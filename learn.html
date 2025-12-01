@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogicPals - Learning Session</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- REUSING YOUR BRAND COLORS --- */
+        :root {
+            --primary-blue: #2563EB;
+            --primary-dark: #1E40AF;
+            --bg-blue-light: #EFF6FF;
+            --text-dark: #111827;
+            --text-gray: #6B7280;
+            --chat-user-bg: #2563EB;
+            --chat-ai-bg: #F3F4F6;
+            --mic-recording: #EF4444; /* Red for recording */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-blue-light); height: 100vh; display: flex; flex-direction: column; }
+
+        /* --- HEADER (Simplified) --- */
+        header {
+            background: white;
+            padding: 16px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+        .logo { font-weight: 700; color: var(--primary-blue); font-size: 20px; display: flex; align-items: center; gap: 8px; }
+        .close-btn { color: var(--text-gray); text-decoration: none; font-weight: 600; }
+
+        /* --- CHAT AREA --- */
+        .chat-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 16px;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .message.ai {
+            align-self: flex-start;
+            background-color: white;
+            color: var(--text-dark);
+            border-bottom-left-radius: 2px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background-color: var(--chat-user-bg);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        /* --- INPUT AREA --- */
+        .input-area {
+            background: white;
+            padding: 20px;
+            border-top: 1px solid #E5E7EB;
+        }
+        
+        .input-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 16px;
+            border: 2px solid #E5E7EB;
+            border-radius: 50px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus { border-color: var(--primary-blue); }
+
+        /* --- MICROPHONE BUTTON --- */
+        .mic-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            background-color: var(--bg-blue-light);
+            color: var(--primary-blue);
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .mic-btn:hover { background-color: #DBEAFE; transform: scale(1.05); }
+
+        /* Recording Animation */
+        .mic-btn.recording {
+            background-color: var(--mic-recording);
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        /* --- SEND BUTTON --- */
+        .send-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            background-color: var(--primary-blue);
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .send-btn:hover { background-color: var(--primary-dark); }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+                <rect width="32" height="32" rx="8" fill="#2563EB"/>
+                <path d="M10 10H14V22H22V10H26" stroke="white" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+            LogicPals Tutor
+        </div>
+        <a href="index.html" class="close-btn">Exit</a>
+    </header>
+
+    <div class="chat-container" id="chatContainer">
+        <div class="message ai">
+            Hi! I'm your LogicPal. 👋 <br>
+            I have a mystery for you. Ready to solve it? 
+            <br><br>
+            <strong>"Rahim has 12 marbles. He gives 5 to his sister. How many does he have left?"</strong>
+            <br><br>
+            Click the microphone to tell me your answer! 🎤
+        </div>
+    </div>
+
+    <div class="input-area">
+        <div class="input-wrapper">
+            <input type="text" id="textInput" placeholder="Type your answer here...">
+            
+            <button class="mic-btn" id="micBtn" onclick="toggleRecording()">
+                🎤
+            </button>
+
+            <button class="send-btn" onclick="sendText()">
+                ➤
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. SETUP VARIABLES ---
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        const micBtn = document.getElementById('micBtn');
+        const chatContainer = document.getElementById('chatContainer');
+
+        // --- 2. MICROPHONE LOGIC ---
+        async function toggleRecording() {
+            if (!isRecording) {
+                // START Recording
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = (event) => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = sendAudioToBackend;
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    micBtn.classList.add('recording'); // Red pulse effect
+                    micBtn.innerHTML = "⬛"; // Stop icon
+                } catch (err) {
+                    alert("Could not access microphone: " + err);
+                }
+            } else {
+                // STOP Recording
+                mediaRecorder.stop();
+                isRecording = false;
+                micBtn.classList.remove('recording');
+                micBtn.innerHTML = "🎤"; // Mic icon
+            }
+        }
+
+        // --- 3. SEND AUDIO TO BACKEND (Placeholder for Supabase) ---
+        async function sendAudioToBackend() {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            
+            // UI: Show user sent an audio message
+            addMessage('user', "🎤 [Sent Audio Message]");
+            addMessage('ai', "Thinking... 🤔"); // Temporary loading state
+
+            // TODO: CONNECT TO SUPABASE HERE
+            // 1. Send 'audioBlob' to Edge Function
+            // 2. Get back text & audio
+            // 3. Play audio
+            
+            // FOR NOW: Simulate AI response after 2 seconds
+            setTimeout(() => {
+                // Remove "Thinking..." (simple logic for prototype)
+                chatContainer.lastElementChild.remove();
+                
+                addMessage('ai', "That's a great start! If Rahim gave away marbles, does he have more or fewer now?");
+                
+                // Simulate Voice Playback
+                // const audio = new Audio("data:audio/mp3;base64,...");
+                // audio.play();
+            }, 2000);
+        }
+
+        // --- 4. TEXT CHAT LOGIC ---
+        function sendText() {
+            const input = document.getElementById('textInput');
+            const text = input.value;
+            if(!text) return;
+
+            addMessage('user', text);
+            input.value = "";
+            
+            // Simulate AI reply
+            setTimeout(() => {
+                addMessage('ai', "Interesting! Tell me more about why you think that.");
+            }, 1000);
+        }
+
+        // --- HELPER: Add Message to Chat ---
+        function addMessage(sender, text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', sender);
+            msgDiv.innerHTML = text;
+            chatContainer.appendChild(msgDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight; // Auto scroll
+        }
+    </script>
+</body>
+</html>
