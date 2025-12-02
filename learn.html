@@ -46,7 +46,7 @@
             max-width: 800px;
             margin: 0 auto;
             width: 100%;
-            scroll-behavior: smooth; /* Smooth scrolling */
+            scroll-behavior: smooth;
         }
 
         .message {
@@ -172,7 +172,8 @@
 
     <script>
         // --- 1. SETUP VARIABLES ---
-        let supabase;
+        // Note: We use 'supabaseClient' instead of 'supabase' to avoid naming conflicts
+        let supabaseClient;
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
@@ -182,16 +183,16 @@
         // -----------------------------------------------------------
         //  TODO: PASTE YOUR LONG KEY BELOW INSIDE THE QUOTES!
         // -----------------------------------------------------------
-        const supabaseKey = 'PASTE_YOUR_ANON_PUBLIC_KEY_HERE'; 
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; 
 
         const micBtn = document.getElementById('micBtn');
         const chatContainer = document.getElementById('chatContainer');
 
-        // --- 2. INITIALIZATION ---
+        // --- 2. INITIALIZATION (Safe Wait) ---
         window.onload = function() {
             if (window.supabase) {
-                const { createClient } = window.supabase;
-                supabase = createClient(supabaseUrl, supabaseKey);
+                // Fix: Naming the variable 'supabaseClient' prevents the ReferenceError
+                supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
                 console.log("✅ Supabase Connected!");
                 loadProblem();
             } else {
@@ -201,7 +202,7 @@
 
         // --- 3. FETCH PROBLEM ---
         async function loadProblem() {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('problems')
                 .select('*')
                 .eq('title', 'The Marble Mystery')
@@ -248,14 +249,13 @@
             }
         }
 
-        // --- 5. SEND AUDIO (FIXED STACK OVERFLOW) ---
+        // --- 5. SEND AUDIO (With Transcript & Safe Audio) ---
         async function sendAudioToBackend() {
-            // This line is CORRECT - Do not change
             const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
             
             // Show temporary listening message
             const tempId = "temp-" + Date.now();
-            addMessage('user', `<span id="${tempId}">🎤 Processing voice...</span>`);
+            addMessage('user', `<span id="${tempId}">🎤 Processing...</span>`);
             addMessage('ai', "Thinking... 🤔");
 
             try {
@@ -270,7 +270,7 @@
 
                 const data = await response.json();
                 
-                // Remove temporary messages safely
+                // Cleanup temporary messages safely
                 if(chatContainer.lastElementChild.innerText.includes("Thinking")) {
                     chatContainer.lastElementChild.remove();
                 }
@@ -282,13 +282,13 @@
                     return;
                 }
 
-                // Show REAL Transcript
+                // Show REAL Transcript (Your request!)
                 addMessage('user', data.userTranscript);
 
                 // Show AI Reply
                 addMessage('ai', data.aiText);
                 
-                // Play Audio Safely (Prevents Loop)
+                // Play Audio Safely
                 const audio = new Audio("data:audio/mp3;base64," + data.audioContent);
                 audio.play().catch(e => console.log("Audio play prevented:", e));
 
@@ -309,7 +309,7 @@
             input.value = "";
         }
 
-        // --- 6. SAFE MESSAGE FUNCTION (FIXED STACK OVERFLOW) ---
+        // --- 6. SAFE MESSAGE FUNCTION (Fixed Stack Overflow) ---
         function addMessage(sender, text) {
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('message', sender);
@@ -322,7 +322,7 @@
             
             chatContainer.appendChild(msgDiv);
             
-            // Use requestAnimationFrame to prevent scroll loops
+            // This fixes the infinite loop crash!
             requestAnimationFrame(() => {
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             });
