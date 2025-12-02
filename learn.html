@@ -6,8 +6,10 @@
     <title>LogicPals - Learning Session</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
-        /* --- REUSING YOUR BRAND COLORS --- */
+        /* --- STYLES --- */
         :root {
             --primary-blue: #2563EB;
             --primary-dark: #1E40AF;
@@ -16,13 +18,12 @@
             --text-gray: #6B7280;
             --chat-user-bg: #2563EB;
             --chat-ai-bg: #F3F4F6;
-            --mic-recording: #EF4444; /* Red for recording */
+            --mic-recording: #EF4444; 
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-blue-light); height: 100vh; display: flex; flex-direction: column; }
 
-        /* --- HEADER (Simplified) --- */
         header {
             background: white;
             padding: 16px 20px;
@@ -35,7 +36,6 @@
         .logo { font-weight: 700; color: var(--primary-blue); font-size: 20px; display: flex; align-items: center; gap: 8px; }
         .close-btn { color: var(--text-gray); text-decoration: none; font-weight: 600; }
 
-        /* --- CHAT AREA --- */
         .chat-container {
             flex: 1;
             padding: 20px;
@@ -72,7 +72,6 @@
             border-bottom-right-radius: 2px;
         }
 
-        /* --- INPUT AREA --- */
         .input-area {
             background: white;
             padding: 20px;
@@ -98,7 +97,6 @@
         }
         input[type="text"]:focus { border-color: var(--primary-blue); }
 
-        /* --- MICROPHONE BUTTON --- */
         .mic-btn {
             width: 56px;
             height: 56px;
@@ -116,7 +114,6 @@
 
         .mic-btn:hover { background-color: #DBEAFE; transform: scale(1.05); }
 
-        /* Recording Animation */
         .mic-btn.recording {
             background-color: var(--mic-recording);
             color: white;
@@ -129,7 +126,6 @@
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
 
-        /* --- SEND BUTTON --- */
         .send-btn {
             width: 56px;
             height: 56px;
@@ -144,7 +140,6 @@
             justify-content: center;
         }
         .send-btn:hover { background-color: var(--primary-dark); }
-
     </style>
 </head>
 <body>
@@ -162,146 +157,159 @@
 
     <div class="chat-container" id="chatContainer">
         <div class="message ai">
-            Hi! I'm your LogicPal. 👋 <br>
-            I have a mystery for you. Ready to solve it? 
-            <br><br>
-            <strong>"Rahim has 12 marbles. He gives 5 to his sister. How many does he have left?"</strong>
-            <br><br>
-            Click the microphone to tell me your answer! 🎤
+            Loading your mystery... 🕵️
         </div>
     </div>
 
     <div class="input-area">
         <div class="input-wrapper">
             <input type="text" id="textInput" placeholder="Type your answer here...">
-            
-            <button class="mic-btn" id="micBtn" onclick="toggleRecording()">
-                🎤
-            </button>
-
-            <button class="send-btn" onclick="sendText()">
-                ➤
-            </button>
+            <button class="mic-btn" id="micBtn" onclick="toggleRecording()">🎤</button>
+            <button class="send-btn" onclick="sendText()">➤</button>
         </div>
     </div>
 
     <script>
-       // --- INITIALIZE SUPABASE ---
-    const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co'; // I pre-filled your URL!
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; // <--- PASTE KEY HERE
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        // --- 1. SETUP VARIABLES ---
+        let supabase;
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        
+        // YOUR SPECIFIC PROJECT URL
+        const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
+        
+        // -----------------------------------------------------------
+        //  TODO: PASTE YOUR LONG KEY BELOW INSIDE THE QUOTES!
+        // -----------------------------------------------------------
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; 
 
-    // --- 1. SETUP VARIABLES ---
-    let mediaRecorder;
-    let audioChunks = [];
-    let isRecording = false;
-    const micBtn = document.getElementById('micBtn');
-    const chatContainer = document.getElementById('chatContainer');
+        const micBtn = document.getElementById('micBtn');
+        const chatContainer = document.getElementById('chatContainer');
 
-        // --- 2. MICROPHONE LOGIC ---
+        // --- 2. INITIALIZATION (Wait for page load) ---
+        window.onload = function() {
+            if (window.supabase) {
+                const { createClient } = window.supabase;
+                supabase = createClient(supabaseUrl, supabaseKey);
+                console.log("✅ Supabase Connected!");
+                loadProblem();
+            } else {
+                alert("Error: Supabase library failed to load.");
+            }
+        };
+
+        // --- 3. FETCH PROBLEM ---
+        async function loadProblem() {
+            const { data, error } = await supabase
+                .from('problems')
+                .select('*')
+                .eq('title', 'The Marble Mystery')
+                .single();
+
+            if (error) {
+                console.error('Error fetching problem:', error);
+                addMessage('ai', "⚠️ Could not connect to database. Check your API Key.");
+                return;
+            }
+
+            chatContainer.innerHTML = ''; 
+            const welcomeMessage = `
+                Hi! I'm your LogicPal. 👋 <br>
+                I have a mystery for you! <br><br>
+                <strong>"${data.problem_text}"</strong>
+                <br><br>
+                Click the microphone to tell me your answer! 🎤
+            `;
+            addMessage('ai', welcomeMessage);
+        }
+
+        // --- 4. MICROPHONE LOGIC ---
         async function toggleRecording() {
             if (!isRecording) {
-                // START Recording
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     mediaRecorder = new MediaRecorder(stream);
                     audioChunks = [];
-
-                    mediaRecorder.ondataavailable = (event) => {
-                        audioChunks.push(event.data);
-                    };
-
+                    mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
                     mediaRecorder.onstop = sendAudioToBackend;
-
                     mediaRecorder.start();
                     isRecording = true;
-                    micBtn.classList.add('recording'); // Red pulse effect
-                    micBtn.innerHTML = "⬛"; // Stop icon
+                    micBtn.classList.add('recording');
+                    micBtn.innerHTML = "⬛"; 
                 } catch (err) {
-                    alert("Could not access microphone: " + err);
+                    alert("Microphone access denied. Make sure you are using the Vercel HTTPS link!");
                 }
             } else {
-                // STOP Recording
                 mediaRecorder.stop();
                 isRecording = false;
                 micBtn.classList.remove('recording');
-                micBtn.innerHTML = "🎤"; // Mic icon
+                micBtn.innerHTML = "🎤"; 
             }
         }
 
-        // --- 3. SEND AUDIO TO BACKEND (REAL CONNECTION) ---
-    async function sendAudioToBackend() {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        
-        // UI: Show user sent an audio message
-        addMessage('user', "🎤 [Sent Audio Message]");
-        addMessage('ai', "Thinking... 🤔"); // Temporary loading state
-
-        try {
-            // 1. Prepare the audio file to upload
-            const formData = new FormData();
-            formData.append('file', audioBlob);
-
-            // 2. Send to your Supabase "Brain"
-            // I added your specific project URL here:
-            const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer ' + supabaseKey
-                },
-                body: formData
-            });
-
-            const data = await response.json();
-
-            // 3. Handle the Response
-            // Remove the "Thinking..." message
-            chatContainer.lastElementChild.remove();
-
-            if (data.error) {
-                addMessage('ai', "⚠️ Error: " + data.error);
-                console.error(data.error);
-                return;
-            }
-
-            // Show text reply
-            addMessage('ai', data.aiText);
+        // --- 5. SEND AUDIO TO BACKEND (Real Brain) ---
+        async function sendAudioToBackend() {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
             
-            // Play audio reply
-            const audio = new Audio("data:audio/mp3;base64," + data.audioContent);
-            audio.play();
+            addMessage('user', "🎤 [Sent Audio Message]");
+            addMessage('ai', "Thinking... 🤔");
 
-        } catch (error) {
-            if(chatContainer.lastElementChild.innerText.includes("Thinking")) {
+            try {
+                const formData = new FormData();
+                formData.append('file', audioBlob);
+
+                // Using your specific Project ID in the URL
+                const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + supabaseKey
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                // Remove loading message
                 chatContainer.lastElementChild.remove();
-            }
-            addMessage('ai', "⚠️ Connection failed. Check your internet.");
-            console.error(error);
-        }
-    }
 
-        // --- 4. TEXT CHAT LOGIC ---
+                if (data.error) {
+                    addMessage('ai', "⚠️ Error: " + data.error);
+                    console.error(data.error);
+                    return;
+                }
+
+                // Show Text
+                addMessage('ai', data.aiText);
+                
+                // Play Audio
+                const audio = new Audio("data:audio/mp3;base64," + data.audioContent);
+                audio.play();
+
+            } catch (error) {
+                if(chatContainer.lastElementChild.innerText.includes("Thinking")) {
+                    chatContainer.lastElementChild.remove();
+                }
+                addMessage('ai', "⚠️ Connection failed. Check internet.");
+                console.error(error);
+            }
+        }
+
         function sendText() {
             const input = document.getElementById('textInput');
             const text = input.value;
             if(!text) return;
-
             addMessage('user', text);
             input.value = "";
-            
-            // Simulate AI reply
-            setTimeout(() => {
-                addMessage('ai', "Interesting! Tell me more about why you think that.");
-            }, 1000);
+            // Text logic can be added later, focusing on voice first!
         }
 
-        // --- HELPER: Add Message to Chat ---
         function addMessage(sender, text) {
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('message', sender);
             msgDiv.innerHTML = text;
             chatContainer.appendChild(msgDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight; // Auto scroll
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         }
     </script>
 </body>
