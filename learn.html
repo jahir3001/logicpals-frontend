@@ -186,12 +186,17 @@
     </div>
 
     <script>
-        // --- 1. SETUP VARIABLES ---
-        let mediaRecorder;
-        let audioChunks = [];
-        let isRecording = false;
-        const micBtn = document.getElementById('micBtn');
-        const chatContainer = document.getElementById('chatContainer');
+       // --- INITIALIZE SUPABASE ---
+    const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co'; // I pre-filled your URL!
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; // <--- PASTE KEY HERE
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    // --- 1. SETUP VARIABLES ---
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+    const micBtn = document.getElementById('micBtn');
+    const chatContainer = document.getElementById('chatContainer');
 
         // --- 2. MICROPHONE LOGIC ---
         async function toggleRecording() {
@@ -224,31 +229,56 @@
             }
         }
 
-        // --- 3. SEND AUDIO TO BACKEND (Placeholder for Supabase) ---
-        async function sendAudioToBackend() {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-            
-            // UI: Show user sent an audio message
-            addMessage('user', "🎤 [Sent Audio Message]");
-            addMessage('ai', "Thinking... 🤔"); // Temporary loading state
+        // --- 3. SEND AUDIO TO BACKEND (REAL CONNECTION) ---
+    async function sendAudioToBackend() {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        
+        // UI: Show user sent an audio message
+        addMessage('user', "🎤 [Sent Audio Message]");
+        addMessage('ai', "Thinking... 🤔"); // Temporary loading state
 
-            // TODO: CONNECT TO SUPABASE HERE
-            // 1. Send 'audioBlob' to Edge Function
-            // 2. Get back text & audio
-            // 3. Play audio
+        try {
+            // 1. Prepare the audio file to upload
+            const formData = new FormData();
+            formData.append('file', audioBlob);
+
+            // 2. Send to your Supabase "Brain"
+            // I added your specific project URL here:
+            const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + supabaseKey
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            // 3. Handle the Response
+            // Remove the "Thinking..." message
+            chatContainer.lastElementChild.remove();
+
+            if (data.error) {
+                addMessage('ai', "⚠️ Error: " + data.error);
+                console.error(data.error);
+                return;
+            }
+
+            // Show text reply
+            addMessage('ai', data.aiText);
             
-            // FOR NOW: Simulate AI response after 2 seconds
-            setTimeout(() => {
-                // Remove "Thinking..." (simple logic for prototype)
+            // Play audio reply
+            const audio = new Audio("data:audio/mp3;base64," + data.audioContent);
+            audio.play();
+
+        } catch (error) {
+            if(chatContainer.lastElementChild.innerText.includes("Thinking")) {
                 chatContainer.lastElementChild.remove();
-                
-                addMessage('ai', "That's a great start! If Rahim gave away marbles, does he have more or fewer now?");
-                
-                // Simulate Voice Playback
-                // const audio = new Audio("data:audio/mp3;base64,...");
-                // audio.play();
-            }, 2000);
+            }
+            addMessage('ai', "⚠️ Connection failed. Check your internet.");
+            console.error(error);
         }
+    }
 
         // --- 4. TEXT CHAT LOGIC ---
         function sendText() {
