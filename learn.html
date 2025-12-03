@@ -172,12 +172,13 @@
 
     <script>
         // --- 1. SETUP VARIABLES ---
-        // FIX: Variable name changed to 'supabaseClient' to avoid conflict
+        // FIX: Renamed to 'supabaseClient' to avoid conflict with library
         let supabaseClient;
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
         
+        // Your specific project URL
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
         
         // -----------------------------------------------------------
@@ -192,7 +193,7 @@
         window.onload = function() {
             if (window.supabase) {
                 const { createClient } = window.supabase;
-                // FIX: Assigning to the new variable name
+                // FIX: Initialize with the unique variable name
                 supabaseClient = createClient(supabaseUrl, supabaseKey);
                 console.log("✅ Supabase Connected!");
                 loadProblem();
@@ -203,7 +204,6 @@
 
         // --- 3. FETCH PROBLEM ---
         async function loadProblem() {
-            // FIX: Using supabaseClient
             const { data, error } = await supabaseClient
                 .from('problems')
                 .select('*')
@@ -273,6 +273,7 @@
 
                 const data = await response.json();
                 
+                // Remove temporary messages safely
                 if(chatContainer.lastElementChild.innerText.includes("Thinking")) {
                     chatContainer.lastElementChild.remove();
                 }
@@ -285,13 +286,13 @@
                     return;
                 }
 
-                // Show Transcript
+                // Show Transcript (Fixing the request to see text)
                 addMessage('user', data.userTranscript);
 
                 // Show AI Reply
                 addMessage('ai', data.aiText);
                 
-                // Play Audio
+                // Play Audio Safely
                 const audio = new Audio("data:audio/mp3;base64," + data.audioContent);
                 audio.play().catch(e => console.log("Audio play prevented:", e));
 
@@ -317,7 +318,8 @@
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('message', sender);
             
-            if (text && (text.includes('<span') || text.includes('<br>'))) {
+            // Allow HTML for special formatting, otherwise text
+            if (text && (text.includes('<span') || text.includes('<br>') || text.includes('<strong>'))) {
                 msgDiv.innerHTML = text;
             } else {
                 msgDiv.innerText = text;
@@ -325,7 +327,7 @@
             
             chatContainer.appendChild(msgDiv);
             
-            // This specific method fixes the "Maximum call stack size" error
+            // FIX: Use requestAnimationFrame to scroll without recursion
             requestAnimationFrame(() => {
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             });
