@@ -172,13 +172,12 @@
 
     <script>
         // --- 1. SETUP VARIABLES ---
-        // FIX: Renamed to 'supabaseClient' to avoid conflict with library
+        // FIX 2: Rename variable to avoid conflict with library name
         let supabaseClient;
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
         
-        // Your specific project URL
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
         
         // -----------------------------------------------------------
@@ -193,7 +192,7 @@
         window.onload = function() {
             if (window.supabase) {
                 const { createClient } = window.supabase;
-                // FIX: Initialize with the unique variable name
+                // FIX 2: Initialize our renamed variable
                 supabaseClient = createClient(supabaseUrl, supabaseKey);
                 console.log("✅ Supabase Connected!");
                 loadProblem();
@@ -204,6 +203,7 @@
 
         // --- 3. FETCH PROBLEM ---
         async function loadProblem() {
+            // FIX 2: Use supabaseClient
             const { data, error } = await supabaseClient
                 .from('problems')
                 .select('*')
@@ -273,7 +273,6 @@
 
                 const data = await response.json();
                 
-                // Remove temporary messages safely
                 if(chatContainer.lastElementChild.innerText.includes("Thinking")) {
                     chatContainer.lastElementChild.remove();
                 }
@@ -286,13 +285,13 @@
                     return;
                 }
 
-                // Show Transcript (Fixing the request to see text)
+                // Show Transcript
                 addMessage('user', data.userTranscript);
 
                 // Show AI Reply
                 addMessage('ai', data.aiText);
                 
-                // Play Audio Safely
+                // Play Audio
                 const audio = new Audio("data:audio/mp3;base64," + data.audioContent);
                 audio.play().catch(e => console.log("Audio play prevented:", e));
 
@@ -313,13 +312,11 @@
             input.value = "";
         }
 
-        // --- 6. SAFE MESSAGE FUNCTION (Prevents Stack Overflow) ---
         function addMessage(sender, text) {
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('message', sender);
             
-            // Allow HTML for special formatting, otherwise text
-            if (text && (text.includes('<span') || text.includes('<br>') || text.includes('<strong>'))) {
+            if (text && (text.includes('<span') || text.includes('<br>'))) {
                 msgDiv.innerHTML = text;
             } else {
                 msgDiv.innerText = text;
@@ -327,7 +324,7 @@
             
             chatContainer.appendChild(msgDiv);
             
-            // FIX: Use requestAnimationFrame to scroll without recursion
+            // Safe Scroll
             requestAnimationFrame(() => {
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             });
