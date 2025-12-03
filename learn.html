@@ -172,13 +172,12 @@
 
     <script>
         // --- 1. SETUP VARIABLES ---
-        // FIX: Variable name changed to 'supabaseClient' to avoid conflict
+        // FIX: WE MUST USE 'supabaseClient' TO AVOID NAMING CONFLICTS
         let supabaseClient;
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
         
-        // Your specific project URL
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
         
         // -----------------------------------------------------------
@@ -274,6 +273,7 @@
 
                 const data = await response.json();
                 
+                // Safe removal of loading messages
                 if(chatContainer.lastElementChild.innerText.includes("Thinking")) {
                     chatContainer.lastElementChild.remove();
                 }
@@ -292,11 +292,16 @@
                 // Show AI Reply
                 addMessage('ai', data.aiText);
                 
-                // Play Audio
-                const audio = new Audio("data:audio/mp3;base64," + data.audioContent);
-                audio.play().catch(e => console.log("Audio play prevented:", e));
+                // Play Audio Safely
+                try {
+                    const audio = new Audio("data:audio/mp3;base64," + data.audioContent);
+                    await audio.play();
+                } catch (audioErr) {
+                    console.log("Audio auto-play blocked (user must interact first):", audioErr);
+                }
 
             } catch (error) {
+                // If it fails, remove the "Thinking..." message so user knows it failed
                 if(chatContainer.lastElementChild.innerText.includes("Thinking")) {
                     chatContainer.lastElementChild.remove();
                 }
@@ -313,12 +318,12 @@
             input.value = "";
         }
 
-        // --- 6. SAFE MESSAGE FUNCTION (Prevents Stack Overflow) ---
+        // --- 6. SAFE MESSAGE FUNCTION (Fixed Recursion) ---
         function addMessage(sender, text) {
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('message', sender);
             
-            if (text && (text.includes('<span') || text.includes('<br>'))) {
+            if (text && (text.includes('<span') || text.includes('<br>') || text.includes('<strong>'))) {
                 msgDiv.innerHTML = text;
             } else {
                 msgDiv.innerText = text;
@@ -326,7 +331,7 @@
             
             chatContainer.appendChild(msgDiv);
             
-            // This specific method fixes the "Maximum call stack size" error
+            // FIX: Using requestAnimationFrame prevents the "Maximum call stack" crash
             requestAnimationFrame(() => {
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             });
