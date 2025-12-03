@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join LogicPals</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root { --primary: #2563EB; --bg: #EFF6FF; --text: #111827; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        
+        .card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); width: 100%; max-width: 450px; }
+        h1 { color: var(--text); text-align: center; margin-bottom: 8px; }
+        .subtitle { text-align: center; color: #6B7280; margin-bottom: 30px; font-size: 14px; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: #374151; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 16px; transition: 0.2s; }
+        input:focus, select:focus { border-color: var(--primary); outline: none; ring: 2px solid #BFDBFE; }
+        
+        .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #9CA3AF; margin: 20px 0 10px; font-weight: 700; border-bottom: 1px solid #F3F4F6; padding-bottom: 5px; }
+        
+        .btn { width: 100%; background: var(--primary); color: white; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 20px; }
+        .btn:hover { background: #1D4ED8; }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        .error { color: #EF4444; font-size: 14px; text-align: center; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Create Your Account</h1>
+        <p class="subtitle">Start your 7-day free trial. No credit card required.</p>
+
+        <form id="signupForm" onsubmit="handleSignup(event)">
+            
+            <div class="section-title">Parent Login</div>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" required placeholder="parent@example.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" required placeholder="******" minlength="6">
+            </div>
+
+            <div class="section-title">Child Profile</div>
+            <div class="form-group">
+                <label>Child's Name</label>
+                <input type="text" id="childName" required placeholder="e.g. Arif">
+            </div>
+            <div class="form-group">
+                <label>Age</label>
+                <select id="childAge" required>
+                    <option value="8">8 Years Old</option>
+                    <option value="9">9 Years Old</option>
+                    <option value="10">10 Years Old</option>
+                    <option value="11">11 Years Old</option>
+                    <option value="12">12 Years Old</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>School Name (For Leaderboard)</label>
+                <input type="text" id="schoolName" required placeholder="e.g. Dhaka Residential Model College">
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn">Start Learning 🚀</button>
+            <p class="error" id="errorMessage"></p>
+        </form>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
+        // PASTE YOUR KEY BELOW
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function handleSignup(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const err = document.getElementById('errorMessage');
+            
+            // 1. Get Values
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const childName = document.getElementById('childName').value;
+            const childAge = document.getElementById('childAge').value;
+            const schoolName = document.getElementById('schoolName').value;
+
+            // 2. Set UI to Loading
+            btn.innerText = "Creating Account...";
+            btn.disabled = true;
+            err.style.display = 'none';
+
+            try {
+                // 3. Sign Up Parent (Supabase Auth)
+                const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password
+                });
+
+                if (authError) throw authError;
+
+                // 4. Create Child Profile
+                // Note: The "Trigger" we ran in SQL automatically created the Parent Profile.
+                // Now we just attach the child to that Parent ID.
+                
+                // Calculate Age Category logic
+                let ageCat = '8-9';
+                if (parseInt(childAge) === 10) ageCat = '9-10';
+                if (parseInt(childAge) >= 11) ageCat = '10-12';
+
+                const { error: childError } = await supabaseClient
+                    .from('children')
+                    .insert([{
+                        parent_id: authData.user.id,
+                        name: childName,
+                        age: parseInt(childAge),
+                        age_category: ageCat,
+                        school_name: schoolName,
+                        difficulty_level: 'medium'
+                    }]);
+
+                if (childError) throw childError;
+
+                // 5. Success! Redirect to Learning
+                alert("Account created! Welcome, " + childName + "!");
+                window.location.href = "learn.html";
+
+            } catch (error) {
+                console.error(error);
+                err.innerText = error.message;
+                err.style.display = 'block';
+                btn.innerText = "Start Learning 🚀";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
