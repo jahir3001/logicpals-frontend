@@ -37,11 +37,12 @@
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         window.onload = async function() {
-            // 1. Check if logged in
+            // 1. SECURITY CHECK (Keep this!)
+            // This kicks out anyone who isn't logged in
             const { data: { session } } = await supabaseClient.auth.getSession();
             
             if (!session) {
-                window.location.href = 'index.html'; // Kick out if not logged in
+                window.location.href = 'index.html'; 
                 return;
             }
 
@@ -53,12 +54,15 @@
                 .single();
 
             if (child) {
+                // Update the Dashboard Text
                 document.getElementById('welcomeName').innerText = "Hi, " + child.name + "! 👋";
                 document.getElementById('schoolName').innerText = child.school_name || "LogicPals Student";
                 document.getElementById('level').innerText = "Age " + child.age + " (" + child.difficulty_level + ")";
                 
-                // Store child info for the learning page
+                // 3. NEW DATA SAVING (This is the new part!)
+                // We save these so learn.html knows who is talking
                 localStorage.setItem('activeChildAge', child.age_category);
+                localStorage.setItem('activeChildName', child.name); 
             }
         };
 
