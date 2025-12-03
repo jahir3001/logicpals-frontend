@@ -94,21 +94,49 @@
             }
         };
 
+        // --- 3. FETCH SMART PROBLEM (Updated) ---
         async function loadProblem() {
-            // Use the safe variable
+            // 1. Get the Child's Age Category (Saved by Dashboard)
+            // If they came directly without dashboard, default to '8-9'
+            const userAgeCategory = localStorage.getItem('activeChildAge') || '8-9';
+            const userName = localStorage.getItem('activeChildName') || 'Friend';
+
+            console.log("Loading problem for:", userAgeCategory);
+
+            // 2. Fetch ALL problems for this age group
             const { data, error } = await supabaseClient
                 .from('problems')
                 .select('*')
-                .eq('title', 'The Marble Mystery')
-                .single();
+                .eq('age_category', userAgeCategory); // Filter by Age!
 
             if (error) {
-                addMessage('ai', "⚠️ Could not connect. Check Key.");
+                console.error('Error fetching problem:', error);
+                addMessage('ai', "⚠️ Database Error. Check API Key.");
                 return;
             }
 
+            if (!data || data.length === 0) {
+                addMessage('ai', `Hi ${userName}! I don't have any problems for age ${userAgeCategory} yet. Tell your parent to upload some!`);
+                return;
+            }
+
+            // 3. Pick a RANDOM problem from the list
+            const randomProblem = data[Math.floor(Math.random() * data.length)];
+
             chatContainer.innerHTML = ''; 
-            addMessage('ai', `Hi! Here is your mystery:<br><br><strong>"${data.problem_text}"</strong><br><br>Click the mic to answer! 🎤`);
+            
+            // 4. Personalized Welcome Message
+            const welcomeMessage = `
+                Hi ${userName}! 👋 <br>
+                Here is a challenge for you:<br><br>
+                <strong>"${randomProblem.problem_text}"</strong>
+                <br><br>
+                Click the microphone to think out loud! 🎤
+            `;
+            addMessage('ai', welcomeMessage);
+            
+            // Save the current problem ID for the backend (Voice Tutor)
+            localStorage.setItem('currentProblemId', randomProblem.id);
         }
 
         // --- 4. MICROPHONE LOGIC ---
