@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Dashboard - LogicPals</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #EFF6FF; padding: 20px; text-align: center; }
+        .card { background: white; padding: 30px; border-radius: 16px; max-width: 500px; margin: 40px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { color: #2563EB; margin-bottom: 5px; }
+        .school-tag { background: #DBEAFE; color: #1E40AF; padding: 5px 12px; border-radius: 20px; font-size: 14px; font-weight: 600; display: inline-block; margin-bottom: 30px; }
+        .stat-box { background: #F3F4F6; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .btn { display: block; width: 100%; background: #2563EB; color: white; padding: 16px; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; text-decoration: none; }
+        .btn:hover { background: #1D4ED8; }
+        .logout { color: #6B7280; font-size: 14px; margin-top: 20px; cursor: pointer; text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1 id="welcomeName">Loading...</h1>
+        <div id="schoolName" class="school-tag">...</div>
+
+        <div class="stat-box">
+            <strong>Current Level:</strong> <span id="level">...</span>
+        </div>
+
+        <button onclick="startLearning()" class="btn">🚀 Solve a Mystery</button>
+        <div class="logout" onclick="logout()">Log Out</div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; // <--- PASTE KEY HERE
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        window.onload = async function() {
+            // 1. Check if logged in
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            
+            if (!session) {
+                window.location.href = 'index.html'; // Kick out if not logged in
+                return;
+            }
+
+            // 2. Fetch Child Profile
+            const { data: child, error } = await supabaseClient
+                .from('children')
+                .select('*')
+                .eq('parent_id', session.user.id)
+                .single();
+
+            if (child) {
+                document.getElementById('welcomeName').innerText = "Hi, " + child.name + "! 👋";
+                document.getElementById('schoolName').innerText = child.school_name || "LogicPals Student";
+                document.getElementById('level').innerText = "Age " + child.age + " (" + child.difficulty_level + ")";
+                
+                // Store child info for the learning page
+                localStorage.setItem('activeChildAge', child.age_category);
+            }
+        };
+
+        function startLearning() {
+            window.location.href = 'learn.html';
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
