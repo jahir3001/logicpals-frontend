@@ -101,21 +101,20 @@
             err.style.display = 'none';
 
             try {
-                // 3. Sign Up Parent (Supabase Auth)
+                // 3. Sign Up Parent
                 const { data: authData, error: authError } = await supabaseClient.auth.signUp({
                     email: email,
-                    password: password,
-                    // We can also store phone in metadata if we want, 
-                    // but saving to the 'children' table is easier for you to read later.
+                    password: password
                 });
 
                 if (authError) throw authError;
 
-                // 4. Create Child Profile (With Phone & School!)
+                // 4. Create Child Profile (Now including Phone!)
                 let ageCat = '8-9';
                 if (parseInt(childAge) === 10) ageCat = '9-10';
                 if (parseInt(childAge) >= 11) ageCat = '10-12';
 
+                // We try to insert the child. The 'parent_id' links it to the user we just made.
                 const { error: childError } = await supabaseClient
                     .from('children')
                     .insert([{
@@ -124,13 +123,13 @@
                         age: parseInt(childAge),
                         age_category: ageCat,
                         school_name: schoolName,
-                        parent_phone: phone, // <--- SAVING PHONE HERE
+                        parent_phone: phone, // <--- Saving Phone Here
                         difficulty_level: 'medium'
                     }]);
 
                 if (childError) throw childError;
 
-                // 5. Success! Redirect to Dashboard
+                // 5. Success!
                 alert("Account created! Welcome, " + childName + "!");
                 window.location.href = "dashboard.html";
 
@@ -142,6 +141,7 @@
                 btn.disabled = false;
             }
         }
+    </script>
     </script>
 </body>
 </html>
