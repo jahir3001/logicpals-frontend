@@ -172,12 +172,13 @@
 
     <script>
         // --- 1. SETUP VARIABLES ---
-        // FIX 2: Rename variable to avoid conflict with library name
+        // FIX: Variable name changed to 'supabaseClient' to avoid conflict
         let supabaseClient;
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
         
+        // Your specific project URL
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
         
         // -----------------------------------------------------------
@@ -192,7 +193,7 @@
         window.onload = function() {
             if (window.supabase) {
                 const { createClient } = window.supabase;
-                // FIX 2: Initialize our renamed variable
+                // FIX: Initialize with the unique variable name
                 supabaseClient = createClient(supabaseUrl, supabaseKey);
                 console.log("✅ Supabase Connected!");
                 loadProblem();
@@ -203,7 +204,7 @@
 
         // --- 3. FETCH PROBLEM ---
         async function loadProblem() {
-            // FIX 2: Use supabaseClient
+            // FIX: Using supabaseClient
             const { data, error } = await supabaseClient
                 .from('problems')
                 .select('*')
@@ -312,6 +313,7 @@
             input.value = "";
         }
 
+        // --- 6. SAFE MESSAGE FUNCTION (Prevents Stack Overflow) ---
         function addMessage(sender, text) {
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('message', sender);
@@ -324,7 +326,7 @@
             
             chatContainer.appendChild(msgDiv);
             
-            // Safe Scroll
+            // This specific method fixes the "Maximum call stack size" error
             requestAnimationFrame(() => {
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             });
