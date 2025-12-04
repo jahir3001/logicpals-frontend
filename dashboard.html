@@ -18,9 +18,9 @@
         .card { background: white; padding: 25px; border-radius: 16px; max-width: 500px; margin: 0 auto 20px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: left; }
         
         /* TEXT */
-        h1 { color: #2563EB; margin: 0 0 5px 0; font-size: 24px; }
+        h1 { color: #2563EB; margin: 0 0 5px 0; font-size: 24px; text-align: center; }
         h2 { font-size: 16px; color: #111827; margin-bottom: 15px; border-bottom: 2px solid #F3F4F6; padding-bottom: 10px; }
-        .school-tag { color: #6B7280; font-size: 14px; margin-bottom: 20px; display: block; }
+        .school-tag { color: #6B7280; font-size: 14px; margin-bottom: 20px; display: block; text-align: center; }
         
         /* LEADERBOARD ITEMS */
         .leader-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #F3F4F6; }
@@ -35,20 +35,28 @@
         .btn-parent { background: white; border: 2px solid #2563EB; color: #2563EB; margin-top: 10px; }
         
         .logout { color: #9CA3AF; font-size: 14px; margin-top: 20px; cursor: pointer; text-decoration: underline; text-align: center; display: block; }
+
+        /* --- REPORT MODAL (New!) --- */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
+        .modal-box { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 16px; position: relative; text-align: left; }
+        .close-modal { position: absolute; top: 15px; right: 15px; font-size: 24px; cursor: pointer; color: #9CA3AF; }
+        .report-content { font-size: 15px; color: #374151; line-height: 1.6; margin-top: 15px; white-space: pre-wrap; }
+        .loading-spinner { border: 4px solid #F3F4F6; border-top: 4px solid #2563EB; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div class="card" style="text-align: center;">
+    <div class="card">
         <h1 id="welcomeName">Loading...</h1>
         <span id="schoolName" class="school-tag">...</span>
         
         <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px;">
-            <div style="background: #F3F4F6; padding: 10px; border-radius: 8px; flex: 1;">
+            <div style="background: #F3F4F6; padding: 10px; border-radius: 8px; flex: 1; text-align: center;">
                 <div style="font-size: 12px; color: #6B7280;">LEVEL</div>
                 <div id="level" style="font-weight: 700; color: #374151;">-</div>
             </div>
-            <div style="background: #F3F4F6; padding: 10px; border-radius: 8px; flex: 1;">
+            <div style="background: #F3F4F6; padding: 10px; border-radius: 8px; flex: 1; text-align: center;">
                 <div style="font-size: 12px; color: #6B7280;">SOLVED</div>
                 <div id="solvedCount" style="font-weight: 700; color: #374151;">0</div>
             </div>
@@ -69,15 +77,26 @@
         <p style="font-size: 14px; color: #6B7280; margin-bottom: 15px;">
             See how your child's critical thinking is developing compared to age benchmarks.
         </p>
-        <button class="btn btn-parent" onclick="alert('Psychiatrist Report Feature Coming Soon!')">📊 View Growth Report</button>
+        <button class="btn btn-parent" onclick="viewReport()">📊 View Growth Report</button>
     </div>
 
     <div class="logout" onclick="logout()">Log Out</div>
 
+    <div id="reportModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="close-modal" onclick="closeReport()">×</div>
+            <h2 style="margin-top: 0; color: #2563EB;">🧠 Cognitive Growth Report</h2>
+            <div id="reportLoading" class="loading-spinner"></div>
+            <div id="reportText" class="report-content"></div>
+        </div>
+    </div>
+
     <script>
+        let currentChildId = null;
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
+        
         // -----------------------------------------------------------
-        //  TODO: PASTE YOUR ANON KEY HERE
+        //  TODO: PASTE YOUR KEY BELOW
         // -----------------------------------------------------------
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -95,6 +114,8 @@
                 .single();
 
             if (child) {
+                currentChildId = child.id; // SAVE FOR REPORT
+                
                 document.getElementById('welcomeName').innerText = "Hi, " + child.name + "! 👋";
                 document.getElementById('schoolName').innerText = child.school_name || "LogicPals Student";
                 document.getElementById('level').innerText = child.difficulty_level.toUpperCase();
@@ -104,32 +125,57 @@
                 localStorage.setItem('activeChildName', child.name); 
             }
 
-            // 3. Load Leaderboard
             loadLeaderboard();
         };
 
-        async function loadLeaderboard() {
-            const { data: schools, error } = await supabaseClient
-                .from('school_leaderboard')
-                .select('*');
-
-            const list = document.getElementById('leaderboardList');
+        // --- NEW: GENERATE REPORT ---
+        async function viewReport() {
+            if (!currentChildId) return alert("Child profile not loaded yet.");
             
-            if (error || !schools || schools.length === 0) {
-                list.innerHTML = '<div style="text-align: center; color: #9CA3AF;">No schools ranked yet! Solve a problem to be first.</div>';
-                return;
-            }
+            // Show Modal
+            document.getElementById('reportModal').style.display = 'flex';
+            document.getElementById('reportLoading').style.display = 'block';
+            document.getElementById('reportText').innerText = "";
 
+            try {
+                // Call the "Psychiatrist" Backend
+                const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/parent-report', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': 'Bearer ' + supabaseKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ child_id: currentChildId })
+                });
+
+                const data = await response.json();
+                
+                document.getElementById('reportLoading').style.display = 'none';
+                
+                if (data.error) {
+                    document.getElementById('reportText').innerText = "⚠️ Error: " + data.error;
+                } else {
+                    document.getElementById('reportText').innerText = data.report || "No recent activity to analyze. Ask your child to solve a problem first!";
+                }
+
+            } catch (err) {
+                document.getElementById('reportLoading').style.display = 'none';
+                document.getElementById('reportText').innerText = "⚠️ Connection failed.";
+            }
+        }
+
+        function closeReport() {
+            document.getElementById('reportModal').style.display = 'none';
+        }
+
+        async function loadLeaderboard() {
+            const { data: schools } = await supabaseClient.from('school_leaderboard').select('*').limit(5);
+            const list = document.getElementById('leaderboardList');
+            if (!schools || schools.length === 0) { list.innerHTML = '<div style="color:#9CA3AF;font-size:13px;">No schools ranked yet!</div>'; return; }
             let html = '';
-            schools.forEach((school, index) => {
-                let medal = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : `#${index + 1}`));
-                html += `
-                    <div class="leader-row">
-                        <div class="rank">${medal}</div>
-                        <div class="school">${school.school_name}</div>
-                        <div class="points">${school.total_points} Pts</div>
-                    </div>
-                `;
+            schools.forEach((s, i) => {
+                let medal = i===0?'🥇':(i===1?'🥈':(i===2?'🥉':`#${i+1}`));
+                html += `<div class="leader-row"><div class="rank">${medal}</div><div class="school">${s.school_name}</div><div class="points">${s.total_points} Pts</div></div>`;
             });
             list.innerHTML = html;
         }
