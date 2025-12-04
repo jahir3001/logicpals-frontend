@@ -107,14 +107,16 @@
             }
         };
 
-        // --- 3. FETCH SMART PROBLEM (Updated) ---
-        // --- 3. FETCH SMART PROBLEM (DYNAMIC) ---
+        
+
+        // --- 3. FETCH PROBLEM (DYNAMIC AGE MATCHING) ---
         async function loadProblem() {
-            // 1. Get Child's Info (Saved by Dashboard)
+            // 1. Get Child's Info
+            // Default to '8-9' if missing
             const userAge = localStorage.getItem('activeChildAge') || '8-9';
             const userName = localStorage.getItem('activeChildName') || 'Friend';
             
-            console.log("Fetching problems for age:", userAge);
+            console.log("Fetching problems for category:", userAge);
 
             // 2. Fetch ALL problems for this age category
             const { data, error } = await supabaseClient
@@ -123,21 +125,20 @@
                 .eq('age_category', userAge); 
 
             if (error) {
-                console.error('Error fetching problem:', error);
-                addMessage('ai', "⚠️ Database Error. Check API Key.");
+                console.error('Database Error:', error);
+                addMessage('ai', "⚠️ Error connecting to database.");
                 return;
             }
 
-            // 3. Handle Empty Content
+            // 3. IF NO PROBLEMS FOUND
             if (!data || data.length === 0) {
-                addMessage('ai', `Hi ${userName}! I looked for problems for age <strong>${userAge}</strong>, but I couldn't find any yet. <br><br>Tell your parent to run the "Content Factory" SQL!`);
+                addMessage('ai', `Hi ${userName}! I looked for problems for age category <strong>${userAge}</strong>, but found ZERO.<br><br>Please run the SQL to add problems for category: '${userAge}'.`);
                 return;
             }
 
-            // 4. Pick a RANDOM problem
+            // 4. Success - Pick Random
             const randomProblem = data[Math.floor(Math.random() * data.length)];
 
-            // 5. Display It
             chatContainer.innerHTML = ''; 
             const welcomeMessage = `
                 Hi ${userName}! 👋 <br>
@@ -148,7 +149,7 @@
             `;
             addMessage('ai', welcomeMessage);
             
-            // 6. Save ID for the Voice Brain
+            // Save ID for voice context
             localStorage.setItem('currentProblemId', randomProblem.id);
         }
 
