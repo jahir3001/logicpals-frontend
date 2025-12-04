@@ -594,6 +594,7 @@
             .process-grid { gap: 40px; }
         }
     </style>
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <header>
@@ -635,6 +636,21 @@
             <div class="hero-illustration">
                 <img src="https://placehold.co/500x500/EFF6FF/2563EB?text=Child+Learning+Happily" alt="Child learning critical thinking with LogicPals">
             </div>
+        </div>
+    </section>
+	<section style="background: #F0F9FF; border-bottom: 1px solid #E0F2FE; padding: 20px 0;">
+        <div class="container" style="display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap;">
+            <div style="font-weight: 700; color: #0369A1; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 20px;">🏆</span> TOP SCHOOLS LIVE:
+            </div>
+            
+            <div id="publicLeaderboard" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 5px;">
+                <span style="color: #64748B;">Loading rankings...</span>
+            </div>
+            
+            <a href="signup.html" style="font-size: 14px; font-weight: 600; color: #2563EB; text-decoration: underline;">
+                Get your school on the list →
+            </a>
         </div>
     </section>
     <section class="section-padding">
@@ -1052,5 +1068,42 @@
             });
         });
     </script>
+<script>
+    // --- LIVE LEADERBOARD LOGIC ---
+    const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; // <--- PASTE KEY HERE
+    
+    // Safety check: specific variable name to avoid conflicts
+    const lpClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+    async function fetchLiveRankings() {
+        const { data: schools, error } = await lpClient
+            .from('school_leaderboard')
+            .select('*')
+            .limit(3); // Just show Top 3 on homepage
+
+        const board = document.getElementById('publicLeaderboard');
+
+        if (error || !schools || schools.length === 0) {
+            board.innerHTML = '<span style="color: #64748B;">Join now to rank your school!</span>';
+            return;
+        }
+
+        let html = '';
+        schools.forEach((school, index) => {
+            let icon = index === 0 ? '🥇' : (index === 1 ? '🥈' : '🥉');
+            // Create a "Pill" style for each school
+            html += `
+                <div style="background: white; border: 1px solid #BAE6FD; padding: 5px 12px; border-radius: 20px; font-size: 14px; font-weight: 600; color: #0C4A6E; white-space: nowrap;">
+                    ${icon} ${school.school_name} <span style="color: #0EA5E9; margin-left: 4px;">(${school.total_points} pts)</span>
+                </div>
+            `;
+        });
+        board.innerHTML = html;
+    }
+
+    // Run immediately
+    fetchLiveRankings();
+</script>
 </body>
 </html>
