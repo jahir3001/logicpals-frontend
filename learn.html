@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor v3.0</title>
+    <title>LogicPals Tutor v4.0 (Memory)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -14,7 +14,10 @@
 
         header { background: white; padding: 16px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
         .logo { font-weight: 700; color: var(--primary); font-size: 20px; }
-        .close-btn { color: #6B7280; text-decoration: none; font-weight: 600; }
+        
+        /* New Finish Button Style */
+        .finish-btn { background: white; border: 2px solid #10B981; color: #10B981; font-weight: 600; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-size: 14px; cursor: pointer; }
+        .finish-btn:hover { background: #10B981; color: white; }
 
         .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto; width: 100%; scroll-behavior: smooth; }
         .message { max-width: 80%; padding: 16px; border-radius: 12px; font-size: 16px; line-height: 1.5; }
@@ -34,8 +37,8 @@
 <body>
 
     <header>
-        <div class="logo">LogicPals Tutor</div>
-        <a href="dashboard.html" class="close-btn">Exit</a>
+        <div class="logo">LogicPals</div>
+        <button onclick="finishSession()" class="finish-btn">✅ I'm Done</button>
     </header>
 
     <div class="chat-container" id="chatContainer">
@@ -53,39 +56,93 @@
     <script>
         let supabaseClient, mediaRecorder, audioChunks = [], isRecording = false;
         
+        // MEMORY: We store the chat here
+        let conversationLog = []; 
+        let currentChildId = null;
+        let currentProblemId = null;
+
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
+        // -----------------------------------------------------------
+        //  TODO: PASTE YOUR KEY BELOW
+        // -----------------------------------------------------------
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; 
 
         const micBtn = document.getElementById('micBtn');
         const chatContainer = document.getElementById('chatContainer');
 
-        window.onload = function() {
+        window.onload = async function() {
             if (window.supabase) {
                 supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+                
+                // Get User ID for saving data later
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if(!session) { window.location.href = 'index.html'; return; }
+                
+                // Get Child ID
+                const { data: child } = await supabaseClient
+                    .from('children')
+                    .select('id')
+                    .eq('parent_id', session.user.id)
+                    .single();
+                
+                if(child) currentChildId = child.id;
+
                 loadProblem();
-            } else {
-                alert("Error: Supabase library failed to load.");
             }
         };
 
         async function loadProblem() {
             const userAge = localStorage.getItem('activeChildAge') || '8-9';
-            const userName = localStorage.getItem('activeChildName') || 'Friend';
-
             const { data, error } = await supabaseClient
                 .from('problems')
                 .select('*')
                 .eq('age_category', userAge); 
 
             if (error || !data || data.length === 0) {
-                chatContainer.innerHTML = '';
-                addMessage('ai', `Hi ${userName}! I couldn't find problems for age <strong>${userAge}</strong>. Please tell your parent to add some!`);
+                addMessage('ai', `No problems found for age ${userAge}.`);
                 return;
             }
 
             const randomProblem = data[Math.floor(Math.random() * data.length)];
+            currentProblemId = randomProblem.id; // Save for database
+
             chatContainer.innerHTML = ''; 
-            addMessage('ai', `Hi ${userName}! 👋<br><br><strong>"${randomProblem.problem_text}"</strong><br><br>🎤 Click the mic to solve it!`);
+            const intro = `Hi! Here is your mystery:<br><br><strong>"${randomProblem.problem_text}"</strong>`;
+            addMessage('ai', intro);
+            
+            // Add to Memory
+            conversationLog.push({ role: 'system', content: `Problem: ${randomProblem.problem_text}` });
+            conversationLog.push({ role: 'ai', content: intro });
+        }
+
+        // --- FINISH & SAVE FUNCTION (The New Part) ---
+        async function finishSession() {
+            if (!currentChildId || !currentProblemId) {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            const btn = document.querySelector('.finish-btn');
+            btn.innerText = "Saving...";
+            
+            // 1. Save to Database
+            const { error } = await supabaseClient
+                .from('attempts')
+                .insert([{
+                    child_id: currentChildId,
+                    problem_id: currentProblemId,
+                    solved_correctly: true, // We assume true for MVP, later AI decides
+                    ai_conversation: conversationLog // Saving the Chat!
+                }]);
+
+            if (error) {
+                console.error("Save failed:", error);
+                alert("Could not save progress.");
+            } else {
+                // 2. Update Total Score (Optional but good)
+                // For now, just go to Dashboard
+                window.location.href = 'dashboard.html';
+            }
         }
 
         async function toggleRecording() {
@@ -100,9 +157,7 @@
                     isRecording = true;
                     micBtn.classList.add('recording');
                     micBtn.innerHTML = "⬛"; 
-                } catch (err) {
-                    alert("Microphone Access Denied. Check Settings.");
-                }
+                } catch (err) { alert("Mic Error"); }
             } else {
                 mediaRecorder.stop();
                 isRecording = false;
@@ -115,7 +170,6 @@
             const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
             const tempId = "temp-" + Date.now();
             addMessage('user', `<span id="${tempId}">🎤 Processing...</span>`);
-            addMessage('ai', "Thinking... 🤔");
 
             try {
                 const formData = new FormData();
@@ -129,40 +183,42 @@
 
                 const data = await response.json();
                 
-                // Cleanup UI
-                if(chatContainer.lastElementChild.innerText.includes("Thinking")) chatContainer.lastElementChild.remove();
+                // Cleanup
                 const tempEl = document.getElementById(tempId);
                 if(tempEl) tempEl.parentElement.remove();
 
-                if (data.error) {
-                    addMessage('ai', "⚠️ Error: " + data.error);
-                    return;
-                }
+                if (data.error) { addMessage('ai', "⚠️ Error."); return; }
+
+                // Add to Memory
+                conversationLog.push({ role: 'user', content: data.userTranscript });
+                conversationLog.push({ role: 'ai', content: data.aiText });
 
                 addMessage('user', data.userTranscript);
                 addMessage('ai', data.aiText);
                 
                 const audio = new Audio("data:audio/mp3;base64," + data.audioContent);
-                audio.play().catch(e => console.log("Audio auto-play blocked:", e));
+                audio.play().catch(e => console.log("Audio blocked:", e));
 
-            } catch (error) {
-                if(chatContainer.lastElementChild.innerText.includes("Thinking")) chatContainer.lastElementChild.remove();
-                addMessage('ai', "⚠️ Connection failed.");
-            }
+            } catch (error) { addMessage('ai', "⚠️ Connection failed."); }
         }
 
         function sendText() {
             const input = document.getElementById('textInput');
             const text = input.value;
             if(!text) return;
+            
+            // Add to Memory
+            conversationLog.push({ role: 'user', content: text });
+            
             addMessage('user', text);
             input.value = "";
+            // Note: Text backend connection not implemented in MVP, just voice.
         }
 
         function addMessage(sender, text) {
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('message', sender);
-            if (text && (text.includes('<') || text.includes('&'))) msgDiv.innerHTML = text;
+            if (text.includes('<')) msgDiv.innerHTML = text;
             else msgDiv.innerText = text;
             chatContainer.appendChild(msgDiv);
             requestAnimationFrame(() => chatContainer.scrollTop = chatContainer.scrollHeight);
