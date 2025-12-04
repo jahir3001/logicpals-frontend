@@ -3,58 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor v2.5</title> <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2563EB">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/brain--v1.png">
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js');
-            });
-        }
-    </script>
-    
+    <title>LogicPals Tutor v3.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* --- STYLES --- */
-        :root {
-            --primary-blue: #2563EB;
-            --bg-blue-light: #EFF6FF;
-            --text-dark: #111827;
-            --chat-user-bg: #2563EB;
-            --mic-recording: #EF4444; 
-        }
+        :root { --primary: #2563EB; --bg: #EFF6FF; --text: #111827; --user-bg: #2563EB; --mic-red: #EF4444; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-blue-light); height: 100vh; display: flex; flex-direction: column; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); height: 100vh; display: flex; flex-direction: column; }
 
-        header {
-            background: white; padding: 16px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            display: flex; justify-content: space-between; align-items: center; z-index: 10;
-        }
-        .logo { font-weight: 700; color: var(--primary-blue); font-size: 20px; }
+        header { background: white; padding: 16px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .logo { font-weight: 700; color: var(--primary); font-size: 20px; }
         .close-btn { color: #6B7280; text-decoration: none; font-weight: 600; }
 
-        .chat-container {
-            flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px;
-            max-width: 800px; margin: 0 auto; width: 100%; scroll-behavior: smooth;
-        }
-
+        .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto; width: 100%; scroll-behavior: smooth; }
         .message { max-width: 80%; padding: 16px; border-radius: 12px; font-size: 16px; line-height: 1.5; }
-        .message.ai { align-self: flex-start; background-color: white; color: var(--text-dark); border-bottom-left-radius: 2px; }
-        .message.user { align-self: flex-end; background-color: var(--chat-user-bg); color: white; border-bottom-right-radius: 2px; }
+        .message.ai { align-self: flex-start; background: white; color: var(--text); border-bottom-left-radius: 2px; }
+        .message.user { align-self: flex-end; background: var(--user-bg); color: white; border-bottom-right-radius: 2px; }
 
         .input-area { background: white; padding: 20px; border-top: 1px solid #E5E7EB; }
         .input-wrapper { max-width: 800px; margin: 0 auto; display: flex; gap: 12px; align-items: center; }
-
-        input[type="text"] { flex: 1; padding: 16px; border: 2px solid #E5E7EB; border-radius: 50px; font-size: 16px; outline: none; }
-        .mic-btn { width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--bg-blue-light); font-size: 24px; cursor: pointer; }
-        .mic-btn.recording { background-color: var(--mic-recording); color: white; animation: pulse 1.5s infinite; }
-        .send-btn { width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--primary-blue); color: white; font-size: 20px; cursor: pointer; }
+        input { flex: 1; padding: 16px; border: 2px solid #E5E7EB; border-radius: 50px; font-size: 16px; outline: none; }
+        .mic-btn { width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--bg); font-size: 24px; cursor: pointer; }
+        .mic-btn.recording { background: var(--mic-red); color: white; animation: pulse 1.5s infinite; }
+        .send-btn { width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 20px; cursor: pointer; }
         
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
     </style>
@@ -62,7 +34,8 @@
 <body>
 
     <header>
-        <div class="logo">LogicPals Tutor v2.5</div> <a href="index.html" class="close-btn">Exit</a>
+        <div class="logo">LogicPals Tutor</div>
+        <a href="dashboard.html" class="close-btn">Exit</a>
     </header>
 
     <div class="chat-container" id="chatContainer">
@@ -78,96 +51,57 @@
     </div>
 
     <script>
-        // --- 2. SETUP VARIABLES (RENAMED) ---
-        let supabaseClient; // <--- This name prevents the conflict!
-        let mediaRecorder;
-        let audioChunks = [];
-        let isRecording = false;
+        let supabaseClient, mediaRecorder, audioChunks = [], isRecording = false;
         
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
-        
-        // -----------------------------------------------------------
-        //  TODO: PASTE YOUR LONG KEY BELOW INSIDE THE QUOTES!
-        // -----------------------------------------------------------
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; 
 
         const micBtn = document.getElementById('micBtn');
         const chatContainer = document.getElementById('chatContainer');
 
-        // --- 3. INITIALIZATION (Wait for page load) ---
         window.onload = function() {
-            // Check if library loaded
             if (window.supabase) {
-                // Initialize using the SAFE variable name
                 supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-                console.log("✅ Supabase Connected!");
                 loadProblem();
             } else {
                 alert("Error: Supabase library failed to load.");
             }
         };
 
-        
-
-        // --- 3. FETCH PROBLEM (DYNAMIC AGE MATCHING) ---
         async function loadProblem() {
-            // 1. Get Child's Info
-            // Default to '8-9' if missing
             const userAge = localStorage.getItem('activeChildAge') || '8-9';
             const userName = localStorage.getItem('activeChildName') || 'Friend';
-            
-            console.log("Fetching problems for category:", userAge);
 
-            // 2. Fetch ALL problems for this age category
             const { data, error } = await supabaseClient
                 .from('problems')
                 .select('*')
                 .eq('age_category', userAge); 
 
-            if (error) {
-                console.error('Database Error:', error);
-                addMessage('ai', "⚠️ Error connecting to database.");
+            if (error || !data || data.length === 0) {
+                chatContainer.innerHTML = '';
+                addMessage('ai', `Hi ${userName}! I couldn't find problems for age <strong>${userAge}</strong>. Please tell your parent to add some!`);
                 return;
             }
 
-            // 3. IF NO PROBLEMS FOUND
-            if (!data || data.length === 0) {
-                addMessage('ai', `Hi ${userName}! I looked for problems for age category <strong>${userAge}</strong>, but found ZERO.<br><br>Please run the SQL to add problems for category: '${userAge}'.`);
-                return;
-            }
-
-            // 4. Success - Pick Random
             const randomProblem = data[Math.floor(Math.random() * data.length)];
-
             chatContainer.innerHTML = ''; 
-            const welcomeMessage = `
-                Hi ${userName}! 👋 <br>
-                Here is a challenge for you:<br><br>
-                <strong>"${randomProblem.problem_text}"</strong>
-                <br><br>
-                Click the microphone to think out loud! 🎤
-            `;
-            addMessage('ai', welcomeMessage);
-            
-            // Save ID for voice context
-            localStorage.setItem('currentProblemId', randomProblem.id);
+            addMessage('ai', `Hi ${userName}! 👋<br><br><strong>"${randomProblem.problem_text}"</strong><br><br>🎤 Click the mic to solve it!`);
         }
 
-        // --- 4. MICROPHONE LOGIC ---
         async function toggleRecording() {
             if (!isRecording) {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     mediaRecorder = new MediaRecorder(stream);
                     audioChunks = [];
-                    mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                     mediaRecorder.onstop = sendAudioToBackend;
                     mediaRecorder.start();
                     isRecording = true;
                     micBtn.classList.add('recording');
                     micBtn.innerHTML = "⬛"; 
                 } catch (err) {
-                    alert("Mic Access Denied. Check Browser Settings.");
+                    alert("Microphone Access Denied. Check Settings.");
                 }
             } else {
                 mediaRecorder.stop();
@@ -177,10 +111,8 @@
             }
         }
 
-        // --- 5. SEND AUDIO TO BACKEND ---
         async function sendAudioToBackend() {
             const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-            
             const tempId = "temp-" + Date.now();
             addMessage('user', `<span id="${tempId}">🎤 Processing...</span>`);
             addMessage('ai', "Thinking... 🤔");
@@ -197,10 +129,8 @@
 
                 const data = await response.json();
                 
-                // Cleanup temp messages
-                if(chatContainer.lastElementChild.innerText.includes("Thinking")) {
-                    chatContainer.lastElementChild.remove();
-                }
+                // Cleanup UI
+                if(chatContainer.lastElementChild.innerText.includes("Thinking")) chatContainer.lastElementChild.remove();
                 const tempEl = document.getElementById(tempId);
                 if(tempEl) tempEl.parentElement.remove();
 
@@ -209,15 +139,14 @@
                     return;
                 }
 
-                // Show Transcript & Reply
                 addMessage('user', data.userTranscript);
                 addMessage('ai', data.aiText);
                 
-                // Play Audio
                 const audio = new Audio("data:audio/mp3;base64," + data.audioContent);
                 audio.play().catch(e => console.log("Audio auto-play blocked:", e));
 
             } catch (error) {
+                if(chatContainer.lastElementChild.innerText.includes("Thinking")) chatContainer.lastElementChild.remove();
                 addMessage('ai', "⚠️ Connection failed.");
             }
         }
@@ -230,23 +159,13 @@
             input.value = "";
         }
 
-        // --- 6. SAFE MESSAGE FUNCTION ---
         function addMessage(sender, text) {
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('message', sender);
-            
-            if (text && (text.includes('<span') || text.includes('<br>') || text.includes('<strong>'))) {
-                msgDiv.innerHTML = text;
-            } else {
-                msgDiv.innerText = text;
-            }
-            
+            if (text && (text.includes('<') || text.includes('&'))) msgDiv.innerHTML = text;
+            else msgDiv.innerText = text;
             chatContainer.appendChild(msgDiv);
-            
-            // This prevents the "Stack Overflow" error
-            requestAnimationFrame(() => {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            });
+            requestAnimationFrame(() => chatContainer.scrollTop = chatContainer.scrollHeight);
         }
     </script>
 </body>
