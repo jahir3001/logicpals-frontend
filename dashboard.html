@@ -133,13 +133,25 @@
             loadLeaderboard();
         };
 
-        // --- GENERATE REPORT (Updated) ---
+        
+        // --- GENERATE REPORT (With "Status Updates") ---
         async function viewReport() {
             if (!currentChildId) return alert("Child profile not loaded yet.");
             
             document.getElementById('reportModal').style.display = 'flex';
             document.getElementById('reportLoading').style.display = 'block';
             document.getElementById('reportContent').style.display = 'none';
+            
+            // 1. Interactive Loading Text
+            const loadingText = document.getElementById('reportLoading');
+            loadingText.innerHTML = '<div class="loading-spinner"></div><div style="margin-top:10px; color:#64748B; font-size:13px;">Analyzing logic patterns...</div>';
+            
+            // Change text after 1.5 seconds to keep them engaged
+            setTimeout(() => {
+                if(document.getElementById('reportModal').style.display === 'flex') {
+                    loadingText.innerHTML = '<div class="loading-spinner"></div><div style="margin-top:10px; color:#64748B; font-size:13px;">Writing psychological insights...</div>';
+                }
+            }, 1500);
 
             try {
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/parent-report', {
@@ -153,21 +165,19 @@
 
                 const data = await response.json();
                 
-                document.getElementById('reportLoading').style.display = 'none';
+                loadingText.style.display = 'none';
                 document.getElementById('reportContent').style.display = 'block';
                 
                 if (data.error) {
                     document.getElementById('reportText').innerText = "⚠️ Error: " + data.error;
                 } else {
-                    // FILL STATS
                     document.getElementById('statTotal').innerText = data.stats.total;
                     document.getElementById('statAvg').innerText = data.stats.avg_questions;
-                    // FILL TEXT
                     document.getElementById('reportText').innerText = data.report;
                 }
 
             } catch (err) {
-                document.getElementById('reportLoading').style.display = 'none';
+                loadingText.style.display = 'none';
                 alert("Connection failed.");
             }
         }
