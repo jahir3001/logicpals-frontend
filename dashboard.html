@@ -14,20 +14,11 @@
     <style>
         body { font-family: 'Inter', sans-serif; background: #EFF6FF; padding: 20px; text-align: center; margin: 0; }
         
-        /* CARDS */
         .card { background: white; padding: 25px; border-radius: 16px; max-width: 500px; margin: 0 auto 20px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: left; }
         
-        /* TEXT */
         h1 { color: #2563EB; margin: 0 0 5px 0; font-size: 24px; text-align: center; }
         h2 { font-size: 16px; color: #111827; margin-bottom: 15px; border-bottom: 2px solid #F3F4F6; padding-bottom: 10px; }
         .school-tag { color: #6B7280; font-size: 14px; margin-bottom: 20px; display: block; text-align: center; }
-        
-        /* LEADERBOARD ITEMS */
-        .leader-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #F3F4F6; }
-        .leader-row:last-child { border-bottom: none; }
-        .rank { font-weight: 700; width: 30px; color: #2563EB; }
-        .school { flex: 1; font-weight: 600; color: #374151; font-size: 14px; }
-        .points { background: #DBEAFE; color: #1E40AF; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; }
         
         /* BUTTONS */
         .btn { display: block; width: 100%; background: #2563EB; color: white; padding: 16px; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; text-decoration: none; text-align: center; }
@@ -36,11 +27,27 @@
         
         .logout { color: #9CA3AF; font-size: 14px; margin-top: 20px; cursor: pointer; text-decoration: underline; text-align: center; display: block; }
 
-        /* --- REPORT MODAL (New!) --- */
+        /* LEADERBOARD */
+        .leader-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #F3F4F6; }
+        .leader-row:last-child { border-bottom: none; }
+        .rank { font-weight: 700; width: 30px; color: #2563EB; }
+        .school { flex: 1; font-weight: 600; color: #374151; font-size: 14px; }
+        .points { background: #DBEAFE; color: #1E40AF; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; }
+
+        /* --- REPORT MODAL (Upgraded) --- */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
-        .modal-box { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 16px; position: relative; text-align: left; }
+        .modal-box { background: white; width: 95%; max-width: 450px; padding: 25px; border-radius: 16px; position: relative; text-align: left; max-height: 80vh; overflow-y: auto; }
         .close-modal { position: absolute; top: 15px; right: 15px; font-size: 24px; cursor: pointer; color: #9CA3AF; }
-        .report-content { font-size: 15px; color: #374151; line-height: 1.6; margin-top: 15px; white-space: pre-wrap; }
+        
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: #F8FAFC; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #E2E8F0; }
+        .stat-val { font-size: 24px; font-weight: 800; color: #2563EB; display: block; margin-bottom: 5px; }
+        .stat-label { font-size: 12px; color: #64748B; font-weight: 600; text-transform: uppercase; }
+        
+        .report-section-title { font-size: 14px; font-weight: 700; color: #1E293B; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .report-text { font-size: 15px; color: #475569; line-height: 1.6; background: #F0FDF4; padding: 15px; border-radius: 12px; border-left: 4px solid #10B981; }
+        
         .loading-spinner { border: 4px solid #F3F4F6; border-top: 4px solid #2563EB; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -50,18 +57,6 @@
     <div class="card">
         <h1 id="welcomeName">Loading...</h1>
         <span id="schoolName" class="school-tag">...</span>
-        
-        <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px;">
-            <div style="background: #F3F4F6; padding: 10px; border-radius: 8px; flex: 1; text-align: center;">
-                <div style="font-size: 12px; color: #6B7280;">LEVEL</div>
-                <div id="level" style="font-weight: 700; color: #374151;">-</div>
-            </div>
-            <div style="background: #F3F4F6; padding: 10px; border-radius: 8px; flex: 1; text-align: center;">
-                <div style="font-size: 12px; color: #6B7280;">SOLVED</div>
-                <div id="solvedCount" style="font-weight: 700; color: #374151;">0</div>
-            </div>
-        </div>
-
         <button onclick="startLearning()" class="btn">🚀 Solve a Mystery</button>
     </div>
 
@@ -73,9 +68,9 @@
     </div>
 
     <div class="card">
-        <h2>👨‍👩‍👧 Parent Insights</h2>
+        <h2>👨‍👩‍👧 Parent Dashboard</h2>
         <p style="font-size: 14px; color: #6B7280; margin-bottom: 15px;">
-            See how your child's critical thinking is developing compared to age benchmarks.
+            View analytics on your child's cognitive development.
         </p>
         <button class="btn btn-parent" onclick="viewReport()">📊 View Growth Report</button>
     </div>
@@ -85,9 +80,25 @@
     <div id="reportModal" class="modal-overlay">
         <div class="modal-box">
             <div class="close-modal" onclick="closeReport()">×</div>
-            <h2 style="margin-top: 0; color: #2563EB;">🧠 Cognitive Growth Report</h2>
+            <h2 style="margin-top: 0; color: #1E293B;">🧠 Cognitive Growth</h2>
+            
             <div id="reportLoading" class="loading-spinner"></div>
-            <div id="reportText" class="report-content"></div>
+            
+            <div id="reportContent" style="display: none;">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-val" id="statTotal">-</span>
+                        <span class="stat-label">Problems Solved</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-val" id="statAvg">-</span>
+                        <span class="stat-label">Avg Questions</span>
+                    </div>
+                </div>
+
+                <div class="report-section-title">✨ PSYCHIATRIST INSIGHT</div>
+                <div id="reportText" class="report-text"></div>
+            </div>
         </div>
     </div>
 
@@ -96,17 +107,15 @@
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
         
         // -----------------------------------------------------------
-        //  TODO: PASTE YOUR KEY BELOW
+        //  TODO: PASTE YOUR KEY HERE
         // -----------------------------------------------------------
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         window.onload = async function() {
-            // 1. Check Login
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) { window.location.href = 'index.html'; return; }
 
-            // 2. Load Child Data
             const { data: child } = await supabaseClient
                 .from('children')
                 .select('*')
@@ -114,31 +123,25 @@
                 .single();
 
             if (child) {
-                currentChildId = child.id; // SAVE FOR REPORT
-                
+                currentChildId = child.id;
                 document.getElementById('welcomeName').innerText = "Hi, " + child.name + "! 👋";
                 document.getElementById('schoolName').innerText = child.school_name || "LogicPals Student";
-                document.getElementById('level').innerText = child.difficulty_level.toUpperCase();
-                document.getElementById('solvedCount').innerText = child.total_problems_solved || 0;
                 
                 localStorage.setItem('activeChildAge', child.age_category);
                 localStorage.setItem('activeChildName', child.name); 
             }
-
             loadLeaderboard();
         };
 
-        // --- NEW: GENERATE REPORT ---
+        // --- GENERATE REPORT (Updated) ---
         async function viewReport() {
             if (!currentChildId) return alert("Child profile not loaded yet.");
             
-            // Show Modal
             document.getElementById('reportModal').style.display = 'flex';
             document.getElementById('reportLoading').style.display = 'block';
-            document.getElementById('reportText').innerText = "";
+            document.getElementById('reportContent').style.display = 'none';
 
             try {
-                // Call the "Psychiatrist" Backend
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/parent-report', {
                     method: 'POST',
                     headers: { 
@@ -151,22 +154,25 @@
                 const data = await response.json();
                 
                 document.getElementById('reportLoading').style.display = 'none';
+                document.getElementById('reportContent').style.display = 'block';
                 
                 if (data.error) {
                     document.getElementById('reportText').innerText = "⚠️ Error: " + data.error;
                 } else {
-                    document.getElementById('reportText').innerText = data.report || "No recent activity to analyze. Ask your child to solve a problem first!";
+                    // FILL STATS
+                    document.getElementById('statTotal').innerText = data.stats.total;
+                    document.getElementById('statAvg').innerText = data.stats.avg_questions;
+                    // FILL TEXT
+                    document.getElementById('reportText').innerText = data.report;
                 }
 
             } catch (err) {
                 document.getElementById('reportLoading').style.display = 'none';
-                document.getElementById('reportText').innerText = "⚠️ Connection failed.";
+                alert("Connection failed.");
             }
         }
 
-        function closeReport() {
-            document.getElementById('reportModal').style.display = 'none';
-        }
+        function closeReport() { document.getElementById('reportModal').style.display = 'none'; }
 
         async function loadLeaderboard() {
             const { data: schools } = await supabaseClient.from('school_leaderboard').select('*').limit(5);
