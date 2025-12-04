@@ -1,7 +1,7 @@
 // LogicPals PWA Service Worker (Smart Version)
 
 // 1. VERSION CONTROL: Change this string every time you update your code!
-const CACHE_NAME = 'logicpals-v6'; 
+const CACHE_NAME = 'logicpals-v7'; 
 
 const urlsToCache = [
   '/',
