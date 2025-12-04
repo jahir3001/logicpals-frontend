@@ -108,19 +108,19 @@
         };
 
         // --- 3. FETCH SMART PROBLEM (Updated) ---
+        // --- 3. FETCH SMART PROBLEM (DYNAMIC) ---
         async function loadProblem() {
-            // 1. Get the Child's Age Category (Saved by Dashboard)
-            // If they came directly without dashboard, default to '8-9'
-            const userAgeCategory = localStorage.getItem('activeChildAge') || '8-9';
+            // 1. Get Child's Info (Saved by Dashboard)
+            const userAge = localStorage.getItem('activeChildAge') || '8-9';
             const userName = localStorage.getItem('activeChildName') || 'Friend';
+            
+            console.log("Fetching problems for age:", userAge);
 
-            console.log("Loading problem for:", userAgeCategory);
-
-            // 2. Fetch ALL problems for this age group
+            // 2. Fetch ALL problems for this age category
             const { data, error } = await supabaseClient
                 .from('problems')
                 .select('*')
-                .eq('age_category', userAgeCategory); // Filter by Age!
+                .eq('age_category', userAge); 
 
             if (error) {
                 console.error('Error fetching problem:', error);
@@ -128,17 +128,17 @@
                 return;
             }
 
+            // 3. Handle Empty Content
             if (!data || data.length === 0) {
-                addMessage('ai', `Hi ${userName}! I don't have any problems for age ${userAgeCategory} yet. Tell your parent to upload some!`);
+                addMessage('ai', `Hi ${userName}! I looked for problems for age <strong>${userAge}</strong>, but I couldn't find any yet. <br><br>Tell your parent to run the "Content Factory" SQL!`);
                 return;
             }
 
-            // 3. Pick a RANDOM problem from the list
+            // 4. Pick a RANDOM problem
             const randomProblem = data[Math.floor(Math.random() * data.length)];
 
+            // 5. Display It
             chatContainer.innerHTML = ''; 
-            
-            // 4. Personalized Welcome Message
             const welcomeMessage = `
                 Hi ${userName}! 👋 <br>
                 Here is a challenge for you:<br><br>
@@ -148,7 +148,7 @@
             `;
             addMessage('ai', welcomeMessage);
             
-            // Save the current problem ID for the backend (Voice Tutor)
+            // 6. Save ID for the Voice Brain
             localStorage.setItem('currentProblemId', randomProblem.id);
         }
 
