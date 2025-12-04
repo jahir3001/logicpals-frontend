@@ -20,30 +20,7 @@
         .stat-box { background: #F3F4F6; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
         .btn { display: block; width: 100%; background: #2563EB; color: white; padding: 16px; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; text-decoration: none; margin-bottom: 15px; }
         .btn:hover { background: #1D4ED8; }
-        .btn-outline { background: white; color: #2563EB; border: 2px solid #2563EB; }
         .logout { color: #6B7280; font-size: 14px; margin-top: 20px; cursor: pointer; text-decoration: underline; }
-
-        /* --- INSTALL POPUP STYLES --- */
-        .install-modal {
-            display: none; /* Hidden by default */
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: white; padding: 25px;
-            border-top-left-radius: 20px; border-top-right-radius: 20px;
-            box-shadow: 0 -5px 25px rgba(0,0,0,0.15);
-            z-index: 1000; text-align: center;
-            animation: slideUp 0.5s ease-out;
-        }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        
-        .install-title { font-weight: 700; font-size: 18px; margin-bottom: 10px; }
-        .install-text { font-size: 14px; color: #6B7280; margin-bottom: 20px; }
-        .install-btn { background: #10B981; color: white; width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 600; font-size: 16px; cursor: pointer; }
-        .close-install { position: absolute; top: 15px; right: 15px; font-size: 20px; color: #9CA3AF; cursor: pointer; }
-        
-        /* iOS Instruction Box */
-        .ios-instructions { display: none; background: #F3F4F6; padding: 15px; border-radius: 10px; margin-top: 10px; font-size: 13px; text-align: left; }
-        .ios-step { margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
-        .ios-icon { font-size: 18px; }
     </style>
 </head>
 <body>
@@ -60,20 +37,6 @@
         <div class="logout" onclick="logout()">Log Out</div>
     </div>
 
-    <div id="installModal" class="install-modal">
-        <div class="close-install" onclick="closeModal()">×</div>
-        <div class="install-title">Install LogicPals App 📱</div>
-        <p class="install-text">Install the app for a better full-screen experience and faster loading!</p>
-        
-        <button id="installBtn" class="install-btn" onclick="triggerInstall()">Install Now</button>
-        
-        <div id="ios content" class="ios-instructions">
-            <div class="ios-step"><span class="ios-icon">1️⃣</span> Tap the <strong>Share</strong> button below</div>
-            <div class="ios-step"><span class="ios-icon">2️⃣</span> Scroll down & tap <strong>Add to Home Screen</strong></div>
-            <div class="ios-step"><span class="ios-icon">3️⃣</span> Click <strong>Add</strong></div>
-        </div>
-    </div>
-
     <script>
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
         // -----------------------------------------------------------
@@ -82,8 +45,8 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // --- AUTH LOGIC ---
         window.onload = async function() {
+            // 1. Check Login
             const { data: { session } } = await supabaseClient.auth.getSession();
             
             if (!session) {
@@ -91,6 +54,7 @@
                 return;
             }
 
+            // 2. Load Child Data
             const { data: child, error } = await supabaseClient
                 .from('children')
                 .select('*')
@@ -102,65 +66,19 @@
                 document.getElementById('schoolName').innerText = child.school_name || "LogicPals Student";
                 document.getElementById('level').innerText = "Age " + child.age + " (" + child.difficulty_level + ")";
                 
+                // 3. SAVE DATA FOR LEARN.HTML (Critical Step)
                 localStorage.setItem('activeChildAge', child.age_category);
                 localStorage.setItem('activeChildName', child.name); 
             }
-
-            // Check if we should show Install Prompt
-            checkInstallStatus();
         };
 
-        function startLearning() { window.location.href = 'learn.html'; }
-        async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
-
-        // --- INSTALL APP LOGIC ---
-        let deferredPrompt;
-        const modal = document.getElementById('installModal');
-        const installBtn = document.getElementById('installBtn');
-        const iosContent = document.getElementById('ios content');
-
-        // 1. Capture the Android/Desktop Install Event
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e; // Save event for later
-            showModal(); // Show our popup
-        });
-
-        function checkInstallStatus() {
-            // If already installed (Standalone mode), don't show
-            if (window.matchMedia('(display-mode: standalone)').matches) {
-                return; 
-            }
-
-            // If iOS, show special instructions because "beforeinstallprompt" doesn't work on iPhone
-            const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-            if (isIOS) {
-                installBtn.style.display = 'none'; // Hide button
-                iosContent.style.display = 'block'; // Show instructions
-                showModal();
-            }
+        function startLearning() {
+            window.location.href = 'learn.html';
         }
 
-        function showModal() {
-            // Show after 2 seconds so it's not annoying immediately
-            setTimeout(() => {
-                modal.style.display = 'block';
-            }, 2000);
-        }
-
-        function closeModal() {
-            modal.style.display = 'none';
-        }
-
-        async function triggerInstall() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt(); // Show native browser prompt
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    deferredPrompt = null;
-                    closeModal();
-                }
-            }
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            window.location.href = 'index.html';
         }
     </script>
 </body>
