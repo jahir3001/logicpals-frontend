@@ -1,7 +1,7 @@
 // LogicPals PWA Service Worker (Full Offline Support)
 
 // 1. VERSION CONTROL: Increment this (v8, v9...) whenever you update code!
-const CACHE_NAME = 'logicpals-v9'; 
+const CACHE_NAME = 'logicpals-v10'; 
 
 // 2. FILES TO CACHE: The browser will save these for offline use
 const urlsToCache = [
