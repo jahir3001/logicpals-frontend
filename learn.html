@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor v9.0 (Offline Backup)</title>
+    <title>LogicPals Tutor v10.0 (Crash Proof)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -56,7 +56,7 @@
     </header>
 
     <div class="chat-container" id="chatContainer">
-        <div class="message ai" id="statusMsg">Connecting to LogicPals... 📡</div>
+        <div class="message ai" id="statusMsg">Connecting to Tutor... 📡</div>
     </div>
 
     <div class="input-area">
@@ -73,7 +73,9 @@
         let supabaseClient, mediaRecorder, audioChunks = [], isRecording = false;
         let isProcessing = false; 
         
+        // This log will STORE the conversation
         let conversationLog = []; 
+        
         let currentChildId = null;
         let currentProblemId = null;
         let currentHints = [];
@@ -82,6 +84,7 @@
         let totalSeconds = 0;
 
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
+        // --- YOUR API KEY ---
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; 
 
         const micBtn = document.getElementById('micBtn');
@@ -89,7 +92,7 @@
         const timerEl = document.getElementById('timer');
         const textInput = document.getElementById('textInput');
 
-        // --- OFFLINE BACKUP PUZZLES ---
+        // --- OFFLINE BACKUP (Prevents Loading Stuck) ---
         const offlineProblems = [
             { id: 999, text: "A farmer has 17 sheep and all but 9 die. How many are left?", hints: ["Read the number carefully.", "It says 'all but 9'."] },
             { id: 998, text: "I am tall when I am young, and I am short when I am old. What am I?", hints: ["You use me to see in the dark.", "I melt."] }
@@ -97,32 +100,29 @@
 
         // --- INITIALIZATION ---
         window.onload = async function() {
-            updateStatus("Checking internet connection... 📶");
+            updateStatus("Checking connection... 📶");
             
             if (window.supabase) {
                 supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
                 
                 try {
-                    // 1. Check Session
+                    // Check Session
                     const { data: { session } } = await supabaseClient.auth.getSession();
                     if(!session) { window.location.href = 'index.html'; return; }
 
-                    // 2. Get Child Profile
-                    updateStatus("Found user! Getting profile... 👤");
+                    // Get Profile
                     const { data: child } = await supabaseClient.from('children').select('id').eq('parent_id', session.user.id).single();
                     if(child) currentChildId = child.id;
 
-                    // 3. Load Problem (With Timeout)
+                    // Get Problem (with Timeout Safety)
                     updateStatus("Downloading puzzle... 🧩");
                     
-                    // Force a timeout race: If DB takes > 5 seconds, use backup.
                     const problemPromise = loadProblemFromDB();
                     const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 5000, 'TIMEOUT'));
                     
                     const result = await Promise.race([problemPromise, timeoutPromise]);
                     
                     if (result === 'TIMEOUT') {
-                        console.warn("Database too slow. Using offline backup.");
                         loadOfflineProblem();
                     }
 
@@ -135,7 +135,7 @@
                     if (e.key === 'Enter') sendText();
                 });
             } else {
-                alert("Database script failed to load.");
+                alert("Database script failed. Reloading...");
             }
         };
 
@@ -165,13 +165,13 @@
             currentHints = hints || ["Think carefully!"];
             hintIndex = 0;
             
-            chatContainer.innerHTML = ''; // Clear loading message
+            chatContainer.innerHTML = ''; 
             
             const intro = `Hi! Here is your mystery:<br><br><strong>"${text}"</strong>`;
             addMessage('ai', intro);
 
-            // SAVE PROBLEM TO MEMORY
-            conversationLog.push({ role: 'system', content: `Current Logic Problem to solve: ${text}` });
+            // SAVE TO HISTORY (Clean)
+            conversationLog.push({ role: 'system', content: `Problem: ${text}` });
             conversationLog.push({ role: 'ai', content: intro });
             startTimer();
         }
@@ -190,7 +190,7 @@
             if (hintIndex < currentHints.length) {
                 const hintText = currentHints[hintIndex];
                 addMessage('hint', `💡 HINT: ${hintText}`);
-                conversationLog.push({ role: 'system', content: `User saw hint: ${hintText}` });
+                conversationLog.push({ role: 'system', content: `Hint: ${hintText}` });
                 hintIndex++;
             } else { 
                 addMessage('hint', "💡 Try explaining what you know so far."); 
@@ -200,33 +200,57 @@
         async function finishSession() {
             clearInterval(timerInterval);
             if (!currentChildId || !currentProblemId) { window.location.href = 'dashboard.html'; return; }
+            
             const btn = document.querySelector('.finish-btn'); 
             btn.innerText = "Saving... 💾";
             confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
             
             try {
+                // We use SAFE history for saving too
+                const safeLog = getSafeHistory();
                 await supabaseClient.from('attempts').insert([{ 
                     child_id: currentChildId, 
                     problem_id: currentProblemId, 
                     solved_correctly: true, 
-                    ai_conversation: conversationLog 
+                    ai_conversation: safeLog 
                 }]);
-            } catch(e) { console.log("Could not save attempt (offline mode)"); }
+            } catch(e) { console.log("Save error", e); }
             
             setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
         }
 
-        // --- CLEAN HISTORY (Prevents Crashes) ---
+        // --- 🛡️ CRITICAL FIX: AGGRESSIVE CLEANER 🛡️ ---
         function getSafeHistory() {
+            // 1. Always keep the first message (Problem Description)
             const firstMsg = conversationLog[0];
-            const recent = conversationLog.slice(-4);
+
+            // 2. Take only the last 3 messages (Keep it short!)
+            const recent = conversationLog.slice(-3);
+
+            // 3. Combine them
             let historyToSend = [firstMsg, ...recent];
-            if (conversationLog.length <= 5) historyToSend = conversationLog;
             
-            return historyToSend.map(msg => ({
-                role: msg.role,
-                content: msg.content // Only send text!
-            }));
+            // 4. If total conversation is short, just use it all
+            if (conversationLog.length <= 4) {
+                historyToSend = conversationLog;
+            }
+
+            // 5. THE MAGIC: Cut strings that are too long!
+            // This prevents "Stack Overflow" errors.
+            return historyToSend.map(msg => {
+                let cleanContent = msg.content || "";
+                
+                // If text is huge (over 200 chars), trim it. 
+                // This stops the memory crash.
+                if (cleanContent.length > 200) {
+                    cleanContent = cleanContent.substring(0, 200) + "...";
+                }
+                
+                return {
+                    role: msg.role,
+                    content: cleanContent
+                };
+            });
         }
 
         // --- VOICE LOGIC ---
@@ -243,7 +267,7 @@
                     isRecording = true;
                     micBtn.classList.add('recording');
                     micBtn.innerHTML = "⏹️"; 
-                } catch (err) { alert("Mic access denied."); }
+                } catch (err) { alert("Mic denied."); }
             } else {
                 mediaRecorder.stop();
                 isRecording = false;
@@ -261,6 +285,8 @@
             try {
                 const formData = new FormData();
                 formData.append('file', audioBlob);
+                
+                // USE AGGRESSIVE CLEANING
                 const safeHistory = getSafeHistory();
                 formData.append('history', JSON.stringify(safeHistory));
 
@@ -306,6 +332,7 @@
             addMessage('ai', `<span id="${tempId}">Thinking... 🤔</span>`);
 
             try {
+                // USE AGGRESSIVE CLEANING
                 const safeHistory = getSafeHistory();
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
@@ -343,6 +370,7 @@
             }
         }
 
+        // --- HELPERS ---
         function addMessage(sender, text) {
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('message', sender);
