@@ -261,8 +261,7 @@
 
             } catch (error) { addMessage('ai', "⚠️ Connection failed."); }
         }
-
-        // --- TEXT CHAT LOGIC (Now Connected to Backend) ---
+// --- TEXT CHAT LOGIC (Refined for Safety) ---
         async function sendText() {
             const input = document.getElementById('textInput');
             const text = input.value;
@@ -271,7 +270,7 @@
             // 1. Show User Message
             conversationLog.push({ role: 'user', content: text });
             addMessage('user', text);
-            input.value = ""; // Clear input
+            input.value = ""; 
             
             // 2. Create Temporary "Thinking..." bubble
             const tempId = "temp-" + Date.now();
@@ -283,7 +282,7 @@
                     method: 'POST',
                     headers: { 
                         'Authorization': 'Bearer ' + supabaseKey,
-                        'Content-Type': 'application/json' // <--- Tells backend this is Text
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ text: text })
                 });
@@ -300,15 +299,20 @@
                 conversationLog.push({ role: 'ai', content: data.aiText });
                 addMessage('ai', data.aiText);
                 
-                // 6. Play Audio (Optional for text chat, but nice to have!)
-                const audio = new Audio("data:audio/mp3;base64," + data.audioContent);
-                audio.play().catch(e => console.log("Audio blocked:", e));
+                // 6. Play Audio (Using a dedicated function for stability)
+                playAudioFromBase64(data.audioContent);
 
             } catch (error) {
                 const tempEl = document.getElementById(tempId);
                 if(tempEl) tempEl.parentElement.remove();
-                addMessage('ai', "⚠️ Connection failed.");
+                addMessage('ai', "⚠️ Connection failed: " + error.message);
             }
+        }
+        
+        // --- DEDICATED AUDIO PLAYBACK FUNCTION ---
+        function playAudioFromBase64(base64String) {
+            const audio = new Audio("data:audio/mp3;base64," + base64String);
+            audio.play().catch(e => console.error("Audio playback error:", e));
         }
 
         function addMessage(sender, text) {
