@@ -188,8 +188,10 @@
             try {
                 const formData = new FormData();
                 formData.append('file', audioBlob);
-                // INTELLIGENCE FIX: We stringify history for FormData
-                formData.append('history', JSON.stringify(conversationLog));
+                
+                // MEMORY FIX: Only send the last 6 messages to prevent crashes
+                const recentHistory = conversationLog.slice(-6);
+                formData.append('history', JSON.stringify(recentHistory));
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
@@ -201,7 +203,7 @@
                 document.getElementById(tempId)?.parentElement.remove();
 
                 if (data.error) { 
-                    addMessage('ai', "⚠️ " + data.error); 
+                    addMessage('ai', "⚠️ Connection failed: " + data.error); 
                     return; 
                 }
 
@@ -214,7 +216,7 @@
 
             } catch (error) {
                 document.getElementById(tempId)?.parentElement.remove();
-                addMessage('ai', "⚠️ Connection failed.");
+                addMessage('ai', "⚠️ Connection failed: Could not reach tutor.");
             } finally {
                 isProcessing = false;
             }
@@ -225,6 +227,8 @@
             if(!text || isProcessing) return; 
             
             isProcessing = true; 
+            
+            // 1. Add current user message to log
             conversationLog.push({ role: 'user', content: text });
             addMessage('user', text);
             textInput.value = ""; 
@@ -233,18 +237,20 @@
             addMessage('ai', `<span id="${tempId}">Thinking... 🤔</span>`);
 
             try {
+                // MEMORY FIX: Only send the last 6 messages to prevent crashes
+                const recentHistory = conversationLog.slice(-6); 
+
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
                     headers: { 'Authorization': 'Bearer ' + supabaseKey, 'Content-Type': 'application/json' },
-                    // INTELLIGENCE FIX: We now send 'history'
-                    body: JSON.stringify({ text: text, history: conversationLog })
+                    body: JSON.stringify({ text: text, history: recentHistory }) // Send clean history
                 });
 
                 const data = await response.json();
                 document.getElementById(tempId)?.parentElement.remove();
 
                 if (data.error) { 
-                    addMessage('ai', "⚠️ " + data.error); 
+                    addMessage('ai', "⚠️ Connection failed: " + data.error); 
                     return; 
                 }
 
@@ -254,7 +260,7 @@
 
             } catch (error) {
                 document.getElementById(tempId)?.parentElement.remove();
-                addMessage('ai', "⚠️ Connection failed.");
+                addMessage('ai', "⚠️ Connection failed: Could not reach tutor.");
             } finally {
                 isProcessing = false; 
             }
