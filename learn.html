@@ -3,33 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor v4.0 (Memory)</title>
+    <title>LogicPals Tutor v5.0 (Full Socratic)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
         :root { --primary: #2563EB; --bg: #EFF6FF; --text: #111827; --user-bg: #2563EB; --mic-red: #EF4444; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg); height: 100vh; display: flex; flex-direction: column; }
 
-        header { background: white; padding: 16px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
-        .logo { font-weight: 700; color: var(--primary); font-size: 20px; }
+        /* HEADER */
+        header { background: white; padding: 12px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .logo { font-weight: 800; color: var(--primary); font-size: 18px; display: flex; align-items: center; gap: 8px; }
         
-        /* New Finish Button Style */
-        .finish-btn { background: white; border: 2px solid #10B981; color: #10B981; font-weight: 600; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-size: 14px; cursor: pointer; }
+        .header-controls { display: flex; align-items: center; gap: 15px; }
+        
+        .timer-badge { background: #FEF3C7; color: #D97706; font-weight: 700; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-family: monospace; display: flex; align-items: center; gap: 5px; }
+        
+        .finish-btn { background: white; border: 2px solid #10B981; color: #10B981; font-weight: 700; padding: 6px 14px; border-radius: 20px; text-decoration: none; font-size: 13px; cursor: pointer; transition: 0.2s; }
         .finish-btn:hover { background: #10B981; color: white; }
 
-        .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto; width: 100%; scroll-behavior: smooth; }
-        .message { max-width: 80%; padding: 16px; border-radius: 12px; font-size: 16px; line-height: 1.5; }
-        .message.ai { align-self: flex-start; background: white; color: var(--text); border-bottom-left-radius: 2px; }
-        .message.user { align-self: flex-end; background: var(--user-bg); color: white; border-bottom-right-radius: 2px; }
+        /* CHAT AREA (The Core) */
+        .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; max-width: 800px; margin: 0 auto; width: 100%; scroll-behavior: smooth; background: #EFF6FF; }
+        
+        .message { max-width: 85%; padding: 16px; border-radius: 16px; font-size: 16px; line-height: 1.6; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.02); animation: popIn 0.3s ease-out; }
+        
+        .message.ai { align-self: flex-start; background: white; color: var(--text); border-bottom-left-radius: 4px; border: 1px solid #E5E7EB; }
+        .message.user { align-self: flex-end; background: var(--user-bg); color: white; border-bottom-right-radius: 4px; }
+        .message.hint { align-self: center; background: #FFFBEB; color: #B45309; border: 1px solid #FCD34D; font-size: 14px; text-align: center; width: 100%; max-width: 100%; }
 
-        .input-area { background: white; padding: 20px; border-top: 1px solid #E5E7EB; }
-        .input-wrapper { max-width: 800px; margin: 0 auto; display: flex; gap: 12px; align-items: center; }
-        input { flex: 1; padding: 16px; border: 2px solid #E5E7EB; border-radius: 50px; font-size: 16px; outline: none; }
-        .mic-btn { width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--bg); font-size: 24px; cursor: pointer; }
+        @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* INPUT AREA */
+        .input-area { background: white; padding: 15px 20px; border-top: 1px solid #E5E7EB; }
+        .input-wrapper { max-width: 800px; margin: 0 auto; display: flex; gap: 10px; align-items: center; }
+        
+        /* Hint Button */
+        .hint-btn { background: #FBBF24; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 0 #D97706; transition: 0.1s; }
+        .hint-btn:active { transform: translateY(3px); box-shadow: none; }
+
+        input { flex: 1; padding: 14px; border: 2px solid #E5E7EB; border-radius: 50px; font-size: 16px; outline: none; transition: 0.2s; }
+        input:focus { border-color: var(--primary); }
+        
+        .mic-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: #F3F4F6; font-size: 22px; cursor: pointer; transition: 0.2s; color: #4B5563; }
         .mic-btn.recording { background: var(--mic-red); color: white; animation: pulse 1.5s infinite; }
-        .send-btn { width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 20px; cursor: pointer; }
+        
+        .send-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 20px; cursor: pointer; box-shadow: 0 3px 0 #1D4ED8; }
+        .send-btn:active { transform: translateY(3px); box-shadow: none; }
         
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
     </style>
@@ -37,17 +58,22 @@
 <body>
 
     <header>
-        <div class="logo">LogicPals</div>
-        <button onclick="finishSession()" class="finish-btn">✅ I'm Done</button>
+        <div class="logo">🧠 LogicPals</div>
+        <div class="header-controls">
+            <div class="timer-badge">⏱️ <span id="timer">00:00</span></div>
+            <button onclick="finishSession()" class="finish-btn">✅ Done</button>
+        </div>
     </header>
 
     <div class="chat-container" id="chatContainer">
-        <div class="message ai">Loading... 🕵️</div>
+        <div class="message ai">Loading your mystery... 🕵️</div>
     </div>
 
     <div class="input-area">
         <div class="input-wrapper">
-            <input type="text" id="textInput" placeholder="Type answer...">
+            <button class="hint-btn" onclick="showHint()" title="Get a Hint">💡</button>
+            
+            <input type="text" id="textInput" placeholder="Type or speak...">
             <button class="mic-btn" id="micBtn" onclick="toggleRecording()">🎤</button>
             <button class="send-btn" onclick="sendText()">➤</button>
         </div>
@@ -56,10 +82,16 @@
     <script>
         let supabaseClient, mediaRecorder, audioChunks = [], isRecording = false;
         
-        // MEMORY: We store the chat here
+        // SESSION STATE
         let conversationLog = []; 
         let currentChildId = null;
         let currentProblemId = null;
+        let currentHints = []; // Store hints for this problem
+        let hintIndex = 0; // Track which hint to show next
+        
+        // TIMER STATE
+        let timerInterval;
+        let totalSeconds = 0;
 
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
         // -----------------------------------------------------------
@@ -69,16 +101,15 @@
 
         const micBtn = document.getElementById('micBtn');
         const chatContainer = document.getElementById('chatContainer');
+        const timerEl = document.getElementById('timer');
 
         window.onload = async function() {
             if (window.supabase) {
                 supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
                 
-                // Get User ID for saving data later
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if(!session) { window.location.href = 'index.html'; return; }
                 
-                // Get Child ID
                 const { data: child } = await supabaseClient
                     .from('children')
                     .select('id')
@@ -90,6 +121,18 @@
                 loadProblem();
             }
         };
+
+        // --- 1. START TIMER ---
+        function startTimer() {
+            totalSeconds = 0;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                totalSeconds++;
+                const mins = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+                const secs = (totalSeconds % 60).toString().padStart(2, '0');
+                timerEl.innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
 
         async function loadProblem() {
             const userAge = localStorage.getItem('activeChildAge') || '8-9';
@@ -104,47 +147,66 @@
             }
 
             const randomProblem = data[Math.floor(Math.random() * data.length)];
-            currentProblemId = randomProblem.id; // Save for database
+            currentProblemId = randomProblem.id;
+            
+            // LOAD HINTS from DB
+            currentHints = randomProblem.hints || ["Think about what you know.", "Break it down into smaller steps."];
+            hintIndex = 0;
 
             chatContainer.innerHTML = ''; 
             const intro = `Hi! Here is your mystery:<br><br><strong>"${randomProblem.problem_text}"</strong>`;
             addMessage('ai', intro);
             
-            // Add to Memory
             conversationLog.push({ role: 'system', content: `Problem: ${randomProblem.problem_text}` });
             conversationLog.push({ role: 'ai', content: intro });
+
+            startTimer(); // Start the clock!
         }
 
-        // --- FINISH & SAVE FUNCTION (The New Part) ---
+        // --- 2. SHOW HINT LOGIC ---
+        function showHint() {
+            if (hintIndex < currentHints.length) {
+                const hintText = currentHints[hintIndex];
+                addMessage('hint', `💡 HINT: ${hintText}`);
+                
+                // Add to memory so AI knows the user saw a hint
+                conversationLog.push({ role: 'system', content: `User saw hint: ${hintText}` });
+                
+                hintIndex++;
+            } else {
+                addMessage('hint', "💡 You've used all the specific hints! Try explaining what you know so far.");
+            }
+        }
+
         async function finishSession() {
+            clearInterval(timerInterval); // Stop timer
+            
             if (!currentChildId || !currentProblemId) {
                 window.location.href = 'dashboard.html';
                 return;
             }
 
             const btn = document.querySelector('.finish-btn');
-            btn.innerText = "Saving...";
+            btn.innerText = "Saving... 💾";
             
-            // 1. Save to Database
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+
             const { error } = await supabaseClient
                 .from('attempts')
                 .insert([{
                     child_id: currentChildId,
                     problem_id: currentProblemId,
-                    solved_correctly: true, // We assume true for MVP, later AI decides
-                    ai_conversation: conversationLog // Saving the Chat!
+                    solved_correctly: true,
+                    ai_conversation: conversationLog,
+                    // Note: We could save 'time_spent: totalSeconds' here if we add that column later
                 }]);
 
-            if (error) {
-                console.error("Save failed:", error);
-                alert("Could not save progress.");
-            } else {
-                // 2. Update Total Score (Optional but good)
-                // For now, just go to Dashboard
-                window.location.href = 'dashboard.html';
-            }
+            if (error) console.error("Save failed:", error);
+
+            setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
         }
 
+        // --- VOICE & CHAT LOGIC ---
         async function toggleRecording() {
             if (!isRecording) {
                 try {
@@ -183,13 +245,11 @@
 
                 const data = await response.json();
                 
-                // Cleanup
                 const tempEl = document.getElementById(tempId);
                 if(tempEl) tempEl.parentElement.remove();
 
                 if (data.error) { addMessage('ai', "⚠️ Error."); return; }
 
-                // Add to Memory
                 conversationLog.push({ role: 'user', content: data.userTranscript });
                 conversationLog.push({ role: 'ai', content: data.aiText });
 
@@ -207,12 +267,13 @@
             const text = input.value;
             if(!text) return;
             
-            // Add to Memory
             conversationLog.push({ role: 'user', content: text });
-            
             addMessage('user', text);
             input.value = "";
-            // Note: Text backend connection not implemented in MVP, just voice.
+            
+            // Ideally we send text to backend here too, but for MVP voice is key.
+            // If you want text response, we need to update the Edge Function to handle text-only input.
+            // For now, this just logs it to the chat.
         }
 
         function addMessage(sender, text) {
@@ -221,7 +282,8 @@
             if (text.includes('<')) msgDiv.innerHTML = text;
             else msgDiv.innerText = text;
             chatContainer.appendChild(msgDiv);
-            requestAnimationFrame(() => chatContainer.scrollTop = chatContainer.scrollHeight);
+            // Scroll to bottom
+            setTimeout(() => { chatContainer.scrollTop = chatContainer.scrollHeight; }, 100);
         }
     </script>
 </body>
