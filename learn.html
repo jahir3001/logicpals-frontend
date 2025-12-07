@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor v10.0 (Crash Proof)</title>
+    <title>LogicPals Tutor v11.0 (Lite Mode)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -84,7 +84,6 @@
         let totalSeconds = 0;
 
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
-        // --- YOUR API KEY ---
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; 
 
         const micBtn = document.getElementById('micBtn');
@@ -92,7 +91,7 @@
         const timerEl = document.getElementById('timer');
         const textInput = document.getElementById('textInput');
 
-        // --- OFFLINE BACKUP (Prevents Loading Stuck) ---
+        // --- OFFLINE BACKUP PUZZLES ---
         const offlineProblems = [
             { id: 999, text: "A farmer has 17 sheep and all but 9 die. How many are left?", hints: ["Read the number carefully.", "It says 'all but 9'."] },
             { id: 998, text: "I am tall when I am young, and I am short when I am old. What am I?", hints: ["You use me to see in the dark.", "I melt."] }
@@ -106,20 +105,16 @@
                 supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
                 
                 try {
-                    // Check Session
                     const { data: { session } } = await supabaseClient.auth.getSession();
                     if(!session) { window.location.href = 'index.html'; return; }
 
-                    // Get Profile
                     const { data: child } = await supabaseClient.from('children').select('id').eq('parent_id', session.user.id).single();
                     if(child) currentChildId = child.id;
 
-                    // Get Problem (with Timeout Safety)
+                    // Load Problem with Timeout
                     updateStatus("Downloading puzzle... 🧩");
-                    
                     const problemPromise = loadProblemFromDB();
                     const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 5000, 'TIMEOUT'));
-                    
                     const result = await Promise.race([problemPromise, timeoutPromise]);
                     
                     if (result === 'TIMEOUT') {
@@ -170,7 +165,7 @@
             const intro = `Hi! Here is your mystery:<br><br><strong>"${text}"</strong>`;
             addMessage('ai', intro);
 
-            // SAVE TO HISTORY (Clean)
+            // SAVE TO HISTORY
             conversationLog.push({ role: 'system', content: `Problem: ${text}` });
             conversationLog.push({ role: 'ai', content: intro });
             startTimer();
@@ -200,57 +195,30 @@
         async function finishSession() {
             clearInterval(timerInterval);
             if (!currentChildId || !currentProblemId) { window.location.href = 'dashboard.html'; return; }
-            
             const btn = document.querySelector('.finish-btn'); 
             btn.innerText = "Saving... 💾";
             confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
             
             try {
-                // We use SAFE history for saving too
-                const safeLog = getSafeHistory();
                 await supabaseClient.from('attempts').insert([{ 
                     child_id: currentChildId, 
                     problem_id: currentProblemId, 
                     solved_correctly: true, 
-                    ai_conversation: safeLog 
+                    ai_conversation: conversationLog 
                 }]);
             } catch(e) { console.log("Save error", e); }
             
             setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
         }
 
-        // --- 🛡️ CRITICAL FIX: AGGRESSIVE CLEANER 🛡️ ---
-        function getSafeHistory() {
-            // 1. Always keep the first message (Problem Description)
-            const firstMsg = conversationLog[0];
-
-            // 2. Take only the last 3 messages (Keep it short!)
-            const recent = conversationLog.slice(-3);
-
-            // 3. Combine them
-            let historyToSend = [firstMsg, ...recent];
-            
-            // 4. If total conversation is short, just use it all
-            if (conversationLog.length <= 4) {
-                historyToSend = conversationLog;
+        // --- 🛡️ LITE MODE: TINY MEMORY 🛡️ ---
+        function getLiteHistory() {
+            // Only send the FIRST message (Problem) 
+            // We DROP the middle conversation to stop the server from crashing.
+            if (conversationLog.length > 0) {
+                return [conversationLog[0]]; 
             }
-
-            // 5. THE MAGIC: Cut strings that are too long!
-            // This prevents "Stack Overflow" errors.
-            return historyToSend.map(msg => {
-                let cleanContent = msg.content || "";
-                
-                // If text is huge (over 200 chars), trim it. 
-                // This stops the memory crash.
-                if (cleanContent.length > 300) {
-                    cleanContent = cleanContent.substring(0, 300) + "...(truncated)";
-                }
-                
-                return {
-                    role: msg.role,
-                    content: cleanContent
-                };
-            });
+            return [];
         }
 
         // --- VOICE LOGIC ---
@@ -286,9 +254,11 @@
                 const formData = new FormData();
                 formData.append('file', audioBlob);
                 
-                // USE AGGRESSIVE CLEANING
-                const safeHistory = getSafeHistory();
-                formData.append('history', JSON.stringify(safeHistory));
+                // USE LITE HISTORY
+                const liteHistory = getLiteHistory();
+                formData.append('history', JSON.stringify(liteHistory));
+                // Add instruction to be brief
+                formData.append('instructions', 'Reply in 2 sentences max.');
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
@@ -332,8 +302,11 @@
             addMessage('ai', `<span id="${tempId}">Thinking... 🤔</span>`);
 
             try {
-                // USE AGGRESSIVE CLEANING
-                const safeHistory = getSafeHistory();
+                // USE LITE HISTORY
+                const liteHistory = getLiteHistory();
+
+                // FORCE SHORT ANSWER to prevent crash
+                const prompt = text + " (Please explain briefly in 2 sentences)";
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
@@ -341,7 +314,7 @@
                         'Authorization': 'Bearer ' + supabaseKey, 
                         'Content-Type': 'application/json' 
                     },
-                    body: JSON.stringify({ text: text, history: safeHistory }) 
+                    body: JSON.stringify({ text: prompt, history: liteHistory }) 
                 });
 
                 if (!response.ok) throw new Error(`Server Error: ${response.status}`);
@@ -363,7 +336,7 @@
             } catch (error) {
                 console.error("Text Error:", error);
                 document.getElementById(tempId)?.parentElement.remove();
-                addMessage('ai', "⚠️ Connection failed: Could not reach tutor.");
+                addMessage('ai', "⚠️ Connection failed: The tutor is overwhelmed. Try shorter questions.");
             } finally {
                 isProcessing = false; 
                 textInput.focus();
@@ -376,16 +349,4 @@
             msgDiv.classList.add('message', sender);
             if (text.includes('<')) msgDiv.innerHTML = text; else msgDiv.innerText = text;
             chatContainer.appendChild(msgDiv);
-            setTimeout(() => { chatContainer.scrollTop = chatContainer.scrollHeight; }, 100);
-        }
-
-        function playAudioFromBase64(base64String) {
-            if (!base64String) return;
-            try {
-                const audio = new Audio("data:audio/mp3;base64," + base64String);
-                audio.play().catch(e => console.log("Autoplay blocked"));
-            } catch (e) { console.error("Audio playback failed", e); }
-        }
-    </script>
-</body>
-</html>
+            setTimeout(() => { chatContainer
