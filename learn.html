@@ -262,18 +262,53 @@
             } catch (error) { addMessage('ai', "⚠️ Connection failed."); }
         }
 
-        function sendText() {
+        // --- TEXT CHAT LOGIC (Now Connected to Backend) ---
+        async function sendText() {
             const input = document.getElementById('textInput');
             const text = input.value;
             if(!text) return;
             
+            // 1. Show User Message
             conversationLog.push({ role: 'user', content: text });
             addMessage('user', text);
-            input.value = "";
+            input.value = ""; // Clear input
             
-            // Ideally we send text to backend here too, but for MVP voice is key.
-            // If you want text response, we need to update the Edge Function to handle text-only input.
-            // For now, this just logs it to the chat.
+            // 2. Create Temporary "Thinking..." bubble
+            const tempId = "temp-" + Date.now();
+            addMessage('ai', `<span id="${tempId}">Thinking... 🤔</span>`);
+
+            try {
+                // 3. Send to Backend (as JSON)
+                const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': 'Bearer ' + supabaseKey,
+                        'Content-Type': 'application/json' // <--- Tells backend this is Text
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                const data = await response.json();
+                
+                // 4. Remove "Thinking..."
+                const tempEl = document.getElementById(tempId);
+                if(tempEl) tempEl.parentElement.remove();
+
+                if (data.error) { addMessage('ai', "⚠️ Error: " + data.error); return; }
+
+                // 5. Show AI Response
+                conversationLog.push({ role: 'ai', content: data.aiText });
+                addMessage('ai', data.aiText);
+                
+                // 6. Play Audio (Optional for text chat, but nice to have!)
+                const audio = new Audio("data:audio/mp3;base64," + data.audioContent);
+                audio.play().catch(e => console.log("Audio blocked:", e));
+
+            } catch (error) {
+                const tempEl = document.getElementById(tempId);
+                if(tempEl) tempEl.parentElement.remove();
+                addMessage('ai', "⚠️ Connection failed.");
+            }
         }
 
         function addMessage(sender, text) {
