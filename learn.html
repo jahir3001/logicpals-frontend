@@ -236,23 +236,44 @@
             const tempId = "temp-" + Date.now();
             addMessage('ai', `<span id="${tempId}">Thinking... 🤔</span>`);
 
-            try {
-                // MEMORY FIX: Only send the last 6 messages to prevent crashes
-                const recentHistory = conversationLog.slice(-6); 
+            // ... existing code ...
 
-                const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + supabaseKey, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text, history: recentHistory }) // Send clean history
-                });
+// 1. SAFETY STEP: Only take the last 4 messages. 
+// Sending the whole history causes the "Maximum call stack size exceeded" crash.
+const safeHistory = Array.isArray(recentHistory) ? recentHistory.slice(-4) : [];
 
-                const data = await response.json();
-                document.getElementById(tempId)?.parentElement.remove();
+try {
+    const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
+        method: 'POST',
+        headers: { 
+            'Authorization': 'Bearer ' + supabaseKey, 
+            'Content-Type': 'application/json' 
+        },
+        // 2. USE safeHistory HERE instead of recentHistory
+        body: JSON.stringify({ text: text, history: safeHistory }) 
+    });
 
-                if (data.error) { 
-                    addMessage('ai', "⚠️ Connection failed: " + data.error); 
-                    return; 
-                }
+    if (!response.ok) throw new Error(`Server Error: ${response.status}`);
+
+    const data = await response.json();
+    
+    // Play audio if it exists
+    if (data.audio) {
+        const audio = new Audio(data.audio);
+        audio.play().catch(e => console.log("Audio autoplay blocked"));
+    }
+    
+    // Remove the temp loading message since we succeeded
+    document.getElementById(tempId)?.parentElement.remove();
+
+} catch (error) {
+    // This is your existing catch block (keep it!)
+    document.getElementById(tempId)?.parentElement.remove();
+    addMessage('ai', "⚠️ Connection failed: Could not reach tutor.");
+    console.error("Full error details:", error);
+} finally {
+    isProcessing = false;
+}
 
                 conversationLog.push({ role: 'ai', content: data.aiText });
                 addMessage('ai', data.aiText);
