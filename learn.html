@@ -242,8 +242,8 @@
                 
                 // If text is huge (over 200 chars), trim it. 
                 // This stops the memory crash.
-                if (cleanContent.length > 200) {
-                    cleanContent = cleanContent.substring(0, 200) + "...";
+                if (cleanContent.length > 300) {
+                    cleanContent = cleanContent.substring(0, 300) + "...(truncated)";
                 }
                 
                 return {
