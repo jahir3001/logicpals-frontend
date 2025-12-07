@@ -180,35 +180,51 @@
         }
 
         async function sendAudioToBackend() {
-            // FIX 1: Set lock
             isProcessing = true; 
             const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
             const tempId = "temp-" + Date.now();
             addMessage('user', `<span id="${tempId}">🎤 Processing...</span>`);
 
             try {
-                const formData = new FormData(); formData.append('file', audioBlob);
+                const formData = new FormData();
+                formData.append('file', audioBlob);
+                // INTELLIGENCE FIX: We stringify history for FormData
+                formData.append('history', JSON.stringify(conversationLog));
+
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
-                    method: 'POST', headers: { 'Authorization': 'Bearer ' + supabaseKey }, body: formData
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + supabaseKey },
+                    body: formData
                 });
+
                 const data = await response.json();
                 document.getElementById(tempId)?.parentElement.remove();
-                if (data.error) { addMessage('ai', "⚠️ Error."); return; }
+
+                if (data.error) { 
+                    addMessage('ai', "⚠️ " + data.error); 
+                    return; 
+                }
+
                 conversationLog.push({ role: 'user', content: data.userTranscript });
                 conversationLog.push({ role: 'ai', content: data.aiText });
+
                 addMessage('user', data.userTranscript);
                 addMessage('ai', data.aiText);
                 playAudioFromBase64(data.audioContent);
-            } catch (error) { addMessage('ai', "⚠️ Connection failed."); } 
-            // FIX 1: Release lock
-            finally { isProcessing = false; }
+
+            } catch (error) {
+                document.getElementById(tempId)?.parentElement.remove();
+                addMessage('ai', "⚠️ Connection failed.");
+            } finally {
+                isProcessing = false;
+            }
         }
 
-        async function sendText() {
+       async function sendText() {
             const text = textInput.value;
-            if(!text || isProcessing) return; // FIX 1: Check lock & empty
+            if(!text || isProcessing) return; 
             
-            isProcessing = true; // FIX 1: Set lock
+            isProcessing = true; 
             conversationLog.push({ role: 'user', content: text });
             addMessage('user', text);
             textInput.value = ""; 
@@ -218,25 +234,30 @@
 
             try {
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
-                    method: 'POST', headers: { 'Authorization': 'Bearer ' + supabaseKey, 'Content-Type': 'application/json' }, body: JSON.stringify({ text: text })
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + supabaseKey, 'Content-Type': 'application/json' },
+                    // INTELLIGENCE FIX: We now send 'history'
+                    body: JSON.stringify({ text: text, history: conversationLog })
                 });
+
                 const data = await response.json();
                 document.getElementById(tempId)?.parentElement.remove();
-                if (data.error) { addMessage('ai', "⚠️ Error: " + data.error); return; }
+
+                if (data.error) { 
+                    addMessage('ai', "⚠️ " + data.error); 
+                    return; 
+                }
+
                 conversationLog.push({ role: 'ai', content: data.aiText });
                 addMessage('ai', data.aiText);
                 playAudioFromBase64(data.audioContent);
+
             } catch (error) {
                 document.getElementById(tempId)?.parentElement.remove();
                 addMessage('ai', "⚠️ Connection failed.");
             } finally {
-                isProcessing = false; // FIX 1: Release lock
+                isProcessing = false; 
             }
-        }
-
-        function playAudioFromBase64(base64String) {
-            const audio = new Audio("data:audio/mp3;base64," + base64String);
-            audio.play().catch(e => console.error("Audio playback error:", e));
         }
 
         function addMessage(sender, text) {
