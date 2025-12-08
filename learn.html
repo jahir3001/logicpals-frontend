@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor v14.0 (Socratic & Stable)</title>
+    <title>LogicPals Tutor v15.0 (Smart Context)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -216,23 +216,41 @@
             confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
             
             try {
-                const liteLog = getLiteHistory();
+                // Save attempt
+                const safeLog = getSmartHistory();
                 await supabaseClient.from('attempts').insert([{ 
                     child_id: currentChildId, 
                     problem_id: currentProblemId, 
                     solved_correctly: true, 
-                    ai_conversation: liteLog 
+                    ai_conversation: safeLog 
                 }]);
             } catch(e) { console.log("Save error", e); }
             setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
         }
 
-        // --- 🛡️ CRITICAL: PAYLOAD DIET 🛡️ ---
-        function getLiteHistory() {
-            // ONLY send the Problem Description. 
-            // We strip all previous chat to prevent Server Crash / Recursion.
-            if (conversationLog.length > 0) return [conversationLog[0]];
-            return [];
+        // --- 🛡️ CRITICAL: SMART HISTORY MEMORY 🛡️ ---
+        function getSmartHistory() {
+            // 1. Always keep the System Context (The Puzzle)
+            // This ensures the AI knows WHAT problem we are solving.
+            let history = [conversationLog[0]];
+
+            // 2. Add the LAST 2 MESSAGES (User + AI)
+            // This ensures the AI knows what you JUST said.
+            // BUT: We must strip out any "audio" or "image" data to prevent crashes.
+            
+            if (conversationLog.length > 2) {
+                const recentMsgs = conversationLog.slice(-2); // Get last 2 messages
+                
+                recentMsgs.forEach(msg => {
+                    // Create a CLEAN copy. Only keep text.
+                    history.push({
+                        role: msg.role,
+                        content: msg.content.substring(0, 200) // Safety Limit: 200 chars max per message
+                    });
+                });
+            }
+
+            return history;
         }
 
         // --- VOICE LOGIC ---
@@ -268,11 +286,10 @@
                 const formData = new FormData();
                 formData.append('file', audioBlob);
                 
-                // USE LITE HISTORY
-                const liteHistory = getLiteHistory();
-                formData.append('history', JSON.stringify(liteHistory));
-                // MICRO-PROMPT INSTRUCTION
-                formData.append('instructions', 'Guide only. No answers. 1 question. Max 15 words.');
+                // USE SMART HISTORY
+                const smartHistory = getSmartHistory();
+                formData.append('history', JSON.stringify(smartHistory));
+                formData.append('instructions', 'Guide only. No answers. 1 short question.');
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
@@ -301,7 +318,7 @@
             }
         }
 
-        // --- TEXT LOGIC (THE FIX) ---
+        // --- TEXT LOGIC (UPDATED PROMPT) ---
         async function sendText() {
             const text = textInput.value.trim();
             if(!text || isProcessing) return; 
@@ -317,21 +334,11 @@
             addMessage('ai', `<span id="${tempId}">Thinking... 🤔</span>`);
 
             try {
-                const liteHistory = getLiteHistory();
+                // 1. Get Smart History (Problem + Recent Chat)
+                const smartHistory = getSmartHistory();
 
-                // ----------------------------------------------------
-                // 🚀 THE COMPRESSED SOCRATIC PROMPT 🚀
-                // We inject the "Soul" of the Claude Prompt but force BREVITY.
-                // ----------------------------------------------------
-                const socraticPrompt = `
-                SYSTEM: You are LogicPals. 
-                1. NEVER answer the problem. 
-                2. Celebrate their effort ("Great thinking!"). 
-                3. Ask ONE guiding question to help them find the next step.
-                4. CRITICAL: Keep entire response under 25 words (Audio limit).
-                
-                USER SAYS: "${text}"
-                `;
+                // 2. Updated Prompt: Be Fun + Short
+                const prompt = text + " [Inst] You are a fun tutor. Use an emoji. Do not answer. Ask 1 guiding question. Max 20 words. [/Inst]";
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
@@ -339,7 +346,7 @@
                         'Authorization': 'Bearer ' + supabaseKey, 
                         'Content-Type': 'application/json' 
                     },
-                    body: JSON.stringify({ text: socraticPrompt, history: liteHistory }) 
+                    body: JSON.stringify({ text: prompt, history: smartHistory }) 
                 });
 
                 if (!response.ok) throw new Error(`Server Error: ${response.status}`);
@@ -350,6 +357,7 @@
                 const replyText = data.reply || data.aiText;
                 if (replyText) {
                     addMessage('ai', replyText);
+                    // IMPORTANT: Save to log so 'getSmartHistory' can find it later
                     conversationLog.push({ role: 'ai', content: replyText });
                 }
 
