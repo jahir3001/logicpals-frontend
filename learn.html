@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor v22.0 (Bulletproof)</title>
+    <title>LogicPals Tutor v23.0 (Victory Aware)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
@@ -55,7 +55,7 @@
     </header>
 
     <div class="chat-container" id="chatContainer">
-        <div class="message ai" id="statusMsg">Starting LogicPals... 🚀</div>
+        <div class="message ai" id="statusMsg">Connecting to Tutor... 📡</div>
     </div>
 
     <div class="input-area">
@@ -79,7 +79,7 @@
         let hintIndex = 0;
         let timerInterval;
         let totalSeconds = 0;
-        let gameStarted = false; // Prevents double loading
+        let gameStarted = false; 
 
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; 
@@ -94,201 +94,112 @@
             { id: 998, text: "I am tall when I am young, and I am short when I am old. What am I?", hints: ["You use me to see in the dark.", "I melt."] }
         ];
 
-        // --- 🚀 INSTANT START LOGIC 🚀 ---
-        // This runs the moment the page opens.
-        
-        // 1. Start the "Race Timer". If DB takes > 1.5s, Force Offline.
-        setTimeout(() => {
-            if (!gameStarted) {
-                console.warn("Database slow. Forcing Offline Mode.");
-                loadOfflineProblem();
-            }
-        }, 1500); 
-
+        // --- INSTANT START LOGIC ---
         window.addEventListener('load', async () => {
+            updateStatus("Checking connection... 📶");
+            
+            // 1.5s Timeout -> Force Offline
+            setTimeout(() => {
+                if (!gameStarted) {
+                    console.warn("Slow connection. Going offline.");
+                    loadOfflineProblem();
+                }
+            }, 1500);
+
             if (typeof supabase !== 'undefined') {
                 try {
                     supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-                    
-                    // Check Session (Quickly)
                     const { data: { session } } = await supabaseClient.auth.getSession();
                     if(session) { 
                          const { data: child } = await supabaseClient.from('children').select('id').eq('parent_id', session.user.id).single();
                          if(child) currentChildId = child.id;
                     }
-
-                    // Try to load real puzzle. If it hangs, the timer above will save us.
                     await loadProblemFromDB();
+                } catch (error) { if (!gameStarted) loadOfflineProblem(); }
+            } else { if (!gameStarted) loadOfflineProblem(); }
 
-                } catch (error) {
-                    if (!gameStarted) loadOfflineProblem();
-                }
-            } else {
-                // If script didn't load, go offline immediately
-                if (!gameStarted) loadOfflineProblem();
-            }
-
-            textInput.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') sendText();
-            });
+            textInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') sendText(); });
         });
 
-        // --- CORE FUNCTIONS ---
+        function updateStatus(text) {
+            const statusDiv = document.getElementById('statusMsg');
+            if(statusDiv) statusDiv.innerText = text;
+        }
 
         async function loadProblemFromDB() {
             if (gameStarted) return; 
-
             const userAge = localStorage.getItem('activeChildAge') || '8-9';
             const { data, error } = await supabaseClient.from('problems').select('*').eq('age_category', userAge); 
-            
             if (error || !data || data.length === 0) throw new Error("No data");
-
             const randomProblem = data[Math.floor(Math.random() * data.length)];
             setupGame(randomProblem.id, randomProblem.problem_text, randomProblem.hints);
         }
 
         function loadOfflineProblem() {
-            if (gameStarted) return;
+            if (gameStarted) return; 
             const backup = offlineProblems[Math.floor(Math.random() * offlineProblems.length)];
             setupGame(backup.id, backup.text, backup.hints);
         }
 
         function setupGame(id, text, hints) {
-            gameStarted = true; // LOCK: Game has started
+            gameStarted = true; 
             currentProblemId = id;
             currentHints = hints || ["Think carefully!"];
             hintIndex = 0;
             chatContainer.innerHTML = ''; 
             
-            // 1. Show Puzzle
+            // Show Puzzle
             const intro = `Hi! Here is your mystery:<br><br><strong>"${text}"</strong>`;
             addMessage('ai', intro);
 
-            // 2. Init Log
+            // Init Memory
             conversationLog.push({ role: 'system', content: `Problem: ${text}` });
             conversationLog.push({ role: 'ai', content: intro });
             
-            // 3. 🚀 AUTO-WELCOME (1s Delay)
+            // Auto Welcome
             setTimeout(() => sendWelcomeMessage(), 1000);
-
             startTimer();
         }
 
-        // --- AUTO WELCOME (Hidden Request) ---
+        // --- AUTO WELCOME ---
         async function sendWelcomeMessage() {
             if (isProcessing) return;
             isProcessing = true;
-
             const tempId = "welcome-loader";
             addMessage('ai', `<span id="${tempId}">👋 Saying hi...</span>`);
 
             try {
-                // Prompt: Just say hi.
                 const prompt = "[Inst] Ignore input. Say: 'Hi! Ready to solve this? How can I help?' (Max 12 words) [/Inst]";
-                const liteHistory = [conversationLog[0]]; 
-
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
                     headers: { 'Authorization': 'Bearer ' + supabaseKey, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: prompt, history: liteHistory }) 
+                    body: JSON.stringify({ text: prompt, history: [conversationLog[0]] }) 
                 });
-
-                if (!response.ok) throw new Error("Welcome failed");
-
                 const data = await response.json();
                 document.getElementById(tempId)?.parentElement.remove();
-
-                if (data.reply || data.aiText) {
-                    const text = data.reply || data.aiText;
-                    addMessage('ai', text);
-                    conversationLog.push({ role: 'ai', content: text });
-                }
-
-                if (data.audio || data.audioContent) {
-                    playAudioFromBase64(data.audio || data.audioContent);
-                }
-
-            } catch (e) {
-                document.getElementById(tempId)?.parentElement.remove();
-            } finally {
-                isProcessing = false;
-            }
+                if (data.reply || data.aiText) addMessage('ai', data.reply || data.aiText);
+                if (data.audio || data.audioContent) playAudioFromBase64(data.audio || data.audioContent);
+            } catch (e) { document.getElementById(tempId)?.parentElement.remove(); } 
+            finally { isProcessing = false; }
         }
 
-        // --- 🛡️ SMART HISTORY MEMORY (Prevent Crashes) 🛡️ ---
+        // --- 🛡️ SMART HISTORY 🛡️ ---
         function getSmartHistory() {
             let history = [];
-            // 1. Always keep the Puzzle Context
             if (conversationLog.length > 0) {
                 let puzzleMsg = conversationLog[0];
-                // Safety trim
                 if (puzzleMsg.content.length > 150) {
                     puzzleMsg = { role: 'system', content: puzzleMsg.content.substring(0, 150) + "..." };
                 }
                 history.push(puzzleMsg);
             }
-            // 2. Add ONLY the last 2 messages (User + AI)
             if (conversationLog.length > 2) {
                 const recentMsgs = conversationLog.slice(-2);
                 recentMsgs.forEach(msg => {
-                    history.push({
-                        role: msg.role,
-                        content: msg.content.substring(0, 100) // Safety trim
-                    });
+                    history.push({ role: msg.role, content: msg.content.substring(0, 100) });
                 });
             }
             return history;
-        }
-
-        // --- TEXT LOGIC (THE FIX: CHEERLEADER + SHORT) ---
-        async function sendText() {
-            const text = textInput.value.trim();
-            if(!text || isProcessing) return; 
-            
-            isProcessing = true; 
-            
-            conversationLog.push({ role: 'user', content: text });
-            addMessage('user', text);
-            textInput.value = ""; 
-            
-            const tempId = "temp-" + Date.now();
-            addMessage('ai', `<span id="${tempId}">Thinking... 🤔</span>`);
-
-            try {
-                const smartHistory = getSmartHistory();
-
-                // 🚀 PROMPT: Praise + Guide + Brief (Anti-Crash)
-                const prompt = text + " [Inst] Start with 'Super!' or 'Nice!'. Ask 1 guiding question. NEVER answer. Max 15 words. [/Inst]";
-
-                const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + supabaseKey, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: prompt, history: smartHistory }) 
-                });
-
-                if (!response.ok) throw new Error(`Server Error: ${response.status}`);
-
-                const data = await response.json();
-                document.getElementById(tempId)?.parentElement.remove();
-
-                const replyText = data.reply || data.aiText;
-                if (replyText) {
-                    addMessage('ai', replyText);
-                    conversationLog.push({ role: 'ai', content: replyText });
-                }
-
-                if (data.audio || data.audioContent) {
-                    playAudioFromBase64(data.audio || data.audioContent);
-                }
-
-            } catch (error) {
-                console.error("Text Error:", error);
-                document.getElementById(tempId)?.parentElement.remove();
-                addMessage('ai', "⚠️ Tutor is thinking too hard. Try asking a simpler question.");
-            } finally {
-                isProcessing = false; 
-                textInput.focus();
-            }
         }
 
         // --- VOICE LOGIC ---
@@ -325,8 +236,9 @@
                 formData.append('file', audioBlob);
                 const smartHistory = getSmartHistory();
                 formData.append('history', JSON.stringify(smartHistory));
-                // Voice Prompt
-                formData.append('instructions', 'Start with praise. Guide only. Max 15 words.');
+                
+                // 🚀 THE VICTORY PROMPT (VOICE)
+                formData.append('instructions', 'If CORRECT: Say "Correct! 🎉" & explain briefly. If WRONG: Guide gently. Max 20 words.');
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
@@ -335,47 +247,85 @@
                 });
 
                 if (!response.ok) throw new Error("Voice Server Error");
-
                 const data = await response.json();
                 document.getElementById(tempId)?.parentElement.remove();
-
-                conversationLog.push({ role: 'user', content: "(Voice Message)" });
-                conversationLog.push({ role: 'ai', content: data.aiText });
-
                 addMessage('user', `🗣️ "${data.userTranscript}"`);
                 addMessage('ai', data.aiText);
                 playAudioFromBase64(data.audioContent);
+                conversationLog.push({ role: 'user', content: "(Voice)" });
+                conversationLog.push({ role: 'ai', content: data.aiText });
 
             } catch (error) {
                 document.getElementById(tempId)?.parentElement.remove();
                 addMessage('ai', "⚠️ Voice processing failed.");
+            } finally { isProcessing = false; }
+        }
+
+        // --- TEXT LOGIC (THE FIX) ---
+        async function sendText() {
+            const text = textInput.value.trim();
+            if(!text || isProcessing) return; 
+            
+            isProcessing = true; 
+            conversationLog.push({ role: 'user', content: text });
+            addMessage('user', text);
+            textInput.value = ""; 
+            const tempId = "temp-" + Date.now();
+            addMessage('ai', `<span id="${tempId}">Thinking... 🤔</span>`);
+
+            try {
+                const smartHistory = getSmartHistory();
+
+                // 🚀 THE "VICTORY PROMPT" 🚀
+                // 1. If Correct: "Correct! 🎉" + Explain.
+                // 2. If Wrong: "Guide, don't answer."
+                // 3. Max 20 words (No Crash).
+                const prompt = text + " [Inst] IF CORRECT: Say 'Correct! 🎉' and explain in 1 sentence. IF WRONG/STUCK: Ask 1 guiding question (e.g. 'Should we share/group?'). Max 20 words. [/Inst]";
+
+                const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + supabaseKey, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: prompt, history: smartHistory }) 
+                });
+
+                if (!response.ok) throw new Error(`Server Error: ${response.status}`);
+                const data = await response.json();
+                document.getElementById(tempId)?.parentElement.remove();
+
+                const replyText = data.reply || data.aiText;
+                if (replyText) {
+                    addMessage('ai', replyText);
+                    conversationLog.push({ role: 'ai', content: replyText });
+                }
+                if (data.audio || data.audioContent) playAudioFromBase64(data.audio || data.audioContent);
+
+            } catch (error) {
+                document.getElementById(tempId)?.parentElement.remove();
+                addMessage('ai', "⚠️ Tutor is thinking too hard. Try asking a simpler question.");
             } finally {
-                isProcessing = false;
+                isProcessing = false; 
+                textInput.focus();
             }
         }
 
         // --- HELPERS ---
-        function startTimer() {
-            totalSeconds = 0; clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                totalSeconds++;
-                const mins = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
-                const secs = (totalSeconds % 60).toString().padStart(2, '0');
-                timerEl.innerText = `${mins}:${secs}`;
-            }, 1000);
+        function addMessage(sender, text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', sender);
+            if (text.includes('<')) msgDiv.innerHTML = text; else msgDiv.innerText = text;
+            chatContainer.appendChild(msgDiv);
+            setTimeout(() => { chatContainer.scrollTop = chatContainer.scrollHeight; }, 100);
         }
 
-        function showHint() {
-            if (hintIndex < currentHints.length) {
-                const hintText = currentHints[hintIndex];
-                addMessage('hint', `💡 HINT: ${hintText}`);
-                conversationLog.push({ role: 'system', content: `Hint: ${hintText}` });
-                hintIndex++;
-            } else { 
-                addMessage('hint', "💡 Try explaining what you know so far."); 
-            }
+        function playAudioFromBase64(base64String) {
+            if (!base64String) return;
+            try {
+                const audio = new Audio("data:audio/mp3;base64," + base64String);
+                audio.play().catch(e => console.log("Autoplay blocked"));
+            } catch (e) { console.error("Audio playback failed", e); }
         }
 
+        // --- FINISH SESSION ---
         async function finishSession() {
             clearInterval(timerInterval);
             if (!currentChildId || !currentProblemId) { window.location.href = 'dashboard.html'; return; }
@@ -393,22 +343,6 @@
                 }]);
             } catch(e) { console.log("Save error", e); }
             setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
-        }
-
-        function addMessage(sender, text) {
-            const msgDiv = document.createElement('div');
-            msgDiv.classList.add('message', sender);
-            if (text.includes('<')) msgDiv.innerHTML = text; else msgDiv.innerText = text;
-            chatContainer.appendChild(msgDiv);
-            setTimeout(() => { chatContainer.scrollTop = chatContainer.scrollHeight; }, 100);
-        }
-
-        function playAudioFromBase64(base64String) {
-            if (!base64String) return;
-            try {
-                const audio = new Audio("data:audio/mp3;base64," + base64String);
-                audio.play().catch(e => console.log("Autoplay blocked"));
-            } catch (e) { console.error("Audio playback failed", e); }
         }
     </script>
 </body>
