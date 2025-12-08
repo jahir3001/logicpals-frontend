@@ -319,7 +319,7 @@
         }
 
         // REPLACE YOUR EXISTING sendText FUNCTION WITH THIS
-async function sendText() {
+	async function sendText() {
             const text = textInput.value.trim();
             if(!text || isProcessing) return; 
             
@@ -334,21 +334,13 @@ async function sendText() {
             addMessage('ai', `<span id="${tempId}">Thinking... 🤔</span>`);
 
             try {
-                // 1. USE LITE HISTORY (Keeps server fast)
+                // 1. USE LITE HISTORY
                 const liteHistory = getLiteHistory();
 
-                // 2. THE "MICRO-SOCRATIC" PROMPT (Optimized from your Doc)
-                // We combine your document's core rules into one powerful instruction.
-                const teacherContext = `
-                SYSTEM INSTRUCTIONS:
-                You are LogicPals, a friendly Socratic tutor for a child.
-                1. NEVER give the answer.
-                2. ALWAYS guide with a question.
-                3. Be encouraging and patient[cite: 116].
-                4. Keep response under 2 sentences (CRITICAL for speed).
-                
-                USER SAYS: "${text}"
-                `;
+                // 2. THE OPTIMIZED PROMPT (Fast & Guiding)
+                // Instead of a long system block, we just tag the instruction to the end.
+                // This saves tokens and processing time.
+                const fastPrompt = text + " (Instruction: Don't give the answer. Ask 1 short question to guide me. Max 1 sentence.)";
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
@@ -356,8 +348,8 @@ async function sendText() {
                         'Authorization': 'Bearer ' + supabaseKey, 
                         'Content-Type': 'application/json' 
                     },
-                    // We send the 'teacherContext' as the text
-                    body: JSON.stringify({ text: teacherContext, history: liteHistory }) 
+                    // We send 'fastPrompt' instead of the heavy teacherContext
+                    body: JSON.stringify({ text: fastPrompt, history: liteHistory }) 
                 });
 
                 if (!response.ok) throw new Error(`Server Error: ${response.status}`);
@@ -379,7 +371,7 @@ async function sendText() {
             } catch (error) {
                 console.error("Text Error:", error);
                 document.getElementById(tempId)?.parentElement.remove();
-                addMessage('ai', "⚠️ Tutor is thinking too hard. Try a simpler question.");
+                addMessage('ai', "⚠️ Connection weak. Try asking a shorter question.");
             } finally {
                 isProcessing = false; 
                 textInput.focus();
