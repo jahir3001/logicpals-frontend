@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor v16.0 (Speed Tuned)</title>
+    <title>LogicPals Tutor v17.0 (Fun & Stable)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -228,7 +228,7 @@
             setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
         }
 
-        // --- 🛡️ CRITICAL: LIGHTWEIGHT CONTEXT 🛡️ ---
+        // --- 🛡️ CRITICAL: SMART HISTORY MEMORY 🛡️ ---
         function getSmartHistory() {
             // 1. Keep the Puzzle Context (First message)
             let history = [];
@@ -290,7 +290,8 @@
                 // USE SMART HISTORY
                 const smartHistory = getSmartHistory();
                 formData.append('history', JSON.stringify(smartHistory));
-                formData.append('instructions', 'Guide only. No answers. Max 15 words.');
+                // 🚀 THE CHEERLEADER PROMPT (VOICE)
+                formData.append('instructions', 'Start with short praise (e.g., "Super!"). Then guide. Max 20 words.');
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
@@ -319,13 +320,14 @@
             }
         }
 
-        // --- TEXT LOGIC (THE FIX: NO EMOJIS, STRICT LIMIT) ---
+        // --- TEXT LOGIC (THE CHEERLEADER FIX) ---
         async function sendText() {
             const text = textInput.value.trim();
             if(!text || isProcessing) return; 
             
             isProcessing = true; 
             
+            // UI Updates
             conversationLog.push({ role: 'user', content: text });
             addMessage('user', text);
             textInput.value = ""; 
@@ -336,9 +338,11 @@
             try {
                 const smartHistory = getSmartHistory();
 
-                // 🚀 OPTIMIZATION: Removed emojis & lowered word count to 15
-                // This ensures Audio Generation stays under 10 seconds.
-                const prompt = text + " [Inst] Do not answer. Ask 1 guiding question. Max 15 words. [/Inst]";
+                // 🚀 THE "CHEERLEADER" PROMPT 🚀
+                // 1. Mandatory Praise (Pumping the kid)
+                // 2. Guiding Question (Socratic)
+                // 3. Strict Word Limit (Anti-Crash)
+                const prompt = text + " [Inst] Start with enthusiasm (e.g., 'Super!'). Ask 1 short guiding question. Keep under 20 words. [/Inst]";
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
@@ -357,6 +361,7 @@
                 const replyText = data.reply || data.aiText;
                 if (replyText) {
                     addMessage('ai', replyText);
+                    // IMPORTANT: Save to log so 'getSmartHistory' can find it later
                     conversationLog.push({ role: 'ai', content: replyText });
                 }
 
