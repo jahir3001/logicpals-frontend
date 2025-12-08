@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor v17.0 (Fun & Stable)</title>
+    <title>LogicPals Tutor v21.0 (Auto-Welcome)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
 
     <style>
         :root { --primary: #2563EB; --bg: #EFF6FF; --text: #111827; --user-bg: #2563EB; --mic-red: #EF4444; }
@@ -27,15 +27,7 @@
         .message.ai { align-self: flex-start; background: white; color: var(--text); border-bottom-left-radius: 4px; border: 1px solid #E5E7EB; }
         .message.user { align-self: flex-end; background: var(--user-bg); color: white; border-bottom-right-radius: 4px; }
         .message.hint { align-self: center; background: #FFFBEB; color: #B45309; border: 1px solid #FCD34D; font-size: 14px; text-align: center; width: 100%; max-width: 100%; }
-        
-        /* EMERGENCY BUTTON */
-        #forceStartBtn {
-            display: none; 
-            margin: 20px auto;
-            background: #EF4444; color: white; border: none; padding: 15px 30px;
-            font-size: 16px; font-weight: bold; border-radius: 50px; cursor: pointer;
-            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
-        }
+        @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* INPUT AREA */
         .input-area { background: white; padding: 15px 20px; border-top: 1px solid #E5E7EB; }
@@ -50,7 +42,6 @@
         
         .send-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 20px; cursor: pointer; box-shadow: 0 3px 0 #1D4ED8; display: flex; align-items: center; justify-content: center; }
         .send-btn:active { transform: translateY(3px); box-shadow: none; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
     </style>
 </head>
 <body>
@@ -65,7 +56,6 @@
 
     <div class="chat-container" id="chatContainer">
         <div class="message ai" id="statusMsg">Connecting to Tutor... 📡</div>
-        <button id="forceStartBtn" onclick="forceOfflineMode()">⚠️ Click here to Play Offline</button>
     </div>
 
     <div class="input-area">
@@ -89,6 +79,7 @@
         let hintIndex = 0;
         let timerInterval;
         let totalSeconds = 0;
+        let gameStarted = false; 
 
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; 
@@ -97,60 +88,44 @@
         const chatContainer = document.getElementById('chatContainer');
         const timerEl = document.getElementById('timer');
         const textInput = document.getElementById('textInput');
-        const forceBtn = document.getElementById('forceStartBtn');
 
         const offlineProblems = [
             { id: 999, text: "A farmer has 17 sheep and all but 9 die. How many are left?", hints: ["Read the number carefully.", "It says 'all but 9'."] },
             { id: 998, text: "I am tall when I am young, and I am short when I am old. What am I?", hints: ["You use me to see in the dark.", "I melt."] }
         ];
 
-        // Emergency Timer
-        setTimeout(() => {
-            if (chatContainer.innerHTML.includes("Connecting")) {
-                forceBtn.style.display = 'block';
-                document.getElementById('statusMsg').innerText = "Connection is slow. Click the red button below! 👇";
-            }
-        }, 5000);
-
-        function forceOfflineMode() {
-            forceBtn.style.display = 'none';
-            loadOfflineProblem();
-        }
-
-        // --- APP START ---
-        initApp();
-
-        async function initApp() {
+        // --- INSTANT START & AUTO-FAILOVER ---
+        window.addEventListener('load', async () => {
             updateStatus("Checking connection... 📶");
-            
-            if (window.supabase) {
-                supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+            // Safety Timer: 1.5s limit
+            setTimeout(() => {
+                if (!gameStarted) {
+                    console.warn("Database slow. Forcing Offline Mode.");
+                    loadOfflineProblem();
+                }
+            }, 1500);
+
+            if (typeof supabase !== 'undefined') {
                 try {
+                    supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
                     const { data: { session } } = await supabaseClient.auth.getSession();
-                    if(!session) { console.log("No session"); } 
-                    else {
+                    if(session) { 
                          const { data: child } = await supabaseClient.from('children').select('id').eq('parent_id', session.user.id).single();
                          if(child) currentChildId = child.id;
                     }
-
-                    updateStatus("Downloading puzzle... 🧩");
-                    const problemPromise = loadProblemFromDB();
-                    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 5000, 'TIMEOUT'));
-                    const result = await Promise.race([problemPromise, timeoutPromise]);
-                    
-                    if (result === 'TIMEOUT') forceOfflineMode();
-
+                    await loadProblemFromDB();
                 } catch (error) {
-                    console.error("Init Error:", error);
-                    forceBtn.style.display = 'block';
-                    updateStatus("Database unreachable.");
+                    if (!gameStarted) loadOfflineProblem();
                 }
-
-                textInput.addEventListener('keypress', function (e) {
-                    if (e.key === 'Enter') sendText();
-                });
+            } else {
+                if (!gameStarted) loadOfflineProblem();
             }
-        };
+
+            textInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') sendText();
+            });
+        });
 
         function updateStatus(text) {
             const statusDiv = document.getElementById('statusMsg');
@@ -158,35 +133,88 @@
         }
 
         async function loadProblemFromDB() {
+            if (gameStarted) return; 
             const userAge = localStorage.getItem('activeChildAge') || '8-9';
             const { data, error } = await supabaseClient.from('problems').select('*').eq('age_category', userAge); 
             if (error || !data || data.length === 0) throw new Error("No data");
-
             const randomProblem = data[Math.floor(Math.random() * data.length)];
             setupGame(randomProblem.id, randomProblem.problem_text, randomProblem.hints);
-            return 'SUCCESS';
         }
 
         function loadOfflineProblem() {
+            if (gameStarted) return; 
             const backup = offlineProblems[Math.floor(Math.random() * offlineProblems.length)];
             setupGame(backup.id, backup.text, backup.hints);
         }
 
         function setupGame(id, text, hints) {
+            gameStarted = true; 
             currentProblemId = id;
             currentHints = hints || ["Think carefully!"];
             hintIndex = 0;
             chatContainer.innerHTML = ''; 
             
+            // 1. Show Puzzle
             const intro = `Hi! Here is your mystery:<br><br><strong>"${text}"</strong>`;
             addMessage('ai', intro);
 
-            // SAVE PROBLEM (Clean Text Only)
+            // 2. Initialize Log
             conversationLog.push({ role: 'system', content: `Problem: ${text}` });
             conversationLog.push({ role: 'ai', content: intro });
+            
+            // 3. 🚀 TRIGGER AUTO-WELCOME (VOICE + TEXT) 🚀
+            // Wait 1s for effect, then trigger the greeter
+            setTimeout(() => sendWelcomeMessage(), 1000);
+
             startTimer();
         }
 
+        // --- NEW FUNCTION: AUTO WELCOME ---
+        async function sendWelcomeMessage() {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            const tempId = "welcome-loader";
+            addMessage('ai', `<span id="${tempId}">👋 Saying hi...</span>`);
+
+            try {
+                // We send a "System Trigger" to the AI
+                const prompt = "[Inst] Ignore previous input. Simply say: 'Hi! Ready to solve this mystery? How can I help?' (Max 15 words) [/Inst]";
+                
+                // We only send the puzzle context
+                const liteHistory = [conversationLog[0]]; 
+
+                const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + supabaseKey, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: prompt, history: liteHistory }) 
+                });
+
+                if (!response.ok) throw new Error("Welcome failed");
+
+                const data = await response.json();
+                document.getElementById(tempId)?.parentElement.remove();
+
+                // Show Text
+                if (data.reply || data.aiText) {
+                    const text = data.reply || data.aiText;
+                    addMessage('ai', text);
+                    conversationLog.push({ role: 'ai', content: text });
+                }
+
+                // Play Audio
+                const audioData = data.audio || data.audioContent;
+                if (audioData) playAudioFromBase64(audioData);
+
+            } catch (e) {
+                console.log("Welcome skipped (Silent start)");
+                document.getElementById(tempId)?.parentElement.remove();
+            } finally {
+                isProcessing = false;
+            }
+        }
+
+        // --- CORE FUNCTIONS ---
         function startTimer() {
             totalSeconds = 0; clearInterval(timerInterval);
             timerInterval = setInterval(() => {
@@ -216,7 +244,6 @@
             confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
             
             try {
-                // Save attempt
                 const safeLog = getSmartHistory();
                 await supabaseClient.from('attempts').insert([{ 
                     child_id: currentChildId, 
@@ -228,33 +255,27 @@
             setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
         }
 
-        // --- 🛡️ CRITICAL: SMART HISTORY MEMORY 🛡️ ---
         function getSmartHistory() {
-            // 1. Keep the Puzzle Context (First message)
             let history = [];
             if (conversationLog.length > 0) {
-                // SAFETY: We truncate the puzzle text to save tokens
                 let puzzleMsg = conversationLog[0];
                 if (puzzleMsg.content.length > 150) {
                     puzzleMsg = { role: 'system', content: puzzleMsg.content.substring(0, 150) + "..." };
                 }
                 history.push(puzzleMsg);
             }
-
-            // 2. Add Last 2 Messages (User + AI)
             if (conversationLog.length > 2) {
                 const recentMsgs = conversationLog.slice(-2);
                 recentMsgs.forEach(msg => {
                     history.push({
                         role: msg.role,
-                        content: msg.content.substring(0, 100) // STRICT LIMIT: 100 chars per message
+                        content: msg.content.substring(0, 100) 
                     });
                 });
             }
             return history;
         }
 
-        // --- VOICE LOGIC ---
         async function toggleRecording() {
             if (!isRecording) {
                 if (isProcessing) return; 
@@ -287,11 +308,10 @@
                 const formData = new FormData();
                 formData.append('file', audioBlob);
                 
-                // USE SMART HISTORY
                 const smartHistory = getSmartHistory();
                 formData.append('history', JSON.stringify(smartHistory));
-                // 🚀 THE CHEERLEADER PROMPT (VOICE)
-                formData.append('instructions', 'Start with short praise (e.g., "Super!"). Then guide. Max 20 words.');
+                // CONCEPT-FIRST PROMPT (VOICE)
+                formData.append('instructions', 'If greeting, say hi. If solving, ask what to do with numbers (e.g. share?). NEVER name the operation. Max 20 words.');
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
@@ -320,36 +340,26 @@
             }
         }
 
-        // --- TEXT LOGIC (THE CHEERLEADER FIX) ---
         async function sendText() {
             const text = textInput.value.trim();
             if(!text || isProcessing) return; 
             
             isProcessing = true; 
-            
-            // UI Updates
             conversationLog.push({ role: 'user', content: text });
             addMessage('user', text);
             textInput.value = ""; 
-            
             const tempId = "temp-" + Date.now();
             addMessage('ai', `<span id="${tempId}">Thinking... 🤔</span>`);
 
             try {
                 const smartHistory = getSmartHistory();
 
-                // 🚀 THE "CHEERLEADER" PROMPT 🚀
-                // 1. Mandatory Praise (Pumping the kid)
-                // 2. Guiding Question (Socratic)
-                // 3. Strict Word Limit (Anti-Crash)
-                const prompt = text + " [Inst] Start with enthusiasm (e.g., 'Super!'). Ask 1 short guiding question. Keep under 20 words. [/Inst]";
+                // CONCEPT-FIRST PROMPT (TEXT)
+                const prompt = text + " [Inst] Be a fun friend. If greeting, say hi. If solving, ask what to do with the numbers (e.g. 'Should we share or group?'). NEVER name the operation (like 'divide'). Max 20 words. [/Inst]";
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
-                    headers: { 
-                        'Authorization': 'Bearer ' + supabaseKey, 
-                        'Content-Type': 'application/json' 
-                    },
+                    headers: { 'Authorization': 'Bearer ' + supabaseKey, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text: prompt, history: smartHistory }) 
                 });
 
@@ -361,14 +371,11 @@
                 const replyText = data.reply || data.aiText;
                 if (replyText) {
                     addMessage('ai', replyText);
-                    // IMPORTANT: Save to log so 'getSmartHistory' can find it later
                     conversationLog.push({ role: 'ai', content: replyText });
                 }
 
                 const audioData = data.audio || data.audioContent;
-                if (audioData) {
-                    playAudioFromBase64(audioData);
-                }
+                if (audioData) playAudioFromBase64(audioData);
 
             } catch (error) {
                 console.error("Text Error:", error);
@@ -380,7 +387,6 @@
             }
         }
 
-        // --- HELPERS ---
         function addMessage(sender, text) {
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('message', sender);
