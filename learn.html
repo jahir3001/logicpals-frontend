@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor v21.0 (Auto-Welcome)</title>
+    <title>LogicPals Tutor v22.0 (Bulletproof)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
@@ -55,7 +55,7 @@
     </header>
 
     <div class="chat-container" id="chatContainer">
-        <div class="message ai" id="statusMsg">Connecting to Tutor... 📡</div>
+        <div class="message ai" id="statusMsg">Starting LogicPals... 🚀</div>
     </div>
 
     <div class="input-area">
@@ -79,7 +79,7 @@
         let hintIndex = 0;
         let timerInterval;
         let totalSeconds = 0;
-        let gameStarted = false; 
+        let gameStarted = false; // Prevents double loading
 
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; 
@@ -94,31 +94,37 @@
             { id: 998, text: "I am tall when I am young, and I am short when I am old. What am I?", hints: ["You use me to see in the dark.", "I melt."] }
         ];
 
-        // --- INSTANT START & AUTO-FAILOVER ---
+        // --- 🚀 INSTANT START LOGIC 🚀 ---
+        // This runs the moment the page opens.
+        
+        // 1. Start the "Race Timer". If DB takes > 1.5s, Force Offline.
+        setTimeout(() => {
+            if (!gameStarted) {
+                console.warn("Database slow. Forcing Offline Mode.");
+                loadOfflineProblem();
+            }
+        }, 1500); 
+
         window.addEventListener('load', async () => {
-            updateStatus("Checking connection... 📶");
-
-            // Safety Timer: 1.5s limit
-            setTimeout(() => {
-                if (!gameStarted) {
-                    console.warn("Database slow. Forcing Offline Mode.");
-                    loadOfflineProblem();
-                }
-            }, 1500);
-
             if (typeof supabase !== 'undefined') {
                 try {
                     supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+                    
+                    // Check Session (Quickly)
                     const { data: { session } } = await supabaseClient.auth.getSession();
                     if(session) { 
                          const { data: child } = await supabaseClient.from('children').select('id').eq('parent_id', session.user.id).single();
                          if(child) currentChildId = child.id;
                     }
+
+                    // Try to load real puzzle. If it hangs, the timer above will save us.
                     await loadProblemFromDB();
+
                 } catch (error) {
                     if (!gameStarted) loadOfflineProblem();
                 }
             } else {
+                // If script didn't load, go offline immediately
                 if (!gameStarted) loadOfflineProblem();
             }
 
@@ -127,28 +133,28 @@
             });
         });
 
-        function updateStatus(text) {
-            const statusDiv = document.getElementById('statusMsg');
-            if(statusDiv) statusDiv.innerText = text;
-        }
+        // --- CORE FUNCTIONS ---
 
         async function loadProblemFromDB() {
             if (gameStarted) return; 
+
             const userAge = localStorage.getItem('activeChildAge') || '8-9';
             const { data, error } = await supabaseClient.from('problems').select('*').eq('age_category', userAge); 
+            
             if (error || !data || data.length === 0) throw new Error("No data");
+
             const randomProblem = data[Math.floor(Math.random() * data.length)];
             setupGame(randomProblem.id, randomProblem.problem_text, randomProblem.hints);
         }
 
         function loadOfflineProblem() {
-            if (gameStarted) return; 
+            if (gameStarted) return;
             const backup = offlineProblems[Math.floor(Math.random() * offlineProblems.length)];
             setupGame(backup.id, backup.text, backup.hints);
         }
 
         function setupGame(id, text, hints) {
-            gameStarted = true; 
+            gameStarted = true; // LOCK: Game has started
             currentProblemId = id;
             currentHints = hints || ["Think carefully!"];
             hintIndex = 0;
@@ -158,18 +164,17 @@
             const intro = `Hi! Here is your mystery:<br><br><strong>"${text}"</strong>`;
             addMessage('ai', intro);
 
-            // 2. Initialize Log
+            // 2. Init Log
             conversationLog.push({ role: 'system', content: `Problem: ${text}` });
             conversationLog.push({ role: 'ai', content: intro });
             
-            // 3. 🚀 TRIGGER AUTO-WELCOME (VOICE + TEXT) 🚀
-            // Wait 1s for effect, then trigger the greeter
+            // 3. 🚀 AUTO-WELCOME (1s Delay)
             setTimeout(() => sendWelcomeMessage(), 1000);
 
             startTimer();
         }
 
-        // --- NEW FUNCTION: AUTO WELCOME ---
+        // --- AUTO WELCOME (Hidden Request) ---
         async function sendWelcomeMessage() {
             if (isProcessing) return;
             isProcessing = true;
@@ -178,10 +183,8 @@
             addMessage('ai', `<span id="${tempId}">👋 Saying hi...</span>`);
 
             try {
-                // We send a "System Trigger" to the AI
-                const prompt = "[Inst] Ignore previous input. Simply say: 'Hi! Ready to solve this mystery? How can I help?' (Max 15 words) [/Inst]";
-                
-                // We only send the puzzle context
+                // Prompt: Just say hi.
+                const prompt = "[Inst] Ignore input. Say: 'Hi! Ready to solve this? How can I help?' (Max 12 words) [/Inst]";
                 const liteHistory = [conversationLog[0]]; 
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
@@ -195,26 +198,163 @@
                 const data = await response.json();
                 document.getElementById(tempId)?.parentElement.remove();
 
-                // Show Text
                 if (data.reply || data.aiText) {
                     const text = data.reply || data.aiText;
                     addMessage('ai', text);
                     conversationLog.push({ role: 'ai', content: text });
                 }
 
-                // Play Audio
-                const audioData = data.audio || data.audioContent;
-                if (audioData) playAudioFromBase64(audioData);
+                if (data.audio || data.audioContent) {
+                    playAudioFromBase64(data.audio || data.audioContent);
+                }
 
             } catch (e) {
-                console.log("Welcome skipped (Silent start)");
                 document.getElementById(tempId)?.parentElement.remove();
             } finally {
                 isProcessing = false;
             }
         }
 
-        // --- CORE FUNCTIONS ---
+        // --- 🛡️ SMART HISTORY MEMORY (Prevent Crashes) 🛡️ ---
+        function getSmartHistory() {
+            let history = [];
+            // 1. Always keep the Puzzle Context
+            if (conversationLog.length > 0) {
+                let puzzleMsg = conversationLog[0];
+                // Safety trim
+                if (puzzleMsg.content.length > 150) {
+                    puzzleMsg = { role: 'system', content: puzzleMsg.content.substring(0, 150) + "..." };
+                }
+                history.push(puzzleMsg);
+            }
+            // 2. Add ONLY the last 2 messages (User + AI)
+            if (conversationLog.length > 2) {
+                const recentMsgs = conversationLog.slice(-2);
+                recentMsgs.forEach(msg => {
+                    history.push({
+                        role: msg.role,
+                        content: msg.content.substring(0, 100) // Safety trim
+                    });
+                });
+            }
+            return history;
+        }
+
+        // --- TEXT LOGIC (THE FIX: CHEERLEADER + SHORT) ---
+        async function sendText() {
+            const text = textInput.value.trim();
+            if(!text || isProcessing) return; 
+            
+            isProcessing = true; 
+            
+            conversationLog.push({ role: 'user', content: text });
+            addMessage('user', text);
+            textInput.value = ""; 
+            
+            const tempId = "temp-" + Date.now();
+            addMessage('ai', `<span id="${tempId}">Thinking... 🤔</span>`);
+
+            try {
+                const smartHistory = getSmartHistory();
+
+                // 🚀 PROMPT: Praise + Guide + Brief (Anti-Crash)
+                const prompt = text + " [Inst] Start with 'Super!' or 'Nice!'. Ask 1 guiding question. NEVER answer. Max 15 words. [/Inst]";
+
+                const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + supabaseKey, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: prompt, history: smartHistory }) 
+                });
+
+                if (!response.ok) throw new Error(`Server Error: ${response.status}`);
+
+                const data = await response.json();
+                document.getElementById(tempId)?.parentElement.remove();
+
+                const replyText = data.reply || data.aiText;
+                if (replyText) {
+                    addMessage('ai', replyText);
+                    conversationLog.push({ role: 'ai', content: replyText });
+                }
+
+                if (data.audio || data.audioContent) {
+                    playAudioFromBase64(data.audio || data.audioContent);
+                }
+
+            } catch (error) {
+                console.error("Text Error:", error);
+                document.getElementById(tempId)?.parentElement.remove();
+                addMessage('ai', "⚠️ Tutor is thinking too hard. Try asking a simpler question.");
+            } finally {
+                isProcessing = false; 
+                textInput.focus();
+            }
+        }
+
+        // --- VOICE LOGIC ---
+        async function toggleRecording() {
+            if (!isRecording) {
+                if (isProcessing) return; 
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = sendAudioToBackend;
+                    mediaRecorder.start();
+                    isRecording = true;
+                    micBtn.classList.add('recording');
+                    micBtn.innerHTML = "⏹️"; 
+                } catch (err) { alert("Mic denied."); }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                micBtn.classList.remove('recording');
+                micBtn.innerHTML = "🎤"; 
+            }
+        }
+
+        async function sendAudioToBackend() {
+            isProcessing = true; 
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            const tempId = "temp-" + Date.now();
+            addMessage('user', `<span id="${tempId}">🎤 Processing...</span>`);
+
+            try {
+                const formData = new FormData();
+                formData.append('file', audioBlob);
+                const smartHistory = getSmartHistory();
+                formData.append('history', JSON.stringify(smartHistory));
+                // Voice Prompt
+                formData.append('instructions', 'Start with praise. Guide only. Max 15 words.');
+
+                const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + supabaseKey },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error("Voice Server Error");
+
+                const data = await response.json();
+                document.getElementById(tempId)?.parentElement.remove();
+
+                conversationLog.push({ role: 'user', content: "(Voice Message)" });
+                conversationLog.push({ role: 'ai', content: data.aiText });
+
+                addMessage('user', `🗣️ "${data.userTranscript}"`);
+                addMessage('ai', data.aiText);
+                playAudioFromBase64(data.audioContent);
+
+            } catch (error) {
+                document.getElementById(tempId)?.parentElement.remove();
+                addMessage('ai', "⚠️ Voice processing failed.");
+            } finally {
+                isProcessing = false;
+            }
+        }
+
+        // --- HELPERS ---
         function startTimer() {
             totalSeconds = 0; clearInterval(timerInterval);
             timerInterval = setInterval(() => {
@@ -253,138 +393,6 @@
                 }]);
             } catch(e) { console.log("Save error", e); }
             setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
-        }
-
-        function getSmartHistory() {
-            let history = [];
-            if (conversationLog.length > 0) {
-                let puzzleMsg = conversationLog[0];
-                if (puzzleMsg.content.length > 150) {
-                    puzzleMsg = { role: 'system', content: puzzleMsg.content.substring(0, 150) + "..." };
-                }
-                history.push(puzzleMsg);
-            }
-            if (conversationLog.length > 2) {
-                const recentMsgs = conversationLog.slice(-2);
-                recentMsgs.forEach(msg => {
-                    history.push({
-                        role: msg.role,
-                        content: msg.content.substring(0, 100) 
-                    });
-                });
-            }
-            return history;
-        }
-
-        async function toggleRecording() {
-            if (!isRecording) {
-                if (isProcessing) return; 
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
-                    audioChunks = [];
-                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                    mediaRecorder.onstop = sendAudioToBackend;
-                    mediaRecorder.start();
-                    isRecording = true;
-                    micBtn.classList.add('recording');
-                    micBtn.innerHTML = "⏹️"; 
-                } catch (err) { alert("Mic denied."); }
-            } else {
-                mediaRecorder.stop();
-                isRecording = false;
-                micBtn.classList.remove('recording');
-                micBtn.innerHTML = "🎤"; 
-            }
-        }
-
-        async function sendAudioToBackend() {
-            isProcessing = true; 
-            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-            const tempId = "temp-" + Date.now();
-            addMessage('user', `<span id="${tempId}">🎤 Processing...</span>`);
-
-            try {
-                const formData = new FormData();
-                formData.append('file', audioBlob);
-                
-                const smartHistory = getSmartHistory();
-                formData.append('history', JSON.stringify(smartHistory));
-                // CONCEPT-FIRST PROMPT (VOICE)
-                formData.append('instructions', 'If greeting, say hi. If solving, ask what to do with numbers (e.g. share?). NEVER name the operation. Max 20 words.');
-
-                const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + supabaseKey },
-                    body: formData
-                });
-
-                if (!response.ok) throw new Error("Voice Server Error");
-
-                const data = await response.json();
-                document.getElementById(tempId)?.parentElement.remove();
-
-                conversationLog.push({ role: 'user', content: "(Voice Message)" });
-                conversationLog.push({ role: 'ai', content: data.aiText });
-
-                addMessage('user', `🗣️ "${data.userTranscript}"`);
-                addMessage('ai', data.aiText);
-                playAudioFromBase64(data.audioContent);
-
-            } catch (error) {
-                console.error(error);
-                document.getElementById(tempId)?.parentElement.remove();
-                addMessage('ai', "⚠️ I couldn't hear that clearly. Please try again.");
-            } finally {
-                isProcessing = false;
-            }
-        }
-
-        async function sendText() {
-            const text = textInput.value.trim();
-            if(!text || isProcessing) return; 
-            
-            isProcessing = true; 
-            conversationLog.push({ role: 'user', content: text });
-            addMessage('user', text);
-            textInput.value = ""; 
-            const tempId = "temp-" + Date.now();
-            addMessage('ai', `<span id="${tempId}">Thinking... 🤔</span>`);
-
-            try {
-                const smartHistory = getSmartHistory();
-
-                // CONCEPT-FIRST PROMPT (TEXT)
-                const prompt = text + " [Inst] Be a fun friend. If greeting, say hi. If solving, ask what to do with the numbers (e.g. 'Should we share or group?'). NEVER name the operation (like 'divide'). Max 20 words. [/Inst]";
-
-                const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + supabaseKey, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: prompt, history: smartHistory }) 
-                });
-
-                if (!response.ok) throw new Error(`Server Error: ${response.status}`);
-
-                const data = await response.json();
-                document.getElementById(tempId)?.parentElement.remove();
-
-                const replyText = data.reply || data.aiText;
-                if (replyText) {
-                    addMessage('ai', replyText);
-                    conversationLog.push({ role: 'ai', content: replyText });
-                }
-
-                const audioData = data.audio || data.audioContent;
-                if (audioData) playAudioFromBase64(audioData);
-
-            } catch (error) {
-                console.error("Text Error:", error);
-                document.getElementById(tempId)?.parentElement.remove();
-                addMessage('ai', "⚠️ Tutor is thinking too hard. Try asking a simpler question.");
-            } finally {
-                isProcessing = false; 
-                textInput.focus();
-            }
         }
 
         function addMessage(sender, text) {
