@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor v13.0 (Micro-Socratic)</title>
+    <title>LogicPals Tutor v14.0 (Socratic & Stable)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -308,6 +308,7 @@
             
             isProcessing = true; 
             
+            // UI Updates
             conversationLog.push({ role: 'user', content: text });
             addMessage('user', text);
             textInput.value = ""; 
@@ -318,9 +319,19 @@
             try {
                 const liteHistory = getLiteHistory();
 
-                // THE MICRO-PROMPT: High Potency, Low Token Count
-                // "Guide. Don't Answer. 1 Question. Max 15 words."
-                const prompt = text + " [Inst] Guide me. Do not answer. Ask 1 short question. Max 15 words. [/Inst]";
+                // ----------------------------------------------------
+                // 🚀 THE COMPRESSED SOCRATIC PROMPT 🚀
+                // We inject the "Soul" of the Claude Prompt but force BREVITY.
+                // ----------------------------------------------------
+                const socraticPrompt = `
+                SYSTEM: You are LogicPals. 
+                1. NEVER answer the problem. 
+                2. Celebrate their effort ("Great thinking!"). 
+                3. Ask ONE guiding question to help them find the next step.
+                4. CRITICAL: Keep entire response under 25 words (Audio limit).
+                
+                USER SAYS: "${text}"
+                `;
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
@@ -328,7 +339,7 @@
                         'Authorization': 'Bearer ' + supabaseKey, 
                         'Content-Type': 'application/json' 
                     },
-                    body: JSON.stringify({ text: prompt, history: liteHistory }) 
+                    body: JSON.stringify({ text: socraticPrompt, history: liteHistory }) 
                 });
 
                 if (!response.ok) throw new Error(`Server Error: ${response.status}`);
