@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor v26.0 (Architect)</title>
+    <title>LogicPals Tutor v27.0 (Game Master)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
@@ -16,6 +16,7 @@
         header { background: white; padding: 12px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
         .logo { font-weight: 800; color: var(--primary); font-size: 18px; display: flex; align-items: center; gap: 8px; }
         .header-controls { display: flex; align-items: center; gap: 15px; }
+        .timer-badge { background: #FEF3C7; color: #D97706; font-weight: 700; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-family: monospace; display: flex; align-items: center; gap: 5px; }
         .finish-btn { background: white; border: 2px solid #10B981; color: #10B981; font-weight: 700; padding: 6px 14px; border-radius: 20px; text-decoration: none; font-size: 13px; cursor: pointer; transition: 0.2s; }
         .finish-btn:hover { background: #10B981; color: white; }
 
@@ -69,7 +70,7 @@
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; 
         
-        // Initial Problem State (Matches the HTML above)
+        // Initial Problem State (Must match HTML above)
         let conversationLog = [
             { role: 'system', content: 'Problem: A farmer has 17 sheep and all but 9 die. How many are left?' },
             { role: 'ai', content: 'Hi! Here is your mystery: "A farmer has 17 sheep and all but 9 die. How many are left?"' }
@@ -82,20 +83,16 @@
         let supabaseClient;
         let currentChildId = null;
 
-        // --- 1. ENTER KEY FIX (Global Listener) ---
+        // --- 1. ENTER KEY & STARTUP ---
+        // Listener is attached IMMEDIATELY.
         const textInput = document.getElementById('textInput');
         textInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault(); // Stop weird browser behavior
-                sendText();
-            }
+            if (e.key === 'Enter') sendText();
         });
 
-        // --- 2. STARTUP LOGIC ---
-        // We start the timer immediately.
         startTimer();
         
-        // We initialize DB in background
+        // Connect to DB in background (does not block UI)
         window.addEventListener('load', async () => {
             if (typeof supabase !== 'undefined') {
                 try {
@@ -107,9 +104,8 @@
                     }
                 } catch(e) { console.log("Offline mode active"); }
             }
-            
-            // Auto Welcome after 1.5s
-            setTimeout(sendWelcomeMessage, 1500);
+            // Auto Welcome after 1s
+            setTimeout(sendWelcomeMessage, 1000);
         });
 
         // --- CORE FUNCTIONS ---
@@ -121,6 +117,7 @@
             addMessage('ai', `<span id="${tempId}">👋 Saying hi...</span>`);
 
             try {
+                // Short Welcome
                 const prompt = "[Inst] Ignore input. Say: 'Hi! Ready to solve this?' (Max 10 words) [/Inst]";
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
@@ -147,12 +144,14 @@
             addMessage('ai', `<span id="${tempId}">Thinking... 🤔</span>`);
 
             try {
+                // 1. SMART CONTEXT (Fixes Looping)
+                // We send the Problem + Last 3 messages.
+                // This lets AI see that it just asked you a question.
                 const smartHistory = getSmartHistory();
 
-                // 🚀 THE COGNITIVE ARCHITECT PROMPT 🚀
-                // 1. We strictly FORBID the answer.
-                // 2. We force the AI to ask about specific WORDS in the puzzle.
-                const prompt = text + " [Inst] You are a Socratic Riddle Tutor. Rule 1: NEVER reveal the answer/number. Rule 2: If user is stuck, ask about the confusing words (e.g. 'What does all-but-9 mean?'). Rule 3: Keep it under 20 words. [/Inst]";
+                // 2. THE GAME MASTER PROMPT (Fixes Spoiling & Dullness)
+                // Logic: Check answer -> Celebrate -> OR Guide -> Anti-Timeout.
+                const prompt = text + " [Inst] Analyze Problem. 1. If Answer matches Problem: Say 'Correct! 🎉' & explain briefly. 2. If Wrong: Ask guiding question about CONCEPTS (no numbers). 3. NEVER name the operation. 4. Max 20 words. [/Inst]";
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
@@ -183,12 +182,17 @@
         // --- HELPERS ---
         function getSmartHistory() {
             let history = [];
-            // Keep Puzzle Context
+            // Always keep Problem Context (First Item)
             if (conversationLog.length > 0) history.push(conversationLog[0]);
-            // Keep Last 2 Messages
-            if (conversationLog.length > 2) {
-                const recent = conversationLog.slice(-2);
+            
+            // Keep Last 3 Messages (User -> AI -> User)
+            // This prevents the AI from forgetting the active conversation
+            if (conversationLog.length > 3) {
+                const recent = conversationLog.slice(-3);
                 recent.forEach(msg => history.push({ role: msg.role, content: msg.content.substring(0, 100) }));
+            } else if (conversationLog.length > 1) {
+                 // If chat just started, send everything (skipping index 0 which is already added)
+                 conversationLog.slice(1).forEach(msg => history.push({ role: msg.role, content: msg.content.substring(0, 100) }));
             }
             return history;
         }
@@ -281,7 +285,7 @@
                 formData.append('file', audioBlob);
                 const smartHistory = getSmartHistory();
                 formData.append('history', JSON.stringify(smartHistory));
-                formData.append('instructions', 'NEVER answer. Ask about specific words. Max 15 words.');
+                formData.append('instructions', 'If CORRECT: Say "Correct! 🎉". If WRONG: Guide conceptually. NEVER name math operation. Max 15 words.');
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
