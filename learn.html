@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor v30.0 (Hybrid Engine)</title>
+    <title>LogicPals Tutor v31.0 (Sticky Logic)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
@@ -49,8 +49,7 @@
         </div>
     </header>
 
-    <div class="chat-container" id="chatContainer">
-        </div>
+    <div class="chat-container" id="chatContainer"></div>
 
     <div class="input-area">
         <div class="input-wrapper">
@@ -68,68 +67,96 @@
         
         let conversationLog = [];
         let currentHints = [];
-        let hintIndex = 0;
         let isProcessing = false;
         let mediaRecorder, audioChunks = [], isRecording = false;
         let supabaseClient;
         let currentChildId = null;
-        let currentProblemId = 0; 
+        let currentProblemId = null;
 
-        // --- 🚀 THE LOCAL LIBRARY (No More Boredom) 🚀 ---
-        // 5 Puzzles. We pick a random one if the database is slow.
-        const localPuzzles = [
-            { id: 999, text: "A farmer has 17 sheep and all but 9 die. How many are left?", hints: ["Read 'all but 9' carefully.", "It implies 9 survived."] },
-            { id: 998, text: "I am an odd number. Take away a letter and I become even. What number am I?", hints: ["It's a number word.", "Think of 'Seven'."] },
-            { id: 997, text: "What comes once in a minute, twice in a moment, but never in a thousand years?", hints: ["It's a letter.", "Look at the words."] },
-            { id: 996, text: "Tom's mother has 3 children: April, May, and who?", hints: ["Read the first two words.", "Tom's mother."] },
-            { id: 995, text: "What has many keys but can't open a single lock?", hints: ["It makes music.", "A Piano."] }
-        ];
+        // --- 1. THE "STICKY" STARTUP ---
+        // This ensures if you refresh, you stay on the SAME puzzle.
+        window.onload = async function() {
+            startTimer();
 
-        // --- 1. ENTER KEY & STARTUP ---
-        const textInput = document.getElementById('textInput');
-        textInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                sendText();
+            // A. Check Local Storage First (Fastest)
+            const savedPuzzle = localStorage.getItem('activePuzzle');
+            if (savedPuzzle) {
+                const p = JSON.parse(savedPuzzle);
+                loadGameUI(p.id, p.text, p.hints);
+                // Connect DB in background for saving later
+                setTimeout(initSupabase, 1000);
+            } else {
+                // B. New User? Init DB and fetch Fresh Puzzle
+                initSupabase();
             }
-        });
 
-        startTimer();
-        
-        // --- 2. INSTANT LAUNCH ---
-        window.onload = function() {
-            // A. Pick a Random Local Puzzle (Solves "Always Sheep")
-            const p = localPuzzles[Math.floor(Math.random() * localPuzzles.length)];
-            currentProblemId = p.id;
-            currentHints = p.hints;
-
-            // B. Render Immediately
-            const intro = `Hi! Here is your mystery:<br><br><strong>"${p.text}"</strong>`;
-            addMessage('ai', intro);
-            conversationLog = [
-                { role: 'system', content: `Problem: ${p.text}` },
-                { role: 'ai', content: intro }
-            ];
-
-            // C. Connect DB in Background (Solves "Dashboard 0")
-            setTimeout(initSupabase, 500);
-            
-            // D. Auto-Welcome
-            setTimeout(sendWelcomeMessage, 1500);
+            textInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') sendText();
+            });
         };
 
-        function initSupabase() {
+        async function initSupabase() {
             if (typeof supabase !== 'undefined') {
                 try {
                     supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-                    supabaseClient.auth.getSession().then(({ data }) => {
-                        if (data.session) {
-                            supabaseClient.from('children').select('id').eq('parent_id', data.session.user.id).single()
-                            .then(({data: child}) => { if(child) currentChildId = child.id; });
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    
+                    if (session) {
+                        // Get User ID
+                        const { data: child } = await supabaseClient.from('children').select('id').eq('parent_id', session.user.id).single();
+                        if (child) currentChildId = child.id;
+
+                        // ONLY fetch new puzzle if we don't have one in LocalStorage
+                        if (!localStorage.getItem('activePuzzle')) {
+                            fetchFreshPuzzle();
                         }
-                    });
-                } catch(e) { console.log("Still offline, will retry save later."); }
+                    }
+                } catch(e) { console.log("Offline mode"); }
             }
+        }
+
+        async function fetchFreshPuzzle() {
+            // 1. Get List of Solved IDs
+            const { data: solved } = await supabaseClient.from('attempts').select('problem_id').eq('child_id', currentChildId);
+            const solvedIds = solved ? solved.map(a => a.problem_id) : [];
+
+            // 2. Fetch All Problems
+            const { data: allProblems } = await supabaseClient.from('problems').select('*');
+            
+            // 3. Filter: Find one NOT solved
+            const available = allProblems.filter(p => !solvedIds.includes(p.id));
+            
+            // 4. Pick One
+            let nextPuzzle;
+            if (available.length > 0) {
+                nextPuzzle = available[Math.floor(Math.random() * available.length)];
+            } else {
+                // If all solved, pick random from all (Replay)
+                nextPuzzle = allProblems[Math.floor(Math.random() * allProblems.length)];
+            }
+
+            // 5. Save & Load
+            localStorage.setItem('activePuzzle', JSON.stringify({
+                id: nextPuzzle.id,
+                text: nextPuzzle.problem_text,
+                hints: nextPuzzle.hints
+            }));
+            loadGameUI(nextPuzzle.id, nextPuzzle.problem_text, nextPuzzle.hints);
+        }
+
+        function loadGameUI(id, text, hints) {
+            currentProblemId = id;
+            currentHints = hints || ["Think carefully."];
+            
+            const intro = `Hi! Here is your mystery:<br><br><strong>"${text}"</strong>`;
+            addMessage('ai', intro);
+            conversationLog = [
+                { role: 'system', content: `Problem: ${text}` },
+                { role: 'ai', content: intro }
+            ];
+            
+            // Auto Welcome
+            setTimeout(sendWelcomeMessage, 1500);
         }
 
         // --- CORE FUNCTIONS ---
@@ -169,8 +196,10 @@
             try {
                 const smartHistory = getSmartHistory();
 
-                // 🚀 PROMPT V3: STRICT ANTI-ANSWER 🚀
-                const prompt = text + " [Inst] You are a tutor. 1. If Answer Correct: Say 'Correct! 🎉' & Explain. 2. If Asking for Answer: SAY NO gently. 3. Else: Guide conceptually. Max 20 words. [/Inst]";
+                // 🚀 CONCEPT-ONLY PROMPT 🚀
+                // We forbid "Operation Names" (Divide/Add/Sub).
+                // We force "Concept" questions.
+                const prompt = text + " [Inst] You are a Riddle Master. 1. If Answer Correct: Say 'Correct! 🎉' & Explain. 2. If Wrong: Ask about the STORY (e.g. 'Are we grouping or losing items?'). 3. FORBIDDEN: Do not say 'divide', 'subtract', 'multiply'. Max 20 words. [/Inst]";
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
@@ -219,13 +248,15 @@
 
         function startTimer() {
             let totalSeconds = 0;
-            setInterval(() => {
-                totalSeconds++;
-                const mins = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
-                const secs = (totalSeconds % 60).toString().padStart(2, '0');
-                const el = document.querySelector('.timer-badge span');
-                if(el) el.innerText = `${mins}:${secs}`;
-            }, 1000);
+            const timerEl = document.querySelector('.timer-badge span'); 
+            if(timerEl) {
+                setInterval(() => {
+                    totalSeconds++;
+                    const mins = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+                    const secs = (totalSeconds % 60).toString().padStart(2, '0');
+                    timerEl.innerText = `${mins}:${secs}`;
+                }, 1000);
+            }
         }
 
         function showHint() {
@@ -243,44 +274,32 @@
             } catch (e) { console.error("Audio error", e); }
         }
 
-        // --- 🚀 ROBUST SAVING (Fixes Dashboard) 🚀 ---
+        // --- FINISH SESSION (Clear Sticky Puzzle) ---
         async function finishSession() {
             const btn = document.querySelector('.finish-btn'); 
             btn.innerText = "Saving... 💾";
             confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
             
-            // Try to initialize DB one last time if it failed earlier
-            if (!supabaseClient && typeof supabase !== 'undefined') {
-                try { supabaseClient = supabase.createClient(supabaseUrl, supabaseKey); } catch(e) {}
-            }
-
-            if (supabaseClient) {
+            // 1. Save to Database
+            if (supabaseClient && currentChildId) {
                 try {
-                    // Re-check session if needed
-                    if (!currentChildId) {
-                        const { data } = await supabaseClient.auth.getSession();
-                        if (data.session) {
-                            const { data: child } = await supabaseClient.from('children').select('id').eq('parent_id', data.session.user.id).single();
-                            if (child) currentChildId = child.id;
-                        }
-                    }
-
-                    if (currentChildId) {
-                        // FORCE SAVE: We send the hardcoded ID if offline, or real ID if online
-                        // Note: Ensure your database allows inserting ID 999, 998, etc.
-                        await supabaseClient.from('attempts').insert([{ 
-                            child_id: currentChildId, 
-                            problem_id: currentProblemId > 0 ? currentProblemId : 1, 
-                            solved_correctly: true, 
-                            ai_conversation: getSmartHistory() 
-                        }]);
-                        console.log("Progress Saved!");
-                    }
-                } catch(e) { console.log("Save failed:", e); }
+                    await supabaseClient.from('attempts').insert([{ 
+                        child_id: currentChildId, 
+                        problem_id: currentProblemId, 
+                        solved_correctly: true, 
+                        ai_conversation: getSmartHistory() 
+                    }]);
+                } catch(e) {}
             }
-            
-            // Go to next
-            setTimeout(() => { location.reload(); }, 1500);
+
+            // 2. CLEAR STICKY PUZZLE
+            localStorage.removeItem('activePuzzle');
+
+            // 3. Load Next (This triggers 'fetchFreshPuzzle' again)
+            setTimeout(() => { 
+                btn.innerText = "Next Level 🚀";
+                location.reload(); 
+            }, 1000);
         }
         
         // --- VOICE ---
@@ -317,7 +336,7 @@
                 formData.append('file', audioBlob);
                 const smartHistory = getSmartHistory();
                 formData.append('history', JSON.stringify(smartHistory));
-                formData.append('instructions', 'If CORRECT: Say "Correct! 🎉". If WRONG: Guide. Max 15 words.');
+                formData.append('instructions', 'If CORRECT: Say "Correct! 🎉". If WRONG: Guide conceptually. Max 15 words.');
 
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
