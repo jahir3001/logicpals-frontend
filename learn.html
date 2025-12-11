@@ -130,10 +130,10 @@
             display: flex; 
             gap: 12px; 
             align-items: center; 
-            background: #F9FAFB;
-            padding: 8px;
-            border-radius: 50px;
-            border: 1px solid #E5E7EB;
+            background: #F9FAFB; 
+            padding: 8px; 
+            border-radius: 50px; 
+            border: 1px solid #E5E7EB; 
         }
         
         /* HINT BUTTON UI */
@@ -176,10 +176,10 @@
             flex: 1; 
             padding: 12px 15px; 
             border: none; 
-            background: transparent;
+            background: transparent; 
             font-size: 18px; 
             outline: none; 
-            color: #374151;
+            color: #374151; 
         }
         
         .mic-btn { 
@@ -191,7 +191,7 @@
             font-size: 22px; 
             cursor: pointer; 
             color: #6B7280; 
-            transition: 0.2s;
+            transition: 0.2s; 
         }
         .mic-btn:hover { background: #FEF2F2; color: #EF4444; }
         .mic-btn.recording { 
@@ -265,7 +265,7 @@
         let startTime;
         let timerInterval;
 
-        // --- LOCAL PUZZLE LIBRARY (Instant Load) ---
+        // --- LOCAL PUZZLE LIBRARY (Fallback) ---
         const localPuzzles = [
             { id: 999, text: "A farmer has 17 sheep and all but 9 die. How many are left?", hints: ["Read 'all but 9' carefully.", "It means 9 are alive.", "The rest died."] },
             { id: 998, text: "I am an odd number. Take away a letter and I become even. What number am I?", hints: ["It's a word trick.", "Write down 'Seven'.", "Take away 'S'."] },
@@ -287,7 +287,7 @@
                 } catch(e) {}
             }
 
-            // 2. Load Puzzle
+            // 2. Load Puzzle (Sticky Logic)
             const saved = localStorage.getItem('activePuzzle');
             if (saved) {
                 const p = JSON.parse(saved);
