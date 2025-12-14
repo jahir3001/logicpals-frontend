@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor v33.0 (Retry Logic)</title>
+    <title>LogicPals Tutor v34.0 (Un-Jammable)</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
@@ -15,11 +15,11 @@
 
         header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; }
         .logo { font-weight: 800; color: var(--primary); font-size: 20px; display: flex; align-items: center; gap: 8px; }
-        
         .header-controls { display: flex; align-items: center; gap: 15px; }
+        
         .timer-badge { background: #FEF3C7; color: #D97706; font-weight: 700; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-family: monospace; display: flex; align-items: center; gap: 6px; }
         
-        /* LOGIC GATE: Hidden until victory */
+        /* FINISH BUTTON (Hidden by default) */
         .finish-btn { 
             display: none; 
             background: #10B981; color: white; font-weight: 700; padding: 8px 20px; border-radius: 20px; cursor: pointer; 
@@ -44,12 +44,10 @@
         input:focus { border-color: var(--primary); }
         
         .mic-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: #F3F4F6; font-size: 20px; cursor: pointer; color: #4B5563; }
-        /* Red Pulse when recording */
         .mic-btn.recording { background: #EF4444; color: white; animation: pulse 1.5s infinite; }
         
-        .send-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .send-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .send-btn:disabled { background: #9CA3AF; cursor: not-allowed; }
         
         .typing { font-size: 14px; color: #6B7280; margin-left: 20px; font-style: italic; opacity: 0; transition: 0.3s; margin-bottom: 5px; }
         .typing.active { opacity: 1; }
@@ -76,7 +74,7 @@
             </div>
             <input type="text" id="textInput" placeholder="Type or speak..." autocomplete="off">
             <button class="mic-btn" id="micBtn" onclick="toggleRecording()">🎤</button>
-            <button class="send-btn" onclick="sendText()">➤</button>
+            <button id="sendBtn" class="send-btn" onclick="sendText()">➤</button>
         </div>
     </div>
 
@@ -93,7 +91,7 @@
         let supabaseClient;
         let currentChildId = null;
         let currentProblemId = null;
-        let puzzleSolved = false; // Logic Gate
+        let puzzleSolved = false; 
         let startTime;
         let timerInterval;
 
@@ -117,7 +115,6 @@
                 } catch(e) {}
             }
 
-            // Load Puzzle (Sticky)
             const saved = localStorage.getItem('activePuzzle');
             if (saved) {
                 const p = JSON.parse(saved);
@@ -146,7 +143,7 @@
             currentHints = hints || ["Think carefully."];
             hintsRemaining = 3;
             puzzleSolved = false;
-            document.getElementById('finishBtn').style.display = 'none'; // Ensure Hidden
+            document.getElementById('finishBtn').style.display = 'none'; 
             updateHintBadge();
             document.getElementById('chatContainer').innerHTML = '';
             
@@ -169,10 +166,13 @@
             }
         }
 
-        // --- 🤖 AUTO-RETRY AI (Fixes "Trouble Thinking") ---
-        async function sendText(retryCount = 0) {
+        // --- 🤖 AI LOGIC WITH "UN-JAMMER" ---
+        async function sendText() {
             const textInput = document.getElementById('textInput');
+            const sendBtn = document.getElementById('sendBtn');
             const text = textInput.value.trim();
+            
+            // PREVENT SENDING IF EMPTY OR ALREADY BUSY
             if(!text || isProcessing) return; 
             
             // LOGIC GATE
@@ -182,25 +182,37 @@
                 return;
             }
 
+            // LOCK INTERFACE
             isProcessing = true; 
+            sendBtn.disabled = true; // Visual Lock
+            sendBtn.style.background = "#9CA3AF";
             document.getElementById('typingIndicator').classList.add('active');
             
-            if (retryCount === 0) { // Only show user message once
-                addMessage('user', text);
-                conversationLog.push({ role: 'user', content: text });
-                textInput.value = ""; 
-            }
+            addMessage('user', text);
+            conversationLog.push({ role: 'user', content: text });
+            textInput.value = ""; 
+
+            // SAFETY WATCHDOG: If AI hangs for 15s, Unlock everything
+            const watchdog = setTimeout(() => {
+                if (isProcessing) {
+                    console.warn("Watchdog reset");
+                    isProcessing = false;
+                    sendBtn.disabled = false;
+                    sendBtn.style.background = "#4F46E5";
+                    document.getElementById('typingIndicator').classList.remove('active');
+                    addMessage('ai', "I got stuck thinking. Try asking again!");
+                }
+            }, 15000);
 
             try {
                 const smartPrompt = `
-                ROLE: You are LogicPals, a Socratic Tutor.
-                GOAL: Help the child solve the puzzle.
+                ROLE: LogicPals Socratic Tutor.
                 RULES:
                 1. IF CORRECT: Start with "Correct! 🎉". Explain logic.
                 2. IF WRONG: Be encouraging. Ask a guiding question.
                 3. IF ASKING ANSWER: Refuse playfully.
                 4. NEVER name operations (don't say "Divide").
-                5. Keep tone friendly.
+                5. Keep tone friendly. Max 30 words.
                 
                 HISTORY: ${JSON.stringify(conversationLog.slice(-4))}
                 USER INPUT: "${text}"
@@ -214,40 +226,32 @@
 
                 if (!response.ok) throw new Error("Server Error");
                 const data = await response.json();
+                
+                // Clear Watchdog
+                clearTimeout(watchdog);
+
                 const reply = data.reply || data.aiText;
                 
                 addMessage('ai', reply);
                 conversationLog.push({ role: 'ai', content: reply });
                 speak(reply);
 
-                if (reply.includes("Correct!") || reply.includes("🎉")) {
+                if (reply.toLowerCase().includes("correct") || reply.includes("🎉")) {
                     puzzleSolved = true;
                     document.getElementById('finishBtn').style.display = 'block'; 
                     confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
                 }
 
             } catch (error) {
-                // 🔄 AUTO-RETRY LOGIC 🔄
-                if (retryCount < 1) {
-                    console.log("Retrying AI connection...");
-                    setTimeout(() => {
-                        isProcessing = false; // Reset lock for retry
-                        sendText(1); // Retry once
-                    }, 1000);
-                    return;
-                }
-                
-                // If 2nd try fails, show error
-                const err = "I'm having a little trouble thinking. Can you say that again?";
-                addMessage('ai', err);
-                speak(err);
+                // If error, unlock immediately
+                addMessage('ai', "I'm having a little trouble thinking. Can you say that again?");
             } finally {
-                // Only unlock if we aren't retrying
-                if (retryCount >= 1 || !isProcessing) {
-                    isProcessing = false; 
-                    document.getElementById('typingIndicator').classList.remove('active');
-                    textInput.focus();
-                }
+                // ALWAYS UNLOCK
+                isProcessing = false; 
+                sendBtn.disabled = false;
+                sendBtn.style.background = "#4F46E5";
+                document.getElementById('typingIndicator').classList.remove('active');
+                textInput.focus();
             }
         }
 
@@ -283,7 +287,6 @@
             }, 1000);
         }
 
-        // --- 💾 DATABASE SYNC (Fixes "Solved 0") ---
         async function finishSession() {
             if (!puzzleSolved) return;
 
@@ -291,7 +294,6 @@
             btn.innerText = "Saving... 💾";
             btn.disabled = true;
             
-            // AWAIT IS CRITICAL HERE
             if (supabaseClient && currentChildId) {
                 try {
                     await supabaseClient.from('attempts').insert([{ 
@@ -301,16 +303,13 @@
                         ai_conversation: conversationLog,
                         hints_used: hintsUsedCount 
                     }]);
-                    console.log("Sync Complete");
-                } catch(e) { console.error("Save failed:", e); }
+                } catch(e) { console.error(e); }
             }
 
-            // Clear Sticky Logic
             localStorage.removeItem('activePuzzle');
-
-            // 🔄 RELOAD TO FETCH NEW PUZZLE (Not Dashboard)
+            
             setTimeout(() => { 
-                location.reload(); 
+                window.location.href = 'dashboard.html'; 
             }, 1000);
         }
 
@@ -323,7 +322,6 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // --- 🎤 MICROPHONE FIX ---
         function toggleRecording() {
             if (!('webkitSpeechRecognition' in window)) {
                 alert("Voice input requires Chrome/Edge.");
@@ -331,30 +329,17 @@
             }
             const recognition = new webkitSpeechRecognition();
             recognition.lang = "en-US";
-            recognition.interimResults = false; // Only final results
-            recognition.maxAlternatives = 1;
-
-            recognition.onstart = () => {
-                document.getElementById('micBtn').classList.add('recording');
-                document.getElementById('textInput').placeholder = "Listening...";
-            };
-            
-            recognition.onend = () => {
-                document.getElementById('micBtn').classList.remove('recording');
-                document.getElementById('textInput').placeholder = "Type or speak...";
-            };
-            
+            recognition.onstart = () => document.getElementById('micBtn').classList.add('recording');
+            recognition.onend = () => document.getElementById('micBtn').classList.remove('recording');
             recognition.onresult = (e) => {
-                const t = e.results[0][0].transcript;
-                document.getElementById('textInput').value = t;
-                // Auto-send after 0.5s pause to let user see text
-                setTimeout(() => sendText(), 500); 
+                document.getElementById('textInput').value = e.results[0][0].transcript;
+                sendText();
             };
-            
             recognition.start();
         }
 
-        document.getElementById('textInput').addEventListener('keypress', function (e) {
+        // IMPROVED KEY LISTENER
+        document.getElementById('textInput').addEventListener('keydown', function (e) {
             if (e.key === 'Enter') sendText();
         });
     </script>
