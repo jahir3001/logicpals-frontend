@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor v33.0 (Enterprise)</title>
+    <title>LogicPals Tutor v33.0 (Retry Logic)</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
@@ -16,13 +16,13 @@
         header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; }
         .logo { font-weight: 800; color: var(--primary); font-size: 20px; display: flex; align-items: center; gap: 8px; }
         
+        .header-controls { display: flex; align-items: center; gap: 15px; }
         .timer-badge { background: #FEF3C7; color: #D97706; font-weight: 700; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-family: monospace; display: flex; align-items: center; gap: 6px; }
         
-        /* HIDDEN BUTTON - Only appears on Victory */
+        /* LOGIC GATE: Hidden until victory */
         .finish-btn { 
             display: none; 
-            background: #10B981; border: none; color: white; font-weight: 700; padding: 8px 20px; border-radius: 20px; cursor: pointer; 
-            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+            background: #10B981; color: white; font-weight: 700; padding: 8px 20px; border-radius: 20px; cursor: pointer; 
             animation: pulse-green 1.5s infinite;
         }
         @keyframes pulse-green { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
@@ -36,17 +36,22 @@
         .input-area { background: white; padding: 15px 20px; border-top: 1px solid #E5E7EB; }
         .input-wrapper { max-width: 800px; margin: 0 auto; display: flex; gap: 10px; align-items: center; }
         
-        .hint-btn { background: #FBBF24; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; }
-        .hint-count { position: absolute; top: -5px; right: -5px; background: #EF4444; color: white; font-size: 10px; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+        .hint-wrapper { position: relative; }
+        .hint-btn { background: #FBBF24; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .hint-count { position: absolute; top: -5px; right: -5px; background: #EF4444; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
 
         input { flex: 1; padding: 12px 15px; border: 2px solid #E5E7EB; border-radius: 50px; font-size: 16px; outline: none; transition: 0.2s; }
         input:focus { border-color: var(--primary); }
         
         .mic-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: #F3F4F6; font-size: 20px; cursor: pointer; color: #4B5563; }
+        /* Red Pulse when recording */
         .mic-btn.recording { background: #EF4444; color: white; animation: pulse 1.5s infinite; }
+        
         .send-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         
-        .typing { font-size: 12px; color: #6B7280; margin-left: 20px; margin-bottom: 5px; opacity: 0; transition: 0.3s; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        
+        .typing { font-size: 14px; color: #6B7280; margin-left: 20px; font-style: italic; opacity: 0; transition: 0.3s; margin-bottom: 5px; }
         .typing.active { opacity: 1; }
     </style>
 </head>
@@ -65,8 +70,8 @@
     <div class="input-area">
         <div class="typing" id="typingIndicator">Tutor is thinking...</div>
         <div class="input-wrapper">
-            <div style="position:relative">
-                <button class="hint-btn" onclick="useHint()">💡</button>
+            <div class="hint-wrapper">
+                <button class="hint-btn" onclick="useHint()" title="Get a Hint">💡</button>
                 <div class="hint-count" id="hintBadge">3</div>
             </div>
             <input type="text" id="textInput" placeholder="Type or speak..." autocomplete="off">
@@ -88,21 +93,18 @@
         let supabaseClient;
         let currentChildId = null;
         let currentProblemId = null;
-        let puzzleSolved = false; // The Gatekeeper
+        let puzzleSolved = false; // Logic Gate
         let startTime;
         let timerInterval;
 
-        // --- LOCAL PUZZLE LIBRARY (Fallback) ---
         const localPuzzles = [
             { id: 999, text: "A farmer has 17 sheep and all but 9 die. How many are left?", hints: ["Read 'all but 9' carefully.", "It means 9 are alive.", "The rest died."] },
             { id: 998, text: "I am an odd number. Take away a letter and I become even. What number am I?", hints: ["It's a word trick.", "Write down 'Seven'.", "Take away 'S'."] },
-            { id: 997, text: "If you have a bowl with 6 apples and you take away 4, how many apples do you have?", hints: ["How many are in YOUR hand?", "Not what's in the bowl.", "You took 4."] },
-            { id: 996, text: "Tom's mother has 3 children: April, May, and who?", hints: ["Read the name again.", "It's Tom's mother.", "Tom is the child."] }
+            { id: 997, text: "What comes once in a minute, twice in a moment, but never in a thousand years?", hints: ["It's a letter.", "Look at the spelling.", "The letter 'M'."] }
         ];
 
-        // --- STARTUP LOGIC ---
+        // --- STARTUP ---
         window.onload = function() {
-            // 1. Initialize DB
             if (typeof supabase !== 'undefined') {
                 try {
                     supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -115,7 +117,7 @@
                 } catch(e) {}
             }
 
-            // 2. Load Puzzle
+            // Load Puzzle (Sticky)
             const saved = localStorage.getItem('activePuzzle');
             if (saved) {
                 const p = JSON.parse(saved);
@@ -127,9 +129,8 @@
 
             startTimer();
 
-            // 3. Welcome Voice
             setTimeout(() => {
-                const msg = "Hi! I'm ready to help you solve this mystery!";
+                const msg = "Hi! Ready to solve this mystery? How can I help?";
                 addMessage('ai', msg);
                 speak(msg);
             }, 1000);
@@ -145,16 +146,16 @@
             currentHints = hints || ["Think carefully."];
             hintsRemaining = 3;
             puzzleSolved = false;
-            document.getElementById('finishBtn').style.display = 'none'; // HIDE BUTTON
+            document.getElementById('finishBtn').style.display = 'none'; // Ensure Hidden
             updateHintBadge();
-            
             document.getElementById('chatContainer').innerHTML = '';
+            
             const intro = `Here is your mystery:<br><br><strong>"${text}"</strong>`;
             addMessage('ai', intro);
             conversationLog = [{ role: 'system', content: `Problem: ${text}` }];
         }
 
-        // --- 🚀 CLIENT-SIDE VOICE (Fast & Free) ---
+        // --- BROWSER VOICE ---
         function speak(text) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
@@ -168,35 +169,37 @@
             }
         }
 
-        // --- 🧠 SMART AI LOGIC ---
-        async function sendText() {
+        // --- 🤖 AUTO-RETRY AI (Fixes "Trouble Thinking") ---
+        async function sendText(retryCount = 0) {
             const textInput = document.getElementById('textInput');
             const text = textInput.value.trim();
             if(!text || isProcessing) return; 
             
-            // Logic Gate: If solved, stop chat
+            // LOGIC GATE
             if (puzzleSolved) {
-                addMessage('ai', "You solved it! Click the green button to move on! 🎉");
-                speak("You solved it! Click the green button to move on!");
+                addMessage('ai', "You solved it! Click the green button! 🎉");
+                speak("You solved it! Click the green button!");
                 return;
             }
 
             isProcessing = true; 
             document.getElementById('typingIndicator').classList.add('active');
             
-            addMessage('user', text);
-            conversationLog.push({ role: 'user', content: text });
-            textInput.value = ""; 
+            if (retryCount === 0) { // Only show user message once
+                addMessage('user', text);
+                conversationLog.push({ role: 'user', content: text });
+                textInput.value = ""; 
+            }
 
             try {
-                // MASSIVE PROMPT (Allowed because no Audio Gen)
                 const smartPrompt = `
                 ROLE: You are LogicPals, a Socratic Tutor.
+                GOAL: Help the child solve the puzzle.
                 RULES:
-                1. IF CORRECT: You MUST start with "Correct! 🎉". Explain briefly.
-                2. IF WRONG: Guide the child. Ask "Why do you think that?".
-                3. IF ASKING FOR ANSWER: Refuse playfully.
-                4. NEVER name the math operation (e.g. don't say "Divide").
+                1. IF CORRECT: Start with "Correct! 🎉". Explain logic.
+                2. IF WRONG: Be encouraging. Ask a guiding question.
+                3. IF ASKING ANSWER: Refuse playfully.
+                4. NEVER name operations (don't say "Divide").
                 5. Keep tone friendly.
                 
                 HISTORY: ${JSON.stringify(conversationLog.slice(-4))}
@@ -206,37 +209,45 @@
                 const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
                     method: 'POST',
                     headers: { 'Authorization': 'Bearer ' + supabaseKey, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        text: smartPrompt, 
-                        history: [], // History handled in prompt
-                        skipAudio: true // CRITICAL: Skip server audio to prevent timeout
-                    }) 
+                    body: JSON.stringify({ text: smartPrompt, history: [], skipAudio: true }) 
                 });
 
-                if (!response.ok) throw new Error("Server Busy");
+                if (!response.ok) throw new Error("Server Error");
                 const data = await response.json();
-                
                 const reply = data.reply || data.aiText;
                 
                 addMessage('ai', reply);
                 conversationLog.push({ role: 'ai', content: reply });
                 speak(reply);
 
-                // CHECK FOR VICTORY
                 if (reply.includes("Correct!") || reply.includes("🎉")) {
                     puzzleSolved = true;
-                    document.getElementById('finishBtn').style.display = 'block'; // SHOW BUTTON
+                    document.getElementById('finishBtn').style.display = 'block'; 
                     confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
                 }
 
             } catch (error) {
-                const err = "I'm having trouble thinking. Can you say that again?";
+                // 🔄 AUTO-RETRY LOGIC 🔄
+                if (retryCount < 1) {
+                    console.log("Retrying AI connection...");
+                    setTimeout(() => {
+                        isProcessing = false; // Reset lock for retry
+                        sendText(1); // Retry once
+                    }, 1000);
+                    return;
+                }
+                
+                // If 2nd try fails, show error
+                const err = "I'm having a little trouble thinking. Can you say that again?";
                 addMessage('ai', err);
                 speak(err);
             } finally {
-                isProcessing = false; 
-                document.getElementById('typingIndicator').classList.remove('active');
-                textInput.focus();
+                // Only unlock if we aren't retrying
+                if (retryCount >= 1 || !isProcessing) {
+                    isProcessing = false; 
+                    document.getElementById('typingIndicator').classList.remove('active');
+                    textInput.focus();
+                }
             }
         }
 
@@ -244,7 +255,7 @@
         function useHint() {
             if (hintsRemaining > 0) {
                 const index = 3 - hintsRemaining;
-                const hint = currentHints[index] || "Read carefully.";
+                const hint = currentHints[index] || "Think about the logic.";
                 addMessage('hint', `💡 HINT: ${hint}`);
                 speak("Hint: " + hint);
                 hintsRemaining--;
@@ -272,20 +283,17 @@
             }, 1000);
         }
 
-        // --- DATA SAVING (The Fix for "0 Solved") ---
+        // --- 💾 DATABASE SYNC (Fixes "Solved 0") ---
         async function finishSession() {
             if (!puzzleSolved) return;
 
-            const btn = document.querySelector('.finish-btn'); 
+            const btn = document.getElementById('finishBtn');
             btn.innerText = "Saving... 💾";
             btn.disabled = true;
             
-            // Calculate Stats
-            const timeSpentSeconds = Math.floor((Date.now() - startTime) / 1000);
-            
+            // AWAIT IS CRITICAL HERE
             if (supabaseClient && currentChildId) {
                 try {
-                    // AWAIT is critical here. We must wait for DB.
                     await supabaseClient.from('attempts').insert([{ 
                         child_id: currentChildId, 
                         problem_id: currentProblemId, 
@@ -293,14 +301,16 @@
                         ai_conversation: conversationLog,
                         hints_used: hintsUsedCount 
                     }]);
-                    console.log("Saved Success");
-                } catch(e) { console.error("Save error", e); }
+                    console.log("Sync Complete");
+                } catch(e) { console.error("Save failed:", e); }
             }
 
+            // Clear Sticky Logic
             localStorage.removeItem('activePuzzle');
-            
+
+            // 🔄 RELOAD TO FETCH NEW PUZZLE (Not Dashboard)
             setTimeout(() => { 
-                window.location.href = 'dashboard.html'; 
+                location.reload(); 
             }, 1000);
         }
 
@@ -313,20 +323,34 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // --- VOICE INPUT ---
+        // --- 🎤 MICROPHONE FIX ---
         function toggleRecording() {
             if (!('webkitSpeechRecognition' in window)) {
-                alert("Please use Chrome for voice.");
+                alert("Voice input requires Chrome/Edge.");
                 return;
             }
             const recognition = new webkitSpeechRecognition();
             recognition.lang = "en-US";
-            recognition.onstart = () => document.getElementById('micBtn').classList.add('recording');
-            recognition.onend = () => document.getElementById('micBtn').classList.remove('recording');
-            recognition.onresult = (e) => {
-                document.getElementById('textInput').value = e.results[0][0].transcript;
-                sendText();
+            recognition.interimResults = false; // Only final results
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = () => {
+                document.getElementById('micBtn').classList.add('recording');
+                document.getElementById('textInput').placeholder = "Listening...";
             };
+            
+            recognition.onend = () => {
+                document.getElementById('micBtn').classList.remove('recording');
+                document.getElementById('textInput').placeholder = "Type or speak...";
+            };
+            
+            recognition.onresult = (e) => {
+                const t = e.results[0][0].transcript;
+                document.getElementById('textInput').value = t;
+                // Auto-send after 0.5s pause to let user see text
+                setTimeout(() => sendText(), 500); 
+            };
+            
             recognition.start();
         }
 
