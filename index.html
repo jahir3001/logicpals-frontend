@@ -178,14 +178,14 @@
         }
         .hero-headline {
             font-size: 48px;
-            font-weight: 700; /* Explicitly bold */
+            font-weight: 700;
             color: var(--text-dark);
             margin-bottom: 24px;
             line-height: 1.1;
         }
         .hero-subhead {
             font-size: 20px;
-            color: var(--text-gray); /* Explicitly gray */
+            color: var(--text-gray);
             margin-bottom: 40px;
         }
         .hero-cta-group {
@@ -329,7 +329,7 @@
         /* --- SECTION 6: PRICING (2-COLUMN LAYOUT) --- */
         .pricing-2-col-grid {
             display: grid;
-            grid-template-columns: 1fr 1.1fr; /* Premium card slightly wider */
+            grid-template-columns: 1fr 1.1fr;
             gap: 32px;
             max-width: 1000px;
             margin: 60px auto 0;
@@ -478,7 +478,7 @@
         }
         .faq-item.active .faq-answer {
             padding: 0 24px 24px;
-            max-height: 500px; /* Arbitrary large height */
+            max-height: 500px;
         }
         .faq-icon {
             font-size: 20px;
@@ -566,14 +566,11 @@
             .section-padding { padding: 50px 0; }
             h1.hero-headline { font-size: 32px; }
             h2 { font-size: 28px; }
-            /* Nav */
-            .nav-links { display: none; } /* Simplified for mobile */
-            /* Grids to Stacks */
+            .nav-links { display: none; }
             .hero-grid, .problem-grid, .process-grid, .benefits-grid, .testimonial-grid, .footer-grid {
                 grid-template-columns: 1fr;
                 gap: 40px;
             }
-            /* Pricing Responsive Logic */
             .pricing-2-col-grid {
                 grid-template-columns: 1fr;
                 max-width: 500px;
@@ -583,7 +580,7 @@
             }
             .pricing-card.popular {
                 transform: none;
-                order: -1; /* Show premium first on mobile */
+                order: -1;
             }
             .hero-grid { display: flex; flex-direction: column; }
             .hero-illustration { order: -1; width: 100%; }
@@ -623,6 +620,11 @@
                 <h1 class="hero-headline">Your Child Can Solve Problems They've Never Seen Before</h1>
                 <p class="hero-subhead">While other kids panic on unfamiliar questions, yours will confidently figure them out.
                 Our AI teaches the thinking skills schools don't—in just 15 minutes a day.</p>
+                
+                <div style="background: white; padding: 24px; border-radius: 12px; border-left: 5px solid #F59E0B; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 32px; text-align: left;">
+                    <div style="font-size: 12px; font-weight: 800; color: #D97706; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">🔍 Try This Mystery</div>
+                    <p style="font-size: 18px; font-weight: 700; color: #1F2937; margin-bottom: 0; line-height: 1.4;">"I am an odd number. Take away a letter and I become even. What number am I?"</p>
+                </div>
                 <div class="hero-cta-group">
                     <a href="signup.html" class="btn btn-primary">Try Free for 7 Days</a>
                     <button class="btn btn-outline" onclick="document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})">Watch 2-Min Demo ↓</button>
@@ -787,32 +789,31 @@
             </div>
         </div>
     </section>
+    
     <section class="section-padding testimonials-section">
         <div class="container">
             <div class="text-center">
-                <h2>Parents Are Seeing Results in the First Week</h2>
+                <h2>What Parents Are Saying ❤️</h2>
                 <p>Real families. Real transformations. Real results.</p>
             </div>
             <div class="testimonial-grid">
                 <div class="testimonial-card">
                     <div class="stars"> ★★★★★ </div>
-                    <p class="quote">"Week 1: My son said 'Mom, can I do one more problem?'
-                    I almost cried. He's NEVER asked to do math. Week 3: His teacher asked what changed—he's solving problems in completely different ways now."</p>
-                    <div class="author-name">Ayesha Rahman</div>
-                    <div class="author-detail">Mother of 9-year-old Arif • Dhanmondi, Dhaka</div>
+                    <p class="quote">"My son asked to do 'one more mystery' before bed. That's NEVER happened with math homework!"</p>
+                    <div class="author-name">Ayesha</div>
+                    <div class="author-detail">Mother of 9-year-old • Dhanmondi</div>
                 </div>
                 <div class="testimonial-card">
                     <div class="stars"> ★★★★★ </div>
-                    <p class="quote">"We spent  ৳ 12,000/month on tutors. Same results: my daughter would cry before sessions. With LogicPals? She solves problems at 10 PM because she WANTS to. Her last exam: 87 (up from 64)."</p>
-                    <div class="author-name">Karim Hassan</div>
-                    <div class="author-detail">Father of 11-year-old Nadia • Gulshan, Dhaka</div>
+                    <p class="quote">"The AI is more patient than me! 😅 It guides him without giving the answer. Amazing."</p>
+                    <div class="author-name">Karim</div>
+                    <div class="author-detail">Father of 11-year-old • Gulshan</div>
                 </div>
                 <div class="testimonial-card">
                     <div class="stars"> ★★★★★ </div>
-                    <p class="quote">"I asked my daughter to solve a percentage problem. She said 'Let me try three different ways and see which is fastest.'
-                    WHAT?! LogicPals didn't just teach her math—it taught her to be a problem-solver."</p>
+                    <p class="quote">"I asked my daughter to solve a percentage problem. She said 'Let me try three different ways.' WHAT?! LogicPals didn't just teach her math—it taught her to be a problem-solver."</p>
                     <div class="author-name">Nusrat Ahmed</div>
-                    <div class="author-detail">Mother of 10-year-old Tasneem • Uttara, Dhaka</div>
+                    <div class="author-detail">Mother of 10-year-old • Uttara</div>
                 </div>
             </div>
         </div>
@@ -960,6 +961,23 @@
                     The worst that can happen? You get 7 days of free learning.<br>
                     The best that can happen? Your child discovers they're capable of so much more.
                 </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding" style="background-color: #111827; color: white;">
+        <div class="container">
+            <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+                <h2 style="color: #F59E0B; margin-bottom: 30px;">Why I Built LogicPals 🧠</h2>
+                <div style="text-align: left; font-size: 18px; line-height: 1.8; color: #D1D5DB;">
+                    <p>"As a parent, I watched my child memorize formulas perfectly but panic when exam questions changed slightly.</p>
+                    <p>I realized: Schools teach <strong>WHAT</strong> to think, not <strong>HOW</strong> to think.</p>
+                    <p>So I built LogicPals - an AI tutor that never gives answers, only asks questions that guide children to discover solutions themselves.</p>
+                    <p>That's the Socratic Method. And it works."</p>
+                </div>
+                <div style="margin-top: 30px; font-weight: 700; font-size: 20px; text-align: right; color: white;">
+                    - Tasbi, Founder
+                </div>
             </div>
         </div>
     </section>
