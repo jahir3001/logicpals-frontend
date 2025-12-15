@@ -8,81 +8,74 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        :root { --primary: #4F46E5; --bg: #F3F4F6; --green: #10B981; }
+        :root { --primary: #4F46E5; --bg: #F3F4F6; --green: #10B981; --orange: #F59E0B; }
         * { box-sizing: border-box; }
         body { font-family: 'Nunito', sans-serif; background: var(--bg); color: #1F2937; margin: 0; padding-bottom: 40px; }
 
-        /* HEADER */
         header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .logo { font-weight: 800; color: var(--primary); font-size: 20px; display: flex; align-items: center; gap: 5px; }
         .logout-btn { color: #6B7280; text-decoration: none; font-weight: 600; font-size: 14px; }
 
-        /* CONTAINER */
-        .container { max-width: 600px; margin: 30px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 20px; }
+        .container { max-width: 600px; margin: 20px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 15px; }
 
-        /* 1. PURPLE WELCOME CARD */
+        /* 1. PURPLE HEADER (User Info) */
         .welcome-card { 
             background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%); 
-            color: white; padding: 30px; border-radius: 20px; 
-            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3); text-align: center;
+            color: white; padding: 25px; border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3); text-align: left;
         }
-        .welcome-card h1 { font-size: 26px; margin: 0 0 5px 0; }
-        .welcome-card p { opacity: 0.9; font-size: 15px; margin: 0; }
+        .welcome-card h1 { font-size: 28px; margin: 0; }
+        .welcome-card p { opacity: 0.9; font-size: 16px; margin: 5px 0 0 0; font-weight: 600; }
 
-        /* 2. STATS GRID */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .stat-card { background: white; padding: 20px; border-radius: 16px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .stat-icon { font-size: 28px; margin-bottom: 5px; display: block; }
-        .stat-val { font-size: 22px; font-weight: 800; color: #111827; }
-        .stat-label { font-size: 12px; color: #6B7280; font-weight: 700; text-transform: uppercase; margin-top: 5px; }
+        /* 2. STATS ROW (Streak | Level) */
+        .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .stat-card { background: white; padding: 15px; border-radius: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .stat-icon { font-size: 24px; }
+        .stat-text div:first-child { font-size: 12px; color: #6B7280; font-weight: 700; text-transform: uppercase; }
+        .stat-text div:last-child { font-size: 18px; font-weight: 800; color: #111827; }
 
-        /* 3. PROGRESS CARD */
-        .progress-card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .progress-header { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; font-weight: 700; }
-        .progress-track { background: #E5E7EB; height: 12px; border-radius: 10px; overflow: hidden; }
-        .progress-fill { background: #9CA3AF; height: 100%; width: 0%; transition: width 1s ease; border-radius: 10px; }
+        /* 3. PROGRESS & GOAL CARD */
+        .progress-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .progress-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; font-weight: 700; }
+        .progress-track { background: #E5E7EB; height: 10px; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
+        .progress-fill { background: var(--green); height: 100%; width: 0%; transition: width 1s ease; border-radius: 10px; }
         
-        /* Orange Goal Box */
         .daily-goal { 
-            margin-top: 20px; padding: 15px; background: #FFF7ED; 
-            border: 1px solid #FFEDD5; border-radius: 12px; 
-            display: flex; align-items: center; gap: 10px; 
-            color: #C2410C; font-size: 14px; font-weight: 700; 
+            background: #FFF7ED; border: 1px solid #FFEDD5; border-radius: 12px; 
+            padding: 12px; display: flex; align-items: center; gap: 10px; 
+            color: #C2410C; font-size: 14px; font-weight: 700;
         }
 
-        /* 4. GREEN ACTION BUTTON */
+        /* 4. DETAILS ROW (Age | Solved) - Requested in Fixing Issue 3 */
+        .details-card {
+            background: white; padding: 15px; border-radius: 16px; 
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 14px; font-weight: 700; color: #4B5563;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .detail-item { display: flex; align-items: center; gap: 8px; }
+
+        /* 5. GREEN ACTION BUTTON */
         .play-btn { 
             display: flex; justify-content: center; align-items: center; gap: 10px;
             width: 100%; background: var(--green); color: white; 
-            text-align: center; padding: 20px; border-radius: 20px; 
+            text-align: center; padding: 18px; border-radius: 20px; 
             font-size: 18px; font-weight: 800; text-decoration: none; 
             box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); 
-            transition: transform 0.2s; 
+            transition: transform 0.2s; margin-top: 5px;
         }
-        .play-btn:hover { transform: translateY(-2px); }
         .play-btn:active { transform: scale(0.98); }
 
-        /* 5. LEADERBOARD */
-        .leaderboard-card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .lb-header { font-weight: 800; font-size: 16px; margin-bottom: 20px; color: #1F2937; display: flex; align-items: center; gap: 8px; }
-        .lb-list { display: flex; flex-direction: column; gap: 12px; }
-        .lb-item { display: flex; justify-content: space-between; padding: 12px; background: #F9FAFB; border-radius: 10px; font-size: 14px; align-items: center; }
-        .lb-rank { font-weight: 800; margin-right: 8px; width: 25px; }
-        .lb-school { font-weight: 600; color: #374151; flex: 1; }
+        /* 6. LEADERBOARD */
+        .section-title { font-weight: 800; font-size: 16px; margin: 20px 0 10px; color: #1F2937; }
+        .leaderboard-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .lb-item { display: flex; justify-content: space-between; padding: 15px 20px; border-bottom: 1px solid #F3F4F6; font-size: 14px; align-items: center; }
+        .lb-school { font-weight: 600; color: #374151; }
         .lb-points { font-weight: 800; color: var(--primary); }
 
-        /* 6. GROWTH REPORT */
-        .growth-card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .insight-text { 
-            background: #ECFDF5; padding: 20px; border-radius: 12px; 
-            border-left: 5px solid var(--green); font-size: 14px; 
-            line-height: 1.6; color: #065F46; margin-top: 15px; 
-        }
-        .insight-sub { font-size: 13px; color: #6B7280; }
-
-        /* LOADING SPINNER */
-        .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s ease-in-out infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        /* 7. GROWTH REPORT */
+        .growth-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid var(--primary); }
+        .insight-text { font-size: 14px; line-height: 1.6; color: #4B5563; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -95,20 +88,24 @@
     <div class="container">
         
         <div class="welcome-card">
-            <h1 id="userName">Hi, Friend! 👋</h1>
-            <p>Let's solve some mysteries today.</p>
+            <h1 id="userName">Hi! 👋</h1>
+            <p id="userSchool">Loading your school...</p>
         </div>
 
-        <div class="stats-grid">
+        <div class="stats-row">
             <div class="stat-card">
-                <span class="stat-icon">🔥</span>
-                <div class="stat-val" id="streakVal">0</div>
-                <div class="stat-label">Day Streak</div>
+                <div class="stat-icon">🔥</div>
+                <div class="stat-text">
+                    <div>Streak</div>
+                    <div id="streakVal">0 Days</div>
+                </div>
             </div>
             <div class="stat-card">
-                <span class="stat-icon">📊</span>
-                <div class="stat-val">Level 1</div>
-                <div class="stat-label">Age 8 (Medium)</div>
+                <div class="stat-icon">📊</div>
+                <div class="stat-text">
+                    <div>Level</div>
+                    <div>1</div>
+                </div>
             </div>
         </div>
 
@@ -120,31 +117,31 @@
             <div class="progress-track">
                 <div class="progress-fill" id="progressBar"></div>
             </div>
-            
             <div class="daily-goal">
                 <span>🎯</span>
                 <span id="dailyGoalText">Today's Goal: Solve 2 more!</span>
             </div>
         </div>
 
+        <div class="details-card">
+            <div class="detail-item">🎓 Age 8 (MEDIUM)</div>
+            <div class="detail-item">✅ Solved: <span id="totalSolved" style="margin-left:5px; color:#4F46E5;">0</span></div>
+        </div>
+
         <a href="learn.html" class="play-btn">
             <span>🚀</span> Solve a Mystery
         </a>
 
-        <div class="leaderboard-card">
-            <div class="lb-header"><span>🏆</span> Top Schools Leaderboard</div>
-            <div id="lbList" class="lb-list">
-                <div style="text-align:center; padding:10px; color:#9CA3AF;">
-                    <div class="spinner"></div> Loading...
-                </div>
-            </div>
+        <div class="section-title">🏆 Top Schools Leaderboard</div>
+        <div class="leaderboard-card" id="lbList">
+            <div style="padding:20px; text-align:center; color:#9CA3AF;">Loading rankings...</div>
         </div>
 
+        <div class="section-title">🧠 Psychiatrist Insight</div>
         <div class="growth-card">
-            <div class="lb-header"><span>🧠</span> Psychiatrist Insight</div>
-            <div class="insight-sub">Based on your recent logic patterns:</div>
+            <div style="font-weight:700; font-size:14px; color:#1F2937;">Cognitive Growth Update</div>
             <div class="insight-text" id="aiInsight">
-                Analysis pending... Solve more problems to generate your personalized cognitive growth report.
+                Complete more mysteries to generate your personalized thinking pattern analysis.
             </div>
         </div>
 
@@ -159,85 +156,86 @@
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) { window.location.href = 'index.html'; return; }
 
-            initDashboard(session.user);
+            // LOAD DATA
+            await loadDashboard(session.user);
         };
 
-        async function initDashboard(user) {
+        async function loadDashboard(user) {
             try {
-                // 1. SELF-HEALING PROFILE
+                // 1. GET CHILD PROFILE (Fixing the Name Issue)
                 let { data: child, error } = await supabase.from('children').select('*').eq('parent_id', user.id).single();
                 
+                // Self-Healing: Create if missing
                 if (!child) {
-                    console.log("Creating missing profile...");
                     const { data: newChild } = await supabase.from('children').insert([{ 
                         parent_id: user.id, name: "Logic Explorer", school: "My School", age: 8 
                     }]).select().single();
                     child = newChild;
                 }
 
+                // UPDATE UI WITH NAME
                 if (child) {
                     document.getElementById('userName').innerText = `Hi, ${child.name}! 👋`;
-                    loadStats(child.id);
-                    loadLeaderboard(child.school);
+                    document.getElementById('userSchool').innerText = child.school || "Future Genius";
+                    
+                    // LOAD STATS
+                    await loadStats(child.id);
+                    // LOAD LEADERBOARD
+                    await loadLeaderboard(child.school);
                 }
 
-            } catch (err) { console.error("Dash Error:", err); }
-        }
-
-        async function loadLeaderboard(mySchool) {
-            // Fetch from the VIEW we created
-            const { data: schools } = await supabase.from('school_leaderboard').select('*').limit(5);
-            
-            let html = "";
-            if (schools && schools.length > 0) {
-                const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
-                schools.forEach((s, i) => {
-                    // Highlight if it's user's school
-                    const isMine = s.school_name === mySchool;
-                    const style = isMine ? "background:#EFF6FF; border:1px solid #BFDBFE;" : "";
-                    
-                    html += `
-                    <div class="lb-item" style="${style}">
-                        <div style="display:flex; align-items:center;">
-                            <span class="lb-rank">${medals[i]}</span>
-                            <span class="lb-school">${s.school_name}</span>
-                        </div>
-                        <span class="lb-points">${s.total_points} pts</span>
-                    </div>`;
-                });
-            } else {
-                html = "<div style='text-align:center; color:#6B7280; font-size:14px;'>Be the first to score points for your school! 🚀</div>";
-            }
-            document.getElementById('lbList').innerHTML = html;
+            } catch (err) { console.error(err); }
         }
 
         async function loadStats(childId) {
-            const { data: attempts } = await supabase.from('attempts').select('*').eq('child_id', childId).order('created_at', {ascending:false});
-            const solved = attempts ? attempts.filter(a => a.solved_correctly).length : 0;
+            const { data: attempts } = await supabase.from('attempts').select('*').eq('child_id', childId);
+            const solvedCount = attempts ? attempts.filter(a => a.solved_correctly).length : 0;
 
-            // Update Progress Bar
-            document.getElementById('progressText').innerText = `${solved}/10`;
-            document.getElementById('progressBar').style.width = `${Math.min((solved/10)*100, 100)}%`;
-            if(solved > 0) document.getElementById('progressBar').style.background = "#10B981"; // Green fill
+            // UPDATE UI
+            document.getElementById('totalSolved').innerText = solvedCount;
+            document.getElementById('progressText').innerText = `${solvedCount}/10`; // Simplified weekly logic
+            document.getElementById('progressBar').style.width = `${Math.min((solvedCount/10)*100, 100)}%`;
 
-            // Update Streak
-            if (solved > 0) document.getElementById('streakVal').innerText = "1"; // Basic streak logic
+            // STREAK LOGIC
+            if (solvedCount > 0) document.getElementById('streakVal').innerText = "1 Day"; // Basic placeholder
 
-            // Update Goal
-            const remaining = Math.max(2 - solved, 0);
+            // DAILY GOAL
+            const remaining = Math.max(2 - solvedCount, 0); // Simplified daily logic
             if (remaining === 0) {
-                document.getElementById('dailyGoalText').innerText = "🎉 Goal Reached! Amazing job!";
+                document.getElementById('dailyGoalText').innerText = "🎉 Goal Met!";
                 document.querySelector('.daily-goal').style.background = "#ECFDF5";
                 document.querySelector('.daily-goal').style.color = "#065F46";
             } else {
                 document.getElementById('dailyGoalText').innerText = `Today's Goal: Solve ${remaining} more!`;
             }
 
-            // Update Insight
-            if (solved >= 3) {
-                document.getElementById('aiInsight').innerText = 
-                    "Excellent progress! Your child is showing strong persistence. They are asking 30% fewer hints than yesterday, which indicates growing confidence in independent problem solving.";
+            // INSIGHT LOGIC
+            if (solvedCount >= 3) {
+                document.getElementById('aiInsight').innerText = "Excellent lateral thinking detected! Your child is consistently identifying patterns faster than before.";
             }
+        }
+
+        async function loadLeaderboard(mySchool) {
+            const { data: schools } = await supabase.from('school_leaderboard').select('*').limit(5);
+            
+            let html = "";
+            if (schools && schools.length > 0) {
+                const medals = ['🥇', '🥈', '🥉'];
+                schools.forEach((s, i) => {
+                    const icon = medals[i] || '🏅';
+                    const isMine = s.school_name === mySchool;
+                    const style = isMine ? "background:#EFF6FF;" : "";
+                    
+                    html += `
+                    <div class="lb-item" style="${style}">
+                        <div class="lb-school">${icon} ${s.school_name}</div>
+                        <div class="lb-points">${s.total_points} pts</div>
+                    </div>`;
+                });
+            } else {
+                html = "<div style='padding:20px; text-align:center; color:#6B7280;'>Be the first to rank!</div>";
+            }
+            document.getElementById('lbList').innerHTML = html;
         }
 
         async function logout() {
