@@ -3,115 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor v34.0 (Stability & Growth)</title>
+    <title>LogicPals Tutor v36.0 (Badges + Voice)</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
 
     <style>
-        :root { --primary: #4F46E5; --bg: #F3F4F6; --chat-user: #4F46E5; --chat-ai: #FFFFFF; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Nunito', sans-serif; background: var(--bg); height: 100vh; display: flex; flex-direction: column; }
+        :root { --primary: #4F46E5; --bg: #F3F4F6; }
+        body { font-family: 'Nunito', sans-serif; background: var(--bg); height: 100vh; display: flex; flex-direction: column; margin: 0; }
 
-        /* HEADER */
-        header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; }
-        .logo { font-weight: 800; color: var(--primary); font-size: 20px; display: flex; align-items: center; gap: 8px; }
-        .timer-badge { background: #FEF3C7; color: #D97706; font-weight: 700; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-family: monospace; }
+        /* HEADER WITH BADGES */
+        header { 
+            background: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; 
+        }
+        .left-section { display: flex; flex-direction: column; }
+        .logo { font-weight: 800; color: var(--primary); font-size: 18px; display: flex; align-items: center; gap: 5px; }
+        
+        /* RESTORED BADGES */
+        .badges { display: flex; gap: 8px; margin-top: 4px; }
+        .badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: 800; letter-spacing: 0.5px; }
+        .badge.age { background: #E0E7FF; color: #4338CA; }
+        .badge.level { background: #FEF3C7; color: #D97706; }
 
-        /* CHAT AREA */
-        .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; max-width: 800px; margin: 0 auto; width: 100%; scroll-behavior: smooth; }
+        .timer-badge { background: #F3F4F6; color: #6B7280; font-weight: 700; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-family: monospace; border: 1px solid #E5E7EB; }
+        
+        .finish-btn { display: none; background: #10B981; color: white; font-weight: 700; padding: 8px 16px; border-radius: 20px; border:none; cursor: pointer; animation: pulse 1.5s infinite; }
+
+        .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; max-width: 800px; margin: 0 auto; width: 100%; }
         .message { max-width: 85%; padding: 14px 18px; border-radius: 18px; font-size: 16px; line-height: 1.5; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .message.ai { align-self: flex-start; background: var(--chat-ai); color: #1F2937; border-bottom-left-radius: 4px; }
-        .message.user { align-self: flex-end; background: var(--chat-user); color: white; border-bottom-right-radius: 4px; }
-        .message.hint { align-self: center; background: #FFFBEB; color: #B45309; border: 1px dashed #F59E0B; font-size: 14px; text-align: center; width: 90%; margin: 10px 0; }
+        .message.ai { align-self: flex-start; background: white; color: #1F2937; border-bottom-left-radius: 4px; }
+        .message.user { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 4px; }
+        .message.hint { align-self: center; background: #FFFBEB; color: #B45309; border: 1px dashed #F59E0B; font-size: 14px; text-align: center; width: 90%; }
 
-        /* INPUT AREA */
         .input-area { background: white; padding: 15px 20px; border-top: 1px solid #E5E7EB; }
+        .hint-status { text-align: center; font-size: 11px; color: #9CA3AF; margin-bottom: 8px; font-weight: 700; }
         .input-wrapper { max-width: 800px; margin: 0 auto; display: flex; gap: 10px; align-items: center; }
         
-        .hint-wrapper { position: relative; }
-        .hint-btn { background: #FBBF24; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .hint-count { position: absolute; top: -5px; right: -5px; background: #EF4444; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
-
-        input { flex: 1; padding: 12px 15px; border: 2px solid #E5E7EB; border-radius: 50px; font-size: 16px; outline: none; transition: 0.2s; }
-        .mic-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: #F3F4F6; font-size: 20px; cursor: pointer; color: #4B5563; }
+        .hint-btn { background: #FBBF24; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 20px; cursor: pointer; }
+        input { flex: 1; padding: 12px 15px; border: 2px solid #E5E7EB; border-radius: 50px; font-size: 16px; outline: none; }
+        .mic-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: #F3F4F6; font-size: 20px; cursor: pointer; }
         .mic-btn.recording { background: #EF4444; color: white; animation: pulse 1.5s infinite; }
-        
-        .send-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-        .send-btn:disabled { background: #9CA3AF; cursor: not-allowed; } /* Visual Lock */
+        .send-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 18px; cursor: pointer; }
+        .send-btn:disabled { background: #D1D5DB; }
 
-        /* LEADERBOARD MODAL (Growth Hack) */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
-        .modal { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); animation: popIn 0.4s; }
-        .modal h2 { color: #10B981; margin-bottom: 10px; }
-        .modal p { color: #6B7280; margin-bottom: 20px; font-size: 15px; }
-        .modal input { width: 100%; margin-bottom: 15px; border: 2px solid #E5E7EB; padding: 12px; border-radius: 10px; font-size: 16px; }
-        .modal-btn { background: #4F46E5; color: white; border: none; padding: 12px; width: 100%; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 16px; margin-bottom: 10px; }
-        .skip-btn { background: transparent; border: none; color: #9CA3AF; cursor: pointer; font-size: 14px; text-decoration: underline; }
-
-        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-        
-        .typing { font-size: 14px; color: #6B7280; margin-left: 20px; font-style: italic; opacity: 0; transition: 0.3s; margin-bottom: 5px; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+        .typing { font-size: 13px; color: #6B7280; margin-left: 20px; font-style: italic; opacity: 0; transition: 0.3s; margin-bottom: 5px; }
         .typing.active { opacity: 1; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">🧠 LogicPals</div>
-        <div class="timer-badge">⏱️ <span id="timeDisplay">00:00</span></div>
+        <div class="left-section">
+            <div class="logo">🧠 LogicPals</div>
+            <div class="badges">
+                <span class="badge age">AGE 8-10</span>
+                <span class="badge level">📊 MEDIUM</span>
+            </div>
+        </div>
+        <div class="header-controls">
+            <div class="timer-badge">⏱️ <span id="timeDisplay">00:00</span></div>
+            <button id="finishBtn" onclick="finishSession()" class="finish-btn">🎉 Next Puzzle</button>
+        </div>
     </header>
 
     <div class="chat-container" id="chatContainer"></div>
 
     <div class="input-area">
-        <div class="typing" id="typingIndicator">Tutor is thinking...</div>
+        <div class="typing" id="typingIndicator">Thinking...</div>
+        <div class="hint-status" id="hintStatus">Hints Used: 0/3</div>
         <div class="input-wrapper">
-            <div class="hint-wrapper">
-                <button class="hint-btn" onclick="useHint()" title="Get a Hint">💡</button>
-                <div class="hint-count" id="hintBadge">3</div>
-            </div>
-            <input type="text" id="textInput" placeholder="Type or speak..." autocomplete="off">
+            <button id="hintBtn" class="hint-btn" onclick="useHint()">💡</button>
+            <input type="text" id="textInput" placeholder="Type answer..." autocomplete="off">
             <button class="mic-btn" id="micBtn" onclick="toggleRecording()">🎤</button>
             <button id="sendBtn" class="send-btn" onclick="sendText()">➤</button>
         </div>
     </div>
 
-    <div class="modal-overlay" id="leaderboardModal">
-        <div class="modal">
-            <h2>🎉 Fantastic Job!</h2>
-            <p>You solved it! Want to join your school's leaderboard?</p>
-            <input type="text" id="schoolInput" placeholder="🏫 Your School Name">
-            <input type="text" id="whatsappInput" placeholder="📱 WhatsApp (Optional)">
-            <button class="modal-btn" onclick="submitLeaderboard()">Join Leaderboard 🚀</button>
-            <button class="skip-btn" onclick="skipLeaderboard()">Skip for now</button>
-        </div>
-    </div>
-
     <script>
-        // --- CONFIGURATION ---
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; 
         
         let conversationLog = [];
         let currentHints = [];
-        let hintsRemaining = 3;
         let hintsUsedCount = 0;
+        const totalHints = 3;
         let isProcessing = false;
         let supabaseClient;
         let currentChildId = null;
         let currentProblemId = null;
         let puzzleSolved = false;
         let startTime;
-        
+
         const localPuzzles = [
             { id: 999, text: "A farmer has 17 sheep and all but 9 die. How many are left?", hints: ["Read 'all but 9' carefully.", "It means 9 are alive.", "The rest died."] },
-            { id: 998, text: "I am an odd number. Take away a letter and I become even. What number am I?", hints: ["It's a word trick.", "Write down 'Seven'.", "Take away 'S'."] },
-            { id: 997, text: "What comes once in a minute, twice in a moment, but never in a thousand years?", hints: ["It's a letter.", "Look at the spelling.", "The letter 'M'."] }
+            { id: 998, text: "I am an odd number. Take away a letter and I become even. What number am I?", hints: ["It's a word trick.", "Write down 'Seven'.", "Take away 'S'."] }
         ];
 
-        // --- STARTUP ---
         window.onload = function() {
             if (typeof supabase !== 'undefined') {
                 try {
@@ -136,6 +125,7 @@
 
             startTimer();
 
+            // VOICE RESTORED
             setTimeout(() => {
                 const msg = "Hi! Ready to solve this mystery? How can I help?";
                 addMessage('ai', msg);
@@ -151,9 +141,9 @@
         function loadGameUI(id, text, hints) {
             currentProblemId = id;
             currentHints = hints || ["Think carefully."];
-            hintsRemaining = 3;
-            puzzleSolved = false;
-            updateHintBadge();
+            hintsUsedCount = 0;
+            document.getElementById('hintStatus').innerText = `Hints Used: 0/${totalHints}`;
+            document.getElementById('finishBtn').style.display = 'none';
             document.getElementById('chatContainer').innerHTML = '';
             
             const intro = `Here is your mystery:<br><br><strong>"${text}"</strong>`;
@@ -174,7 +164,6 @@
             }
         }
 
-        // --- 🤖 ROBUST AI LOGIC (Deadlock Proof) ---
         async function sendText() {
             const textInput = document.getElementById('textInput');
             const sendBtn = document.getElementById('sendBtn');
@@ -183,29 +172,26 @@
             if(!text || isProcessing) return; 
             
             if (puzzleSolved) {
-                document.getElementById('leaderboardModal').style.display = 'flex';
+                addMessage('ai', "You solved it! Click the green button! 🎉");
+                speak("You solved it! Click the green button!");
                 return;
             }
 
-            // LOCK UI
             isProcessing = true; 
-            sendBtn.disabled = true; // Visual Lock
-            sendBtn.style.background = "#9CA3AF";
+            sendBtn.disabled = true; 
             document.getElementById('typingIndicator').classList.add('active');
             
             addMessage('user', text);
             conversationLog.push({ role: 'user', content: text });
             textInput.value = ""; 
 
-            // 🛡️ WATCHDOG: Unlocks UI if AI freezes (15s)
+            // WATCHDOG (Prevents Freeze)
             const watchdog = setTimeout(() => {
                 if (isProcessing) {
-                    console.warn("Watchdog unlocking UI");
                     isProcessing = false;
                     sendBtn.disabled = false;
-                    sendBtn.style.background = "#4F46E5";
                     document.getElementById('typingIndicator').classList.remove('active');
-                    addMessage('ai', "I got stuck thinking. Can you ask again?");
+                    addMessage('ai', "I got stuck thinking. Try asking again!");
                 }
             }, 15000);
 
@@ -214,7 +200,7 @@
                 ROLE: LogicPals Tutor.
                 RULES:
                 1. IF CORRECT: Start with "Correct! 🎉". Explain logic.
-                2. IF WRONG: Ask guiding question.
+                2. IF WRONG: Ask a guiding question.
                 3. IF ASKING ANSWER: Refuse playfully.
                 4. Max 30 words.
                 
@@ -230,54 +216,37 @@
 
                 if (!response.ok) throw new Error("Server Error");
                 const data = await response.json();
-                clearTimeout(watchdog); // Success, clear watchdog
+                clearTimeout(watchdog);
 
                 const reply = data.reply || data.aiText;
                 addMessage('ai', reply);
                 conversationLog.push({ role: 'ai', content: reply });
                 speak(reply);
 
-                // VICTORY LOGIC -> LEADERBOARD MODAL
                 if (reply.toLowerCase().includes("correct") || reply.includes("🎉")) {
                     puzzleSolved = true;
+                    document.getElementById('finishBtn').style.display = 'block'; 
                     confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-                    // Wait 2s for confetti, then show modal
-                    setTimeout(() => {
-                        document.getElementById('leaderboardModal').style.display = 'flex';
-                    }, 2000);
                 }
 
             } catch (error) {
                 addMessage('ai', "I'm having a little trouble thinking. Can you say that again?");
             } finally {
-                // ALWAYS UNLOCK
                 isProcessing = false; 
                 sendBtn.disabled = false;
-                sendBtn.style.background = "#4F46E5";
                 document.getElementById('typingIndicator').classList.remove('active');
                 textInput.focus();
             }
         }
 
-        // --- HINT SYSTEM ---
         function useHint() {
-            if (hintsRemaining > 0) {
-                const index = 3 - hintsRemaining;
-                const hint = currentHints[index] || "Think logically.";
+            if (hintsUsedCount < totalHints) {
+                const hint = currentHints[hintsUsedCount] || "Think logically.";
+                hintsUsedCount++;
                 addMessage('hint', `💡 HINT: ${hint}`);
                 speak("Hint: " + hint);
-                hintsRemaining--;
-                hintsUsedCount++;
-                updateHintBadge();
-            } else {
-                addMessage('hint', "No hints left! You got this!");
+                document.getElementById('hintStatus').innerText = `Hints Used: ${hintsUsedCount}/${totalHints}`;
             }
-        }
-
-        function updateHintBadge() {
-            const el = document.getElementById('hintBadge');
-            el.innerText = hintsRemaining;
-            if (hintsRemaining === 0) el.style.backgroundColor = "#9CA3AF";
         }
 
         function startTimer() {
@@ -290,20 +259,11 @@
             }, 1000);
         }
 
-        // --- GROWTH HACK: LEADERBOARD ---
-        async function submitLeaderboard() {
-            const school = document.getElementById('schoolInput').value;
-            const whatsapp = document.getElementById('whatsappInput').value;
-            await saveProgress(school, whatsapp);
-        }
-
-        async function skipLeaderboard() {
-            await saveProgress(null, null);
-        }
-
-        async function saveProgress(school, whatsapp) {
-            const btn = document.querySelector('.modal-btn');
-            if(btn) btn.innerText = "Saving... 💾";
+        async function finishSession() {
+            if (!puzzleSolved) return;
+            const btn = document.getElementById('finishBtn');
+            btn.innerText = "Saving... 💾";
+            btn.disabled = true;
             
             if (supabaseClient && currentChildId) {
                 try {
@@ -312,14 +272,10 @@
                         problem_id: currentProblemId, 
                         solved_correctly: true, 
                         ai_conversation: conversationLog,
-                        hints_used: hintsUsedCount,
-                        // If you have these columns, uncomment:
-                        // school_name: school,
-                        // whatsapp: whatsapp
+                        hints_used: hintsUsedCount
                     }]);
-                } catch(e) { console.error(e); }
+                } catch(e) {}
             }
-
             localStorage.removeItem('activePuzzle');
             setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
         }
