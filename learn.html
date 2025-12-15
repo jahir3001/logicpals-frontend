@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor v34.0 (Un-Jammable)</title>
+    <title>LogicPals Tutor v35.0 (Feature Rich)</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
@@ -13,32 +13,59 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Nunito', sans-serif; background: var(--bg); height: 100vh; display: flex; flex-direction: column; }
 
-        header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; }
+        /* --- HEADER & BADGES --- */
+        header { 
+            background: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; 
+        }
+        .left-section { display: flex; flex-direction: column; gap: 4px; }
         .logo { font-weight: 800; color: var(--primary); font-size: 20px; display: flex; align-items: center; gap: 8px; }
-        .header-controls { display: flex; align-items: center; gap: 15px; }
         
-        .timer-badge { background: #FEF3C7; color: #D97706; font-weight: 700; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-family: monospace; display: flex; align-items: center; gap: 6px; }
+        .badges { display: flex; gap: 8px; }
+        .badge { font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 700; letter-spacing: 0.5px; }
+        .badge.age { background: #E0E7FF; color: #4338CA; }
+        .badge.level { background: #FEF3C7; color: #D97706; }
+
+        .header-controls { display: flex; align-items: center; gap: 10px; }
+        .timer-badge { background: #F3F4F6; color: #6B7280; font-weight: 700; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-family: monospace; border: 1px solid #E5E7EB; }
         
         /* FINISH BUTTON (Hidden by default) */
         .finish-btn { 
             display: none; 
-            background: #10B981; color: white; font-weight: 700; padding: 8px 20px; border-radius: 20px; cursor: pointer; 
+            background: #10B981; color: white; font-weight: 700; padding: 8px 20px; border-radius: 20px; cursor: pointer; border:none;
             animation: pulse-green 1.5s infinite;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
         @keyframes pulse-green { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
+        /* --- CHAT AREA --- */
         .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; max-width: 800px; margin: 0 auto; width: 100%; scroll-behavior: smooth; }
         .message { max-width: 85%; padding: 14px 18px; border-radius: 18px; font-size: 16px; line-height: 1.5; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .message.ai { align-self: flex-start; background: var(--chat-ai); color: #1F2937; border-bottom-left-radius: 4px; }
         .message.user { align-self: flex-end; background: var(--chat-user); color: white; border-bottom-right-radius: 4px; }
-        .message.hint { align-self: center; background: #FFFBEB; color: #B45309; border: 1px dashed #F59E0B; font-size: 14px; text-align: center; width: 90%; margin: 10px 0; }
+        
+        /* HINT MESSAGE STYLE */
+        .message.hint { 
+            align-self: center; background: #FFFBEB; color: #B45309; border: 1px dashed #F59E0B; 
+            font-size: 14px; text-align: center; width: 90%; margin: 10px 0; 
+        }
 
+        /* --- INPUT AREA & HINT COUNTER --- */
         .input-area { background: white; padding: 15px 20px; border-top: 1px solid #E5E7EB; }
+        
+        /* HINT STATUS BAR */
+        .hint-status { 
+            text-align: center; font-size: 12px; color: #6B7280; margin-bottom: 8px; font-weight: 600;
+            display: flex; justify-content: center; gap: 5px;
+        }
+        .hint-dot { width: 8px; height: 8px; border-radius: 50%; background: #E5E7EB; }
+        .hint-dot.active { background: #F59E0B; }
+
         .input-wrapper { max-width: 800px; margin: 0 auto; display: flex; gap: 10px; align-items: center; }
         
-        .hint-wrapper { position: relative; }
-        .hint-btn { background: #FBBF24; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .hint-count { position: absolute; top: -5px; right: -5px; background: #EF4444; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+        .hint-btn { background: #FBBF24; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .hint-btn:active { transform: scale(0.95); }
+        .hint-btn:disabled { background: #D1D5DB; cursor: not-allowed; }
 
         input { flex: 1; padding: 12px 15px; border: 2px solid #E5E7EB; border-radius: 50px; font-size: 16px; outline: none; transition: 0.2s; }
         input:focus { border-color: var(--primary); }
@@ -51,12 +78,20 @@
         
         .typing { font-size: 14px; color: #6B7280; margin-left: 20px; font-style: italic; opacity: 0; transition: 0.3s; margin-bottom: 5px; }
         .typing.active { opacity: 1; }
+        
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">🧠 LogicPals</div>
+        <div class="left-section">
+            <div class="logo">🧠 LogicPals</div>
+            <div class="badges">
+                <span class="badge age">AGE 8-10</span>
+                <span class="badge level">📊 MEDIUM</span>
+            </div>
+        </div>
         <div class="header-controls">
             <div class="timer-badge">⏱️ <span id="timeDisplay">00:00</span></div>
             <button id="finishBtn" onclick="finishSession()" class="finish-btn">🎉 Next Puzzle</button>
@@ -67,11 +102,17 @@
 
     <div class="input-area">
         <div class="typing" id="typingIndicator">Tutor is thinking...</div>
+        
+        <div class="hint-status">
+            <span>Hints Used:</span>
+            <div id="dot1" class="hint-dot"></div>
+            <div id="dot2" class="hint-dot"></div>
+            <div id="dot3" class="hint-dot"></div>
+            <span id="hintText" style="margin-left: 5px; font-size: 10px;">(0/3)</span>
+        </div>
+
         <div class="input-wrapper">
-            <div class="hint-wrapper">
-                <button class="hint-btn" onclick="useHint()" title="Get a Hint">💡</button>
-                <div class="hint-count" id="hintBadge">3</div>
-            </div>
+            <button id="hintBtn" class="hint-btn" onclick="useHint()" title="Get a Hint">💡</button>
             <input type="text" id="textInput" placeholder="Type or speak..." autocomplete="off">
             <button class="mic-btn" id="micBtn" onclick="toggleRecording()">🎤</button>
             <button id="sendBtn" class="send-btn" onclick="sendText()">➤</button>
@@ -85,8 +126,9 @@
         
         let conversationLog = [];
         let currentHints = [];
-        let hintsRemaining = 3;
-        let hintsUsedCount = 0;
+        let hintsUsedCount = 0; // Starts at 0
+        const totalHints = 3;
+        
         let isProcessing = false;
         let supabaseClient;
         let currentChildId = null;
@@ -103,6 +145,7 @@
 
         // --- STARTUP ---
         window.onload = function() {
+            // DB Init
             if (typeof supabase !== 'undefined') {
                 try {
                     supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -115,6 +158,7 @@
                 } catch(e) {}
             }
 
+            // Sticky Load
             const saved = localStorage.getItem('activePuzzle');
             if (saved) {
                 const p = JSON.parse(saved);
@@ -141,10 +185,11 @@
         function loadGameUI(id, text, hints) {
             currentProblemId = id;
             currentHints = hints || ["Think carefully."];
-            hintsRemaining = 3;
+            hintsUsedCount = 0; // Reset hints
+            updateHintUI();
+            
             puzzleSolved = false;
             document.getElementById('finishBtn').style.display = 'none'; 
-            updateHintBadge();
             document.getElementById('chatContainer').innerHTML = '';
             
             const intro = `Here is your mystery:<br><br><strong>"${text}"</strong>`;
@@ -157,6 +202,7 @@
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
+                // Try to find a good voice
                 const voices = window.speechSynthesis.getVoices();
                 const preferred = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
                 if (preferred) utterance.voice = preferred;
@@ -166,25 +212,23 @@
             }
         }
 
-        // --- 🤖 AI LOGIC WITH "UN-JAMMER" ---
+        // --- 🤖 AI LOGIC WITH WATCHDOG ---
         async function sendText() {
             const textInput = document.getElementById('textInput');
             const sendBtn = document.getElementById('sendBtn');
             const text = textInput.value.trim();
             
-            // PREVENT SENDING IF EMPTY OR ALREADY BUSY
             if(!text || isProcessing) return; 
             
-            // LOGIC GATE
             if (puzzleSolved) {
                 addMessage('ai', "You solved it! Click the green button! 🎉");
                 speak("You solved it! Click the green button!");
                 return;
             }
 
-            // LOCK INTERFACE
+            // LOCK UI
             isProcessing = true; 
-            sendBtn.disabled = true; // Visual Lock
+            sendBtn.disabled = true; 
             sendBtn.style.background = "#9CA3AF";
             document.getElementById('typingIndicator').classList.add('active');
             
@@ -192,10 +236,9 @@
             conversationLog.push({ role: 'user', content: text });
             textInput.value = ""; 
 
-            // SAFETY WATCHDOG: If AI hangs for 15s, Unlock everything
+            // 🛡️ WATCHDOG TIMER (Auto-Unlocker)
             const watchdog = setTimeout(() => {
                 if (isProcessing) {
-                    console.warn("Watchdog reset");
                     isProcessing = false;
                     sendBtn.disabled = false;
                     sendBtn.style.background = "#4F46E5";
@@ -206,13 +249,12 @@
 
             try {
                 const smartPrompt = `
-                ROLE: LogicPals Socratic Tutor.
+                ROLE: LogicPals Tutor.
                 RULES:
                 1. IF CORRECT: Start with "Correct! 🎉". Explain logic.
-                2. IF WRONG: Be encouraging. Ask a guiding question.
+                2. IF WRONG: Ask a guiding question.
                 3. IF ASKING ANSWER: Refuse playfully.
-                4. NEVER name operations (don't say "Divide").
-                5. Keep tone friendly. Max 30 words.
+                4. Max 30 words.
                 
                 HISTORY: ${JSON.stringify(conversationLog.slice(-4))}
                 USER INPUT: "${text}"
@@ -226,12 +268,9 @@
 
                 if (!response.ok) throw new Error("Server Error");
                 const data = await response.json();
-                
-                // Clear Watchdog
                 clearTimeout(watchdog);
 
                 const reply = data.reply || data.aiText;
-                
                 addMessage('ai', reply);
                 conversationLog.push({ role: 'ai', content: reply });
                 speak(reply);
@@ -243,10 +282,9 @@
                 }
 
             } catch (error) {
-                // If error, unlock immediately
                 addMessage('ai', "I'm having a little trouble thinking. Can you say that again?");
             } finally {
-                // ALWAYS UNLOCK
+                // UNLOCK UI
                 isProcessing = false; 
                 sendBtn.disabled = false;
                 sendBtn.style.background = "#4F46E5";
@@ -255,26 +293,32 @@
             }
         }
 
-        // --- FEATURES ---
+        // --- NEW FEATURE: VISUAL HINT COUNTER ---
         function useHint() {
-            if (hintsRemaining > 0) {
-                const index = 3 - hintsRemaining;
-                const hint = currentHints[index] || "Think about the logic.";
+            if (hintsUsedCount < totalHints) {
+                const hint = currentHints[hintsUsedCount] || "Think logically.";
+                hintsUsedCount++;
+                
                 addMessage('hint', `💡 HINT: ${hint}`);
                 speak("Hint: " + hint);
-                hintsRemaining--;
-                hintsUsedCount++;
-                updateHintBadge();
-            } else {
-                addMessage('hint', "No hints left! You got this!");
-                speak("No hints left!");
+                updateHintUI();
             }
         }
 
-        function updateHintBadge() {
-            const el = document.getElementById('hintBadge');
-            el.innerText = hintsRemaining;
-            if (hintsRemaining === 0) el.style.backgroundColor = "#9CA3AF";
+        function updateHintUI() {
+            // Update dots
+            for(let i=1; i<=3; i++) {
+                const dot = document.getElementById(`dot${i}`);
+                if (i <= hintsUsedCount) dot.classList.add('active');
+                else dot.classList.remove('active');
+            }
+            // Update text
+            document.getElementById('hintText').innerText = `(${hintsUsedCount}/3)`;
+            
+            // Disable button if used up
+            if (hintsUsedCount >= totalHints) {
+                document.getElementById('hintBtn').disabled = true;
+            }
         }
 
         function startTimer() {
@@ -287,6 +331,7 @@
             }, 1000);
         }
 
+        // --- 💾 DATABASE SYNC (Fixes "Solved 0") ---
         async function finishSession() {
             if (!puzzleSolved) return;
 
@@ -294,6 +339,7 @@
             btn.innerText = "Saving... 💾";
             btn.disabled = true;
             
+            // CRITICAL: AWAIT THE SAVE
             if (supabaseClient && currentChildId) {
                 try {
                     await supabaseClient.from('attempts').insert([{ 
@@ -301,15 +347,17 @@
                         problem_id: currentProblemId, 
                         solved_correctly: true, 
                         ai_conversation: conversationLog,
-                        hints_used: hintsUsedCount 
+                        hints_used: hintsUsedCount // Saving Hint Count!
                     }]);
-                } catch(e) { console.error(e); }
+                    console.log("Progress Saved.");
+                } catch(e) { console.error("Save failed:", e); }
             }
 
             localStorage.removeItem('activePuzzle');
             
+            // Reload page to fetch NEW puzzle from library
             setTimeout(() => { 
-                window.location.href = 'dashboard.html'; 
+                location.reload(); 
             }, 1000);
         }
 
@@ -338,7 +386,6 @@
             recognition.start();
         }
 
-        // IMPROVED KEY LISTENER
         document.getElementById('textInput').addEventListener('keydown', function (e) {
             if (e.key === 'Enter') sendText();
         });
