@@ -3,59 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Dashboard</title>
+    <title>LogicPals Dashboard v2.1</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        :root { --primary: #4F46E5; --bg: #F3F4F6; --card-bg: #FFFFFF; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Nunito', sans-serif; background: var(--bg); color: #1F2937; padding-bottom: 40px; }
+        :root { --primary: #4F46E5; --bg: #F3F4F6; }
+        body { font-family: 'Nunito', sans-serif; background: var(--bg); color: #1F2937; padding-bottom: 40px; margin: 0; }
 
-        /* HEADER */
         header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .logo { font-weight: 800; color: var(--primary); font-size: 20px; display: flex; align-items: center; gap: 8px; }
+        .logo { font-weight: 800; color: var(--primary); font-size: 20px; }
         .logout-btn { color: #6B7280; text-decoration: none; font-weight: 600; font-size: 14px; }
 
-        /* DASHBOARD CONTAINER */
         .container { max-width: 600px; margin: 20px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 20px; }
 
-        /* WELCOME CARD */
         .welcome-card { background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%); color: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3); }
-        .welcome-card h1 { font-size: 24px; margin-bottom: 5px; }
-        .welcome-card p { opacity: 0.9; font-size: 14px; }
-
-        /* STATS GRID */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .stat-card { background: white; padding: 15px; border-radius: 16px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .stat-icon { font-size: 24px; margin-bottom: 5px; display: block; }
-        .stat-val { font-size: 20px; font-weight: 800; color: #111827; }
-        .stat-label { font-size: 12px; color: #6B7280; font-weight: 700; text-transform: uppercase; }
+        .stat-val { font-size: 20px; font-weight: 800; }
+        .stat-label { font-size: 12px; color: #6B7280; font-weight: 700; }
 
-        /* PROGRESS SECTION */
-        .progress-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .progress-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; font-weight: 700; }
-        .progress-track { background: #E5E7EB; height: 12px; border-radius: 10px; overflow: hidden; }
-        .progress-fill { background: #10B981; height: 100%; width: 0%; transition: width 1s ease; border-radius: 10px; }
+        .progress-card, .leaderboard-card, .growth-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .play-btn { display: block; width: 100%; background: #10B981; color: white; text-align: center; padding: 18px; border-radius: 20px; font-size: 18px; font-weight: 800; text-decoration: none; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); }
         
-        .daily-goal { margin-top: 15px; padding: 12px; background: #FFF7ED; border: 1px solid #FFEDD5; border-radius: 12px; display: flex; align-items: center; gap: 10px; color: #C2410C; font-size: 14px; font-weight: 600; }
-
-        /* CTA BUTTON */
-        .play-btn { display: block; width: 100%; background: #10B981; color: white; text-align: center; padding: 18px; border-radius: 20px; font-size: 18px; font-weight: 800; text-decoration: none; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); transition: transform 0.2s; }
-        .play-btn:active { transform: scale(0.98); }
-
-        /* LEADERBOARD */
-        .leaderboard-card { background: white; padding: 20px; border-radius: 20px; }
-        .lb-header { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 16px; margin-bottom: 15px; color: #1F2937; }
-        .lb-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F3F4F6; font-size: 14px; }
-        .lb-item:last-child { border-bottom: none; }
-        .lb-school { font-weight: 600; color: #4B5563; }
-        .lb-points { font-weight: 800; color: #4F46E5; }
-
-        /* GROWTH REPORT (Moved Bottom) */
-        .growth-card { background: white; padding: 25px; border-radius: 20px; border: 2px solid #E0E7FF; }
-        .insight-text { background: #F0FDF4; padding: 15px; border-radius: 12px; border-left: 4px solid #10B981; font-size: 14px; line-height: 1.6; color: #065F46; margin-top: 15px; }
+        .lb-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F3F4F6; }
+        
+        /* DEBUG BOX (Hidden unless error) */
+        #debugLog { display: none; background: #FEF2F2; color: #DC2626; padding: 10px; margin-top: 20px; border-radius: 8px; font-size: 12px; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -68,162 +42,133 @@
     <div class="container">
         
         <div class="welcome-card">
-            <h1 id="userName">Hi, Friend! 👋</h1>
-            <p id="userSchool">Let's solve some mysteries today.</p>
+            <h1 id="userName">Loading... 👋</h1>
+            <p id="userSchool">Getting things ready...</p>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
-                <span class="stat-icon">🔥</span>
+                <span style="font-size: 24px;">🔥</span>
                 <div class="stat-val" id="streakVal">0</div>
                 <div class="stat-label">Day Streak</div>
             </div>
             <div class="stat-card">
-                <span class="stat-icon">📊</span>
+                <span style="font-size: 24px;">📊</span>
                 <div class="stat-val">Level 1</div>
                 <div class="stat-label">Age 8 (Medium)</div>
             </div>
         </div>
 
         <div class="progress-card">
-            <div class="progress-header">
-                <span>This Week's Mysteries</span>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-weight:700; font-size:14px;">
+                <span>Weekly Mysteries</span>
                 <span id="progressText">0/10</span>
             </div>
-            <div class="progress-track">
-                <div class="progress-fill" id="progressBar"></div>
+            <div style="background:#E5E7EB; height:12px; border-radius:10px; overflow:hidden;">
+                <div id="progressBar" style="background:#10B981; height:100%; width:0%; transition:width 1s;"></div>
             </div>
-            
-            <div class="daily-goal">
-                <span>🎯</span>
-                <span id="dailyGoalText">Today's Goal: Solve 2 more!</span>
+            <div style="margin-top:15px; padding:12px; background:#FFF7ED; color:#C2410C; border-radius:12px; font-size:14px; font-weight:600;">
+                🎯 <span id="dailyGoalText">Today's Goal: Solve 2 more!</span>
             </div>
         </div>
 
         <a href="learn.html" class="play-btn">🚀 Solve a Mystery</a>
 
         <div class="leaderboard-card">
-            <div class="lb-header">
-                <span>🏆</span> Top Schools Leaderboard
-            </div>
-            <div id="lbList">
-                <div style="text-align:center; color:#9CA3AF; padding:10px;">Loading...</div>
-            </div>
+            <div style="font-weight:800; margin-bottom:15px;">🏆 Top Schools Leaderboard</div>
+            <div id="lbList">Loading leaderboard...</div>
         </div>
 
         <div class="growth-card">
-            <div class="lb-header"><span>🧠</span> Psychiatrist Insight</div>
-            <div style="font-size:13px; color:#6B7280; margin-bottom:10px;">Based on your recent logic patterns:</div>
-            <div class="insight-text" id="aiInsight">
-                Analysis pending... Solve more problems to generate your personalized cognitive growth report.
+            <div style="font-weight:800; margin-bottom:10px;">🧠 Psychiatrist Insight</div>
+            <div style="background:#F0FDF4; padding:15px; border-radius:12px; color:#065F46; font-size:14px;" id="aiInsight">
+                Analysis pending... Solve problems to see growth.
             </div>
         </div>
+
+        <div id="debugLog"></div>
 
     </div>
 
     <script>
-        // --- CONFIGURATION ---
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; 
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         window.onload = async function() {
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                window.location.href = 'index.html';
-                return;
-            }
+            if (!session) { window.location.href = 'index.html'; return; }
 
-            loadUserData(session.user.id);
+            initDashboard(session.user);
         };
 
-        async function loadUserData(userId) {
-            // 1. Get Child Profile
-            const { data: child } = await supabase.from('children').select('*').eq('parent_id', userId).single();
-            if(child) {
-                document.getElementById('userName').innerText = `Hi, ${child.name}! 👋`;
-                document.getElementById('userSchool').innerText = child.school || "Future Logic Master";
-                loadStats(child.id, child.school);
+        async function initDashboard(user) {
+            try {
+                // 1. LOAD LEADERBOARD FIRST (Independent of user profile)
+                loadLeaderboard();
+
+                // 2. CHECK FOR CHILD PROFILE
+                let { data: child, error } = await supabase.from('children').select('*').eq('parent_id', user.id).single();
+
+                // 🚨 SELF-HEALING: If no child found, create one automatically
+                if (!child) {
+                    console.log("No profile found. Auto-creating...");
+                    const { data: newChild, error: createError } = await supabase
+                        .from('children')
+                        .insert([{ 
+                            parent_id: user.id, 
+                            name: "Junior Logic", 
+                            school: "Maple Leaf", // Default school
+                            age: 8 
+                        }])
+                        .select()
+                        .single();
+                    
+                    if (createError) throw createError;
+                    child = newChild; // Use the new child
+                }
+
+                // 3. UPDATE UI
+                document.getElementById('userName').innerText = `Hi, ${child.name || 'Friend'}! 👋`;
+                document.getElementById('userSchool').innerText = child.school || "Ready to learn?";
+
+                // 4. LOAD STATS
+                loadStats(child.id);
+
+            } catch (err) {
+                document.getElementById('debugLog').style.display = 'block';
+                document.getElementById('debugLog').innerText = "Error: " + err.message;
             }
         }
 
-        async function loadStats(childId, schoolName) {
-            // 2. Get Attempts (The Source of Truth)
-            const { data: attempts } = await supabase
-                .from('attempts')
-                .select('created_at, solved_correctly')
-                .eq('child_id', childId)
-                .order('created_at', { ascending: false });
-
-            const solvedCount = attempts ? attempts.filter(a => a.solved_correctly).length : 0;
-            
-            // A. CALCULATE STREAK (Consecutive Days)
-            let streak = 0;
-            if (attempts && attempts.length > 0) {
-                const today = new Date().toDateString();
-                const lastPlay = new Date(attempts[0].created_at).toDateString();
-                
-                // Simple logic: If played today or yesterday, streak is alive.
-                // (For MVP, we just count total active days in last 7 days to simulate streak)
-                const uniqueDays = new Set(attempts.map(a => new Date(a.created_at).toDateString()));
-                streak = uniqueDays.size; 
-            }
-            document.getElementById('streakVal').innerText = streak;
-
-            // B. WEEKLY PROGRESS
-            // Filter attempts in last 7 days
-            const oneWeekAgo = new Date();
-            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-            const weeklySolved = attempts ? attempts.filter(a => new Date(a.created_at) > oneWeekAgo && a.solved_correctly).length : 0;
-            
-            document.getElementById('progressText').innerText = `${weeklySolved}/10`;
-            document.getElementById('progressBar').style.width = `${Math.min((weeklySolved/10)*100, 100)}%`;
-
-            // C. DAILY GOAL
-            const todayStr = new Date().toDateString();
-            const todaySolved = attempts ? attempts.filter(a => new Date(a.created_at).toDateString() === todayStr && a.solved_correctly).length : 0;
-            const remaining = Math.max(2 - todaySolved, 0);
-            
-            if (remaining > 0) {
-                document.getElementById('dailyGoalText').innerText = `Target: Solve ${remaining} more today!`;
-            } else {
-                document.getElementById('dailyGoalText').innerText = `🎉 Daily Goal Reached!`;
-                document.querySelector('.daily-goal').style.background = "#ECFDF5";
-                document.querySelector('.daily-goal').style.color = "#065F46";
-                document.querySelector('.daily-goal').style.borderColor = "#A7F3D0";
-            }
-
-            // D. LEADERBOARD (REAL DATA FROM DB)
-            const { data: schools, error } = await supabase
-                .from('school_leaderboard') // This matches the View we just created
-                .select('*')
-                .limit(5);
-
-            let lbHtml = "";
-            
+        async function loadLeaderboard() {
+            const { data: schools } = await supabase.from('school_leaderboard').select('*').limit(5);
+            let html = "";
             if (schools && schools.length > 0) {
-                const medals = ['🥇', '🥈', '🥉'];
-                schools.forEach((r, i) => {
-                    // Highlight User's School
-                    const isMySchool = r.school_name === (schoolName || '');
-                    const highlightStyle = isMySchool ? "background:#EFF6FF; border:1px solid #BFDBFE;" : "";
-                    
-                    lbHtml += `
-                    <div class="lb-item" style="${highlightStyle}">
-                        <span class="lb-school">${medals[i] || '🏅'} ${r.school_name}</span>
-                        <span class="lb-points">${r.total_points} pts</span>
-                    </div>`;
+                schools.forEach((s, i) => {
+                    html += `<div class="lb-item"><span>${i+1}. ${s.school_name}</span><b>${s.total_points} pts</b></div>`;
                 });
             } else {
-                lbHtml = '<div style="text-align:center; padding:15px; color:#6B7280;">Be the first to rank your school! 🚀</div>';
+                html = "<div style='color:#9CA3AF; text-align:center;'>Be the first to rank! Solve a puzzle.</div>";
             }
-            
-            document.getElementById('lbList').innerHTML = lbHtml;
+            document.getElementById('lbList').innerHTML = html;
+        }
 
-            // E. PSYCHIATRIST INSIGHT
-            if (solvedCount > 0) {
-                document.getElementById('aiInsight').innerText = 
-                    `I'm so proud of ${childName || 'your child'}'s effort! Solving ${solvedCount} problems shows great determination. They are developing strong lateral thinking skills. Keep encouraging this curiosity!`;
+        async function loadStats(childId) {
+            const { data: attempts } = await supabase
+                .from('attempts')
+                .select('*')
+                .eq('child_id', childId);
+
+            const solved = attempts ? attempts.filter(a => a.solved_correctly).length : 0;
+            
+            // Update Progress UI
+            document.getElementById('progressText').innerText = `${solved}/10`;
+            document.getElementById('progressBar').style.width = `${Math.min((solved/10)*100, 100)}%`;
+            
+            if (solved > 0) {
+                document.getElementById('dailyGoalText').innerText = "Great start! Keep going!";
+                document.getElementById('streakVal').innerText = "1"; // Simple streak for now
             }
         }
 
