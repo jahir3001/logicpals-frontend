@@ -193,26 +193,31 @@
                 document.querySelector('.daily-goal').style.borderColor = "#A7F3D0";
             }
 
-            // D. LEADERBOARD (Mock + Real Mix)
-            // Ideally, you query a view. Here we simulate.
-            const userSchool = schoolName || "Your School";
-            // Mock data for visual appeal, insert user's real score
-            const rankings = [
-                { school: "Maple Leaf", pts: 245 },
-                { school: "Chittagong Grammar", pts: 180 },
-                { school: "Sunbeams", pts: 150 },
-                { school: userSchool, pts: solvedCount * 10 } // 10 pts per solve
-            ].sort((a,b) => b.pts - a.pts).slice(0, 3); // Top 3
+            // D. LEADERBOARD (REAL DATA FROM DB)
+            const { data: schools, error } = await supabase
+                .from('school_leaderboard') // This matches the View we just created
+                .select('*')
+                .limit(5);
 
             let lbHtml = "";
-            const medals = ['🥇', '🥈', '🥉'];
-            rankings.forEach((r, i) => {
-                lbHtml += `
-                <div class="lb-item">
-                    <span class="lb-school">${medals[i] || '🏅'} ${r.school}</span>
-                    <span class="lb-points">${r.pts} pts</span>
-                </div>`;
-            });
+            
+            if (schools && schools.length > 0) {
+                const medals = ['🥇', '🥈', '🥉'];
+                schools.forEach((r, i) => {
+                    // Highlight User's School
+                    const isMySchool = r.school_name === (schoolName || '');
+                    const highlightStyle = isMySchool ? "background:#EFF6FF; border:1px solid #BFDBFE;" : "";
+                    
+                    lbHtml += `
+                    <div class="lb-item" style="${highlightStyle}">
+                        <span class="lb-school">${medals[i] || '🏅'} ${r.school_name}</span>
+                        <span class="lb-points">${r.total_points} pts</span>
+                    </div>`;
+                });
+            } else {
+                lbHtml = '<div style="text-align:center; padding:15px; color:#6B7280;">Be the first to rank your school! 🚀</div>';
+            }
+            
             document.getElementById('lbList').innerHTML = lbHtml;
 
             // E. PSYCHIATRIST INSIGHT
