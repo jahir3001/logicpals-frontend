@@ -94,31 +94,35 @@
             const childAge = document.getElementById('childAge').value;
             const schoolName = document.getElementById('schoolName').value;
 
+            // 2. Set UI to Loading
             btn.innerText = "Creating Account...";
             btn.disabled = true;
             err.style.display = 'none';
 
             try {
-                // 2. THE FIX: Send all data in the 'options' object
-                // This passes "Akash" and "Phone" directly to the Database Trigger we just updated.
-                // The Trigger will handle saving it to the tables correctly.
-                const { data, error } = await supabaseClient.auth.signUp({
+                // 3. THE FIX: Send Data in 'options'
+                // We send the profile data directly to Supabase Auth.
+                // The Database Trigger will catch this and populate 'profiles' and 'children'.
+                const { data: authData, error: authError } = await supabaseClient.auth.signUp({
                     email: email,
                     password: password,
                     options: {
                         data: {
-                            full_name: childName,   // Maps to children.name
-                            phone: phone,           // Maps to profiles.phone
-                            school_name: schoolName,// Maps to children.school_name
-                            age: childAge           // Maps to children.age
+                            full_name: childName,   // Sends Name (Fixes the NOT NULL crash)
+                            phone: phone,           // Sends Phone
+                            school_name: schoolName,// Sends School
+                            age: childAge           // Sends Age
                         }
                     }
                 });
 
-                if (error) throw error;
+                if (authError) throw authError;
 
-                // 3. Success
-                alert("Account created successfully! Welcome, " + childName + "!");
+                // 4. Success!
+                // NOTE: We removed the manual "insert into children" code here.
+                // The database trigger does it automatically now. This prevents duplicates.
+                
+                alert("Account created! Welcome, " + childName + "!");
                 window.location.href = "dashboard.html";
 
             } catch (error) {
