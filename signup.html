@@ -76,63 +76,63 @@
         </form>
     </div>
 
-    <script>
-        const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+   <script>
+    // YOUR SUPABASE CONFIGURATION
+    const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        async function handleSignup(e) {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            const err = document.getElementById('errorMessage');
-            
-            // 1. Get Values
-            const phone = document.getElementById('phone').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const childName = document.getElementById('childName').value;
-            const childAge = document.getElementById('childAge').value;
-            const schoolName = document.getElementById('schoolName').value;
+    async function handleSignup(e) {
+        e.preventDefault();
+        
+        // UI Elements
+        const btn = document.getElementById('submitBtn');
+        const err = document.getElementById('errorMessage');
+        
+        // 1. Get Values from Form Inputs
+        const phone = document.getElementById('phone').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const childName = document.getElementById('childName').value;
+        const childAge = document.getElementById('childAge').value;
+        const schoolName = document.getElementById('schoolName').value;
 
-            // 2. Set UI to Loading
-            btn.innerText = "Creating Account...";
-            btn.disabled = true;
-            err.style.display = 'none';
+        // 2. Set Loading State
+        btn.innerText = "Creating Account...";
+        btn.disabled = true;
+        err.style.display = 'none';
 
-            try {
-                // 3. THE FIX: Send Data in 'options'
-                // We send the profile data directly to Supabase Auth.
-                // The Database Trigger will catch this and populate 'profiles' and 'children'.
-                const { data: authData, error: authError } = await supabaseClient.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: {
-                        data: {
-                            full_name: childName,   // Sends Name (Fixes the NOT NULL crash)
-                            phone: phone,           // Sends Phone
-                            school_name: schoolName,// Sends School
-                            age: childAge           // Sends Age
-                        }
+        try {
+            // 3. SEND DATA TO SUPABASE
+            // We pass the Form Data inside 'options.data'. 
+            // The Database Trigger we just fixed will catch this.
+            const { data, error } = await supabaseClient.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: {
+                        full_name: childName,   // Sends "Tajwar"
+                        phone: phone,           // Sends "0181..."
+                        school_name: schoolName,// Sends "Academia Banasree"
+                        age: childAge           // Sends "8"
                     }
-                });
+                }
+            });
 
-                if (authError) throw authError;
+            if (error) throw error;
 
-                // 4. Success!
-                // NOTE: We removed the manual "insert into children" code here.
-                // The database trigger does it automatically now. This prevents duplicates.
-                
-                alert("Account created! Welcome, " + childName + "!");
-                window.location.href = "dashboard.html";
+            // 4. SUCCESS
+            alert("Account created successfully! Welcome, " + childName + "!");
+            window.location.href = "dashboard.html";
 
-            } catch (error) {
-                console.error(error);
-                err.innerText = error.message;
-                err.style.display = 'block';
-                btn.innerText = "Start Learning 🚀";
-                btn.disabled = false;
-            }
+        } catch (error) {
+            console.error("Signup Error:", error);
+            err.innerText = error.message; // Show the specific error
+            err.style.display = 'block';
+            btn.innerText = "Start Learning 🚀";
+            btn.disabled = false;
         }
-    </script>
+    }
+</script>
 </body>
 </html>
