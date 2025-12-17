@@ -100,8 +100,8 @@
 
             try {
                 // 2. THE FIX: Send all data in the 'options' object
-                // This passes the data directly to the Database Trigger we just updated.
-                // No manual 'insert into children' is needed anymore!
+                // This passes "Akash" and "Phone" directly to the Database Trigger we just updated.
+                // The Trigger will handle saving it to the tables correctly.
                 const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
                     password: password,
