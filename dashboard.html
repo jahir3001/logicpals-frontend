@@ -14,11 +14,11 @@
 
         header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .logo { font-weight: 800; color: var(--primary); font-size: 20px; display: flex; align-items: center; gap: 5px; }
-        .logout-btn { color: #6B7280; text-decoration: none; font-weight: 600; font-size: 14px; }
+        .logout-btn { color: #6B7280; text-decoration: none; font-weight: 600; font-size: 14px; cursor: pointer; }
 
         .container { max-width: 600px; margin: 20px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 15px; }
 
-        /* 1. PURPLE HEADER (User Info) */
+        /* PURPLE HEADER */
         .welcome-card { 
             background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%); 
             color: white; padding: 25px; border-radius: 20px; 
@@ -27,14 +27,14 @@
         .welcome-card h1 { font-size: 28px; margin: 0; }
         .welcome-card p { opacity: 0.9; font-size: 16px; margin: 5px 0 0 0; font-weight: 600; }
 
-        /* 2. STATS ROW (Streak | Level) */
+        /* STATS GRID */
         .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .stat-card { background: white; padding: 15px; border-radius: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .stat-icon { font-size: 24px; }
         .stat-text div:first-child { font-size: 12px; color: #6B7280; font-weight: 700; text-transform: uppercase; }
         .stat-text div:last-child { font-size: 18px; font-weight: 800; color: #111827; }
 
-        /* 3. PROGRESS & GOAL CARD */
+        /* PROGRESS */
         .progress-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .progress-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; font-weight: 700; }
         .progress-track { background: #E5E7EB; height: 10px; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
@@ -46,7 +46,7 @@
             color: #C2410C; font-size: 14px; font-weight: 700;
         }
 
-        /* 4. DETAILS ROW (Age | Solved) - Requested in Fixing Issue 3 */
+        /* DETAILS ROW */
         .details-card {
             background: white; padding: 15px; border-radius: 16px; 
             display: flex; justify-content: space-between; align-items: center;
@@ -55,7 +55,7 @@
         }
         .detail-item { display: flex; align-items: center; gap: 8px; }
 
-        /* 5. GREEN ACTION BUTTON */
+        /* PLAY BUTTON */
         .play-btn { 
             display: flex; justify-content: center; align-items: center; gap: 10px;
             width: 100%; background: var(--green); color: white; 
@@ -66,14 +66,14 @@
         }
         .play-btn:active { transform: scale(0.98); }
 
-        /* 6. LEADERBOARD */
+        /* LEADERBOARD */
         .section-title { font-weight: 800; font-size: 16px; margin: 20px 0 10px; color: #1F2937; }
         .leaderboard-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .lb-item { display: flex; justify-content: space-between; padding: 15px 20px; border-bottom: 1px solid #F3F4F6; font-size: 14px; align-items: center; }
         .lb-school { font-weight: 600; color: #374151; }
         .lb-points { font-weight: 800; color: var(--primary); }
 
-        /* 7. GROWTH REPORT */
+        /* INSIGHT */
         .growth-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid var(--primary); }
         .insight-text { font-size: 14px; line-height: 1.6; color: #4B5563; margin-top: 10px; }
     </style>
@@ -82,13 +82,13 @@
 
     <header>
         <div class="logo"><span>🧠</span> LogicPals</div>
-        <a href="#" onclick="logout()" class="logout-btn">Log Out</a>
+        <a onclick="logout()" class="logout-btn">Log Out</a>
     </header>
 
     <div class="container">
         
         <div class="welcome-card">
-            <h1 id="userName">Hi! 👋</h1>
+            <h1 id="userName">Hi Student! 👋</h1>
             <p id="userSchool">Loading your school...</p>
         </div>
 
@@ -162,27 +162,26 @@
 
         async function loadDashboard(user) {
             try {
-                // 1. GET CHILD PROFILE (Fixing the Name Issue)
+                // 1. GET CHILD PROFILE
                 let { data: child, error } = await supabase.from('children').select('*').eq('parent_id', user.id).single();
                 
                 // Self-Healing: Create if missing
                 if (!child) {
                     const { data: newChild } = await supabase.from('children').insert([{ 
-                        parent_id: user.id, name: "Logic Explorer", school: "My School", age: 8 
+                        parent_id: user.id, name: "Student", school: "My School", age: 8 
                     }]).select().single();
                     child = newChild;
                 }
 
-                // UPDATE UI WITH NAME
-                if (child) {
-                    document.getElementById('userName').innerText = `Hi, ${child.name}! 👋`;
-                    document.getElementById('userSchool').innerText = child.school || "Future Genius";
-                    
-                    // LOAD STATS
-                    await loadStats(child.id);
-                    // LOAD LEADERBOARD
-                    await loadLeaderboard(child.school);
-                }
+                // 2. FIX NAME DISPLAY
+                // Checks if name exists, otherwise defaults to 'Student'
+                const displayName = (child && child.name && child.name.trim() !== "") ? child.name : "Student";
+                document.getElementById('userName').innerText = `Hi ${displayName}! 👋`;
+                document.getElementById('userSchool').innerText = child.school || "Future Genius";
+                
+                // LOAD STATS & LEADERBOARD
+                await loadStats(child.id);
+                await loadLeaderboard(child.school);
 
             } catch (err) { console.error(err); }
         }
@@ -193,14 +192,11 @@
 
             // UPDATE UI
             document.getElementById('totalSolved').innerText = solvedCount;
-            document.getElementById('progressText').innerText = `${solvedCount}/10`; // Simplified weekly logic
+            document.getElementById('progressText').innerText = `${solvedCount}/10`; 
             document.getElementById('progressBar').style.width = `${Math.min((solvedCount/10)*100, 100)}%`;
 
-            // STREAK LOGIC
-            if (solvedCount > 0) document.getElementById('streakVal').innerText = "1 Day"; // Basic placeholder
-
-            // DAILY GOAL
-            const remaining = Math.max(2 - solvedCount, 0); // Simplified daily logic
+            // GOAL
+            const remaining = Math.max(2 - solvedCount, 0);
             if (remaining === 0) {
                 document.getElementById('dailyGoalText').innerText = "🎉 Goal Met!";
                 document.querySelector('.daily-goal').style.background = "#ECFDF5";
@@ -209,14 +205,15 @@
                 document.getElementById('dailyGoalText').innerText = `Today's Goal: Solve ${remaining} more!`;
             }
 
-            // INSIGHT LOGIC
+            // INSIGHT
             if (solvedCount >= 3) {
                 document.getElementById('aiInsight').innerText = "Excellent lateral thinking detected! Your child is consistently identifying patterns faster than before.";
             }
         }
 
         async function loadLeaderboard(mySchool) {
-            const { data: schools } = await supabase.from('school_leaderboard').select('*').limit(5);
+            // Fetch from the View
+            const { data: schools, error } = await supabase.from('school_leaderboard').select('*').limit(5);
             
             let html = "";
             if (schools && schools.length > 0) {
@@ -233,7 +230,8 @@
                     </div>`;
                 });
             } else {
-                html = "<div style='padding:20px; text-align:center; color:#6B7280;'>Be the first to rank!</div>";
+                // FALLBACK IF EMPTY
+                html = "<div style='padding:20px; text-align:center; color:#6B7280;'>No schools ranked yet. Solve a puzzle to be the first!</div>";
             }
             document.getElementById('lbList').innerHTML = html;
         }
