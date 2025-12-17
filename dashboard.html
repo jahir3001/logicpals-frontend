@@ -8,18 +8,24 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* BRAND COLORS */
-        :root { --primary: #4F46E5; --bg: #F3F4F6; --green: #10B981; --orange: #F59E0B; }
+        :root { --primary: #4F46E5; --bg: #F3F4F6; --green: #10B981; }
         * { box-sizing: border-box; }
         body { font-family: 'Nunito', sans-serif; background: var(--bg); color: #1F2937; margin: 0; padding-bottom: 40px; }
 
         header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .logo { font-weight: 800; color: var(--primary); font-size: 20px; display: flex; align-items: center; gap: 5px; }
-        .logout-btn { color: #6B7280; text-decoration: none; font-weight: 600; font-size: 14px; cursor: pointer; }
+        
+        /* LOGOUT BUTTON - FIXED STYLE */
+        .logout-btn { 
+            background: transparent; border: 1px solid #E5E7EB; 
+            color: #6B7280; padding: 8px 16px; border-radius: 8px; 
+            font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s;
+        }
+        .logout-btn:hover { background: #FEE2E2; color: #DC2626; border-color: #FCA5A5; }
 
         .container { max-width: 600px; margin: 20px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 18px; }
 
-        /* 1. WELCOME CARD (Purple Gradient) */
+        /* WELCOME CARD */
         .welcome-card { 
             background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%); 
             color: white; padding: 25px; border-radius: 20px; 
@@ -28,53 +34,36 @@
         .welcome-card h1 { font-size: 28px; margin: 0; }
         .welcome-card p { opacity: 0.9; font-size: 16px; margin: 5px 0 0 0; font-weight: 600; }
 
-        /* 2. STATS ROW */
+        /* STATS GRID */
         .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .stat-card { background: white; padding: 15px; border-radius: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .stat-icon { font-size: 24px; }
         .stat-text div:first-child { font-size: 12px; color: #6B7280; font-weight: 700; text-transform: uppercase; }
         .stat-text div:last-child { font-size: 18px; font-weight: 800; color: #111827; }
 
-        /* 3. PROGRESS & GOAL */
+        /* PROGRESS & GOAL */
         .progress-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .progress-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; font-weight: 700; }
         .progress-track { background: #E5E7EB; height: 10px; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
         .progress-fill { background: var(--green); height: 100%; width: 0%; transition: width 1s ease; border-radius: 10px; }
-        
-        .daily-goal { 
-            background: #FFF7ED; border: 1px solid #FFEDD5; border-radius: 12px; 
-            padding: 12px; display: flex; align-items: center; gap: 10px; 
-            color: #C2410C; font-size: 14px; font-weight: 700;
-        }
+        .daily-goal { background: #FFF7ED; border: 1px solid #FFEDD5; border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 10px; color: #C2410C; font-size: 14px; font-weight: 700; }
 
-        /* 4. DETAILS ROW (Age | Solved) */
-        .details-card {
-            background: white; padding: 15px; border-radius: 16px; 
-            display: flex; justify-content: space-between; align-items: center;
-            font-size: 14px; font-weight: 700; color: #4B5563;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
+        /* DETAILS */
+        .details-card { background: white; padding: 15px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 700; color: #4B5563; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .detail-item { display: flex; align-items: center; gap: 8px; }
 
-        /* 5. PLAY BUTTON (Green) */
-        .play-btn { 
-            display: flex; justify-content: center; align-items: center; gap: 10px;
-            width: 100%; background: var(--green); color: white; 
-            text-align: center; padding: 18px; border-radius: 20px; 
-            font-size: 18px; font-weight: 800; text-decoration: none; 
-            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); 
-            transition: transform 0.2s; margin-top: 5px;
-        }
+        /* PLAY BUTTON */
+        .play-btn { display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; background: var(--green); color: white; text-align: center; padding: 18px; border-radius: 20px; font-size: 18px; font-weight: 800; text-decoration: none; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); transition: transform 0.2s; margin-top: 5px; }
         .play-btn:active { transform: scale(0.98); }
 
-        /* 6. LEADERBOARD */
-        .section-title { font-weight: 800; font-size: 16px; margin: 15px 0 10px; color: #1F2937; }
+        /* LEADERBOARD */
+        .section-title { font-weight: 800; font-size: 16px; margin: 20px 0 10px; color: #1F2937; }
         .leaderboard-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .lb-item { display: flex; justify-content: space-between; padding: 15px 20px; border-bottom: 1px solid #F3F4F6; font-size: 14px; align-items: center; }
         .lb-school { font-weight: 600; color: #374151; }
         .lb-points { font-weight: 800; color: var(--primary); }
 
-        /* 7. INSIGHT */
+        /* INSIGHT */
         .growth-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid var(--primary); }
         .insight-text { font-size: 14px; line-height: 1.6; color: #4B5563; margin-top: 10px; }
     </style>
@@ -83,13 +72,13 @@
 
     <header>
         <div class="logo"><span>🧠</span> LogicPals</div>
-        <a onclick="logout()" class="logout-btn">Log Out</a>
+        <button id="logoutBtn" class="logout-btn">Log Out</button>
     </header>
 
     <div class="container">
         
         <div class="welcome-card">
-            <h1 id="userName">Hi! 👋</h1>
+            <h1 id="userName">Hi Student! 👋</h1>
             <p id="userSchool">Loading profile...</p>
         </div>
 
@@ -145,7 +134,6 @@
                 Analysis pending... Solve problems to generate your personalized thinking pattern analysis.
             </div>
         </div>
-
     </div>
 
     <script>
@@ -154,38 +142,63 @@
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         window.onload = async function() {
+            // Check Session
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) { window.location.href = 'index.html'; return; }
+            if (!session) { 
+                window.location.href = 'index.html'; 
+                return; 
+            }
 
-            // LOAD DATA
+            // --- FIXED LOGOUT LOGIC ---
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                await supabase.auth.signOut();
+                window.location.href = 'index.html';
+            });
+
+            // Load Data
             await loadDashboard(session.user);
         };
 
         async function loadDashboard(user) {
             try {
                 // 1. GET CHILD PROFILE
-                let { data: child, error } = await supabase.from('children').select('*').eq('parent_id', user.id).single();
+                // We search 'children' table
+                let { data: child, error } = await supabase
+                    .from('children')
+                    .select('*')
+                    .eq('parent_id', user.id)
+                    .maybeSingle();
                 
-                // Self-Healing
+                // 2. SELF-HEALING (If profile missing)
                 if (!child) {
+                    console.log("No profile found. Creating one...");
+                    // We default to "Student" here. 
+                    // NOTE: If you run the SQL script, this won't happen for existing users like Akash.
                     const { data: newChild } = await supabase.from('children').insert([{ 
-                        parent_id: user.id, name: "Student", school: "My School", age: 8 
+                        parent_id: user.id, 
+                        name: "Student", 
+                        school: "My School", 
+                        age: 8 
                     }]).select().single();
                     child = newChild;
                 }
 
-                // 2. UPDATE UI
-                const displayName = (child.name && child.name.trim()) ? child.name : "Student";
-                const displaySchool = (child.school || child.school_name || "Future Genius");
-                
-                document.getElementById('userName').innerText = `Hi, ${displayName}! 👋`;
-                document.getElementById('userSchool').innerText = displaySchool;
-                
-                // 3. LOAD DATA
-                loadStats(child.id);
-                loadLeaderboard(displaySchool);
+                // 3. UI UPDATES
+                if (child) {
+                    // Name Logic: Use child.name. If empty, fallback to "Student"
+                    const displayName = (child.name && child.name.trim() !== "") ? child.name : "Student";
+                    document.getElementById('userName').innerText = `Hi, ${displayName}! 👋`;
+                    
+                    // School Logic: Checks both columns
+                    const displaySchool = child.school || child.school_name || "My School";
+                    document.getElementById('userSchool').innerText = displaySchool;
+                    
+                    // Load Dependent Data
+                    loadStats(child.id);
+                    loadLeaderboard(displaySchool);
+                }
 
-            } catch (err) { console.error(err); }
+            } catch (err) { console.error("Dashboard Error:", err); }
         }
 
         async function loadStats(childId) {
@@ -213,7 +226,7 @@
         }
 
         async function loadLeaderboard(mySchool) {
-            const { data: schools } = await supabase.from('school_leaderboard').select('*').limit(5);
+            const { data: schools, error } = await supabase.from('school_leaderboard').select('*').limit(5);
             
             let html = "";
             if (schools && schools.length > 0) {
@@ -230,14 +243,10 @@
                     </div>`;
                 });
             } else {
+                // Handle Empty State gracefully
                 html = "<div style='padding:20px; text-align:center; color:#6B7280;'>No schools ranked yet. Solve a mystery to start!</div>";
             }
             document.getElementById('lbList').innerHTML = html;
-        }
-
-        async function logout() {
-            await supabase.auth.signOut();
-            window.location.href = 'index.html';
         }
     </script>
 </body>
