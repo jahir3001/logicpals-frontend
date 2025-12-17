@@ -6,39 +6,23 @@
     <title>Join LogicPals</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563EB">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/brain--v1.png">
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js');
-            });
-        }
-    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         :root { --primary: #2563EB; --bg: #EFF6FF; --text: #111827; }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        
         .card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); width: 100%; max-width: 450px; }
         h1 { color: var(--text); text-align: center; margin-bottom: 8px; }
         .subtitle { text-align: center; color: #6B7280; margin-bottom: 30px; font-size: 14px; }
-        
         .form-group { margin-bottom: 20px; }
         label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: #374151; }
         input, select { width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 16px; transition: 0.2s; }
         input:focus, select:focus { border-color: var(--primary); outline: none; ring: 2px solid #BFDBFE; }
-        
         .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #9CA3AF; margin: 20px 0 10px; font-weight: 700; border-bottom: 1px solid #F3F4F6; padding-bottom: 5px; }
-        
         .btn { width: 100%; background: var(--primary); color: white; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 20px; }
         .btn:hover { background: #1D4ED8; }
         .btn:disabled { opacity: 0.7; cursor: not-allowed; }
-        
         .error { color: #EF4444; font-size: 14px; text-align: center; margin-top: 10px; display: none; }
     </style>
 </head>
@@ -67,7 +51,7 @@
             <div class="section-title">Child Profile</div>
             <div class="form-group">
                 <label>Child's Name</label>
-                <input type="text" id="childName" required placeholder="e.g. Arif">
+                <input type="text" id="childName" required placeholder="e.g. Akash">
             </div>
             <div class="form-group">
                 <label>Age</label>
@@ -110,33 +94,31 @@
             const childAge = document.getElementById('childAge').value;
             const schoolName = document.getElementById('schoolName').value;
 
-            // 2. Set UI to Loading
             btn.innerText = "Creating Account...";
             btn.disabled = true;
             err.style.display = 'none';
 
             try {
-                // 3. Sign Up with Metadata (The Fix)
-                // We send the profile data directly to Supabase Auth.
-                // The Database Trigger will catch this and create the Tables automatically.
-                const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+                // 2. THE FIX: Send all data in the 'options' object
+                // This passes the data directly to the Database Trigger we just updated.
+                // No manual 'insert into children' is needed anymore!
+                const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
                     password: password,
                     options: {
                         data: {
-                            full_name: childName,   // This fixes "Hi Student"
-                            school_name: schoolName, // This fixes Leaderboard
-                            age: childAge,
-                            phone: phone
+                            full_name: childName,   // Maps to children.name
+                            phone: phone,           // Maps to profiles.phone
+                            school_name: schoolName,// Maps to children.school_name
+                            age: childAge           // Maps to children.age
                         }
                     }
                 });
 
-                if (authError) throw authError;
+                if (error) throw error;
 
-                // 4. Success!
-                // No manual insertion code here - it prevents the duplicate bug.
-                alert("Account created! Welcome, " + childName + "!");
+                // 3. Success
+                alert("Account created successfully! Welcome, " + childName + "!");
                 window.location.href = "dashboard.html";
 
             } catch (error) {
