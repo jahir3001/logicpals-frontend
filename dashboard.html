@@ -14,34 +14,24 @@
 
         header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .logo { font-weight: 800; color: var(--primary); font-size: 20px; display: flex; align-items: center; gap: 5px; }
-        
-        /* LOGOUT BUTTON - FIXED STYLE */
-        .logout-btn { 
-            background: transparent; border: 1px solid #E5E7EB; 
-            color: #6B7280; padding: 8px 16px; border-radius: 8px; 
-            font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s;
-        }
+        .logout-btn { background: transparent; border: 1px solid #E5E7EB; color: #6B7280; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s; }
         .logout-btn:hover { background: #FEE2E2; color: #DC2626; border-color: #FCA5A5; }
 
         .container { max-width: 600px; margin: 20px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 18px; }
 
         /* WELCOME CARD */
-        .welcome-card { 
-            background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%); 
-            color: white; padding: 25px; border-radius: 20px; 
-            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3); text-align: left;
-        }
+        .welcome-card { background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%); color: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3); text-align: left; }
         .welcome-card h1 { font-size: 28px; margin: 0; }
         .welcome-card p { opacity: 0.9; font-size: 16px; margin: 5px 0 0 0; font-weight: 600; }
 
-        /* STATS GRID */
+        /* STATS */
         .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .stat-card { background: white; padding: 15px; border-radius: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .stat-icon { font-size: 24px; }
         .stat-text div:first-child { font-size: 12px; color: #6B7280; font-weight: 700; text-transform: uppercase; }
         .stat-text div:last-child { font-size: 18px; font-weight: 800; color: #111827; }
 
-        /* PROGRESS & GOAL */
+        /* PROGRESS */
         .progress-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .progress-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; font-weight: 700; }
         .progress-track { background: #E5E7EB; height: 10px; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
@@ -52,7 +42,7 @@
         .details-card { background: white; padding: 15px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 700; color: #4B5563; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .detail-item { display: flex; align-items: center; gap: 8px; }
 
-        /* PLAY BUTTON */
+        /* BUTTON */
         .play-btn { display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; background: var(--green); color: white; text-align: center; padding: 18px; border-radius: 20px; font-size: 18px; font-weight: 800; text-decoration: none; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); transition: transform 0.2s; margin-top: 5px; }
         .play-btn:active { transform: scale(0.98); }
 
@@ -76,41 +66,26 @@
     </header>
 
     <div class="container">
-        
         <div class="welcome-card">
-            <h1 id="userName">Hi Student! 👋</h1>
+            <h1 id="userName">Hi! 👋</h1>
             <p id="userSchool">Loading profile...</p>
         </div>
 
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-icon">🔥</div>
-                <div class="stat-text">
-                    <div>Streak</div>
-                    <div id="streakVal">0 Days</div>
-                </div>
+                <div class="stat-text"><div>Streak</div><div id="streakVal">0 Days</div></div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">📊</div>
-                <div class="stat-text">
-                    <div>Level</div>
-                    <div>1</div>
-                </div>
+                <div class="stat-text"><div>Level</div><div>1</div></div>
             </div>
         </div>
 
         <div class="progress-card">
-            <div class="progress-header">
-                <span>This Week's Mysteries</span>
-                <span id="progressText">0/10</span>
-            </div>
-            <div class="progress-track">
-                <div class="progress-fill" id="progressBar"></div>
-            </div>
-            <div class="daily-goal">
-                <span>🎯</span>
-                <span id="dailyGoalText">Today's Goal: Solve 2 more!</span>
-            </div>
+            <div class="progress-header"><span>This Week's Mysteries</span><span id="progressText">0/10</span></div>
+            <div class="progress-track"><div class="progress-fill" id="progressBar"></div></div>
+            <div class="daily-goal"><span>🎯</span><span id="dailyGoalText">Today's Goal: Solve 2 more!</span></div>
         </div>
 
         <div class="details-card">
@@ -118,9 +93,7 @@
             <div class="detail-item">✅ Solved: <span id="totalSolved" style="margin-left:5px; color:#4F46E5;">0</span></div>
         </div>
 
-        <a href="learn.html" class="play-btn">
-            <span>🚀</span> Solve a Mystery
-        </a>
+        <a href="learn.html" class="play-btn"><span>🚀</span> Solve a Mystery</a>
 
         <div class="section-title">🏆 Top Schools Leaderboard</div>
         <div class="leaderboard-card" id="lbList">
@@ -130,9 +103,7 @@
         <div class="section-title">🧠 Psychiatrist Insight</div>
         <div class="growth-card">
             <div style="font-weight:700; font-size:14px; color:#1F2937;">Cognitive Growth Update</div>
-            <div class="insight-text" id="aiInsight">
-                Analysis pending... Solve problems to generate your personalized thinking pattern analysis.
-            </div>
+            <div class="insight-text" id="aiInsight">Analysis pending... Solve problems to generate report.</div>
         </div>
     </div>
 
@@ -142,63 +113,52 @@
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         window.onload = async function() {
-            // Check Session
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) { 
-                window.location.href = 'index.html'; 
-                return; 
-            }
+            if (!session) { window.location.href = 'index.html'; return; }
 
-            // --- FIXED LOGOUT LOGIC ---
             document.getElementById('logoutBtn').addEventListener('click', async () => {
                 await supabase.auth.signOut();
                 window.location.href = 'index.html';
             });
 
-            // Load Data
             await loadDashboard(session.user);
         };
 
         async function loadDashboard(user) {
             try {
-                // 1. GET CHILD PROFILE
-                // We search 'children' table
-                let { data: child, error } = await supabase
-                    .from('children')
-                    .select('*')
-                    .eq('parent_id', user.id)
-                    .maybeSingle();
+                // 1. FETCH PROFILE (This gets "Akash")
+                const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+                const realName = profile ? profile.full_name : "Student";
+
+                // 2. FETCH CHILD (This gets "School")
+                let { data: child } = await supabase.from('children').select('*').eq('parent_id', user.id).maybeSingle();
                 
-                // 2. SELF-HEALING (If profile missing)
+                // 3. AUTO-FIX (If child missing, create it using Profile Name)
                 if (!child) {
-                    console.log("No profile found. Creating one...");
-                    // We default to "Student" here. 
-                    // NOTE: If you run the SQL script, this won't happen for existing users like Akash.
+                    console.log("Creating child profile for: " + realName);
                     const { data: newChild } = await supabase.from('children').insert([{ 
                         parent_id: user.id, 
-                        name: "Student", 
+                        name: realName,  // Use the name from Profile!
                         school: "My School", 
                         age: 8 
                     }]).select().single();
                     child = newChild;
                 }
 
-                // 3. UI UPDATES
-                if (child) {
-                    // Name Logic: Use child.name. If empty, fallback to "Student"
-                    const displayName = (child.name && child.name.trim() !== "") ? child.name : "Student";
-                    document.getElementById('userName').innerText = `Hi, ${displayName}! 👋`;
-                    
-                    // School Logic: Checks both columns
-                    const displaySchool = child.school || child.school_name || "My School";
-                    document.getElementById('userSchool').innerText = displaySchool;
-                    
-                    // Load Dependent Data
+                // 4. UPDATE UI
+                // Prefer child.name, fallback to profile name
+                const displayName = (child && child.name && child.name !== "Student") ? child.name : realName;
+                document.getElementById('userName').innerText = `Hi, ${displayName}! 👋`;
+                
+                const displaySchool = child ? (child.school || child.school_name || "My School") : "My School";
+                document.getElementById('userSchool').innerText = displaySchool;
+
+                if(child) {
                     loadStats(child.id);
                     loadLeaderboard(displaySchool);
                 }
 
-            } catch (err) { console.error("Dashboard Error:", err); }
+            } catch (err) { console.error("Dash Error:", err); }
         }
 
         async function loadStats(childId) {
@@ -219,14 +179,11 @@
             } else {
                 document.getElementById('dailyGoalText').innerText = `Today's Goal: Solve ${remaining} more!`;
             }
-
-            if (solvedCount >= 3) {
-                document.getElementById('aiInsight').innerText = "Excellent lateral thinking detected! Your child is consistently identifying patterns faster than before.";
-            }
         }
 
         async function loadLeaderboard(mySchool) {
-            const { data: schools, error } = await supabase.from('school_leaderboard').select('*').limit(5);
+            // Load Top 5
+            const { data: schools } = await supabase.from('school_leaderboard').select('*').limit(5);
             
             let html = "";
             if (schools && schools.length > 0) {
@@ -235,16 +192,10 @@
                     const icon = medals[i] || '🏅';
                     const isMine = (s.school_name === mySchool);
                     const style = isMine ? "background:#EFF6FF;" : "";
-                    
-                    html += `
-                    <div class="lb-item" style="${style}">
-                        <div class="lb-school">${icon} ${s.school_name}</div>
-                        <div class="lb-points">${s.total_points} pts</div>
-                    </div>`;
+                    html += `<div class="lb-item" style="${style}"><div class="lb-school">${icon} ${s.school_name}</div><div class="lb-points">${s.total_points} pts</div></div>`;
                 });
             } else {
-                // Handle Empty State gracefully
-                html = "<div style='padding:20px; text-align:center; color:#6B7280;'>No schools ranked yet. Solve a mystery to start!</div>";
+                html = "<div style='padding:20px; text-align:center; color:#6B7280;'>No schools ranked yet. Solve a puzzle!</div>";
             }
             document.getElementById('lbList').innerHTML = html;
         }
