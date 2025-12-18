@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor - Cross Device Sync</title>
+    <title>LogicPals Tutor - Final Polish</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -25,7 +25,6 @@
         .header-controls { display: flex; align-items: center; gap: 10px; }
         .timer-badge { background: #F3F4F6; color: #6B7280; font-weight: 700; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-family: monospace; border: 1px solid #E5E7EB; }
         
-        /* Two buttons: Next (Green) and Dashboard (Gray) */
         .action-btn { display: none; padding: 8px 16px; border-radius: 20px; border:none; cursor: pointer; font-weight: 700; font-size: 14px; }
         .next-btn { background: #10B981; color: white; animation: pulse 1.5s infinite; }
         .dash-btn { background: #E5E7EB; color: #374151; text-decoration: none; display: block; padding: 8px 12px; border-radius: 12px; font-size: 12px;}
@@ -40,7 +39,6 @@
         /* INPUT AREA */
         .input-area { background: white; padding: 15px 20px; border-top: 1px solid #E5E7EB; display: flex; flex-direction: column; align-items: center; }
         
-        /* GOLDEN HINT BADGE */
         .hint-pill { 
             background: #FEF3C7; color: #D97706; border: 2px solid #FCD34D;
             padding: 8px 20px; border-radius: 25px; font-size: 14px; font-weight: 800; 
@@ -105,8 +103,7 @@
 
     <script>
         // ===============================================
-        // 🔐 SECURE KEY HANDLING (Split Strategy)
-        // This tricks GitHub scanners but works on all devices
+        // 🔐 SECURE KEY HANDLING
         // ===============================================
         const k_part1 = "sk-proj-dT54l3-DsOdBbN4RqvflV3Kv3BuIN0lBCFaDAgGgaNqGsMKS96CY8";
         const k_part2 = "2GX1gIJYa-RRmguTUOjkDT3BlbkFJmdKpyH1FXStC45hPW1983ZlAGV2j7KE7dFNyFJ3JywFTdR6YEpCQ1OEgtJ0REg1gkIOBy_vVYA";
@@ -127,30 +124,39 @@
         let startTime;
         let availablePuzzles = [];
 
-        // Fallback puzzles if DB connection fails
+        // 🧠 FALLBACK DATA BANK (UPDATED LOGIC)
         const localPuzzles = [
-            { id: "999", text: "A farmer has 17 sheep and all but 9 die. How many are left?", answer: "9", explanation: "9 survived.", hints: ["Read carefully.", "All but 9 die."] },
-            { id: "998", text: "I am an odd number. Take away a letter and I become even.", answer: "Seven", explanation: "Seven - S = Even", hints: ["Word trick", "Seven"] }
+            { 
+                id: "999", 
+                text: "A farmer has 17 sheep and all but 9 die. How many are left?", 
+                answer: "9", 
+                explanation: "This is a word trick. 'All but 9 die' means 9 sheep survived. The dead ones are 8 (17-9). The answer is 9 alive.", 
+                hints: ["Read 'all but 9' carefully.", "It means 9 are alive.", "The rest died."] 
+            },
+            { 
+                id: "998", 
+                text: "I am an odd number. Take away a letter and I become even. What number am I?", 
+                answer: "Seven", 
+                explanation: "This is a LINGUISTIC riddle, not math. The word is SEVEN. If you remove the letter 'S', it spells 'EVEN'.", 
+                hints: ["It's a word trick, not math.", "Write down the word 'SEVEN'.", "Take away the letter 'S'."] 
+            }
         ];
 
         window.onload = async function() {
             if (typeof supabase !== 'undefined') {
                 supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-                
-                // 1. Get User
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (session) {
-                    // 2. Get Child Profile
                     const { data: child } = await supabaseClient.from('children').select('id').eq('parent_id', session.user.id).single();
                     if(child) currentChildId = child.id;
 
-                    // 3. FETCH REAL PROBLEMS FROM DB (Fixes Dashboard Stats)
+                    // FETCH REAL PROBLEMS
                     const { data: dbProblems } = await supabaseClient.from('problems').select('*').eq('is_active', true);
                     if (dbProblems && dbProblems.length > 0) {
                         availablePuzzles = dbProblems.map(p => ({
-                            id: p.id, // This is the UUID required by the DB
+                            id: p.id,
                             text: p.problem_text,
-                            answer: p.solution_explanation, // Or generic instruction
+                            answer: p.solution_explanation, 
                             explanation: p.solution_explanation,
                             hints: p.hints || ["Think carefully."]
                         }));
@@ -158,30 +164,24 @@
                 }
             }
 
-            // If DB fetch failed or empty, use local
             if (availablePuzzles.length === 0) availablePuzzles = localPuzzles;
-
-            // Start Game
             loadNextPuzzle();
         };
 
         function loadNextPuzzle() {
-            // Reset UI
             document.getElementById('nextBtn').style.display = 'none';
             document.getElementById('chatContainer').innerHTML = '';
             document.getElementById('textInput').value = '';
             hintsUsedCount = 0;
             document.getElementById('hintCount').innerText = `0/${totalHints}`;
             
-            // Pick Random Puzzle
             const p = availablePuzzles[Math.floor(Math.random() * availablePuzzles.length)];
             currentProblem = p;
             currentHints = p.hints || ["Think carefully."];
             puzzleSolved = false;
             conversationLog = [];
             
-            // Intro
-            const intro = `Here is your mystery:<br><br><strong>"${p.text}"</strong><br><br>Ready?`;
+            const intro = `Here is your mystery:<br><br><strong>"${p.text}"</strong><br><br>Hi! Ready to solve this?`;
             addMessage('ai', intro);
             speak(`Here is your mystery: ${p.text}`); 
             startTimer();
@@ -215,18 +215,23 @@
             textInput.value = ""; 
 
             try {
-                // System Prompt Injection
+                // 🧠 ULTRA-SMART SYSTEM PROMPT
+                // We force the AI to respect the specific explanation logic
                 const messagesToSend = [
                     { 
                         role: 'system', 
-                        content: `You are LogicPals, a Socratic Tutor.
+                        content: `You are LogicPals, a Socratic Tutor for a child.
+                        
                         CURRENT PROBLEM: "${currentProblem.text}"
-                        SECRET ANSWER/LOGIC: "${currentProblem.explanation}"
+                        SECRET ANSWER: "${currentProblem.answer}"
+                        LOGIC EXPLANATION: "${currentProblem.explanation}"
+
                         RULES:
-                        1. If correct: Start with "Correct! 🎉". Explain logic briefly.
-                        2. If wrong: Validate thought, then guide.
-                        3. NEVER give the answer.
-                        4. Max 35 words.` 
+                        1. TRUST THE LOGIC EXPLANATION ABOVE ALL ELSE.
+                        2. If user is Correct: Start with "Correct! 🎉" and explain the logic briefly.
+                        3. If user is Wrong: Check if they are guessing math instead of wordplay (or vice versa). Guide them to the right path.
+                        4. NEVER give the answer directly.
+                        5. Keep replies short (max 35 words).` 
                     },
                     ...conversationLog
                 ];
@@ -240,7 +245,7 @@
                     body: JSON.stringify({
                         model: "gpt-4o-mini",
                         messages: messagesToSend,
-                        temperature: 0.7,
+                        temperature: 0.5, // Lower temp = More logical/strict
                         max_tokens: 150
                     })
                 });
@@ -255,10 +260,9 @@
 
                 if (reply.toLowerCase().includes("correct") || reply.includes("🎉")) {
                     puzzleSolved = true;
-                    // Show Next Puzzle Button
                     document.getElementById('nextBtn').style.display = 'block'; 
                     confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-                    saveAttempt(); // Save to DB immediately
+                    saveAttempt(); 
                 }
 
             } catch (error) {
@@ -273,10 +277,10 @@
         }
 
         async function saveAttempt() {
-            if (supabaseClient && currentChildId && currentProblem.id !== "999") {
+            // Safety: Only save if we have a valid User AND it's a real DB problem (UUID)
+            // This prevents the dashboard error for demo puzzles
+            if (supabaseClient && currentChildId && currentProblem.id.toString().length > 10) {
                 try {
-                    // This creates the record in the 'attempts' table
-                    // Because 'problem_id' is now a real UUID from the DB, it will save correctly!
                     await supabaseClient.from('attempts').insert([{ 
                         child_id: currentChildId, 
                         problem_id: currentProblem.id, 
@@ -284,8 +288,10 @@
                         hints_used: hintsUsedCount,
                         ai_conversation: conversationLog
                     }]);
-                    console.log("Progress Saved!");
+                    console.log("Progress Saved to DB!");
                 } catch(e) { console.error("Save failed:", e); }
+            } else {
+                console.log("Demo puzzle or no user - skipping DB save.");
             }
         }
 
