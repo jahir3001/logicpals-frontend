@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor - Teacher Mode</title>
+    <title>LogicPals Tutor - Final Master</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -37,7 +37,7 @@
         /* INPUT AREA */
         .input-area { background: white; padding: 15px 20px; border-top: 1px solid #E5E7EB; display: flex; flex-direction: column; align-items: center; }
         
-        /* GOLDEN HINT BADGE */
+        /* 🔥 GOLDEN HINT BADGE */
         .hint-pill { 
             background: #FEF3C7; color: #D97706; border: 2px solid #FCD34D;
             padding: 8px 20px; border-radius: 25px; font-size: 14px; font-weight: 800; 
@@ -55,6 +55,7 @@
         input { flex: 1; padding: 12px 15px; border: 2px solid #E5E7EB; border-radius: 50px; font-size: 16px; outline: none; transition: border-color 0.2s; }
         input:focus { border-color: var(--primary); }
         
+        /* 🎤 MICROPHONE BUTTON */
         .mic-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: #F3F4F6; font-size: 20px; cursor: pointer; transition: 0.2s; }
         .mic-btn.recording { background: #EF4444; color: white; animation: pulse 1.5s infinite; }
         
@@ -62,6 +63,7 @@
         .send-btn:hover { background: #4338CA; }
         .send-btn:disabled { background: #D1D5DB; cursor: not-allowed; }
 
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
         .typing { font-size: 13px; color: #6B7280; font-style: italic; opacity: 0; transition: 0.3s; margin-bottom: 5px; width: 100%; max-width: 800px; text-align: left; padding-left: 60px; }
         .typing.active { opacity: 1; }
     </style>
@@ -92,7 +94,7 @@
         </div>
         <div class="input-wrapper">
             <button id="hintBtn" class="hint-btn" onclick="useHint()" title="Get a Hint">💡</button>
-            <input type="text" id="textInput" placeholder="Type your answer here..." autocomplete="off">
+            <input type="text" id="textInput" placeholder="Type or use microphone..." autocomplete="off">
             <button class="mic-btn" id="micBtn" onclick="toggleRecording()" title="Speak">🎤</button>
             <button id="sendBtn" class="send-btn" onclick="sendText()">➤</button>
         </div>
@@ -109,19 +111,18 @@
         let isProcessing = false;
         let supabaseClient;
         let currentChildId = null;
-        let currentProblemId = null;
-        let currentProblemText = "";
+        let currentProblem = null; 
         let puzzleSolved = false;
         let startTime;
         let OPENAI_API_KEY = "";
 
-        // 🧠 TEACHER'S EDITION: Now includes Answers!
+        // 🧠 DATA BANK (Problem + Answer Key)
         const localPuzzles = [
             { 
                 id: 999, 
                 text: "A farmer has 17 sheep and all but 9 die. How many are left?", 
                 answer: "9",
-                explanation: "The phrase 'all but 9 die' means 9 sheep survived. 17 - 9 = 8 died. The ones left are 9.",
+                explanation: "The phrase 'all but 9 die' means 9 sheep survived. The rest died.",
                 hints: ["Read 'all but 9' carefully.", "It means 9 are alive.", "The rest died."] 
             },
             { 
@@ -134,19 +135,19 @@
         ];
 
         window.onload = function() {
-            // Key Management
+            // 1. Key Check
             const storedKey = localStorage.getItem('user_openai_key');
             if (storedKey) {
                 OPENAI_API_KEY = storedKey;
             } else {
-                const userKey = prompt("⚠️ DEV MODE: Please enter your NEW OpenAI API Key:");
+                const userKey = prompt("⚠️ DEV MODE: Please enter your OpenAI API Key:");
                 if (userKey && userKey.startsWith("sk-")) {
                     localStorage.setItem('user_openai_key', userKey);
                     OPENAI_API_KEY = userKey;
                 }
             }
 
-            // Supabase Init
+            // 2. Supabase Check
             if (typeof supabase !== 'undefined') {
                 supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
                 supabaseClient.auth.getSession().then(({ data }) => {
@@ -157,21 +158,24 @@
                 });
             }
 
-            // Persistence
+            // 3. Restore Session
             const savedSession = localStorage.getItem('lp_session');
             if (savedSession) {
                 const data = JSON.parse(savedSession);
-                currentProblemId = data.id;
-                currentProblemText = data.text;
+                // 🧠 RE-BIND PROBLEM: This ensures the AI remembers the answer key after refresh
+                currentProblem = localPuzzles.find(x => x.id === data.id) || localPuzzles[0];
+                
                 currentHints = data.hints;
                 hintsUsedCount = data.hintsCount;
-                conversationLog = data.log;
+                conversationLog = data.log || [];
                 puzzleSolved = data.solved;
 
                 document.getElementById('hintCount').innerText = `${hintsUsedCount}/${totalHints}`;
+                
                 conversationLog.forEach(msg => {
                     if (msg.role !== 'system') addMessage(msg.role, msg.content, false);
                 });
+                
                 if (puzzleSolved) document.getElementById('finishBtn').style.display = 'block';
             } else {
                 const p = localPuzzles[Math.floor(Math.random() * localPuzzles.length)];
@@ -181,36 +185,39 @@
         };
 
         function initGame(p) {
-            currentProblemId = p.id;
-            currentProblemText = p.text;
+            currentProblem = p;
             currentHints = p.hints;
             hintsUsedCount = 0;
             puzzleSolved = false;
-            
-            // 🧠 SMARTER SYSTEM PROMPT with ANSWER KEY
-            conversationLog = [{ 
-                role: 'system', 
-                content: `You are LogicPals, a Socratic Tutor.
-                
-                Current Problem: "${p.text}"
-                SECRET ANSWER: "${p.answer}"
-                EXPLANATION: "${p.explanation}"
-
-                INSTRUCTIONS:
-                1. If user is Correct: Start with "Correct! 🎉" and explain the logic briefly.
-                2. If user calculates WRONG THING (e.g. 17-9=8 died): Validate their math ("Correct, 8 died...") BUT guide them back to the real question ("...but how many are LEFT?").
-                3. NEVER give the answer directly.
-                4. Keep it short (max 40 words).` 
-            }];
+            conversationLog = [];
             
             document.getElementById('hintCount').innerText = `0/${totalHints}`;
-            addMessage('ai', `Here is your mystery:<br><br><strong>"${p.text}"</strong><br><br>Ready?`);
+            
+            const intro = `Here is your mystery:<br><br><strong>"${p.text}"</strong><br><br>Ready?`;
+            addMessage('ai', intro);
+            speak(`Here is your mystery: ${p.text}`); // 🔊 VOICE
+        }
+
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                // Strip HTML for clean speech
+                const cleanText = text.replace(/<[^>]*>/g, '');
+                
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                const voices = window.speechSynthesis.getVoices();
+                const preferred = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
+                if (preferred) utterance.voice = preferred;
+                
+                utterance.rate = 1.0; 
+                utterance.pitch = 1.1;
+                window.speechSynthesis.speak(utterance);
+            }
         }
 
         function saveState() {
             const state = {
-                id: currentProblemId,
-                text: currentProblemText,
+                id: currentProblem.id,
                 hints: currentHints,
                 hintsCount: hintsUsedCount,
                 log: conversationLog,
@@ -233,7 +240,28 @@
             textInput.value = ""; 
 
             try {
-                if (!OPENAI_API_KEY) throw new Error("Missing API Key. Refresh to enter.");
+                if (!OPENAI_API_KEY) throw new Error("Missing API Key. Refresh page.");
+
+                // 🧠 THE "NO AMNESIA" PROMPT INJECTION
+                // We inject the system instruction FRESH every single time.
+                const messagesToSend = [
+                    { 
+                        role: 'system', 
+                        content: `You are LogicPals, a Socratic Tutor for a child.
+                        
+                        CURRENT PROBLEM: "${currentProblem.text}"
+                        SECRET ANSWER: "${currentProblem.answer}"
+                        EXPLANATION: "${currentProblem.explanation}"
+
+                        RULES:
+                        1. If user is Correct: Say "Correct! 🎉" and explain why.
+                        2. If user is Wrong: Validate their thought, then guide them back.
+                        3. NEVER give the answer directly.
+                        4. If the user says "what problem?", remind them of the text above.
+                        5. Keep replies short (max 40 words).` 
+                    },
+                    ...conversationLog // Append history
+                ];
 
                 const response = await fetch("https://api.openai.com/v1/chat/completions", {
                     method: "POST",
@@ -243,7 +271,7 @@
                     },
                     body: JSON.stringify({
                         model: "gpt-4o-mini",
-                        messages: conversationLog,
+                        messages: messagesToSend,
                         temperature: 0.7,
                         max_tokens: 150
                     })
@@ -256,6 +284,8 @@
                 addMessage('ai', reply);
                 conversationLog.push({ role: 'assistant', content: reply });
                 
+                speak(reply); // 🔊 VOICE REPLY
+
                 if (reply.toLowerCase().includes("correct") || reply.includes("🎉")) {
                     puzzleSolved = true;
                     document.getElementById('finishBtn').style.display = 'block'; 
@@ -263,6 +293,7 @@
                 }
 
             } catch (error) {
+                console.error(error);
                 addMessage('ai', `⚠️ Error: ${error.message}`);
             } finally {
                 isProcessing = false; 
@@ -278,6 +309,7 @@
                 const hint = currentHints[hintsUsedCount];
                 hintsUsedCount++;
                 addMessage('hint', `💡 HINT: ${hint}`);
+                speak(`Hint: ${hint}`); // 🔊 VOICE HINT
                 document.getElementById('hintCount').innerText = `${hintsUsedCount}/${totalHints}`;
                 saveState();
             }
@@ -295,17 +327,45 @@
             if (shouldSave) saveState();
         }
 
+        // 🎤 BROWSER NATIVE MICROPHONE (Fixes "Voice Issue" without Server)
+        function toggleRecording() {
+            if (!('webkitSpeechRecognition' in window)) {
+                alert("Voice input requires Chrome/Edge/Android.");
+                return;
+            }
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = "en-US";
+            
+            recognition.onstart = () => {
+                document.getElementById('micBtn').classList.add('recording');
+            };
+            
+            recognition.onend = () => {
+                document.getElementById('micBtn').classList.remove('recording');
+            };
+            
+            recognition.onresult = (e) => {
+                const transcript = e.results[0][0].transcript;
+                document.getElementById('textInput').value = transcript;
+                sendText(); // Auto-send
+            };
+            
+            recognition.start();
+        }
+
         async function finishSession() {
             const btn = document.getElementById('finishBtn');
             btn.innerText = "Saving...";
             
             if (supabaseClient && currentChildId) {
-                await supabaseClient.from('attempts').insert([{ 
-                    child_id: currentChildId, 
-                    problem_id: currentProblemId, 
-                    solved_correctly: true, 
-                    hints_used: hintsUsedCount
-                }]);
+                try {
+                    await supabaseClient.from('attempts').insert([{ 
+                        child_id: currentChildId, 
+                        problem_id: currentProblem.id, 
+                        solved_correctly: true, 
+                        hints_used: hintsUsedCount
+                    }]);
+                } catch(e) {}
             }
             localStorage.removeItem('lp_session'); 
             window.location.href = 'dashboard.html';
@@ -321,7 +381,6 @@
             }, 1000);
         }
         
-        function toggleRecording() { alert("Voice input requires Premium!"); }
         document.getElementById('textInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') sendText(); });
     </script>
 </body>
