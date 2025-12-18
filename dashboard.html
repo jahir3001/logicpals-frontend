@@ -1,204 +1,115 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+-- ============================================
+-- LOGICPALS FINAL PRODUCTION SCHEMA
+-- STRATEGY: Manual Onboarding via App (No Auth Triggers)
+-- ============================================
 
-    <style>
-        :root { --primary: #4F46E5; --bg: #F3F4F6; --green: #10B981; }
-        * { box-sizing: border-box; }
-        body { font-family: 'Nunito', sans-serif; background: var(--bg); color: #1F2937; margin: 0; padding-bottom: 40px; }
+-- 1. CLEANUP (Wipe everything for a fresh start)
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP FUNCTION IF EXISTS public.handle_new_user();
+DROP VIEW IF EXISTS school_leaderboard;
+DROP TABLE IF EXISTS attempts CASCADE;
+DROP TABLE IF EXISTS problems CASCADE;
+DROP TABLE IF EXISTS children CASCADE;
+DROP TABLE IF EXISTS profiles CASCADE;
 
-        header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .logo { font-weight: 800; color: var(--primary); font-size: 20px; display: flex; align-items: center; gap: 5px; }
-        .logout-btn { background: transparent; border: 1px solid #E5E7EB; color: #6B7280; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s; }
-        .logout-btn:hover { background: #FEE2E2; color: #DC2626; border-color: #FCA5A5; }
+-- 2. CREATE TABLES
 
-        .container { max-width: 600px; margin: 20px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 18px; }
+-- PROFILES (Parents)
+CREATE TABLE profiles (
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email text UNIQUE NOT NULL,
+  full_name text NOT NULL,
+  phone text,
+  role text DEFAULT 'parent',
+  subscription_status text DEFAULT 'trial',
+  created_at timestamptz DEFAULT now()
+);
 
-        /* WELCOME CARD */
-        .welcome-card { background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%); color: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3); text-align: left; }
-        .welcome-card h1 { font-size: 28px; margin: 0; }
-        .welcome-card p { opacity: 0.9; font-size: 16px; margin: 5px 0 0 0; font-weight: 600; }
+-- CHILDREN (Students)
+CREATE TABLE children (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  parent_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  age integer,
+  age_category text, -- '8-10', etc.
+  school_name text DEFAULT 'My School',
+  curriculum text,
+  difficulty_level text DEFAULT 'medium',
+  total_problems_solved integer DEFAULT 0,
+  streak_days integer DEFAULT 0,
+  last_activity_date date,
+  created_at timestamptz DEFAULT now()
+);
 
-        /* STATS */
-        .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .stat-card { background: white; padding: 15px; border-radius: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .stat-icon { font-size: 24px; }
-        .stat-text div:first-child { font-size: 12px; color: #6B7280; font-weight: 700; text-transform: uppercase; }
-        .stat-text div:last-child { font-size: 18px; font-weight: 800; color: #111827; }
+-- PROBLEMS (Content)
+CREATE TABLE problems (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  title text NOT NULL,
+  problem_text text NOT NULL,
+  age_category text NOT NULL,
+  difficulty text NOT NULL,
+  hints jsonb,
+  solution_explanation text,
+  is_active boolean DEFAULT true,
+  created_at timestamptz DEFAULT now()
+);
 
-        /* PROGRESS */
-        .progress-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .progress-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; font-weight: 700; }
-        .progress-track { background: #E5E7EB; height: 10px; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
-        .progress-fill { background: var(--green); height: 100%; width: 0%; transition: width 1s ease; border-radius: 10px; }
-        .daily-goal { background: #FFF7ED; border: 1px solid #FFEDD5; border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 10px; color: #C2410C; font-size: 14px; font-weight: 700; }
+-- ATTEMPTS (Activity)
+CREATE TABLE attempts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  child_id uuid NOT NULL REFERENCES children(id) ON DELETE CASCADE,
+  problem_id uuid NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
+  solved_correctly boolean DEFAULT false,
+  hints_used integer DEFAULT 0,
+  questions_asked integer DEFAULT 0,
+  ai_conversation jsonb,
+  completed_at timestamptz DEFAULT now(),
+  created_at timestamptz DEFAULT now()
+);
 
-        /* DETAILS */
-        .details-card { background: white; padding: 15px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 700; color: #4B5563; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .detail-item { display: flex; align-items: center; gap: 8px; }
+-- 3. THE LEADERBOARD VIEW (The Engine)
+CREATE VIEW school_leaderboard AS
+SELECT 
+  c.school_name,
+  SUM(c.total_problems_solved) * 10 as total_points
+FROM children c
+WHERE c.school_name IS NOT NULL 
+  AND c.school_name != ''
+  AND c.school_name != 'My School'
+GROUP BY c.school_name
+ORDER BY total_points DESC;
 
-        /* BUTTON */
-        .play-btn { display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; background: var(--green); color: white; text-align: center; padding: 18px; border-radius: 20px; font-size: 18px; font-weight: 800; text-decoration: none; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); transition: transform 0.2s; margin-top: 5px; }
-        .play-btn:active { transform: scale(0.98); }
+-- 4. ROW LEVEL SECURITY (The Security)
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE children ENABLE ROW LEVEL SECURITY;
+ALTER TABLE attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE problems ENABLE ROW LEVEL SECURITY;
 
-        /* LEADERBOARD */
-        .section-title { font-weight: 800; font-size: 16px; margin: 20px 0 10px; color: #1F2937; }
-        .leaderboard-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .lb-item { display: flex; justify-content: space-between; padding: 15px 20px; border-bottom: 1px solid #F3F4F6; font-size: 14px; align-items: center; }
-        .lb-school { font-weight: 600; color: #374151; }
-        .lb-points { font-weight: 800; color: var(--primary); }
+-- Profiles: Users see/edit their own
+CREATE POLICY "Users view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "Users update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 
-        /* INSIGHT */
-        .growth-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid var(--primary); }
-        .insight-text { font-size: 14px; line-height: 1.6; color: #4B5563; margin-top: 10px; }
-    </style>
-</head>
-<body>
+-- Children: Parents see/edit their kids
+CREATE POLICY "Parents view kids" ON children FOR SELECT USING (parent_id = auth.uid());
+CREATE POLICY "Parents insert kids" ON children FOR INSERT WITH CHECK (parent_id = auth.uid());
+CREATE POLICY "Parents update kids" ON children FOR UPDATE USING (parent_id = auth.uid());
 
-    <header>
-        <div class="logo"><span>🧠</span> LogicPals</div>
-        <button id="logoutBtn" class="logout-btn">Log Out</button>
-    </header>
+-- Attempts: Parents see kids' attempts
+CREATE POLICY "Parents view attempts" ON attempts FOR SELECT USING (
+  child_id IN (SELECT id FROM children WHERE parent_id = auth.uid())
+);
+CREATE POLICY "Parents insert attempts" ON attempts FOR INSERT WITH CHECK (
+  child_id IN (SELECT id FROM children WHERE parent_id = auth.uid())
+);
 
-    <div class="container">
-        <div class="welcome-card">
-            <h1 id="userName">Hi! 👋</h1>
-            <p id="userSchool">Loading profile...</p>
-        </div>
+-- Problems: Everyone reads active problems
+CREATE POLICY "Public read problems" ON problems FOR SELECT USING (is_active = true);
 
-        <div class="stats-row">
-            <div class="stat-card">
-                <div class="stat-icon">🔥</div>
-                <div class="stat-text"><div>Streak</div><div id="streakVal">0 Days</div></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">📊</div>
-                <div class="stat-text"><div>Level</div><div>1</div></div>
-            </div>
-        </div>
+-- Leaderboard: Everyone reads
+GRANT SELECT ON school_leaderboard TO anon, authenticated;
 
-        <div class="progress-card">
-            <div class="progress-header"><span>This Week's Mysteries</span><span id="progressText">0/10</span></div>
-            <div class="progress-track"><div class="progress-fill" id="progressBar"></div></div>
-            <div class="daily-goal"><span>🎯</span><span id="dailyGoalText">Today's Goal: Solve 2 more!</span></div>
-        </div>
-
-        <div class="details-card">
-            <div class="detail-item">🎓 Age 8 (MEDIUM)</div>
-            <div class="detail-item">✅ Solved: <span id="totalSolved" style="margin-left:5px; color:#4F46E5;">0</span></div>
-        </div>
-
-        <a href="learn.html" class="play-btn"><span>🚀</span> Solve a Mystery</a>
-
-        <div class="section-title">🏆 Top Schools Leaderboard</div>
-        <div class="leaderboard-card" id="lbList">
-            <div style="padding:20px; text-align:center; color:#9CA3AF;">Loading rankings...</div>
-        </div>
-
-        <div class="section-title">🧠 Psychiatrist Insight</div>
-        <div class="growth-card">
-            <div style="font-weight:700; font-size:14px; color:#1F2937;">Cognitive Growth Update</div>
-            <div class="insight-text" id="aiInsight">Analysis pending... Solve problems to generate report.</div>
-        </div>
-    </div>
-
-    <script>
-        const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; 
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-        window.onload = async function() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) { window.location.href = 'index.html'; return; }
-
-            document.getElementById('logoutBtn').addEventListener('click', async () => {
-                await supabase.auth.signOut();
-                window.location.href = 'index.html';
-            });
-
-            await loadDashboard(session.user);
-        };
-
-        async function loadDashboard(user) {
-            try {
-                // 1. FETCH PROFILE (This gets "Akash")
-                const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-                const realName = profile ? profile.full_name : "Student";
-
-                // 2. FETCH CHILD (This gets "School")
-                let { data: child } = await supabase.from('children').select('*').eq('parent_id', user.id).maybeSingle();
-                
-                // 3. AUTO-FIX (If child missing, create it using Profile Name)
-                if (!child) {
-                    console.log("Creating child profile for: " + realName);
-                    const { data: newChild } = await supabase.from('children').insert([{ 
-                        parent_id: user.id, 
-                        name: realName,  // Use the name from Profile!
-                        school: "My School", 
-                        age: 8 
-                    }]).select().single();
-                    child = newChild;
-                }
-
-                // 4. UPDATE UI
-                // Prefer child.name, fallback to profile name
-                const displayName = (child && child.name && child.name !== "Student") ? child.name : realName;
-                document.getElementById('userName').innerText = `Hi, ${displayName}! 👋`;
-                
-                const displaySchool = child ? (child.school || child.school_name || "My School") : "My School";
-                document.getElementById('userSchool').innerText = displaySchool;
-
-                if(child) {
-                    loadStats(child.id);
-                    loadLeaderboard(displaySchool);
-                }
-
-            } catch (err) { console.error("Dash Error:", err); }
-        }
-
-        async function loadStats(childId) {
-            const { data: attempts } = await supabase.from('attempts').select('*').eq('child_id', childId);
-            const solvedCount = attempts ? attempts.filter(a => a.solved_correctly).length : 0;
-
-            document.getElementById('totalSolved').innerText = solvedCount;
-            document.getElementById('progressText').innerText = `${solvedCount}/10`; 
-            document.getElementById('progressBar').style.width = `${Math.min((solvedCount/10)*100, 100)}%`;
-
-            if (solvedCount > 0) document.getElementById('streakVal').innerText = "1 Day"; 
-
-            const remaining = Math.max(2 - solvedCount, 0);
-            if (remaining === 0) {
-                document.getElementById('dailyGoalText').innerText = "🎉 Goal Met!";
-                document.querySelector('.daily-goal').style.background = "#ECFDF5";
-                document.querySelector('.daily-goal').style.color = "#065F46";
-            } else {
-                document.getElementById('dailyGoalText').innerText = `Today's Goal: Solve ${remaining} more!`;
-            }
-        }
-
-        async function loadLeaderboard(mySchool) {
-            // Load Top 5
-            const { data: schools } = await supabase.from('school_leaderboard').select('*').limit(5);
-            
-            let html = "";
-            if (schools && schools.length > 0) {
-                const medals = ['🥇', '🥈', '🥉'];
-                schools.forEach((s, i) => {
-                    const icon = medals[i] || '🏅';
-                    const isMine = (s.school_name === mySchool);
-                    const style = isMine ? "background:#EFF6FF;" : "";
-                    html += `<div class="lb-item" style="${style}"><div class="lb-school">${icon} ${s.school_name}</div><div class="lb-points">${s.total_points} pts</div></div>`;
-                });
-            } else {
-                html = "<div style='padding:20px; text-align:center; color:#6B7280;'>No schools ranked yet. Solve a puzzle!</div>";
-            }
-            document.getElementById('lbList').innerHTML = html;
-        }
-    </script>
-</body>
-</html>
+-- 5. SEED DATA (Problems)
+INSERT INTO problems (title, problem_text, age_category, difficulty, hints) VALUES
+('Odd Number', 'I am an odd number. Take away a letter and I become even. What number am I?', '8-10', 'medium', '["Think of word play", "Write down the word SEVEN", "Remove the letter S"]'),
+('Singara Math', 'If 3 Singaras cost 15 Taka, how much do 5 Singaras cost?', '8-10', 'easy', '["Find cost of 1 singara", "15 divided by 3 is 5", "Now multiply 5 by 5"]');
