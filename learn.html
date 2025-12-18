@@ -3,20 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals Tutor - Persistent Mode</title>
+    <title>LogicPals Tutor - Safe Mode</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
-        :root { --primary: #4F46E5; --bg: #F3F4F6; --hint-gold: #F59E0B; --hint-bg: #FEF3C7; }
+        :root { --primary: #4F46E5; --bg: #F3F4F6; }
         body { font-family: 'Nunito', sans-serif; background: var(--bg); height: 100vh; display: flex; flex-direction: column; margin: 0; }
 
         /* HEADER */
-        header { 
-            background: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; 
-        }
+        header { background: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; }
         .left-section { display: flex; flex-direction: column; }
         .logo { font-weight: 800; color: var(--primary); font-size: 18px; display: flex; align-items: center; gap: 5px; }
         
@@ -40,18 +37,27 @@
         /* INPUT AREA */
         .input-area { background: white; padding: 15px 20px; border-top: 1px solid #E5E7EB; display: flex; flex-direction: column; align-items: center; }
         
-        /* 🔥 HIGHLIGHTED HINT STATUS */
-        .hint-status { 
-            background: var(--hint-bg); color: #92400E; border: 1px solid #FCD34D;
-            padding: 4px 12px; border-radius: 12px;
-            font-size: 12px; font-weight: 800; margin-bottom: 10px;
-            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.1);
-            display: inline-block;
+        /* 🔥 GOLDEN HINT BADGE (Restored) */
+        .hint-pill { 
+            background: #FEF3C7; 
+            color: #D97706; 
+            border: 2px solid #FCD34D;
+            padding: 8px 20px; 
+            border-radius: 25px; 
+            font-size: 14px; 
+            font-weight: 800; 
+            margin-bottom: 15px;
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(245, 158, 11, 0.15);
+            animation: popIn 0.3s ease-out;
         }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
         .input-wrapper { width: 100%; max-width: 800px; display: flex; gap: 10px; align-items: center; }
         
-        .hint-btn { background: #FBBF24; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 20px; cursor: pointer; transition: transform 0.2s; }
+        .hint-btn { background: #FBBF24; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; font-size: 20px; cursor: pointer; transition: transform 0.2s; box-shadow: 0 2px 5px rgba(251, 191, 36, 0.4); }
         .hint-btn:hover { transform: scale(1.1); }
         
         input { flex: 1; padding: 12px 15px; border: 2px solid #E5E7EB; border-radius: 50px; font-size: 16px; outline: none; transition: border-color 0.2s; }
@@ -64,7 +70,6 @@
         .send-btn:hover { background: #4338CA; }
         .send-btn:disabled { background: #D1D5DB; cursor: not-allowed; }
 
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
         .typing { font-size: 13px; color: #6B7280; font-style: italic; opacity: 0; transition: 0.3s; margin-bottom: 5px; width: 100%; max-width: 800px; text-align: left; padding-left: 60px; }
         .typing.active { opacity: 1; }
     </style>
@@ -89,7 +94,11 @@
 
     <div class="input-area">
         <div class="typing" id="typingIndicator">LogicPals is thinking...</div>
-        <div class="hint-status" id="hintStatus">💡 Hints Used: 0/3</div>
+        
+        <div class="hint-pill" id="hintStatus">
+            <span>💡 Hints Used:</span>
+            <span id="hintCount">0/3</span>
+        </div>
         
         <div class="input-wrapper">
             <button id="hintBtn" class="hint-btn" onclick="useHint()" title="Get a Hint">💡</button>
@@ -114,14 +123,29 @@
         let currentProblemText = "";
         let puzzleSolved = false;
         let startTime;
+        let OPENAI_API_KEY = ""; // WILL BE FILLED BY USER
 
-        // Default puzzles if offline
         const localPuzzles = [
             { id: 999, text: "A farmer has 17 sheep and all but 9 die. How many are left?", hints: ["Read 'all but 9' carefully.", "It means 9 are alive.", "The rest died."] },
             { id: 998, text: "I am an odd number. Take away a letter and I become even. What number am I?", hints: ["It's a word trick.", "Write down 'Seven'.", "Take away 'S'."] }
         ];
 
         window.onload = function() {
+            // 1. SAFE KEY LOADING
+            const storedKey = localStorage.getItem('user_openai_key');
+            if (storedKey) {
+                OPENAI_API_KEY = storedKey;
+            } else {
+                const userKey = prompt("⚠️ DEV MODE: Please enter your NEW OpenAI API Key to start:");
+                if (userKey && userKey.startsWith("sk-")) {
+                    localStorage.setItem('user_openai_key', userKey);
+                    OPENAI_API_KEY = userKey;
+                } else {
+                    alert("A valid API key is required for the AI to work.");
+                }
+            }
+
+            // 2. SUPABASE INIT
             if (typeof supabase !== 'undefined') {
                 supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
                 supabaseClient.auth.getSession().then(({ data }) => {
@@ -132,30 +156,31 @@
                 });
             }
 
-            // --- 🧠 PERSISTENCE LOGIC START ---
-            // Check if there is an active session in storage
-            const activeSession = localStorage.getItem('lp_active_session');
+            // 3. PERSISTENCE CHECK
+            const savedSession = localStorage.getItem('lp_session');
             
-            if (activeSession) {
-                // RESTORE STATE
-                const sessionData = JSON.parse(activeSession);
-                currentProblemId = sessionData.id;
-                currentProblemText = sessionData.text;
-                currentHints = sessionData.hints;
-                hintsUsedCount = sessionData.hintsUsedCount || 0;
-                conversationLog = sessionData.log || [];
+            if (savedSession) {
+                console.log("Restoring saved session...");
+                const data = JSON.parse(savedSession);
+                currentProblemId = data.id;
+                currentProblemText = data.text;
+                currentHints = data.hints;
+                hintsUsedCount = data.hintsCount;
+                conversationLog = data.log;
+                puzzleSolved = data.solved;
+
+                document.getElementById('hintCount').innerText = `${hintsUsedCount}/${totalHints}`;
                 
-                // Rebuild UI from Log
-                document.getElementById('hintStatus').innerText = `💡 Hints Used: ${hintsUsedCount}/${totalHints}`;
                 conversationLog.forEach(msg => {
-                    if (msg.role !== 'system') addMessage(msg.role, msg.content);
+                    if (msg.role !== 'system') addMessage(msg.role, msg.content, false);
                 });
+
+                if (puzzleSolved) document.getElementById('finishBtn').style.display = 'block';
+
             } else {
-                // START NEW
                 const p = localPuzzles[Math.floor(Math.random() * localPuzzles.length)];
                 initGame(p.id, p.text, p.hints);
             }
-            // --- PERSISTENCE LOGIC END ---
 
             startTimer();
         };
@@ -165,104 +190,74 @@
             currentProblemText = text;
             currentHints = hints || ["Think carefully."];
             hintsUsedCount = 0;
-            conversationLog = [{ role: 'system', content: `Problem: ${text}` }];
+            puzzleSolved = false;
             
-            document.getElementById('hintStatus').innerText = `💡 Hints Used: 0/${totalHints}`;
-            addMessage('ai', `Here is your mystery:<br><br><strong>"${text}"</strong><br><br>Hi! Ready to solve this?`);
+            conversationLog = [{ 
+                role: 'system', 
+                content: `You are LogicPals, a Socratic Tutor for a child (age 8-10). 
+                Current Problem: "${text}".
+                Rules: 1. NEVER give the answer. 2. Be encouraging. 3. Ask guiding questions. 4. Max 40 words.` 
+            }];
             
-            saveProgress(); // Initial Save
+            document.getElementById('hintCount').innerText = `0/${totalHints}`;
+            
+            const intro = `Here is your mystery:<br><br><strong>"${text}"</strong><br><br>Ready?`;
+            addMessage('ai', intro);
         }
 
-        function saveProgress() {
+        function saveState() {
             const state = {
                 id: currentProblemId,
                 text: currentProblemText,
                 hints: currentHints,
-                hintsUsedCount: hintsUsedCount,
-                log: conversationLog
+                hintsCount: hintsUsedCount,
+                log: conversationLog,
+                solved: puzzleSolved
             };
-            localStorage.setItem('lp_active_session', JSON.stringify(state));
-        }
-
-        function speak(text) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                const voices = window.speechSynthesis.getVoices();
-                const preferred = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
-                if (preferred) utterance.voice = preferred;
-                utterance.rate = 1.0; 
-                utterance.pitch = 1.1;
-                window.speechSynthesis.speak(utterance);
-            }
+            localStorage.setItem('lp_session', JSON.stringify(state));
         }
 
         async function sendText() {
             const textInput = document.getElementById('textInput');
-            const sendBtn = document.getElementById('sendBtn');
             const text = textInput.value.trim();
-            
             if(!text || isProcessing) return; 
             
-            if (puzzleSolved) {
-                addMessage('ai', "You solved it! Click 'Done' to finish! 🎉");
-                return;
-            }
-
             isProcessing = true; 
-            sendBtn.disabled = true; 
+            document.getElementById('sendBtn').disabled = true;
             document.getElementById('typingIndicator').classList.add('active');
             
             addMessage('user', text);
             conversationLog.push({ role: 'user', content: text });
-            saveProgress(); // Save User Input
             textInput.value = ""; 
 
-            // WATCHDOG
-            const watchdog = setTimeout(() => {
-                if (isProcessing) {
-                    isProcessing = false;
-                    sendBtn.disabled = false;
-                    document.getElementById('typingIndicator').classList.remove('active');
-                    addMessage('ai', "I'm thinking really hard... try asking again!");
-                }
-            }, 15000);
-
             try {
-                // 🧠 DIAGNOSTIC FETCH
-                const response = await fetch('https://ovszuxerimbmzfblzkgd.supabase.co/functions/v1/voice-tutor', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + supabaseKey, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        text: `
-                        ROLE: Socratic Tutor.
-                        PROBLEM: "${currentProblemText}"
-                        STUDENT SAYS: "${text}"
-                        HISTORY: ${JSON.stringify(conversationLog.slice(-6))}
-                        INSTRUCTION: Be brief, encouraging, and ask ONE guiding question.
-                        `, 
-                        history: [], 
-                        skipAudio: true 
-                    }) 
+                if (!OPENAI_API_KEY) throw new Error("Missing API Key. Refresh to enter it.");
+
+                const response = await fetch("https://api.openai.com/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${OPENAI_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-4o-mini",
+                        messages: conversationLog,
+                        temperature: 0.7,
+                        max_tokens: 150
+                    })
                 });
 
                 if (!response.ok) {
-                    // 🚨 SPECIFIC ERROR REPORTING
-                    const status = response.status;
-                    if (status === 404) throw new Error("ERROR 404: The AI Brain is missing. (Did you deploy the Edge Function?)");
-                    if (status === 500) throw new Error("ERROR 500: The AI Brain crashed. (Check OpenAI Key in Supabase)");
-                    throw new Error(`Server Error: ${status}`);
+                    const errData = await response.json();
+                    throw new Error(errData.error?.message || "AI Error");
                 }
-
+                
                 const data = await response.json();
-                clearTimeout(watchdog);
+                const reply = data.choices[0].message.content;
 
-                const reply = data.reply || data.aiText;
                 addMessage('ai', reply);
-                conversationLog.push({ role: 'ai', content: reply });
-                saveProgress(); // Save AI Reply
-                speak(reply);
-
+                conversationLog.push({ role: 'assistant', content: reply });
+                
                 if (reply.toLowerCase().includes("correct") || reply.includes("🎉")) {
                     puzzleSolved = true;
                     document.getElementById('finishBtn').style.display = 'block'; 
@@ -271,13 +266,13 @@
 
             } catch (error) {
                 console.error(error);
-                // 🚨 USER FACING ERROR
-                addMessage('ai', `⚠️ Connection Trouble: ${error.message}`);
+                addMessage('ai', `⚠️ Brain Freeze: ${error.message}`);
             } finally {
                 isProcessing = false; 
-                sendBtn.disabled = false;
+                document.getElementById('sendBtn').disabled = false;
                 document.getElementById('typingIndicator').classList.remove('active');
                 textInput.focus();
+                saveState();
             }
         }
 
@@ -286,10 +281,39 @@
                 const hint = currentHints[hintsUsedCount] || "Think carefully.";
                 hintsUsedCount++;
                 addMessage('hint', `💡 HINT: ${hint}`);
-                speak("Hint: " + hint);
-                document.getElementById('hintStatus').innerText = `💡 Hints Used: ${hintsUsedCount}/${totalHints}`;
-                saveProgress(); // Save Hint usage
+                document.getElementById('hintCount').innerText = `${hintsUsedCount}/${totalHints}`;
+                saveState();
             }
+        }
+
+        function addMessage(sender, text, shouldSave = true) {
+            const container = document.getElementById('chatContainer');
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', sender);
+            if (sender === 'assistant') msgDiv.classList.add('ai');
+            
+            msgDiv.innerHTML = text; 
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+            if (shouldSave) saveState();
+        }
+
+        async function finishSession() {
+            const btn = document.getElementById('finishBtn');
+            btn.innerText = "Saving...";
+            
+            if (supabaseClient && currentChildId) {
+                try {
+                    await supabaseClient.from('attempts').insert([{ 
+                        child_id: currentChildId, 
+                        problem_id: currentProblemId, 
+                        solved_correctly: true, 
+                        hints_used: hintsUsedCount
+                    }]);
+                } catch(e) { console.error(e); }
+            }
+            localStorage.removeItem('lp_session');
+            window.location.href = 'dashboard.html';
         }
 
         function startTimer() {
@@ -301,56 +325,9 @@
                 document.getElementById('timeDisplay').innerText = `${mins}:${secs}`;
             }, 1000);
         }
-
-        async function finishSession() {
-            if (!puzzleSolved) return;
-            const btn = document.getElementById('finishBtn');
-            btn.innerText = "Saving... 💾";
-            btn.disabled = true;
-            
-            if (supabaseClient && currentChildId) {
-                try {
-                    await supabaseClient.from('attempts').insert([{ 
-                        child_id: currentChildId, 
-                        problem_id: currentProblemId, 
-                        solved_correctly: true, 
-                        ai_conversation: conversationLog,
-                        hints_used: hintsUsedCount
-                    }]);
-                } catch(e) {}
-            }
-            localStorage.removeItem('lp_active_session'); // Clear session on finish
-            setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
-        }
-
-        function addMessage(sender, text) {
-            const container = document.getElementById('chatContainer');
-            const msgDiv = document.createElement('div');
-            msgDiv.classList.add('message', sender);
-            msgDiv.innerHTML = text; 
-            container.appendChild(msgDiv);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function toggleRecording() {
-            if (!('webkitSpeechRecognition' in window)) {
-                alert("Voice input requires Chrome/Edge.");
-                return;
-            }
-            const recognition = new webkitSpeechRecognition();
-            recognition.lang = "en-US";
-            recognition.onstart = () => document.getElementById('micBtn').classList.add('recording');
-            recognition.onend = () => document.getElementById('micBtn').classList.remove('recording');
-            recognition.onresult = (e) => {
-                document.getElementById('textInput').value = e.results[0][0].transcript;
-                sendText();
-            };
-            recognition.start();
-        }
-
-        document.getElementById('textInput').addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') sendText();
-        });
+        
+        function toggleRecording() { alert("Voice input requires Premium!"); }
+        document.getElementById('textInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') sendText(); });
     </script>
 </body>
 </html>
