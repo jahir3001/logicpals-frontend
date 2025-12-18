@@ -14,52 +14,28 @@
 
         header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .logo { font-weight: 800; color: var(--primary); font-size: 20px; display: flex; align-items: center; gap: 5px; }
-        .logout-btn { background: transparent; border: 1px solid #E5E7EB; color: #6B7280; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s; }
-        .logout-btn:hover { background: #FEE2E2; color: #DC2626; border-color: #FCA5A5; }
+        .logout-btn { background: transparent; border: 1px solid #E5E7EB; color: #6B7280; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
 
         .container { max-width: 600px; margin: 20px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 18px; }
 
-        /* WELCOME CARD */
-        .welcome-card { background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%); color: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3); text-align: left; }
+        .welcome-card { background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%); color: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3); }
         .welcome-card h1 { font-size: 28px; margin: 0; }
         .welcome-card p { opacity: 0.9; font-size: 16px; margin: 5px 0 0 0; font-weight: 600; }
 
-        /* STATS */
         .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .stat-card { background: white; padding: 15px; border-radius: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .stat-icon { font-size: 24px; }
         .stat-text div:first-child { font-size: 12px; color: #6B7280; font-weight: 700; text-transform: uppercase; }
         .stat-text div:last-child { font-size: 18px; font-weight: 800; color: #111827; }
 
-        /* PROGRESS */
-        .progress-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .progress-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; font-weight: 700; }
-        .progress-track { background: #E5E7EB; height: 10px; border-radius: 10px; overflow: hidden; margin-bottom: 15px; }
-        .progress-fill { background: var(--green); height: 100%; width: 0%; transition: width 1s ease; border-radius: 10px; }
-        .daily-goal { background: #FFF7ED; border: 1px solid #FFEDD5; border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 10px; color: #C2410C; font-size: 14px; font-weight: 700; }
-
-        /* DETAILS */
-        .details-card { background: white; padding: 15px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 700; color: #4B5563; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .detail-item { display: flex; align-items: center; gap: 8px; }
-
-        /* BUTTON */
-        .play-btn { display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; background: var(--green); color: white; text-align: center; padding: 18px; border-radius: 20px; font-size: 18px; font-weight: 800; text-decoration: none; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); transition: transform 0.2s; margin-top: 5px; }
-        .play-btn:active { transform: scale(0.98); }
-
-        /* LEADERBOARD */
+        .play-btn { display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; background: var(--green); color: white; text-align: center; padding: 18px; border-radius: 20px; font-size: 18px; font-weight: 800; text-decoration: none; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); margin-top: 5px; }
+        
         .section-title { font-weight: 800; font-size: 16px; margin: 20px 0 10px; color: #1F2937; }
         .leaderboard-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .lb-item { display: flex; justify-content: space-between; padding: 15px 20px; border-bottom: 1px solid #F3F4F6; font-size: 14px; align-items: center; }
         .lb-school { font-weight: 600; color: #374151; }
         .lb-points { font-weight: 800; color: var(--primary); }
-
-        /* INSIGHT */
-        .growth-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid var(--primary); }
-        .insight-text { font-size: 14px; line-height: 1.6; color: #4B5563; margin-top: 10px; }
-
-        /* Loading state */
         .loading { color: #9CA3AF; text-align: center; padding: 20px; }
-        .error { color: #DC2626; background: #FEE2E2; padding: 12px; border-radius: 8px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -81,20 +57,9 @@
                 <div class="stat-text"><div>Streak</div><div id="streakVal">0 Days</div></div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">📊</div>
-                <div class="stat-text"><div>Level</div><div id="levelVal">1</div></div>
+                <div class="stat-icon">✅</div>
+                <div class="stat-text"><div>Solved</div><div id="totalSolved">0</div></div>
             </div>
-        </div>
-
-        <div class="progress-card">
-            <div class="progress-header"><span>This Week's Mysteries</span><span id="progressText">0/10</span></div>
-            <div class="progress-track"><div class="progress-fill" id="progressBar"></div></div>
-            <div class="daily-goal"><span>🎯</span><span id="dailyGoalText">Today's Goal: Solve 2 more!</span></div>
-        </div>
-
-        <div class="details-card">
-            <div class="detail-item" id="ageDisplay">🎓 Age 8 (MEDIUM)</div>
-            <div class="detail-item">✅ Solved: <span id="totalSolved" style="margin-left:5px; color:#4F46E5;">0</span></div>
         </div>
 
         <a href="learn.html" class="play-btn"><span>🚀</span> Solve a Mystery</a>
@@ -103,279 +68,88 @@
         <div class="leaderboard-card" id="lbList">
             <div class="loading">Loading rankings...</div>
         </div>
-
-        <div class="section-title">🧠 Psychiatrist Insight</div>
-        <div class="growth-card">
-            <div style="font-weight:700; font-size:14px; color:#1F2937;">Cognitive Growth Update</div>
-            <div class="insight-text" id="aiInsight">Solve problems to generate your personalized thinking pattern analysis.</div>
-        </div>
     </div>
 
     <script>
-        // FIXED: Correct Supabase initialization
         const { createClient } = supabase;
         const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'; 
         const sb = createClient(supabaseUrl, supabaseKey);
 
         window.onload = async function() {
+            // 1. AUTH CHECK
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) { window.location.href = 'index.html'; return; }
+
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                await sb.auth.signOut();
+                window.location.href = 'index.html';
+            });
+
+            const user = session.user;
+            
             try {
-                // Check authentication
-                const { data: { session }, error: sessionError } = await sb.auth.getSession();
+                // 2. SELF-HEALING PROFILE (Fixes "Loading..." stuck)
+                let { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
                 
-                if (sessionError || !session) {
-                    console.error('Auth error:', sessionError);
-                    window.location.href = 'index.html';
-                    return;
+                if (!profile) {
+                    console.log("Profile missing (DB Reset?). Recreating...");
+                    await sb.from('profiles').insert([{ 
+                        id: user.id, 
+                        email: user.email, 
+                        full_name: user.user_metadata.full_name || "Parent"
+                    }]);
+                    // Fetch again
+                    const res = await sb.from('profiles').select('*').eq('id', user.id).single();
+                    profile = res.data;
                 }
 
-                // Setup logout
-                document.getElementById('logoutBtn').addEventListener('click', async () => {
-                    await sb.auth.signOut();
-                    window.location.href = 'index.html';
-                });
-
-                // Load dashboard data
-                await loadDashboard(session.user);
-
-            } catch (err) {
-                console.error('Dashboard initialization error:', err);
-                document.getElementById('userName').innerHTML = `<div class="error">Error loading dashboard. Please refresh.</div>`;
-            }
-        };
-
-        async function loadDashboard(user) {
-            try {
-                console.log('Loading dashboard for user:', user.id);
-
-                // 1. FETCH PROFILE (Parent data)
-                const { data: profile, error: profileError } = await sb
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', user.id)
-                    .maybeSingle();
-
-                if (profileError) {
-                    console.error('Profile fetch error:', profileError);
-                }
-
-                const parentName = profile?.full_name || "Parent";
-
-                // 2. FETCH CHILD (Student data)
-                let { data: child, error: childError } = await sb
-                    .from('children')
-                    .select('*')
-                    .eq('parent_id', user.id)
-                    .maybeSingle();
-
-                if (childError) {
-                    console.error('Child fetch error:', childError);
-                }
-
-                // 3. AUTO-CREATE CHILD if missing
+                // 3. GET CHILD DATA
+                let { data: child } = await sb.from('children').select('*').eq('parent_id', user.id).maybeSingle();
+                
                 if (!child) {
-                    console.log('Creating child profile...');
-                    const { data: newChild, error: insertError } = await sb
-                        .from('children')
-                        .insert([{ 
-                            parent_id: user.id, 
-                            name: parentName,  // Use parent name as default
-                            school_name: "My School", 
-                            age: 8,
-                            age_category: "8-10",
-                            difficulty_level: "medium"
-                        }])
-                        .select()
-                        .single();
-
-                    if (insertError) {
-                        console.error('Child creation error:', insertError);
-                        throw insertError;
-                    }
-
+                    console.log("Child missing. Creating...");
+                    const { data: newChild } = await sb.from('children').insert([{ 
+                        parent_id: user.id, 
+                        name: profile.full_name || "Student", 
+                        school_name: "My School", 
+                        age: 10,
+                        age_category: "8-10" 
+                    }]).select().single();
                     child = newChild;
                 }
 
-                // 4. UPDATE UI WITH CHILD DATA
-                const childName = child?.name || parentName || "Student";
-                const schoolName = child?.school_name || child?.school || "My School";
-                const childAge = child?.age || 8;
-                const difficultyLevel = (child?.difficulty_level || "medium").toUpperCase();
-
-                // Update welcome section
-                document.getElementById('userName').innerText = `Hi, ${childName}! 👋`;
-                document.getElementById('userSchool').innerText = schoolName;
-
-                // Update age display
-                document.getElementById('ageDisplay').innerText = `🎓 Age ${childAge} (${difficultyLevel})`;
+                // 4. UPDATE DASHBOARD UI
+                document.getElementById('userName').innerText = `Hi, ${child.name}! 👋`;
+                document.getElementById('userSchool').innerText = child.school_name;
 
                 // 5. LOAD STATS
-                if (child) {
-                    await loadStats(child.id);
-                    await loadLeaderboard(schoolName);
-                    await loadInsight(child.id);
-                }
+                const { data: attempts } = await sb.from('attempts').select('*').eq('child_id', child.id);
+                const solved = attempts ? attempts.filter(a => a.solved_correctly).length : 0;
+                document.getElementById('totalSolved').innerText = solved;
+                if(solved > 0) document.getElementById('streakVal').innerText = "1 Day";
 
-            } catch (err) {
-                console.error('Dashboard load error:', err);
-                document.getElementById('userName').innerHTML = `<div class="error">Failed to load profile: ${err.message}</div>`;
-            }
-        }
-
-        async function loadStats(childId) {
-            try {
-                // Fetch all attempts for this child
-                const { data: attempts, error } = await sb
-                    .from('attempts')
-                    .select('*')
-                    .eq('child_id', childId);
-
-                if (error) {
-                    console.error('Attempts fetch error:', error);
-                    return;
-                }
-
-                const totalAttempts = attempts?.length || 0;
-                const solvedCount = attempts?.filter(a => a.solved_correctly === true).length || 0;
-
-                // Update total solved
-                document.getElementById('totalSolved').innerText = solvedCount;
-
-                // Update weekly progress
-                const weeklyGoal = 10;
-                document.getElementById('progressText').innerText = `${solvedCount}/${weeklyGoal}`;
-                const progressPercent = Math.min((solvedCount / weeklyGoal) * 100, 100);
-                document.getElementById('progressBar').style.width = `${progressPercent}%`;
-
-                // Update level (simple calculation: 1 level per 5 problems)
-                const level = Math.floor(solvedCount / 5) + 1;
-                document.getElementById('levelVal').innerText = level;
-
-                // Calculate streak
-                const { data: childData } = await sb
-                    .from('children')
-                    .select('streak_days, last_activity_date')
-                    .eq('id', childId)
-                    .single();
-
-                const streakDays = childData?.streak_days || 0;
-                
-                if (streakDays === 0 && solvedCount > 0) {
-                    document.getElementById('streakVal').innerText = "1 Day";
-                } else if (streakDays === 1) {
-                    document.getElementById('streakVal').innerText = "1 Day";
-                } else {
-                    document.getElementById('streakVal').innerText = `${streakDays} Days`;
-                }
-
-                // Update daily goal
-                const dailyGoal = 2;
-                const remaining = Math.max(dailyGoal - solvedCount, 0);
-                
-                if (remaining === 0 || solvedCount >= dailyGoal) {
-                    document.getElementById('dailyGoalText').innerText = "🎉 Daily Goal Met!";
-                    document.querySelector('.daily-goal').style.background = "#ECFDF5";
-                    document.querySelector('.daily-goal').style.borderColor = "#A7F3D0";
-                    document.querySelector('.daily-goal').style.color = "#065F46";
-                } else {
-                    document.getElementById('dailyGoalText').innerText = `Today's Goal: Solve ${remaining} more!`;
-                }
-
-            } catch (err) {
-                console.error('Stats load error:', err);
-            }
-        }
-
-        async function loadLeaderboard(mySchool) {
-            try {
-                // FIXED: Fetch from school_leaderboard view
-                const { data: schools, error } = await sb
-                    .from('school_leaderboard')
-                    .select('*')
-                    .order('total_points', { ascending: false })
-                    .limit(5);
-
-                if (error) {
-                    console.error('Leaderboard fetch error:', error);
-                    document.getElementById('lbList').innerHTML = `<div class="error">Failed to load leaderboard: ${error.message}</div>`;
-                    return;
-                }
-
-                let html = "";
+                // 6. LOAD LEADERBOARD (Using Secure Function)
+                const { data: schools, error } = await sb.rpc('get_school_leaderboard');
                 
                 if (schools && schools.length > 0) {
+                    let html = "";
                     const medals = ['🥇', '🥈', '🥉'];
-                    
-                    schools.forEach((school, index) => {
-                        const icon = medals[index] || '🏅';
-                        const isMine = (school.school_name === mySchool);
-                        const highlightStyle = isMine ? "background:#EFF6FF; border-left:3px solid #4F46E5;" : "";
-                        
-                        html += `
-                            <div class="lb-item" style="${highlightStyle}">
-                                <div class="lb-school">${icon} ${school.school_name}</div>
-                                <div class="lb-points">${school.total_points} pts</div>
-                            </div>
-                        `;
+                    schools.forEach((s, i) => {
+                        const icon = medals[i] || '🏅';
+                        const isMine = (s.school_name === child.school_name);
+                        const style = isMine ? "background:#EFF6FF; border-left: 3px solid #4F46E5;" : "";
+                        html += `<div class="lb-item" style="${style}"><div class="lb-school">${icon} ${s.school_name}</div><div class="lb-points">${s.total_points} pts</div></div>`;
                     });
+                    document.getElementById('lbList').innerHTML = html;
                 } else {
-                    html = `<div class="loading">No schools ranked yet. Be the first! 🏆</div>`;
+                    document.getElementById('lbList').innerHTML = `<div class="loading">No rankings yet. Start solving!</div>`;
                 }
-                
-                document.getElementById('lbList').innerHTML = html;
 
             } catch (err) {
-                console.error('Leaderboard load error:', err);
-                document.getElementById('lbList').innerHTML = `<div class="error">Error loading leaderboard</div>`;
+                console.error("Critical Error:", err);
             }
-        }
-
-        async function loadInsight(childId) {
-            try {
-                // Fetch recent attempts to generate insight
-                const { data: attempts, error } = await sb
-                    .from('attempts')
-                    .select('*')
-                    .eq('child_id', childId)
-                    .order('completed_at', { ascending: false })
-                    .limit(10);
-
-                if (error) {
-                    console.error('Insight fetch error:', error);
-                    return;
-                }
-
-                const solvedCount = attempts?.filter(a => a.solved_correctly).length || 0;
-                const totalAttempts = attempts?.length || 0;
-
-                if (totalAttempts === 0) {
-                    document.getElementById('aiInsight').innerText = "Solve problems to generate your personalized thinking pattern analysis.";
-                    return;
-                }
-
-                // Calculate average hints used
-                const avgHints = attempts.reduce((sum, a) => sum + (a.hints_used || 0), 0) / totalAttempts;
-                const avgQuestions = attempts.reduce((sum, a) => sum + (a.questions_asked || 0), 0) / totalAttempts;
-
-                // Generate insight based on patterns
-                let insight = "";
-                
-                if (solvedCount < 3) {
-                    insight = `Great start! You've attempted ${totalAttempts} problem${totalAttempts > 1 ? 's' : ''}. Keep practicing - every attempt builds your thinking muscles! 💪`;
-                } else if (avgHints < 1) {
-                    insight = `Impressive! You're solving problems with minimal hints (avg: ${avgHints.toFixed(1)}). This shows strong independent thinking! 🧠✨`;
-                } else if (avgHints > 2) {
-                    insight = `You're learning to break down complex problems! Using hints is smart - it helps you understand the process. As you practice more, you'll need fewer hints! 🎯`;
-                } else {
-                    insight = `You're developing excellent problem-solving habits! You ask good questions (avg: ${avgQuestions.toFixed(1)}) and use hints strategically. Keep it up! 🌟`;
-                }
-
-                document.getElementById('aiInsight').innerText = insight;
-
-            } catch (err) {
-                console.error('Insight load error:', err);
-            }
-        }
+        };
     </script>
 </body>
 </html>
