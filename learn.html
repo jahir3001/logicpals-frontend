@@ -67,8 +67,8 @@
             text-decoration: none; 
             padding: 8px 16px; 
             border-radius: 12px; 
-            font-size: 14px; 
-            font-weight: 700; 
+            font-size: 14px;
+            font-weight: 700;
             border: none;
             cursor: pointer;
             transition: all 0.2s;
@@ -584,6 +584,7 @@
     </header>
 
     <div class="main-content">
+        <!-- Problem Card - Always Visible -->
         <div class="problem-card">
             <div class="problem-header">
                 <div class="problem-badges">
@@ -618,6 +619,7 @@
             </div>
         </div>
 
+        <!-- Skip Section -->
         <div class="skip-section" id="skipSection">
             <div class="skip-text">Stuck? That's okay! 💙</div>
             <div class="skip-buttons">
@@ -626,11 +628,13 @@
             </div>
         </div>
 
+        <!-- Chat Container -->
         <div class="chat-container" id="chatContainer">
             <div class="message system">Hi! Ready to solve this mystery? How can I help? 🤔</div>
         </div>
     </div>
 
+    <!-- Success Modal -->
     <div class="success-modal" id="successModal">
         <div class="success-content">
             <div class="success-icon">🎉</div>
@@ -782,214 +786,3 @@
             
             // Update problem card
             document.getElementById('problemText').innerHTML = `"${p.problem_text}"`;
-            
-            // Update badges
-            document.getElementById('difficultyBadge').innerText = (p.difficulty || 'Medium').toUpperCase();
-            document.getElementById('difficultyBadge').className = `badge difficulty ${p.difficulty || 'medium'}`;
-            
-            document.getElementById('categoryBadge').innerText = (p.category || 'Logic').toUpperCase();
-            
-            // Update progress
-            problemsAttempted++;
-            document.getElementById('progressText').innerText = `Problem ${problemsAttempted} of 10`;
-            document.getElementById('progressFill').style.width = `${(problemsAttempted/10)*100}%`;
-            
-            // Start Timer
-            startTime = Date.now();
-            clearInterval(timerInterval);
-            timerInterval = setInterval(updateTimer, 1000);
-        }
-
-        function updateTimer() {
-            const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
-            const secs = (elapsed % 60).toString().padStart(2, '0');
-            document.getElementById('timeDisplay').innerText = `${mins}:${secs}`;
-        }
-
-        function useHint() {
-            if (hintsUsedCount < totalHints && currentHints.length > 0) {
-                const hint = currentHints[Math.min(hintsUsedCount, currentHints.length - 1)];
-                hintsUsedCount++;
-                document.getElementById('hintCount').innerText = `${hintsUsedCount}/${totalHints} used`;
-                
-                // Add hint to chat
-                const div = document.createElement('div');
-                div.className = 'message hint';
-                div.innerHTML = `💡 HINT: ${hint}`;
-                document.getElementById('chatContainer').appendChild(div);
-                scrollToBottom();
-                
-                // Add system log
-                conversationLog.push({ role: 'system', content: `The user took a hint: "${hint}"` });
-                
-                if (hintsUsedCount >= totalHints) {
-                    document.getElementById('hintBtn').disabled = true;
-                }
-            }
-        }
-
-        // Toggle Skip Section
-        // Show skip buttons if user is inactive for 30 seconds or asks for help repeatedly
-        setInterval(() => {
-            if (!puzzleSolved && (Date.now() - startTime > 45000)) { // 45 seconds
-                document.getElementById('skipSection').classList.add('active');
-            }
-        }, 5000);
-
-        function hideSkip() {
-            document.getElementById('skipSection').classList.remove('active');
-        }
-
-        function skipPuzzle() {
-            // Log skip
-            if (currentChildId && currentProblem) {
-                sb.from('attempts').insert([{
-                    child_id: currentChildId,
-                    problem_id: currentProblem.id,
-                    skipped: true
-                }]);
-            }
-            loadNextPuzzle();
-        }
-
-        function scrollToBottom() {
-            const container = document.getElementById('chatContainer');
-            container.scrollTop = container.scrollHeight;
-        }
-
-        async function sendText() {
-            const input = document.getElementById('textInput');
-            const text = input.value.trim();
-            if (!text || isProcessing) return;
-
-            // UI Updates
-            isProcessing = true;
-            document.getElementById('sendBtn').disabled = true;
-            document.getElementById('typingIndicator').classList.add('active');
-            
-            // Add User Message
-            const userDiv = document.createElement('div');
-            userDiv.className = 'message user';
-            userDiv.innerText = text;
-            document.getElementById('chatContainer').appendChild(userDiv);
-            scrollToBottom();
-            
-            input.value = '';
-            questionsAsked++;
-            document.getElementById('questionCount').innerText = questionsAsked;
-            
-            // Add to conversation log
-            conversationLog.push({ role: 'user', content: text });
-
-            try {
-                // Prepare messages
-                const messages = [
-                    { 
-                        role: 'system', 
-                        content: `You are LogicPals, a Socratic Tutor. 
-                        PROBLEM: "${currentProblem.problem_text}"
-                        SOLUTION: "${currentProblem.solution_explanation}"
-                        HINTS: ${JSON.stringify(currentHints)}
-                        
-                        RULES:
-                        1. IF user is correct, start with "Correct! 🎉"
-                        2. IF wrong, guide them with a question.
-                        3. NEVER give the answer.
-                        4. Keep replies short (under 40 words).` 
-                    },
-                    ...conversationLog
-                ];
-
-                const response = await fetch("https://api.openai.com/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${OPENAI_API_KEY}`
-                    },
-                    body: JSON.stringify({
-                        model: "gpt-4o-mini",
-                        messages: messages,
-                        temperature: 0.3
-                    })
-                });
-
-                const data = await response.json();
-                const reply = data.choices[0].message.content;
-
-                // Add AI Message
-                const aiDiv = document.createElement('div');
-                aiDiv.className = 'message ai';
-                aiDiv.innerText = reply;
-                document.getElementById('chatContainer').appendChild(aiDiv);
-                conversationLog.push({ role: 'assistant', content: reply });
-                scrollToBottom();
-
-                // Check Win Condition
-                if (reply.includes("Correct") || reply.includes("🎉")) {
-                    puzzleSolved = true;
-                    showSuccessModal();
-                    
-                    if (currentChildId && currentProblem) {
-                        await sb.from('attempts').insert([{ 
-                            child_id: currentChildId, 
-                            problem_id: currentProblem.id, 
-                            solved_correctly: true,
-                            hints_used: hintsUsedCount,
-                            questions_asked: questionsAsked
-                        }]);
-                    }
-                }
-
-            } catch (err) {
-                console.error(err);
-                const errDiv = document.createElement('div');
-                errDiv.className = 'message system';
-                errDiv.innerText = "⚠️ Connection error. Please try again.";
-                document.getElementById('chatContainer').appendChild(errDiv);
-            } finally {
-                isProcessing = false;
-                document.getElementById('sendBtn').disabled = false;
-                document.getElementById('typingIndicator').classList.remove('active');
-                input.focus();
-            }
-        }
-
-        function showSuccessModal() {
-            const timeStr = document.getElementById('timeDisplay').innerText;
-            document.getElementById('modalTime').innerText = timeStr;
-            document.getElementById('modalHints').innerText = hintsUsedCount;
-            document.getElementById('modalQuestions').innerText = questionsAsked;
-            
-            // Dynamic Insight
-            const cat = currentProblem.category || 'logic';
-            const insight = learningInsights[cat] || learningInsights['logic'];
-            document.getElementById('insightText').innerHTML = `You practiced <strong>${insight}</strong> This skill helps in math, science, and everyday life!`;
-            
-            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-            document.getElementById('successModal').classList.add('active');
-        }
-
-        // Voice Input (Simulated for this demo, works if API available)
-        function toggleRecording() {
-            if (!('webkitSpeechRecognition' in window)) {
-                alert("Voice input requires Chrome/Edge.");
-                return;
-            }
-            const recognition = new webkitSpeechRecognition();
-            recognition.lang = "en-US";
-            recognition.onstart = () => document.querySelector('.mic-btn').classList.add('recording');
-            recognition.onend = () => document.querySelector('.mic-btn').classList.remove('recording');
-            recognition.onresult = (e) => {
-                document.getElementById('textInput').value = e.results[0][0].transcript;
-                sendText();
-            };
-            recognition.start();
-        }
-
-        document.getElementById('textInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendText();
-        });
-    </script>
-</body>
-</html>
