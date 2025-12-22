@@ -32,7 +32,7 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
             z-index: 100;
         }
         .logo { 
@@ -67,24 +67,40 @@
             text-decoration: none; 
             padding: 8px 16px; 
             border-radius: 12px; 
-            font-size: 14px;
-            font-weight: 700;
+            font-size: 14px; 
+            font-weight: 700; 
             border: none;
             cursor: pointer;
             transition: all 0.2s;
         }
-        .exit-btn:hover {
-            background: #D1D5DB;
+        .exit-btn:hover { background: #D1D5DB; }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 20px;
+            gap: 16px;
         }
 
-        /* Problem Header */
-        .problem-header {
+        /* Problem Card - ALWAYS VISIBLE */
+        .problem-card {
             background: white;
-            padding: 16px 20px;
-            border-bottom: 2px solid #E5E7EB;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 2px solid #E5E7EB;
+        }
+        .problem-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 16px;
             flex-wrap: wrap;
             gap: 10px;
         }
@@ -117,9 +133,12 @@
             border: 1px solid #A5B4FC;
         }
         .problem-progress {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             color: #6B7280;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .progress-bar-mini {
             width: 100px;
@@ -127,9 +146,6 @@
             background: #E5E7EB;
             border-radius: 10px;
             overflow: hidden;
-            display: inline-block;
-            margin-left: 8px;
-            vertical-align: middle;
         }
         .progress-fill-mini {
             height: 100%;
@@ -137,26 +153,79 @@
             transition: width 0.3s;
         }
 
+        .problem-divider {
+            height: 2px;
+            background: linear-gradient(to right, #E5E7EB, #F3F4F6, #E5E7EB);
+            margin: 16px 0;
+        }
+
+        .problem-text-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .problem-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1F2937;
+            line-height: 1.6;
+            padding: 16px;
+            background: linear-gradient(135deg, #FEF3C7 0%, #FEF9C3 100%);
+            border-left: 4px solid var(--warning);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .problem-stats {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .stat-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .stat-pill.hints {
+            background: #FEF3C7;
+            color: #D97706;
+            border: 2px solid #FCD34D;
+        }
+        .stat-pill.questions {
+            background: #DBEAFE;
+            color: #1E40AF;
+            border: 2px solid #93C5FD;
+        }
+
         /* Chat Container */
         .chat-container { 
             flex: 1; 
-            padding: 20px; 
             overflow-y: auto; 
             display: flex; 
             flex-direction: column; 
-            gap: 16px; 
-            max-width: 900px; 
-            margin: 0 auto; 
-            width: 100%;
+            gap: 12px;
+            padding: 16px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
             scroll-behavior: smooth;
         }
         .message { 
-            max-width: 80%; 
-            padding: 14px 18px; 
-            border-radius: 18px; 
-            font-size: 16px; 
-            line-height: 1.6; 
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            max-width: 75%; 
+            padding: 12px 16px; 
+            border-radius: 16px; 
+            font-size: 15px; 
+            line-height: 1.5; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
             animation: slideIn 0.3s ease-out;
         }
         @keyframes slideIn {
@@ -165,7 +234,7 @@
         }
         .message.ai { 
             align-self: flex-start; 
-            background: white; 
+            background: #F3F4F6;
             color: #1F2937; 
             border-bottom-left-radius: 4px; 
         }
@@ -180,20 +249,19 @@
             background: #FFFBEB; 
             color: #B45309; 
             border: 2px dashed #F59E0B; 
-            font-size: 15px; 
+            font-size: 14px; 
             text-align: center; 
-            width: 90%;
-            max-width: 500px;
+            width: 85%;
+            font-weight: 600;
         }
         .message.system {
             align-self: center;
             background: #EFF6FF;
             color: #1E40AF;
             border: 1px solid #BFDBFE;
-            font-size: 15px;
+            font-size: 14px;
             text-align: center;
-            width: 90%;
-            max-width: 500px;
+            width: 85%;
             font-weight: 600;
         }
 
@@ -204,16 +272,14 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 1000;
             animation: fadeIn 0.3s;
         }
-        .success-modal.active {
-            display: flex;
-        }
+        .success-modal.active { display: flex; }
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -320,24 +386,26 @@
         /* Skip Section */
         .skip-section {
             background: white;
-            border-top: 1px solid #E5E7EB;
-            padding: 12px 20px;
+            border-radius: 12px;
+            padding: 16px;
             display: none;
             flex-direction: column;
             align-items: center;
             gap: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
-        .skip-section.active {
-            display: flex;
-        }
+        .skip-section.active { display: flex; }
         .skip-text {
             font-size: 14px;
             color: #6B7280;
             text-align: center;
+            font-weight: 600;
         }
         .skip-buttons {
             display: flex;
             gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         .skip-btn {
             padding: 8px 20px;
@@ -346,6 +414,7 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
+            border: none;
         }
         .skip-btn.primary {
             background: #DBEAFE;
@@ -356,6 +425,9 @@
             background: white;
             color: #6B7280;
             border: 2px solid #E5E7EB;
+        }
+        .skip-btn:hover {
+            transform: translateY(-2px);
         }
 
         /* Input Area */
@@ -378,23 +450,8 @@
             max-width: 900px; 
             text-align: left;
         }
-        .typing-indicator.active { 
-            opacity: 1; 
-        }
-        .hint-status { 
-            background: #FEF3C7; 
-            color: #D97706; 
-            border: 2px solid #FCD34D;
-            padding: 10px 24px; 
-            border-radius: 25px; 
-            font-size: 14px; 
-            font-weight: 800; 
-            margin-bottom: 16px; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px;
-            box-shadow: 0 4px 6px rgba(245, 158, 11, 0.15);
-        }
+        .typing-indicator.active { opacity: 1; }
+        
         .input-wrapper { 
             width: 100%; 
             max-width: 900px; 
@@ -417,9 +474,7 @@
             align-items: center;
             justify-content: center;
         }
-        .hint-btn:hover:not(:disabled) { 
-            transform: scale(1.1); 
-        }
+        .hint-btn:hover:not(:disabled) { transform: scale(1.1); }
         .hint-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
@@ -451,9 +506,7 @@
             align-items: center;
             justify-content: center;
         }
-        .mic-btn:hover {
-            background: #E5E7EB;
-        }
+        .mic-btn:hover { background: #E5E7EB; }
         .mic-btn.recording { 
             background: #EF4444; 
             color: white; 
@@ -492,15 +545,20 @@
 
         /* Mobile Responsive */
         @media (max-width: 768px) {
-            .problem-header {
-                padding: 12px 16px;
+            .main-content {
+                padding: 12px;
+                gap: 12px;
             }
-            .chat-container {
+            .problem-card {
                 padding: 16px;
             }
+            .problem-text {
+                font-size: 16px;
+                padding: 12px;
+            }
             .message {
-                max-width: 90%;
-                font-size: 15px;
+                max-width: 85%;
+                font-size: 14px;
             }
             .success-content {
                 padding: 32px 24px;
@@ -525,23 +583,54 @@
         </div>
     </header>
 
-    <div class="problem-header">
-        <div class="problem-badges">
-            <div class="badge difficulty" id="difficultyBadge">🔶 MEDIUM</div>
-            <div class="badge age">🎓 Age 8-10</div>
-            <div class="badge category" id="categoryBadge">Logic Puzzle</div>
-        </div>
-        <div class="problem-progress">
-            <span id="progressText">Problem 1 of 10</span>
-            <div class="progress-bar-mini">
-                <div class="progress-fill-mini" id="progressFill" style="width: 10%;"></div>
+    <div class="main-content">
+        <div class="problem-card">
+            <div class="problem-header">
+                <div class="problem-badges">
+                    <div class="badge difficulty" id="difficultyBadge">🔶 MEDIUM</div>
+                    <div class="badge age">🎓 Age 8-10</div>
+                    <div class="badge category" id="categoryBadge">Logic Puzzle</div>
+                </div>
+                <div class="problem-progress">
+                    <span id="progressText">Problem 1 of 10</span>
+                    <div class="progress-bar-mini">
+                        <div class="progress-fill-mini" id="progressFill" style="width: 10%;"></div>
+                    </div>
+                </div>
             </div>
+
+            <div class="problem-divider"></div>
+
+            <div class="problem-text-label">Here is your mystery:</div>
+            <div class="problem-text" id="problemText">
+                "Loading your mystery..."
+            </div>
+
+            <div class="problem-stats">
+                <div class="stat-pill hints">
+                    <span>💡 Hints:</span>
+                    <span id="hintCount">0/3 used</span>
+                </div>
+                <div class="stat-pill questions">
+                    <span>❓ Questions asked:</span>
+                    <span id="questionCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="skip-section" id="skipSection">
+            <div class="skip-text">Stuck? That's okay! 💙</div>
+            <div class="skip-buttons">
+                <button class="skip-btn primary" onclick="skipPuzzle()">Try Different Mystery</button>
+                <button class="skip-btn secondary" onclick="hideSkip()">Keep Trying</button>
+            </div>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message system">Hi! Ready to solve this mystery? How can I help? 🤔</div>
         </div>
     </div>
 
-    <div class="chat-container" id="chatContainer"></div>
-
-    <!-- Success Modal -->
     <div class="success-modal" id="successModal">
         <div class="success-content">
             <div class="success-icon">🎉</div>
@@ -582,21 +671,8 @@
         </div>
     </div>
 
-    <!-- Skip Section -->
-    <div class="skip-section" id="skipSection">
-        <div class="skip-text">Stuck? That's okay! 💙</div>
-        <div class="skip-buttons">
-            <button class="skip-btn primary" onclick="skipPuzzle()">Try Different Mystery</button>
-            <button class="skip-btn secondary" onclick="hideSkip()">Keep Trying</button>
-        </div>
-    </div>
-
     <div class="input-area">
         <div class="typing-indicator" id="typingIndicator">LogicPals is thinking...</div>
-        <div class="hint-status">
-            <span>💡 Hints:</span>
-            <span id="hintCount">0/3</span>
-        </div>
         <div class="input-wrapper">
             <button id="hintBtn" class="hint-btn" onclick="useHint()" title="Get a Hint">💡</button>
             <input type="text" id="textInput" placeholder="Type your answer or question..." autocomplete="off">
@@ -632,7 +708,7 @@
         let problemsAttempted = 0;
         let questionsAsked = 0;
 
-        // Learning insights map
+        // Learning insights
         const learningInsights = {
             'logic': 'LATERAL THINKING - looking at problems in creative ways!',
             'arithmetic': 'NUMBER SENSE - understanding how numbers work together!',
@@ -689,87 +765,231 @@
         };
 
         function loadNextPuzzle() {
-            // Reset
+            // Reset UI
             document.getElementById('successModal').classList.remove('active');
             document.getElementById('skipSection').classList.remove('active');
-            document.getElementById('chatContainer').innerHTML = '';
+            document.getElementById('chatContainer').innerHTML = '<div class="message system">Hi! Ready to solve this mystery? How can I help? 🤔</div>';
             document.getElementById('textInput').value = '';
             hintsUsedCount = 0;
             questionsAsked = 0;
-            document.getElementById('hintCount').innerText = `0/${totalHints}`;
+            document.getElementById('hintCount').innerText = `0/${totalHints} used`;
+            document.getElementById('questionCount').innerText = '0';
             document.getElementById('hintBtn').disabled = false;
             
             const p = availablePuzzles[Math.floor(Math.random() * availablePuzzles.length)];
             currentProblem = p;
             currentHints = Array.isArray(p.hints) ? p.hints : JSON.parse(p.hints || '["Think carefully"]');
             
+            // Update problem card
+            document.getElementById('problemText').innerHTML = `"${p.problem_text}"`;
+            
             // Update badges
-            const diff = (p.difficulty || 'medium').toUpperCase();
-            document.getElementById('difficultyBadge').innerHTML = `🔶 ${diff}`;
-            document.getElementById('categoryBadge').innerHTML = `📚 ${p.category || 'Puzzle'}`;
+            document.getElementById('difficultyBadge').innerText = (p.difficulty || 'Medium').toUpperCase();
+            document.getElementById('difficultyBadge').className = `badge difficulty ${p.difficulty || 'medium'}`;
+            
+            document.getElementById('categoryBadge').innerText = (p.category || 'Logic').toUpperCase();
             
             // Update progress
             problemsAttempted++;
             document.getElementById('progressText').innerText = `Problem ${problemsAttempted} of 10`;
-            document.getElementById('progressFill').style.width = `${(problemsAttempted / 10) * 100}%`;
+            document.getElementById('progressFill').style.width = `${(problemsAttempted/10)*100}%`;
             
-            puzzleSolved = false;
-            isSaved = false;
-            conversationLog = [];
-            
-            const intro = `Here is your mystery:<br><br><strong>"${p.problem_text}"</strong><br><br>Hi! Ready to solve this mystery? How can I help?`;
-            addMessage('ai', intro);
-            speak(`Here is your mystery: ${p.problem_text}. Ready to solve it?`); 
-            startTimer();
-
-            // Show skip option after 2 minutes
-            setTimeout(() => {
-                if (!puzzleSolved) {
-                    document.getElementById('skipSection').classList.add('active');
-                }
-            }, 120000);
+            // Start Timer
+            startTime = Date.now();
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
         }
 
-        function speak(text) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const cleanText = text.replace(/<[^>]*>/g, ''); 
-                const utterance = new SpeechSynthesisUtterance(cleanText);
-                const voices = window.speechSynthesis.getVoices();
-                const preferred = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha'));
-                if (preferred) utterance.voice = preferred;
-                utterance.rate = 1.0; 
-                utterance.pitch = 1.1;
-                window.speechSynthesis.speak(utterance);
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const secs = (elapsed % 60).toString().padStart(2, '0');
+            document.getElementById('timeDisplay').innerText = `${mins}:${secs}`;
+        }
+
+        function useHint() {
+            if (hintsUsedCount < totalHints && currentHints.length > 0) {
+                const hint = currentHints[Math.min(hintsUsedCount, currentHints.length - 1)];
+                hintsUsedCount++;
+                document.getElementById('hintCount').innerText = `${hintsUsedCount}/${totalHints} used`;
+                
+                // Add hint to chat
+                const div = document.createElement('div');
+                div.className = 'message hint';
+                div.innerHTML = `💡 HINT: ${hint}`;
+                document.getElementById('chatContainer').appendChild(div);
+                scrollToBottom();
+                
+                // Add system log
+                conversationLog.push({ role: 'system', content: `The user took a hint: "${hint}"` });
+                
+                if (hintsUsedCount >= totalHints) {
+                    document.getElementById('hintBtn').disabled = true;
+                }
             }
         }
 
+        // Toggle Skip Section
+        // Show skip buttons if user is inactive for 30 seconds or asks for help repeatedly
+        setInterval(() => {
+            if (!puzzleSolved && (Date.now() - startTime > 45000)) { // 45 seconds
+                document.getElementById('skipSection').classList.add('active');
+            }
+        }, 5000);
+
+        function hideSkip() {
+            document.getElementById('skipSection').classList.remove('active');
+        }
+
+        function skipPuzzle() {
+            // Log skip
+            if (currentChildId && currentProblem) {
+                sb.from('attempts').insert([{
+                    child_id: currentChildId,
+                    problem_id: currentProblem.id,
+                    skipped: true
+                }]);
+            }
+            loadNextPuzzle();
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('chatContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
         async function sendText() {
-            const textInput = document.getElementById('textInput');
-            const text = textInput.value.trim();
-            if (!text || isProcessing) return; 
-            
-            isProcessing = true; 
-            questionsAsked++;
+            const input = document.getElementById('textInput');
+            const text = input.value.trim();
+            if (!text || isProcessing) return;
+
+            // UI Updates
+            isProcessing = true;
             document.getElementById('sendBtn').disabled = true;
             document.getElementById('typingIndicator').classList.add('active');
             
-            addMessage('user', text);
+            // Add User Message
+            const userDiv = document.createElement('div');
+            userDiv.className = 'message user';
+            userDiv.innerText = text;
+            document.getElementById('chatContainer').appendChild(userDiv);
+            scrollToBottom();
+            
+            input.value = '';
+            questionsAsked++;
+            document.getElementById('questionCount').innerText = questionsAsked;
+            
+            // Add to conversation log
             conversationLog.push({ role: 'user', content: text });
-            textInput.value = ""; 
 
             try {
-                const messagesToSend = [
+                // Prepare messages
+                const messages = [
                     { 
                         role: 'system', 
-                        content: `You are LogicPals, a Socratic Tutor for children.
+                        content: `You are LogicPals, a Socratic Tutor. 
+                        PROBLEM: "${currentProblem.problem_text}"
+                        SOLUTION: "${currentProblem.solution_explanation}"
+                        HINTS: ${JSON.stringify(currentHints)}
                         
-                        CURRENT PROBLEM: "${currentProblem.problem_text}"
-                        CORRECT ANSWER: "${currentProblem.solution_explanation}"
-
                         RULES:
-                        1. IF the user's answer is correct or very close, respond EXACTLY with: "Correct! 🎉"
-                        2. Guide with questions, never give the answer directly
-                        3. Be encouraging and patient
-                        4. Keep replies under 40 words
-                
+                        1. IF user is correct, start with "Correct! 🎉"
+                        2. IF wrong, guide them with a question.
+                        3. NEVER give the answer.
+                        4. Keep replies short (under 40 words).` 
+                    },
+                    ...conversationLog
+                ];
+
+                const response = await fetch("https://api.openai.com/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${OPENAI_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-4o-mini",
+                        messages: messages,
+                        temperature: 0.3
+                    })
+                });
+
+                const data = await response.json();
+                const reply = data.choices[0].message.content;
+
+                // Add AI Message
+                const aiDiv = document.createElement('div');
+                aiDiv.className = 'message ai';
+                aiDiv.innerText = reply;
+                document.getElementById('chatContainer').appendChild(aiDiv);
+                conversationLog.push({ role: 'assistant', content: reply });
+                scrollToBottom();
+
+                // Check Win Condition
+                if (reply.includes("Correct") || reply.includes("🎉")) {
+                    puzzleSolved = true;
+                    showSuccessModal();
+                    
+                    if (currentChildId && currentProblem) {
+                        await sb.from('attempts').insert([{ 
+                            child_id: currentChildId, 
+                            problem_id: currentProblem.id, 
+                            solved_correctly: true,
+                            hints_used: hintsUsedCount,
+                            questions_asked: questionsAsked
+                        }]);
+                    }
+                }
+
+            } catch (err) {
+                console.error(err);
+                const errDiv = document.createElement('div');
+                errDiv.className = 'message system';
+                errDiv.innerText = "⚠️ Connection error. Please try again.";
+                document.getElementById('chatContainer').appendChild(errDiv);
+            } finally {
+                isProcessing = false;
+                document.getElementById('sendBtn').disabled = false;
+                document.getElementById('typingIndicator').classList.remove('active');
+                input.focus();
+            }
+        }
+
+        function showSuccessModal() {
+            const timeStr = document.getElementById('timeDisplay').innerText;
+            document.getElementById('modalTime').innerText = timeStr;
+            document.getElementById('modalHints').innerText = hintsUsedCount;
+            document.getElementById('modalQuestions').innerText = questionsAsked;
+            
+            // Dynamic Insight
+            const cat = currentProblem.category || 'logic';
+            const insight = learningInsights[cat] || learningInsights['logic'];
+            document.getElementById('insightText').innerHTML = `You practiced <strong>${insight}</strong> This skill helps in math, science, and everyday life!`;
+            
+            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+            document.getElementById('successModal').classList.add('active');
+        }
+
+        // Voice Input (Simulated for this demo, works if API available)
+        function toggleRecording() {
+            if (!('webkitSpeechRecognition' in window)) {
+                alert("Voice input requires Chrome/Edge.");
+                return;
+            }
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = "en-US";
+            recognition.onstart = () => document.querySelector('.mic-btn').classList.add('recording');
+            recognition.onend = () => document.querySelector('.mic-btn').classList.remove('recording');
+            recognition.onresult = (e) => {
+                document.getElementById('textInput').value = e.results[0][0].transcript;
+                sendText();
+            };
+            recognition.start();
+        }
+
+        document.getElementById('textInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendText();
+        });
+    </script>
+</body>
+</html>
