@@ -543,7 +543,6 @@
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } 
         }
 
-        /* Mobile Responsive */
         @media (max-width: 768px) {
             .main-content {
                 padding: 12px;
@@ -798,6 +797,11 @@
             startTime = Date.now();
             clearInterval(timerInterval);
             timerInterval = setInterval(updateTimer, 1000);
+            
+            // Setup skip timer
+            setTimeout(() => {
+                if(!puzzleSolved) document.getElementById('skipSection').classList.add('active');
+            }, 60000); // Show skip after 1 minute
         }
 
         function updateTimer() {
@@ -829,20 +833,11 @@
             }
         }
 
-        // Toggle Skip Section
-        // Show skip buttons if user is inactive for 30 seconds or asks for help repeatedly
-        setInterval(() => {
-            if (!puzzleSolved && (Date.now() - startTime > 45000)) { // 45 seconds
-                document.getElementById('skipSection').classList.add('active');
-            }
-        }, 5000);
-
         function hideSkip() {
             document.getElementById('skipSection').classList.remove('active');
         }
 
         function skipPuzzle() {
-            // Log skip
             if (currentChildId && currentProblem) {
                 sb.from('attempts').insert([{
                     child_id: currentChildId,
@@ -970,7 +965,7 @@
             document.getElementById('successModal').classList.add('active');
         }
 
-        // Voice Input (Simulated for this demo, works if API available)
+        // Voice Input
         function toggleRecording() {
             if (!('webkitSpeechRecognition' in window)) {
                 alert("Voice input requires Chrome/Edge.");
@@ -985,6 +980,12 @@
                 sendText();
             };
             recognition.start();
+        }
+
+        function confirmExit() {
+            if(confirm("Are you sure you want to exit? Progress on this problem will be lost.")) {
+                window.location.href = 'dashboard.html';
+            }
         }
 
         document.getElementById('textInput').addEventListener('keypress', (e) => {
