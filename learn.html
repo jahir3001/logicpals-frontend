@@ -201,7 +201,7 @@
         <div class="logo">🧠 LogicPals</div>
         <div class="header-right">
             <div class="timer-badge">⏱️ <span id="timeDisplay">00:00</span></div>
-            <button onclick="location.href='dashboard.html'" class="exit-btn">Exit</button>
+            <button onclick="clearStateAndExit()" class="exit-btn">Exit</button>
         </div>
     </header>
 
@@ -256,7 +256,7 @@
                 </div>
             </div>
             
-            <button class="next-btn" onclick="loadNextPuzzle()">Next Mystery 🚀</button>
+            <button class="next-btn" onclick="loadNextPuzzle(true)">Next Mystery 🚀</button>
         </div>
     </div>
 
@@ -291,9 +291,15 @@
                 const { data: child } = await sb.from('children').select('id').eq('parent_id', session.user.id).single();
                 if(child) currentChildId = child.id;
             }
-            loadNextPuzzle();
             
-            // Auto-open on desktop
+            // CHECK FOR SAVED STATE (Persistence Fix)
+            const savedState = localStorage.getItem('lp_state');
+            if (savedState) {
+                restoreState(JSON.parse(savedState));
+            } else {
+                loadNextPuzzle(false);
+            }
+            
             if(window.innerWidth > 600) {
                 document.getElementById('toggleBtn').style.display = 'none';
             } else {
@@ -301,7 +307,44 @@
             }
         };
 
-        async function loadNextPuzzle() {
+        function saveState() {
+            const state = {
+                problem: currentProblem,
+                hints: hintsUsed,
+                questions: questionsAsked,
+                chat: chatLog,
+                timeStart: startTime
+            };
+            localStorage.setItem('lp_state', JSON.stringify(state));
+        }
+
+        function restoreState(state) {
+            currentProblem = state.problem;
+            hintsUsed = state.hints;
+            questionsAsked = state.questions;
+            chatLog = state.chat;
+            startTime = state.timeStart || Date.now();
+            
+            renderProblem();
+            updateStats();
+            
+            // Re-render chat
+            document.getElementById('chatContainer').innerHTML = '<div class="message system">Welcome back! I remembered where we left off. 🧠</div>';
+            chatLog.forEach(msg => {
+                if(msg.role !== 'system') addMessage(msg.role === 'assistant' ? 'ai' : 'user', msg.content, false);
+            });
+            
+            startTimer();
+        }
+
+        function clearStateAndExit() {
+            localStorage.removeItem('lp_state');
+            location.href = 'dashboard.html';
+        }
+
+        async function loadNextPuzzle(clearMemory) {
+            if(clearMemory) localStorage.removeItem('lp_state');
+            
             document.getElementById('successModal').style.display = 'none';
             document.getElementById('chatContainer').innerHTML = '<div class="message system">Hi! Ready to solve this? Read the mystery above! 👆</div>';
             document.getElementById('textInput').value = '';
@@ -317,7 +360,14 @@
             } catch(e) {}
             
             currentProblem = puzzle;
+            startTime = Date.now();
             
+            saveState(); // Save new puzzle immediately
+            renderProblem();
+            startTimer();
+        }
+
+        function renderProblem() {
             document.getElementById('problemText').innerText = currentProblem.problem_text;
             document.getElementById('diffBadge').innerText = (currentProblem.difficulty || 'MEDIUM').toUpperCase();
             document.getElementById('catBadge').innerText = (currentProblem.category || 'LOGIC').toUpperCase();
@@ -326,8 +376,6 @@
                 document.getElementById('problemCard').classList.remove('minimized');
                 document.getElementById('toggleBtn').innerText = "Hide Mystery 🔼";
             }
-
-            startTimer();
         }
 
         function updateStats() {
@@ -363,6 +411,8 @@
             addMessage('user', text);
             input.value = '';
             chatLog.push({ role: 'user', content: text });
+            
+            saveState(); // Save chat progress
 
             // INSTANT CHECK
             const cleanInput = text.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -381,7 +431,7 @@
                 return;
             }
 
-            // AI CALL (WITH STRICTER PROMPT)
+            // AI CALL
             try {
                 const res = await fetch("https://api.openai.com/v1/chat/completions", {
                     method: "POST",
@@ -405,6 +455,7 @@
                 const reply = data.choices[0].message.content;
                 addMessage('ai', reply);
                 chatLog.push({ role: 'assistant', content: reply });
+                saveState(); // Save AI reply
                 
                 if(reply.toLowerCase().includes('correct') || reply.includes('🎉')) finishPuzzle();
 
@@ -417,6 +468,7 @@
         }
 
         function finishPuzzle() {
+            localStorage.removeItem('lp_state'); // CLEAR MEMORY ON WIN
             addMessage('ai', "Correct! 🎉 Amazing job!");
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             
@@ -438,10 +490,11 @@
             setTimeout(() => { document.getElementById('successModal').style.display = 'flex'; }, 1000);
         }
 
-        function addMessage(role, text) {
+        function addMessage(role, text, animate = true) {
             const div = document.createElement('div');
             div.className = `message ${role}`;
             div.innerText = text;
+            if(!animate) div.style.animation = 'none';
             const container = document.getElementById('chatContainer');
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
@@ -449,7 +502,6 @@
 
         function useHint() {
             if(hintsUsed >= 3) return;
-            // FIXED: Fallback to AI if hints array is empty
             let hints = currentProblem.hints;
             if(!hints || hints.length === 0) hints = ["Think carefully!", "Read the problem again."];
             
@@ -457,11 +509,11 @@
             addMessage('hint', `💡 HINT: ${hint}`);
             hintsUsed++;
             updateStats();
+            saveState(); // Save hint usage
         }
 
         function startTimer() {
-            startTime = Date.now();
-            clearInterval(timerInt);
+            if (timerInt) clearInterval(timerInt);
             timerInt = setInterval(() => {
                 const diff = Math.floor((Date.now() - startTime) / 1000);
                 const m = Math.floor(diff / 60).toString().padStart(2,'0');
@@ -481,6 +533,12 @@
                 sendText();
             };
             r.start();
+        }
+
+        function confirmExit() {
+            if(confirm("Exit? Progress will be saved.")) {
+                location.href = 'dashboard.html';
+            }
         }
 
         document.getElementById('textInput').addEventListener('keypress', (e) => { if(e.key==='Enter') sendText(); });
