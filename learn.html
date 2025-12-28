@@ -12,7 +12,7 @@
         :root { --primary: #4F46E5; --success: #10B981; --warning: #F59E0B; --bg: #F3F4F6; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
-        /* 📱 CRITICAL FIX: Use 100dvh for mobile browsers */
+        /* 📱 100dvh for mobile browsers */
         body { 
             font-family: 'Nunito', sans-serif; 
             background: var(--bg); 
@@ -38,7 +38,7 @@
         .timer-badge { background: #F3F4F6; color: #6B7280; font-weight: 700; padding: 6px 12px; border-radius: 15px; font-size: 13px; font-family: monospace; border: 1px solid #E5E7EB; }
         .exit-btn { background: #E5E7EB; color: #374151; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; }
 
-        /* 🆕 STATUS BAR (Stats always visible) */
+        /* STATUS BAR */
         .status-bar {
             background: white;
             border-bottom: 1px solid #E5E7EB;
@@ -61,7 +61,7 @@
         .stat-pill.hints { background: #FEF3C7; color: #D97706; border: 1px solid #FCD34D; }
         .stat-pill.questions { background: #DBEAFE; color: #1E40AF; border: 1px solid #93C5FD; }
 
-        /* MAIN CONTENT WRAPPER */
+        /* MAIN CONTENT */
         .main-content { 
             flex: 1; 
             display: flex; 
@@ -73,7 +73,7 @@
             margin: 0 auto;
         }
 
-        /* PROBLEM CARD (Collapsible) */
+        /* PROBLEM CARD */
         .problem-container {
             padding: 10px 16px;
             background: var(--bg);
@@ -103,7 +103,7 @@
             border-left: 4px solid var(--warning); 
         }
         
-        /* Mobile Toggle Logic */
+        /* Mobile Toggle */
         .toggle-btn { 
             display: none; 
             width: 100%; 
@@ -119,7 +119,7 @@
         .problem-card.minimized .problem-text { display: none; }
         .problem-card.minimized { padding: 10px; }
 
-        /* CHAT AREA (Scrollable) */
+        /* CHAT AREA */
         .chat-container { 
             flex: 1; 
             overflow-y: auto; 
@@ -128,7 +128,7 @@
             flex-direction: column; 
             gap: 12px; 
             scroll-behavior: smooth; 
-            -webkit-overflow-scrolling: touch; /* Smooth scroll iOS */
+            -webkit-overflow-scrolling: touch; 
         }
         .message { max-width: 85%; padding: 12px 16px; border-radius: 16px; font-size: 15px; line-height: 1.4; animation: popIn 0.3s; }
         .message.ai { align-self: flex-start; background: white; color: #1F2937; border-bottom-left-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
@@ -136,7 +136,7 @@
         .message.hint { align-self: center; background: #FFFBEB; color: #B45309; border: 1px dashed #F59E0B; font-size: 13px; text-align: center; width: 90%; }
         @keyframes popIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* INPUT AREA (Fixed at bottom) */
+        /* INPUT AREA */
         .input-area { 
             background: white; 
             padding: 10px 16px; 
@@ -144,7 +144,7 @@
             flex-shrink: 0; 
             width: 100%;
             z-index: 20;
-            padding-bottom: env(safe-area-inset-bottom, 10px); /* iPhone Home Bar Safe */
+            padding-bottom: env(safe-area-inset-bottom, 10px); 
         }
         .typing-indicator { font-size: 12px; color: #9CA3AF; margin-bottom: 5px; opacity: 0; transition: 0.2s; height: 15px; }
         
@@ -182,14 +182,13 @@
         .insight-box { background: #ECFDF5; border: 1px solid #10B981; padding: 15px; border-radius: 12px; margin: 15px 0; text-align: left; }
         .next-btn { width: 100%; background: var(--success); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 16px; margin-top: 10px; cursor: pointer; }
 
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
-        /* MOBILE VIEW ADJUSTMENTS */
         @media (max-width: 600px) {
-            .toggle-btn { display: block; } /* Show toggle button */
+            .toggle-btn { display: block; }
             .problem-container { padding: 0 10px; }
             .problem-card { border-radius: 0 0 16px 16px; border-top: none; }
-            .problem-card.minimized { display: none; } /* Completely hide card when minimized */
+            .problem-card.minimized { display: none; }
             .status-bar { padding: 5px; gap: 10px; }
             .chat-container { padding: 10px; }
             .input-area { padding: 8px 12px; }
@@ -262,7 +261,6 @@
     </div>
 
     <script>
-        // --- KEYS ---
         const k1 = "sk-proj-dT54l3-DsOdBbN4RqvflV3Kv3BuIN0lBCFaDAgGgaNqGsMKS96CY8";
         const k2 = "2GX1gIJYa-RRmguTUOjkDT3BlbkFJmdKpyH1FXStC45hPW1983ZlAGV2j7KE7dFNyFJ3JywFTdR6YEpCQ1OEgtJ0REg1gkIOBy_vVYA";
         const OPENAI_API_KEY = k1 + k2;
@@ -299,7 +297,6 @@
             if(window.innerWidth > 600) {
                 document.getElementById('toggleBtn').style.display = 'none';
             } else {
-                // Mobile: Hide by default
                 document.getElementById('problemCard').classList.add('minimized');
             }
         };
@@ -325,7 +322,6 @@
             document.getElementById('diffBadge').innerText = (currentProblem.difficulty || 'MEDIUM').toUpperCase();
             document.getElementById('catBadge').innerText = (currentProblem.category || 'LOGIC').toUpperCase();
             
-            // Mobile: Show question briefly then hide if needed, or keep hidden
             if(window.innerWidth <= 600) {
                 document.getElementById('problemCard').classList.remove('minimized');
                 document.getElementById('toggleBtn').innerText = "Hide Mystery 🔼";
@@ -385,7 +381,7 @@
                 return;
             }
 
-            // AI CALL
+            // AI CALL (WITH STRICTER PROMPT)
             try {
                 const res = await fetch("https://api.openai.com/v1/chat/completions", {
                     method: "POST",
@@ -393,7 +389,14 @@
                     body: JSON.stringify({
                         model: "gpt-4o-mini",
                         messages: [
-                            { role: 'system', content: `Tutor for 8yo. Problem: "${currentProblem.problem_text}". Answer: "${currentProblem.solution_explanation}". If wrong, give hint. Max 35 words.` },
+                            { role: 'system', content: `You are a Socratic Tutor for a child. 
+                            Problem: "${currentProblem.problem_text}". 
+                            Answer: "${currentProblem.solution_explanation}". 
+                            
+                            RULES:
+                            1. NEVER reveal the answer directly. If they don't know, give a definition, synonym, or rhyme.
+                            2. If they are close, encourage them.
+                            3. Keep it short (max 30 words).` },
                             ...chatLog
                         ]
                     })
@@ -446,7 +449,10 @@
 
         function useHint() {
             if(hintsUsed >= 3) return;
-            const hints = currentProblem.hints || ["Think carefully!"];
+            // FIXED: Fallback to AI if hints array is empty
+            let hints = currentProblem.hints;
+            if(!hints || hints.length === 0) hints = ["Think carefully!", "Read the problem again."];
+            
             const hint = hints[Math.min(hintsUsed, hints.length-1)];
             addMessage('hint', `💡 HINT: ${hint}`);
             hintsUsed++;
