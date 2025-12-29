@@ -12,7 +12,6 @@
         :root { --primary: #4F46E5; --success: #10B981; --warning: #F59E0B; --bg: #F3F4F6; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
-        /* 📱 100dvh for mobile browsers */
         body { 
             font-family: 'Nunito', sans-serif; 
             background: var(--bg); 
@@ -292,7 +291,6 @@
                 if(child) currentChildId = child.id;
             }
             
-            // CHECK FOR SAVED STATE (Persistence Fix)
             const savedState = localStorage.getItem('lp_state');
             if (savedState) {
                 restoreState(JSON.parse(savedState));
@@ -328,7 +326,6 @@
             renderProblem();
             updateStats();
             
-            // Re-render chat
             document.getElementById('chatContainer').innerHTML = '<div class="message system">Welcome back! I remembered where we left off. 🧠</div>';
             chatLog.forEach(msg => {
                 if(msg.role !== 'system') addMessage(msg.role === 'assistant' ? 'ai' : 'user', msg.content, false);
@@ -362,7 +359,7 @@
             currentProblem = puzzle;
             startTime = Date.now();
             
-            saveState(); // Save new puzzle immediately
+            saveState(); 
             renderProblem();
             startTimer();
         }
@@ -412,16 +409,20 @@
             input.value = '';
             chatLog.push({ role: 'user', content: text });
             
-            saveState(); // Save chat progress
+            saveState(); 
 
-            // INSTANT CHECK
+            // --- INSTANT CHECK ---
             const cleanInput = text.toLowerCase().replace(/[^a-z0-9]/g, '');
             const answers = (currentProblem.answer_key || currentProblem.solution_explanation || "").toLowerCase().split('|');
             let isCorrect = false;
             
-            answers.forEach(a => {
-                if(a.length > 0 && cleanInput.includes(a.replace(/[^a-z0-9]/g, ''))) isCorrect = true;
-            });
+            // SECURITY CHECK: Input must be at least 2 chars to prevent "?" or "ok" winning
+            if (cleanInput.length >= 2) {
+                answers.forEach(a => {
+                    const cleanAns = a.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    if(cleanAns.length > 0 && cleanInput.includes(cleanAns)) isCorrect = true;
+                });
+            }
 
             if(isCorrect) {
                 finishPuzzle();
@@ -431,7 +432,7 @@
                 return;
             }
 
-            // AI CALL
+            // --- AI CALL ---
             try {
                 const res = await fetch("https://api.openai.com/v1/chat/completions", {
                     method: "POST",
@@ -455,9 +456,12 @@
                 const reply = data.choices[0].message.content;
                 addMessage('ai', reply);
                 chatLog.push({ role: 'assistant', content: reply });
-                saveState(); // Save AI reply
+                saveState();
                 
-                if(reply.toLowerCase().includes('correct') || reply.includes('🎉')) finishPuzzle();
+                // Only win if AI says "Correct!" AND user input wasn't just "?"
+                if((reply.toLowerCase().includes('correct') || reply.includes('🎉')) && cleanInput.length > 1) {
+                    finishPuzzle();
+                }
 
             } catch(e) { console.error(e); }
             
@@ -468,7 +472,7 @@
         }
 
         function finishPuzzle() {
-            localStorage.removeItem('lp_state'); // CLEAR MEMORY ON WIN
+            localStorage.removeItem('lp_state'); 
             addMessage('ai', "Correct! 🎉 Amazing job!");
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             
@@ -509,7 +513,7 @@
             addMessage('hint', `💡 HINT: ${hint}`);
             hintsUsed++;
             updateStats();
-            saveState(); // Save hint usage
+            saveState();
         }
 
         function startTimer() {
