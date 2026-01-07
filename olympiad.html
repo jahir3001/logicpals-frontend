@@ -820,11 +820,30 @@
             if (!loggedIn) return;
 
             // Get user subscription
-            currentSubscription = await SubscriptionGuard.getUserSubscription();
+          /*  currentSubscription = await SubscriptionGuard.getUserSubscription();
             if (!currentSubscription || currentSubscription.expired) {
                 SubscriptionGuard.redirectToUpgrade('trial_expired');
                 return;
-            }
+            } */
+
+            // Get user subscription
+        currentSubscription = await SubscriptionGuard.getUserSubscription();
+
+    // TESTING MODE: Bypass subscription check
+        console.log('⚠️ TESTING MODE: Subscription check disabled');
+        currentSubscription = {
+        tier: 'elite',  // Give yourself Elite tier (full access!)
+        status: 'active',
+        expired: false
+        };
+
+// Check if subscription is expired (DISABLED FOR TESTING)
+/*
+if (currentSubscription && currentSubscription.expired) {
+    SubscriptionGuard.redirectToUpgrade('trial_expired');
+    return;
+}
+*/
 
             // Display subscription badge
             await SubscriptionGuard.displaySubscriptionBadge('subscriptionBadge');
@@ -841,9 +860,14 @@
             const grid = document.getElementById('ageGrid');
             grid.innerHTML = '';
 
-            AGE_GROUPS.forEach(async (group) => {
+         /*   AGE_GROUPS.forEach(async (group) => {
                 const access = await SubscriptionGuard.canAccessLevel(group.id);
-                const isLocked = !access.allowed;
+                const isLocked = !access.allowed; */
+            AGE_GROUPS.forEach(async (group) => {
+    // TESTING MODE: All levels unlocked
+                const access = { allowed: true };
+                const isLocked = false;  // Everything unlocked!
+            
 
                 const card = document.createElement('div');
                 card.className = `age-card ${isLocked ? 'locked' : ''}`;
