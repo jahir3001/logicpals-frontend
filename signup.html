@@ -1,3 +1,15 @@
+<!-- 
+  UPDATED SIGNUP.HTML - WITH SUBSCRIPTION SYSTEM
+  
+  Changes from original:
+  1. No longer manually sets subscription_status (trigger handles it)
+  2. Shows trial expiry date clearly
+  3. Better error handling
+  4. Redirects to dashboard after successful signup
+-->
+
+<!-- COPY EVERYTHING FROM HERE TO END OF FILE -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -286,6 +298,8 @@
                     <option value="12">12 Years Old</option>
                     <option value="13">13 Years Old</option>
                     <option value="14">14 Years Old</option>
+                    <option value="15">15 Years Old</option>
+                    <option value="16">16 Years Old</option>
                 </select>
             </div>
 
@@ -379,13 +393,13 @@
             hideMessages();
 
             try {
-                // STEP 1: Create auth user with metadata
+                // STEP 1: Create auth user
                 const { data: authData, error: authError } = await sb.auth.signUp({
                     email: email,
                     password: password,
                     options: {
                         data: {
-                            full_name: childName,  // Will be used for profile
+                            full_name: childName,
                             role: 'parent'
                         }
                     }
@@ -399,29 +413,30 @@
 
                 const userId = authData.user.id;
 
-                // STEP 2: Create profile (parent data)
+                // STEP 2: Create profile
+                // Note: The free trial subscription will be AUTO-CREATED by the database trigger!
                 const { error: profileError } = await sb
                     .from('profiles')
                     .insert([{
                         id: userId,
                         email: email,
-                        full_name: childName, // Parent name = child name for now
+                        full_name: childName,
                         phone: phone,
-                        role: 'parent',
-                        subscription_status: 'trial'
+                        role: 'parent'
+                        // NOTE: subscription_status removed - let trigger handle it
                     }]);
 
-                if (profileError) {
+                if (profileError && !profileError.message.includes('duplicate')) {
                     console.error('Profile creation error:', profileError);
-                    // Don't throw - profile might already exist from trigger
                 }
 
                 // STEP 3: Determine age category
-                let ageCategory = '8-10';
-                if (childAge <= 7) ageCategory = '6-8';
-                else if (childAge <= 10) ageCategory = '8-10';
-                else if (childAge <= 12) ageCategory = '10-12';
-                else ageCategory = '12-14';
+                let ageCategory = '8-9';
+                if (childAge <= 9) ageCategory = '8-9';
+                else if (childAge <= 11) ageCategory = '10-11';
+                else if (childAge <= 13) ageCategory = '12-13';
+                else if (childAge <= 15) ageCategory = '14-15';
+                else ageCategory = '16+';
 
                 // STEP 4: Create child profile
                 const { data: childData, error: childError } = await sb
@@ -435,7 +450,8 @@
                         curriculum: curriculum,
                         difficulty_level: 'medium',
                         total_problems_solved: 0,
-                        streak_days: 0
+                        streak_days: 0,
+                        subscription_tier: 'free_trial'  // Set child's tier to free_trial
                     }])
                     .select()
                     .single();
@@ -445,8 +461,22 @@
                     throw new Error('Failed to create child profile: ' + childError.message);
                 }
 
-                // SUCCESS!
-                showSuccess(`Welcome, ${childName}! 🎉 Redirecting to your dashboard...`);
+                // STEP 5: Verify free trial was created (by the trigger)
+                const { data: subscription, error: subError } = await sb
+                    .from('subscriptions')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .eq('tier', 'free_trial')
+                    .single();
+
+                if (subscription) {
+                    const expiryDate = new Date(subscription.end_date);
+                    const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+                    
+                    showSuccess(`🎉 Welcome, ${childName}! Your 7-day trial is active (${daysLeft} days left). Redirecting...`);
+                } else {
+                    showSuccess(`Welcome, ${childName}! 🎉 Redirecting to your dashboard...`);
+                }
                 
                 // Wait 2 seconds then redirect
                 setTimeout(() => {
@@ -476,8 +506,6 @@
             const errDiv = document.getElementById('errorMessage');
             errDiv.textContent = message;
             errDiv.style.display = 'block';
-            
-            // Scroll to error
             errDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
@@ -491,16 +519,6 @@
             document.getElementById('errorMessage').style.display = 'none';
             document.getElementById('successMessage').style.display = 'none';
         }
-
-        // Auto-hide error after 5 seconds
-        setInterval(() => {
-            const errDiv = document.getElementById('errorMessage');
-            if (errDiv.style.display === 'block') {
-                setTimeout(() => {
-                    errDiv.style.display = 'none';
-                }, 5000);
-            }
-        }, 100);
     </script>
 </body>
 </html>
