@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogicPals Olympiad - Elite Problem Solving</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="subscription-guard.js"></script>
+    <script src="geometry-renderer.js"></script>
+
+    <style>
+        /* OLYMPIAD PREMIUM THEME - Gold & Elite */
+        :root {
+            --gold-primary: #D4AF37;
+            --gold-dark: #B8933D;
+            --gold-light: #F4E5C3;
+            --bg-dark: #1A1611;
+            --bg-cream: #FFF9F0;
+            --text-dark: #2D2416;
+            --text-gold: #B8933D;
+            --accent-bronze: #CD7F32;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, var(--bg-cream) 0%, #FFF4E0 100%);
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        /* HEADER - Premium Gold Theme */
+        header {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #2D2416 100%);
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold-primary), var(--accent-bronze), var(--gold-primary));
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--gold-primary), var(--gold-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .olympiad-badge {
+            background: linear-gradient(135deg, var(--gold-primary), var(--accent-bronze));
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 10px rgba(212, 175, 55, 0.4);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-header {
+            background: transparent;
+            border: 2px solid var(--gold-primary);
+            color: var(--gold-light);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .btn-header:hover {
+            background: var(--gold-primary);
+            color: var(--bg-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.5);
+        }
+
+        /* MAIN CONTAINER */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* PAGE TITLE */
+        .page-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .page-title h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            text-shadow: 2px 2px 0 rgba(212, 175, 55, 0.1);
+        }
+
+        .page-title p {
+            font-size: 18px;
+            color: var(--text-gold);
+            font-weight: 500;
+        }
+
+        /* AGE GROUP SELECTOR */
+        .age-selector {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            margin-bottom: 40px;
+            border: 2px solid var(--gold-light);
+        }
+
+        .section-label {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .age-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .age-card {
+            background: linear-gradient(135deg, var(--gold-light) 0%, #FFF9F0 100%);
+            border: 3px solid transparent;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .age-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--gold-primary), var(--accent-bronze));
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 0;
+        }
+
+        .age-card:hover::before {
+            opacity: 0.1;
+        }
+
+        .age-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+            border-color: var(--gold-primary);
+        }
+
+        .age-card.active {
+            border-color: var(--gold-primary);
+            background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+            color: white;
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.5);
+        }
+
+        .age-card.active::before {
+            opacity: 0;
+        }
+
+        .age-card-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .age-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .age-label {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .age-range {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .age-card.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+            position: relative;
+        }
+
+        .age-card.locked::after {
+            content: '🔒';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+        }
+
+        /* TOPIC SELECTOR */
+        .topic-selector {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            margin-bottom: 40px;
+            border: 2px solid var(--gold-light);
+            display: none;
+        }
+
+        .topic-selector.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .topic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .topic-card {
+            background: linear-gradient(135deg, #FFFBF5 0%, var(--bg-cream) 100%);
+            border: 2px solid var(--gold-light);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .topic-card:hover {
+            border-color: var(--gold-primary);
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+        }
+
+        .topic-icon {
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .topic-info {
+            flex: 1;
+        }
+
+        .topic-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+
+        .topic-count {
+            font-size: 12px;
+            color: var(--text-gold);
+            font-weight: 500;
+        }
+
+        .topic-card.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .topic-card.locked .topic-icon::after {
+            content: ' 🔒';
+        }
+
+        /* PROBLEM DISPLAY */
+        .problem-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            border: 3px solid var(--gold-primary);
+            display: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .problem-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--gold-primary), var(--accent-bronze), var(--gold-primary));
+        }
+
+        .problem-container.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .problem-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .problem-meta {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .meta-badge {
+            background: var(--gold-light);
+            color: var(--text-dark);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meta-badge.difficulty-medium {
+            background: #FCD34D;
+            color: #92400E;
+        }
+
+        .meta-badge.difficulty-hard {
+            background: #F59E0B;
+            color: #78350F;
+        }
+
+        .problem-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .problem-text {
+            font-size: 20px;
+            line-height: 1.8;
+            color: var(--text-dark);
+            margin-bottom: 30px;
+            padding: 24px;
+            background: var(--bg-cream);
+            border-radius: 12px;
+            border-left: 4px solid var(--gold-primary);
+            font-weight: 500;
+        }
+
+        /* GEOMETRY DISPLAY */
+        .geometry-container {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        /* ANSWER INPUT */
+        .answer-section {
+            margin: 40px 0;
+        }
+
+        .answer-label {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+        }
+
+        .answer-input-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .answer-input {
+            flex: 1;
+            padding: 16px 20px;
+            border: 3px solid var(--gold-light);
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .answer-input:focus {
+            outline: none;
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(212, 175, 55, 0.6);
+        }
+
+        /* ACTION BUTTONS */
+        .problem-tools {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn-tool {
+            background: white;
+            border: 2px solid var(--gold-light);
+            color: var(--text-dark);
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-tool:hover {
+            border-color: var(--gold-primary);
+            background: var(--gold-light);
+            transform: translateY(-2px);
+        }
+
+        /* HINTS DISPLAY */
+        .hints-container {
+            margin: 30px 0;
+            display: none;
+        }
+
+        .hints-container.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .hint-box {
+            background: #FFFBF5;
+            border-left: 4px solid var(--gold-primary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        /* AI CHAT */
+        .ai-chat-container {
+            margin: 30px 0;
+            background: #F9FAFB;
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .ai-chat-container.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .chat-message {
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .chat-message.user {
+            background: var(--gold-light);
+            color: var(--text-dark);
+            margin-left: 40px;
+            text-align: right;
+        }
+
+        .chat-message.ai {
+            background: white;
+            color: var(--text-dark);
+            margin-right: 40px;
+            border: 1px solid var(--gold-light);
+        }
+
+        /* LOADING STATE */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-gold);
+            font-size: 18px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--gold-light);
+            border-top-color: var(--gold-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* MOBILE RESPONSIVE */
+        @media (max-width: 768px) {
+            .page-title h1 {
+                font-size: 32px;
+            }
+
+            .age-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .topic-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .problem-container {
+                padding: 24px;
+            }
+
+            .problem-text {
+                font-size: 18px;
+            }
+
+            .answer-input-group {
+                flex-direction: column;
+            }
+
+            .btn-submit {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="header-content">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div class="logo">
+                    <span>🏆</span>
+                    <span>LogicPals</span>
+                </div>
+                <div class="olympiad-badge">OLYMPIAD</div>
+            </div>
+
+            <div id="subscriptionBadge"></div>
+
+            <div class="header-actions">
+                <a href="learn.html" class="btn-header">Regular Practice</a>
+                <a href="dashboard.html" class="btn-header">Dashboard</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        
+        <!-- PAGE TITLE -->
+        <div class="page-title">
+            <h1>Olympiad Problem Solving</h1>
+            <p>Master BdMO, IMO, and International Competition Mathematics</p>
+        </div>
+
+        <!-- AGE GROUP SELECTOR -->
+        <div class="age-selector">
+            <div class="section-label">
+                <span>📚</span>
+                <span>Select Your Level</span>
+            </div>
+            <div class="age-grid" id="ageGrid">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <!-- TOPIC SELECTOR -->
+        <div class="topic-selector" id="topicSelector">
+            <div class="section-label">
+                <span>🎯</span>
+                <span>Choose a Topic</span>
+            </div>
+            <div class="topic-grid" id="topicGrid">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <!-- PROBLEM DISPLAY -->
+        <div class="problem-container" id="problemContainer">
+            
+            <!-- Problem Header -->
+            <div class="problem-header">
+                <div class="problem-meta">
+                    <div class="meta-badge" id="problemLevel">PRIMARY</div>
+                    <div class="meta-badge" id="problemTopic">GEOMETRY</div>
+                    <div class="meta-badge difficulty-medium" id="problemDifficulty">MEDIUM</div>
+                </div>
+                <div class="problem-actions">
+                    <span style="color: var(--text-gold); font-weight: 700; font-size: 14px;">
+                        ⏱️ <span id="timerDisplay">00:00</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Problem Text -->
+            <div class="problem-text" id="problemText">
+                Loading problem...
+            </div>
+
+            <!-- Geometry Display -->
+            <div class="geometry-container" id="geometryContainer"></div>
+
+            <!-- Answer Section -->
+            <div class="answer-section">
+                <div class="answer-label">Your Answer:</div>
+                <div class="answer-input-group">
+                    <input 
+                        type="text" 
+                        class="answer-input" 
+                        id="answerInput" 
+                        placeholder="Type your answer here..."
+                        autocomplete="off"
+                    >
+                    <button class="btn-submit" onclick="submitAnswer()">
+                        ✓ Submit Answer
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hints -->
+            <div class="hints-container" id="hintsContainer"></div>
+
+            <!-- AI Chat -->
+            <div class="ai-chat-container" id="aiChatContainer"></div>
+
+            <!-- Problem Tools -->
+            <div class="problem-tools">
+                <button class="btn-tool" onclick="showHint()">
+                    💡 Get Hint
+                </button>
+                <button class="btn-tool" onclick="toggleAIChat()">
+                    🤖 Ask AI Tutor
+                </button>
+                <button class="btn-tool" onclick="nextProblem()">
+                    ➡️ Next Problem
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading" id="loadingState">
+            <div class="spinner"></div>
+            <p style="margin-top: 16px;">Loading Olympiad problems...</p>
+        </div>
+
+    </div>
+
+    <script>
+        // Initialize
+        let currentUser = null;
+        let currentSubscription = null;
+        let currentAgeGroup = null;
+        let currentTopic = null;
+        let currentProblem = null;
+        let hintsShown = 0;
+        let startTime = null;
+        let timerInterval = null;
+
+        // Age group configuration
+        const AGE_GROUPS = [
+            {
+                id: 'primary',
+                label: 'Primary',
+                range: '8-9 years',
+                icon: '🌱',
+                description: 'BdMO Primary Level',
+                topics: [
+                    { id: 'logic', name: 'Logic & Reasoning', icon: '🧩' },
+                    { id: 'counting', name: 'Counting & Numbers', icon: '🔢' },
+                    { id: 'geometry', name: 'Visual Geometry', icon: '📐' },
+                    { id: 'patterns', name: 'Patterns', icon: '🎨' },
+                    { id: 'graphs', name: 'Graphs & Data', icon: '📊' }
+                ]
+            },
+            {
+                id: 'junior',
+                label: 'Junior',
+                range: '10-11 years',
+                icon: '🌿',
+                description: 'BdMO Junior Level',
+                topics: [
+                    { id: 'logic_advanced', name: 'Advanced Logic', icon: '🧩' },
+                    { id: 'number_theory', name: 'Number Theory', icon: '🔢' },
+                    { id: 'geometry', name: 'Geometry', icon: '📐' },
+                    { id: 'sequences', name: 'Sequences & Series', icon: '🎨' },
+                    { id: 'combinatorics_basic', name: 'Basic Combinatorics', icon: '🌳' }
+                ]
+            },
+            {
+                id: 'secondary',
+                label: 'Secondary',
+                range: '12-13 years',
+                icon: '🌳',
+                description: 'BdMO Secondary Level',
+                topics: [
+                    { id: 'number_theory', name: 'Number Theory', icon: '🔢' },
+                    { id: 'geometry_proofs', name: 'Geometry & Proofs', icon: '📐' },
+                    { id: 'algebra', name: 'Algebra', icon: '🎯' },
+                    { id: 'combinatorics', name: 'Combinatorics', icon: '🌳' },
+                    { id: 'graph_theory', name: 'Graph Theory', icon: '📊' }
+                ]
+            },
+            {
+                id: 'higher_secondary',
+                label: 'Higher Secondary',
+                range: '14-15 years',
+                icon: '🌲',
+                description: 'BdMO Higher Level',
+                topics: [
+                    { id: 'number_theory_advanced', name: 'Advanced Number Theory', icon: '🔢' },
+                    { id: 'geometry_advanced', name: 'Advanced Geometry', icon: '📐' },
+                    { id: 'functional_equations', name: 'Functional Equations', icon: '🎯' },
+                    { id: 'combinatorics_advanced', name: 'Advanced Combinatorics', icon: '🌳' },
+                    { id: 'induction', name: 'Mathematical Induction', icon: '🧮' }
+                ]
+            },
+            {
+                id: 'advanced',
+                label: 'Advanced',
+                range: '16+ years',
+                icon: '👑',
+                description: 'IMO Preparation',
+                topics: [
+                    { id: 'olympiad_number_theory', name: 'Olympiad Number Theory', icon: '🔢' },
+                    { id: 'olympiad_geometry', name: 'Olympiad Geometry', icon: '📐' },
+                    { id: 'complex_functional_equations', name: 'Complex Functional Equations', icon: '🎯' },
+                    { id: 'olympiad_combinatorics', name: 'Olympiad Combinatorics', icon: '🌳' },
+                    { id: 'proof_mastery', name: 'Proof Mastery', icon: '🧮' }
+                ]
+            }
+        ];
+
+        // Initialize page
+        window.onload = async function() {
+            // Check if user is logged in
+            const loggedIn = await SubscriptionGuard.requireLogin();
+            if (!loggedIn) return;
+
+            // Get user subscription
+            currentSubscription = await SubscriptionGuard.getUserSubscription();
+            if (!currentSubscription || currentSubscription.expired) {
+                SubscriptionGuard.redirectToUpgrade('trial_expired');
+                return;
+            }
+
+            // Display subscription badge
+            await SubscriptionGuard.displaySubscriptionBadge('subscriptionBadge');
+
+            // Render age groups
+            renderAgeGroups();
+
+            // Hide loading
+            document.getElementById('loadingState').style.display = 'none';
+        };
+
+        // Render age group cards
+        function renderAgeGroups() {
+            const grid = document.getElementById('ageGrid');
+            grid.innerHTML = '';
+
+            AGE_GROUPS.forEach(async (group) => {
+                const access = await SubscriptionGuard.canAccessLevel(group.id);
+                const isLocked = !access.allowed;
+
+                const card = document.createElement('div');
+                card.className = `age-card ${isLocked ? 'locked' : ''}`;
+                card.innerHTML = `
+                    <div class="age-card-content">
+                        <span class="age-icon">${group.icon}</span>
+                        <div class="age-label">${group.label}</div>
+                        <div class="age-range">${group.range}</div>
+                    </div>
+                `;
+
+                if (!isLocked) {
+                    card.onclick = () => selectAgeGroup(group);
+                } else {
+                    card.onclick = () => {
+                        SubscriptionGuard.showUpgradeModal(
+                            `Unlock ${group.label} level problems! Upgrade to ${access.suggestedTier} tier.`,
+                            access.suggestedTier
+                        );
+                    };
+                }
+
+                grid.appendChild(card);
+            });
+        }
+
+        // Select age group
+        function selectAgeGroup(group) {
+            currentAgeGroup = group;
+
+            // Update active state
+            document.querySelectorAll('.age-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.target.closest('.age-card').classList.add('active');
+
+            // Render topics
+            renderTopics();
+
+            // Show topic selector
+            document.getElementById('topicSelector').classList.add('active');
+        }
+
+        // Render topics
+        function renderTopics() {
+            if (!currentAgeGroup) return;
+
+            const grid = document.getElementById('topicGrid');
+            grid.innerHTML = '';
+
+            currentAgeGroup.topics.forEach(topic => {
+                const card = document.createElement('div');
+                card.className = 'topic-card';
+                card.innerHTML = `
+                    <span class="topic-icon">${topic.icon}</span>
+                    <div class="topic-info">
+                        <div class="topic-name">${topic.name}</div>
+                        <div class="topic-count">Loading...</div>
+                    </div>
+                `;
+
+                card.onclick = () => selectTopic(topic);
+
+                grid.appendChild(card);
+
+                // Load problem count for this topic
+                loadProblemCount(currentAgeGroup.id, topic.id).then(count => {
+                    card.querySelector('.topic-count').textContent = `${count} problems`;
+                });
+            });
+        }
+
+        // Load problem count
+        async function loadProblemCount(ageGroup, topic) {
+            // TODO: Query Supabase for actual count
+            // For now, return placeholder
+            return Math.floor(Math.random() * 30) + 10;
+        }
+
+        // Select topic
+        async function selectTopic(topic) {
+            currentTopic = topic;
+
+            // Load first problem
+            await loadProblem(currentAgeGroup.id, topic.id);
+
+            // Show problem container
+            document.getElementById('problemContainer').classList.add('active');
+            document.getElementById('problemContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Load problem
+        async function loadProblem(ageGroup, topic) {
+            // TODO: Query Supabase for actual problem
+            // For now, use placeholder
+            currentProblem = {
+                id: '1',
+                problem_text: 'Find the area of a triangle with base 5cm and height 3cm.',
+                olympiad_level: ageGroup,
+                topic: topic,
+                difficulty: 'medium',
+                answer_key: '7.5',
+                hints: [
+                    'Remember the formula for the area of a triangle.',
+                    'Area = (1/2) × base × height',
+                    'Substitute the values: (1/2) × 5 × 3'
+                ],
+                solution_explanation: 'Area = (1/2) × 5 × 3 = 7.5 cm²',
+                problem_type: 'text',
+                geometry_data: null,
+                diagram_url: null,
+                diagram_description: null
+            };
+
+            // Render problem
+            renderProblem();
+
+            // Start timer
+            startTimer();
+        }
+
+        // Render problem
+        function renderProblem() {
+            if (!currentProblem) return;
+
+            // Update meta
+            document.getElementById('problemLevel').textContent = currentAgeGroup.label.toUpperCase();
+            document.getElementById('problemTopic').textContent = currentTopic.name.toUpperCase();
+            document.getElementById('problemDifficulty').textContent = currentProblem.difficulty.toUpperCase();
+
+            // Update problem text
+            document.getElementById('problemText').textContent = currentProblem.problem_text;
+
+            // Render geometry if applicable
+            if (currentProblem.problem_type !== 'text') {
+                GeometryRenderer.renderGeometry(currentProblem, 'geometryContainer');
+            } else {
+                document.getElementById('geometryContainer').innerHTML = '';
+            }
+
+            // Reset state
+            document.getElementById('answerInput').value = '';
+            document.getElementById('hintsContainer').innerHTML = '';
+            document.getElementById('hintsContainer').classList.remove('active');
+            document.getElementById('aiChatContainer').innerHTML = '';
+            document.getElementById('aiChatContainer').classList.remove('active');
+            hintsShown = 0;
+        }
+
+        // Start timer
+        function startTimer() {
+            startTime = Date.now();
+            
+            if (timerInterval) clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const seconds = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById('timerDisplay').textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        // Show hint
+        function showHint() {
+            if (!currentProblem || !currentProblem.hints) return;
+            if (hintsShown >= currentProblem.hints.length) {
+                alert('No more hints available!');
+                return;
+            }
+
+            const container = document.getElementById('hintsContainer');
+            container.classList.add('active');
+
+            const hint = currentProblem.hints[hintsShown];
+            const hintBox = document.createElement('div');
+            hintBox.className = 'hint-box';
+            hintBox.innerHTML = `<strong>💡 Hint ${hintsShown + 1}:</strong> ${hint}`;
+            container.appendChild(hintBox);
+
+            hintsShown++;
+        }
+
+        // Toggle AI chat
+        function toggleAIChat() {
+            const container = document.getElementById('aiChatContainer');
+            container.classList.toggle('active');
+            
+            if (container.classList.contains('active') && container.innerHTML === '') {
+                container.innerHTML = `
+                    <div class="chat-message ai">
+                        Hi! I'm your AI tutor. I won't give you the answer, but I'll help you think through it. What's your approach so far?
+                    </div>
+                `;
+            }
+        }
+
+        // Submit answer
+        function submitAnswer() {
+            const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
+            const correctAnswer = currentProblem.answer_key.toLowerCase();
+
+            if (!userAnswer) {
+                alert('Please enter an answer!');
+                return;
+            }
+
+            // Check if correct (simple comparison for now)
+            if (userAnswer === correctAnswer || userAnswer.includes(correctAnswer)) {
+                // Success!
+                if (timerInterval) clearInterval(timerInterval);
+                
+                alert(`🎉 Correct! You solved it in ${document.getElementById('timerDisplay').textContent}!
+
+${currentProblem.solution_explanation}
+
+Great job! Ready for the next challenge?`);
+                
+                // TODO: Record attempt in database
+                
+                // Load next problem
+                setTimeout(() => nextProblem(), 1000);
+            } else {
+                alert('❌ Not quite right. Try again or use a hint!');
+            }
+        }
+
+        // Next problem
+        function nextProblem() {
+            if (!currentAgeGroup || !currentTopic) return;
+            loadProblem(currentAgeGroup.id, currentTopic.id);
+        }
+
+        // Handle Enter key in answer input
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('answerInput')?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') submitAnswer();
+            });
+        });
+    </script>
+
+</body>
+</html>
