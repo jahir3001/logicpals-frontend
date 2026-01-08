@@ -468,8 +468,7 @@
     </div>
 
     <script>
-       // const SUPABASE_URL = 'https://ovszuxerimbmzfblzkgd.supabase.co';
-       // const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
+        // Supabase config (no duplicates - admin-guard.js has its own copy)
         let sb;
 
         // Initialize
@@ -478,14 +477,11 @@
             const hasAccess = await AdminGuard.requireAdmin();
             if (!hasAccess) return;
 
-            // Initialize Supabase
-            //sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        // Use Supabase from admin-guard.js
-        sb = window.supabase.createClient(
-            'https://ovszuxerimbmzfblzkgd.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'
+            // Initialize Supabase (inline to avoid variable conflicts)
+            sb = supabase.createClient(
+                'https://ovszuxerimbmzfblzkgd.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14'
             );
-            
 
             // Load admin info
             const adminUser = await AdminGuard.getAdminUser();
