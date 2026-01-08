@@ -334,6 +334,79 @@
             display: inline-block;
         }
 
+        /* Mode Selection Cards */
+        .mode-card {
+            background: white;
+            border: 2px solid var(--gold-200);
+            border-radius: 16px;
+            padding: 32px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .mode-card:hover {
+            border-color: var(--gold-400);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(245, 158, 11, 0.25);
+        }
+
+        .mode-icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+        }
+
+        .mode-title {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 12px;
+        }
+
+        .mode-desc {
+            font-size: 14px;
+            color: var(--gray-700);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .mode-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 24px;
+            padding: 0;
+        }
+
+        .mode-features li {
+            font-size: 13px;
+            color: var(--gray-700);
+            padding: 6px 0;
+            border-bottom: 1px solid var(--gold-100);
+        }
+
+        .mode-features li:last-child {
+            border-bottom: none;
+        }
+
+        .mode-btn {
+            background: linear-gradient(135deg, var(--gold-500), var(--gold-600));
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+        }
+
         /* Skill Tracks Grid */
         .skill-tracks {
             display: grid;
@@ -439,14 +512,89 @@
             align-items: center;
         }
 
+        /* Difficulty Badges with Tooltips */
         .difficulty-badge {
             padding: 6px 16px;
             border-radius: 20px;
             font-size: 13px;
             font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+            cursor: help;
+        }
+
+        .difficulty-badge .info-icon {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Tooltip Container */
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 12px;
+            background: var(--gray-900);
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.6;
+            width: 280px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            font-weight: 400;
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 8px solid transparent;
+            border-top-color: var(--gray-900);
+        }
+
+        .difficulty-badge:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .tooltip-title {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 6px;
+        }
+
+        .tooltip-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip-row:last-child {
+            border-bottom: none;
+        }
+
+        .tooltip-label {
+            opacity: 0.8;
+            font-size: 12px;
+        }
+
+        .tooltip-value {
+            font-weight: 600;
+            font-size: 12px;
         }
 
         .difficulty-warmup { background: var(--warmup); color: var(--gray-800); }
@@ -754,6 +902,59 @@
                 </div>
             </div>
 
+            <!-- Mode Selection (shows after level is selected) -->
+            <div id="modeSelectionContainer" style="display: none;">
+                <h2 style="font-family: var(--font-display); font-size: 32px; margin: 60px 0 24px; text-align: center;">Choose Training Mode</h2>
+                <p style="text-align: center; font-size: 16px; color: var(--gray-700); max-width: 600px; margin: 0 auto 32px;">
+                    Select how you want to practice. Each mode is designed for different learning goals.
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 1000px; margin: 0 auto;">
+                    <!-- Bootcamp Mode -->
+                    <div class="mode-card" onclick="selectMode('bootcamp')">
+                        <div class="mode-icon">🧠</div>
+                        <h3 class="mode-title">Skill Bootcamp</h3>
+                        <p class="mode-desc">Master one skill deeply with hints and guidance. Perfect for building foundations.</p>
+                        <ul class="mode-features">
+                            <li>✓ Focus on single skill</li>
+                            <li>✓ Hints available early</li>
+                            <li>✓ Progressive difficulty</li>
+                            <li>✓ Detailed explanations</li>
+                        </ul>
+                        <button class="mode-btn">Start Bootcamp</button>
+                    </div>
+
+                    <!-- Practice Mode -->
+                    <div class="mode-card" onclick="selectMode('practice')">
+                        <div class="mode-icon">🎯</div>
+                        <h3 class="mode-title">Mixed Practice</h3>
+                        <p class="mode-desc">Combine multiple skills with balanced difficulty. Your main training ground.</p>
+                        <ul class="mode-features">
+                            <li>✓ Multiple skills mixed</li>
+                            <li>✓ Hints after thinking</li>
+                            <li>✓ Balanced difficulty</li>
+                            <li>✓ Track progress</li>
+                        </ul>
+                        <button class="mode-btn">Start Practice</button>
+                    </div>
+
+                    <!-- Mock Exam Mode -->
+                    <div class="mode-card" onclick="selectMode('mock')">
+                        <div class="mode-icon">🏆</div>
+                        <h3 class="mode-title">Mock Exam</h3>
+                        <p class="mode-desc">Real competition conditions with timed problems. No hints during exam.</p>
+                        <ul class="mode-features">
+                            <li>✓ Competition-style</li>
+                            <li>✓ Timed problems</li>
+                            <li>✓ No hints allowed</li>
+                            <li>✓ Full analysis after</li>
+                        </ul>
+                        <button class="mode-btn">Start Mock Exam</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skill Selection (shows after mode is selected) -->
             <div id="skillTracksContainer" style="display: none;">
                 <h2 style="font-family: var(--font-display); font-size: 32px; margin: 60px 0 24px;">Select a Thinking Skill</h2>
                 <div class="skill-tracks" id="skillTracks">
@@ -764,12 +965,186 @@
 
         <!-- Section 2: Skill Tracks (Direct Access) -->
         <div class="section" id="section-skills">
-            <h2 style="font-family: var(--font-display); font-size: 36px; margin-bottom: 32px; text-align: center;">
+            <h2 style="font-family: var(--font-display); font-size: 36px; margin-bottom: 16px; text-align: center;">
                 7 Core Thinking Skills
             </h2>
-            <p style="text-align: center; font-size: 18px; color: var(--gray-700); max-width: 700px; margin: 0 auto 40px;">
+            <p style="text-align: center; font-size: 18px; color: var(--gray-700); max-width: 700px; margin: 0 auto 32px;">
                 Master these skills to excel in BdMO, Selection Rounds, and IMO competitions.
             </p>
+
+            <!-- Difficulty Tiers Explanation -->
+            <div style="background: white; border-radius: 16px; padding: 32px; max-width: 900px; margin: 0 auto 40px; border: 2px solid var(--gold-200);">
+                <h3 style="font-family: var(--font-display); font-size: 22px; margin-bottom: 16px; text-align: center;">
+                    Understanding Problem Difficulty
+                </h3>
+                <p style="text-align: center; font-size: 14px; color: var(--gray-700); margin-bottom: 24px;">
+                    Problems are rated by thinking depth, not number size. Hover over each tier to learn more.
+                </p>
+                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                    <span class="difficulty-badge difficulty-warmup">
+                        ⚪ Warmup
+                        <span class="info-icon">ℹ️</span>
+                        <div class="tooltip">
+                            <div class="tooltip-title">⚪ Warmup</div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Purpose:</span>
+                                <span class="tooltip-value">Build confidence</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Insights:</span>
+                                <span class="tooltip-value">1 insight</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Time:</span>
+                                <span class="tooltip-value">3-6 minutes</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Success Rate:</span>
+                                <span class="tooltip-value">80%+</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Hints:</span>
+                                <span class="tooltip-value">Available early</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Equivalent:</span>
+                                <span class="tooltip-value">Below Regional</span>
+                            </div>
+                        </div>
+                    </span>
+
+                    <span class="difficulty-badge difficulty-standard">
+                        🟡 Standard
+                        <span class="info-icon">ℹ️</span>
+                        <div class="tooltip">
+                            <div class="tooltip-title">🟡 Standard</div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Purpose:</span>
+                                <span class="tooltip-value">Core practice</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Insights:</span>
+                                <span class="tooltip-value">1-2 insights</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Time:</span>
+                                <span class="tooltip-value">5-10 minutes</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Success Rate:</span>
+                                <span class="tooltip-value">50-70%</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Hints:</span>
+                                <span class="tooltip-value">After thinking</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Equivalent:</span>
+                                <span class="tooltip-value">Regional level</span>
+                            </div>
+                        </div>
+                    </span>
+
+                    <span class="difficulty-badge difficulty-challenge">
+                        🟠 Challenge
+                        <span class="info-icon">ℹ️</span>
+                        <div class="tooltip">
+                            <div class="tooltip-title">🟠 Challenge</div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Purpose:</span>
+                                <span class="tooltip-value">Stretch thinking</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Insights:</span>
+                                <span class="tooltip-value">2 insights</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Time:</span>
+                                <span class="tooltip-value">8-15 minutes</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Success Rate:</span>
+                                <span class="tooltip-value">30-50%</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Hints:</span>
+                                <span class="tooltip-value">Limited hints</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Equivalent:</span>
+                                <span class="tooltip-value">Hard Regional</span>
+                            </div>
+                        </div>
+                    </span>
+
+                    <span class="difficulty-badge difficulty-contest">
+                        🔴 Contest
+                        <span class="info-icon">ℹ️</span>
+                        <div class="tooltip">
+                            <div class="tooltip-title">🔴 Contest</div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Purpose:</span>
+                                <span class="tooltip-value">Competition prep</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Insights:</span>
+                                <span class="tooltip-value">2-3 insights</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Time:</span>
+                                <span class="tooltip-value">15-25 minutes</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Success Rate:</span>
+                                <span class="tooltip-value">10-30%</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Hints:</span>
+                                <span class="tooltip-value">No hints</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Equivalent:</span>
+                                <span class="tooltip-value">National level</span>
+                            </div>
+                        </div>
+                    </span>
+
+                    <span class="difficulty-badge difficulty-elite">
+                        ⚫ Elite
+                        <span class="info-icon">ℹ️</span>
+                        <div class="tooltip">
+                            <div class="tooltip-title">⚫ Elite</div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Purpose:</span>
+                                <span class="tooltip-value">Train medalists</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Insights:</span>
+                                <span class="tooltip-value">3+ insights</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Time:</span>
+                                <span class="tooltip-value">25-40 minutes</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Success Rate:</span>
+                                <span class="tooltip-value">&lt;5%</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Hints:</span>
+                                <span class="tooltip-value">No hints</span>
+                            </div>
+                            <div class="tooltip-row">
+                                <span class="tooltip-label">Equivalent:</span>
+                                <span class="tooltip-value">IMO prep</span>
+                            </div>
+                        </div>
+                    </span>
+                </div>
+                <p style="text-align: center; font-size: 12px; color: var(--gray-700); margin-top: 20px; font-style: italic;">
+                    💡 "Difficulty = depth of thinking, not size of numbers" - LogicPals Philosophy
+                </p>
+            </div>
             
             <div class="skill-tracks">
                 <div class="skill-card" onclick="selectSkill('constraints')">
@@ -779,8 +1154,8 @@
                     </div>
                     <div class="skill-desc">Master "at least", "at most", ordering, elimination, and multi-constraint reasoning.</div>
                     <div class="skill-stats">
-                        <span class="skill-stat">📚 40-50% of BdMO</span>
-                        <span class="skill-stat">⏱️ 15-20 min avg</span>
+                        <span class="skill-stat">📚 Very common in BdMO</span>
+                        <span class="skill-stat">⏱️ Time varies by level</span>
                     </div>
                 </div>
 
@@ -982,6 +1357,7 @@
         );
 
         let currentLevel = null;
+        let currentMode = null;
         let currentSkill = null;
 
         // Skill definitions
@@ -1105,22 +1481,47 @@
                 console.log('✅ Level card highlighted');
             }
 
-            // Show skill tracks
-            const container = document.getElementById('skillTracksContainer');
-            container.style.display = 'block';
-            console.log('✅ Skill tracks container shown');
-            
-            renderSkillTracks();
-            console.log('✅ Skill tracks rendered');
+            // Show mode selection
+            const modeContainer = document.getElementById('modeSelectionContainer');
+            modeContainer.style.display = 'block';
+            console.log('✅ Mode selection shown');
 
             // Smooth scroll
             setTimeout(() => {
-                container.scrollIntoView({ 
+                modeContainer.scrollIntoView({ 
                     behavior: 'smooth', 
                     block: 'start' 
                 });
-                console.log('✅ Scrolled to skill tracks');
+                console.log('✅ Scrolled to mode selection');
             }, 100);
+        }
+
+        function selectMode(mode) {
+            console.log('✅ Mode selected:', mode);
+            currentMode = mode;
+
+            // Show skill tracks for bootcamp/practice
+            if (mode === 'bootcamp' || mode === 'practice') {
+                const container = document.getElementById('skillTracksContainer');
+                container.style.display = 'block';
+                console.log('✅ Skill tracks container shown');
+                
+                renderSkillTracks();
+                console.log('✅ Skill tracks rendered');
+
+                // Smooth scroll
+                setTimeout(() => {
+                    container.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                    });
+                    console.log('✅ Scrolled to skill tracks');
+                }, 100);
+            } else if (mode === 'mock') {
+                // Redirect to Mock Olympiads section
+                switchSection('mocks');
+                console.log('✅ Switched to Mock Olympiads');
+            }
         }
 
         function renderSkillTracks() {
