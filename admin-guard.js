@@ -64,22 +64,6 @@ async function isAdmin() {
  * Require admin access - redirect if not admin
  */
 async function requireAdmin() {
-    // Show loading
-    document.body.innerHTML = `
-        <div style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
-        ">
-            <div style="font-size: 48px; margin-bottom: 20px;">🔐</div>
-            <div style="font-size: 18px; color: #6B7280;">Checking admin access...</div>
-        </div>
-    `;
-
     const adminAccess = await isAdmin();
     
     if (!adminAccess) {
@@ -117,6 +101,7 @@ async function requireAdmin() {
         return false;
     }
 
+    // User IS admin - just return true, don't modify the page
     return true;
 }
 
