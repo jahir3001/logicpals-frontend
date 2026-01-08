@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Activation - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="admin-guard.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #F3F4F6;
+            color: #111827;
+        }
+
+        /* (Reuse same header/nav styles from admin.html) */
+        header {
+            background: white;
+            border-bottom: 1px solid #E5E7EB;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: #2563EB;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, #DC2626, #991B1B);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        nav {
+            background: white;
+            border-bottom: 1px solid #E5E7EB;
+            padding: 0 24px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-link {
+            padding: 14px 20px;
+            color: #6B7280;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            color: #2563EB;
+            background: #EFF6FF;
+        }
+
+        .nav-link.active {
+            color: #2563EB;
+            border-bottom-color: #2563EB;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: #111827;
+        }
+
+        .page-subtitle {
+            font-size: 15px;
+            color: #6B7280;
+            margin-bottom: 32px;
+        }
+
+        /* ACTIVATION FORM */
+        .activation-card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid #E5E7EB;
+            max-width: 600px;
+        }
+
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #E5E7EB;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .tier-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .tier-option {
+            background: #F9FAFB;
+            border: 2px solid #E5E7EB;
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tier-option:hover {
+            border-color: #2563EB;
+            background: #EFF6FF;
+        }
+
+        .tier-option.selected {
+            border-color: #2563EB;
+            background: #EFF6FF;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .tier-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 4px;
+            text-transform: capitalize;
+        }
+
+        .tier-price {
+            font-size: 18px;
+            font-weight: 800;
+            color: #2563EB;
+        }
+
+        .btn-activate-main {
+            width: 100%;
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+            margin-top: 24px;
+        }
+
+        .btn-activate-main:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-activate-main:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* SUCCESS MESSAGE */
+        .success-message {
+            background: #D1FAE5;
+            border: 2px solid #10B981;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .success-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #065F46;
+            margin-bottom: 8px;
+        }
+
+        .success-text {
+            font-size: 14px;
+            color: #047857;
+        }
+
+        /* RECENT ACTIVATIONS */
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid #E5E7EB;
+            margin-top: 32px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #111827;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            background: #F9FAFB;
+            font-size: 12px;
+            font-weight: 700;
+            color: #6B7280;
+            text-transform: uppercase;
+            border-bottom: 2px solid #E5E7EB;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #F3F4F6;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #F9FAFB;
+        }
+
+        .help-text {
+            font-size: 13px;
+            color: #9CA3AF;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="logo">
+                <span>🎯</span>
+                <span>LogicPals</span>
+            </div>
+            <div class="admin-badge">ADMIN</div>
+        </div>
+    </header>
+
+    <!-- NAVIGATION -->
+    <nav>
+        <div class="nav-links">
+            <a href="admin.html" class="nav-link">📊 Dashboard</a>
+            <a href="admin-subscriptions.html" class="nav-link">💳 Subscriptions</a>
+            <a href="admin-payments.html" class="nav-link active">💰 Payments</a>
+            <a href="dashboard.html" class="nav-link">← Back to Site</a>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        
+        <h1 class="page-title">💰 Activate Payment</h1>
+        <p class="page-subtitle">Manually activate a user's subscription after receiving payment</p>
+
+        <!-- SUCCESS MESSAGE -->
+        <div class="success-message" id="successMessage">
+            <div class="success-title">✅ Subscription Activated!</div>
+            <div class="success-text" id="successText"></div>
+        </div>
+
+        <!-- ACTIVATION FORM -->
+        <div class="activation-card">
+            <form id="activationForm" onsubmit="activateSubscription(event)">
+                
+                <!-- USER EMAIL -->
+                <div class="form-section">
+                    <label class="form-label">User Email</label>
+                    <input 
+                        type="email" 
+                        class="form-input" 
+                        id="userEmail" 
+                        placeholder="user@example.com"
+                        required
+                    >
+                    <div class="help-text">Enter the email address of the user who paid</div>
+                </div>
+
+                <!-- SELECT TIER -->
+                <div class="form-section">
+                    <label class="form-label">Select Subscription Tier</label>
+                    <div class="tier-grid" id="tierGrid">
+                        <!-- Tiers will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- DURATION -->
+                <div class="form-section">
+                    <label class="form-label">Duration (Months)</label>
+                    <input 
+                        type="number" 
+                        class="form-input" 
+                        id="duration" 
+                        value="1"
+                        min="1"
+                        max="12"
+                        required
+                    >
+                    <div class="help-text">Most subscriptions are 1 month. Annual = 12 months</div>
+                </div>
+
+                <!-- PAYMENT REFERENCE -->
+                <div class="form-section">
+                    <label class="form-label">Payment Reference (Optional)</label>
+                    <input 
+                        type="text" 
+                        class="form-input" 
+                        id="paymentRef" 
+                        placeholder="bKash transaction ID"
+                    >
+                </div>
+
+                <!-- ACTIVATE BUTTON -->
+                <button type="submit" class="btn-activate-main" id="activateBtn">
+                    ✓ Activate Subscription
+                </button>
+            </form>
+        </div>
+
+        <!-- RECENT ACTIVATIONS -->
+        <div class="section">
+            <div class="section-title">📜 Recent Activations</div>
+            <div id="recentActivations">
+                <p style="color: #9CA3AF; text-align: center; padding: 40px;">
+                    Loading recent activations...
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ovszuxerimbmzfblzkgd.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
+        let sb;
+        let selectedTier = 'champion'; // Default
+
+        const TIERS = [
+            { id: 'thinker', name: 'Thinker', price: 399 },
+            { id: 'champion', name: 'Champion', price: 699 },
+            { id: 'legend', name: 'Legend', price: 499 },
+            { id: 'scholar', name: 'Scholar', price: 999 },
+            { id: 'elite', name: 'Elite', price: 1499 },
+            { id: 'family', name: 'Family', price: 1799 }
+        ];
+
+        // Initialize
+        window.onload = async function() {
+            // Check admin access
+            const hasAccess = await AdminGuard.requireAdmin();
+            if (!hasAccess) return;
+
+            // Initialize Supabase
+            sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+            // Render tiers
+            renderTiers();
+
+            // Load recent activations
+            loadRecentActivations();
+        };
+
+        // Render tier options
+        function renderTiers() {
+            const grid = document.getElementById('tierGrid');
+            grid.innerHTML = TIERS.map(tier => `
+                <div class="tier-option ${tier.id === 'champion' ? 'selected' : ''}" 
+                     onclick="selectTier('${tier.id}')">
+                    <div class="tier-name">${tier.name}</div>
+                    <div class="tier-price">৳${tier.price}</div>
+                </div>
+            `).join('');
+        }
+
+        // Select tier
+        function selectTier(tierId) {
+            selectedTier = tierId;
+            document.querySelectorAll('.tier-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            event.target.closest('.tier-option').classList.add('selected');
+        }
+
+        // Activate subscription
+        async function activateSubscription(event) {
+            event.preventDefault();
+
+            const activateBtn = document.getElementById('activateBtn');
+            activateBtn.disabled = true;
+            activateBtn.textContent = '⏳ Activating...';
+
+            try {
+                const email = document.getElementById('userEmail').value.trim();
+                const duration = parseInt(document.getElementById('duration').value);
+                const paymentRef = document.getElementById('paymentRef').value.trim() || 'MANUAL_ADMIN';
+
+                // Find user by email
+                const { data: profile, error: profileError } = await sb
+                    .from('profiles')
+                    .select('id, email, full_name')
+                    .eq('email', email)
+                    .single();
+
+                if (profileError || !profile) {
+                    throw new Error('User not found with email: ' + email);
+                }
+
+                // Calculate dates
+                const now = new Date();
+                const endDate = new Date(now);
+                endDate.setMonth(endDate.getMonth() + duration);
+
+                // Get tier price
+                const tierData = TIERS.find(t => t.id === selectedTier);
+                const amount = tierData.price * duration;
+
+                // Create subscription
+                const { data: subscription, error: subError } = await sb
+                    .from('subscriptions')
+                    .insert([{
+                        user_id: profile.id,
+                        tier: selectedTier,
+                        status: 'active',
+                        start_date: now.toISOString(),
+                        end_date: endDate.toISOString(),
+                        payment_method: 'bkash',
+                        payment_amount: amount,
+                        payment_reference: paymentRef,
+                        notes: `Manually activated by admin on ${now.toLocaleDateString()}`
+                    }])
+                    .select()
+                    .single();
+
+                if (subError) throw subError;
+
+                // Update profile
+                await sb
+                    .from('profiles')
+                    .update({
+                        subscription_tier: selectedTier,
+                        subscription_end_date: endDate.toISOString()
+                    })
+                    .eq('id', profile.id);
+
+                // Log admin action
+                await AdminGuard.logAdminAction('activate_subscription', {
+                    user_email: email,
+                    tier: selectedTier,
+                    duration: duration,
+                    amount: amount
+                });
+
+                // Show success
+                document.getElementById('successText').textContent = 
+                    `${profile.full_name || email} is now subscribed to ${tierData.name} tier for ${duration} month(s). Amount: ৳${amount}`;
+                document.getElementById('successMessage').classList.add('show');
+
+                // Reset form
+                document.getElementById('activationForm').reset();
+                renderTiers();
+
+                // Reload recent activations
+                setTimeout(() => {
+                    loadRecentActivations();
+                    document.getElementById('successMessage').classList.remove('show');
+                }, 3000);
+
+            } catch (err) {
+                alert('Error activating subscription: ' + err.message);
+                console.error(err);
+            } finally {
+                activateBtn.disabled = false;
+                activateBtn.textContent = '✓ Activate Subscription';
+            }
+        }
+
+        // Load recent activations
+        async function loadRecentActivations() {
+            try {
+                const { data: subscriptions, error } = await sb
+                    .from('subscriptions')
+                    .select(`
+                        *,
+                        profiles!inner(email, full_name)
+                    `)
+                    .eq('payment_method', 'bkash')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+
+                if (!subscriptions || subscriptions.length === 0) {
+                    document.getElementById('recentActivations').innerHTML = `
+                        <p style="color: #9CA3AF; text-align: center; padding: 40px;">
+                            No recent activations
+                        </p>
+                    `;
+                    return;
+                }
+
+                const tableHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Tier</th>
+                                <th>Amount</th>
+                                <th>Reference</th>
+                                <th>Activated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${subscriptions.map(sub => `
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 600;">${sub.profiles.full_name || 'User'}</div>
+                                        <div style="font-size: 12px; color: #9CA3AF;">${sub.profiles.email}</div>
+                                    </td>
+                                    <td style="text-transform: capitalize; font-weight: 600;">
+                                        ${sub.tier.replace('_', ' ')}
+                                    </td>
+                                    <td style="font-weight: 700; color: #10B981;">
+                                        ৳${sub.payment_amount || 0}
+                                    </td>
+                                    <td style="font-family: monospace; font-size: 12px;">
+                                        ${sub.payment_reference || 'N/A'}
+                                    </td>
+                                    <td style="font-size: 13px; color: #6B7280;">
+                                        ${new Date(sub.created_at).toLocaleString()}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                document.getElementById('recentActivations').innerHTML = tableHTML;
+
+            } catch (err) {
+                console.error('Error loading recent activations:', err);
+            }
+        }
+    </script>
+
+</body>
+</html>
