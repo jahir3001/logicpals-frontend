@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - LogicPals</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="admin-guard.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #F3F4F6;
+            color: #111827;
+        }
+
+        /* HEADER */
+        header {
+            background: white;
+            border-bottom: 1px solid #E5E7EB;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: #2563EB;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, #DC2626, #991B1B);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .admin-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6B7280;
+        }
+
+        .btn-logout {
+            background: #EF4444;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        /* NAVIGATION */
+        nav {
+            background: white;
+            border-bottom: 1px solid #E5E7EB;
+            padding: 0 24px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-link {
+            padding: 14px 20px;
+            color: #6B7280;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            color: #2563EB;
+            background: #EFF6FF;
+        }
+
+        .nav-link.active {
+            color: #2563EB;
+            border-bottom-color: #2563EB;
+        }
+
+        /* MAIN CONTENT */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 24px;
+            color: #111827;
+        }
+
+        /* STATS GRID */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid #E5E7EB;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .stat-icon.blue { background: #DBEAFE; }
+        .stat-icon.green { background: #D1FAE5; }
+        .stat-icon.yellow { background: #FEF3C7; }
+        .stat-icon.purple { background: #E9D5FF; }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #6B7280;
+            font-weight: 500;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .stat-change.positive { color: #10B981; }
+        .stat-change.negative { color: #EF4444; }
+
+        /* SECTIONS */
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid #E5E7EB;
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge {
+            background: #EF4444;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .btn-secondary {
+            background: #F3F4F6;
+            color: #374151;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            background: #E5E7EB;
+        }
+
+        /* PAYMENT CARD */
+        .payment-card {
+            background: #FEF3C7;
+            border: 2px solid #FCD34D;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .payment-info {
+            flex: 1;
+        }
+
+        .payment-email {
+            font-size: 15px;
+            font-weight: 700;
+            color: #92400E;
+            margin-bottom: 4px;
+        }
+
+        .payment-details {
+            font-size: 13px;
+            color: #78350F;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .payment-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-activate {
+            background: #10B981;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn-reject {
+            background: #EF4444;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        /* TABLE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            background: #F9FAFB;
+            font-size: 12px;
+            font-weight: 700;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #E5E7EB;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #F3F4F6;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #F9FAFB;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-badge.active {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .status-badge.expired {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .status-badge.trial {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9CA3AF;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* LOADING */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #9CA3AF;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #F3F4F6;
+            border-top-color: #2563EB;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .payment-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .payment-actions {
+                width: 100%;
+            }
+
+            .btn-activate, .btn-reject {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="logo">
+                <span>🎯</span>
+                <span>LogicPals</span>
+            </div>
+            <div class="admin-badge">ADMIN</div>
+        </div>
+        <div class="header-right">
+            <div class="admin-name" id="adminName">Loading...</div>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <!-- NAVIGATION -->
+    <nav>
+        <div class="nav-links">
+            <a href="admin.html" class="nav-link active">📊 Dashboard</a>
+            <a href="admin-subscriptions.html" class="nav-link">💳 Subscriptions</a>
+            <a href="admin-payments.html" class="nav-link">💰 Payments</a>
+            <a href="dashboard.html" class="nav-link">← Back to Site</a>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        
+        <h1 class="page-title">Admin Dashboard</h1>
+
+        <!-- STATS GRID -->
+        <div class="stats-grid" id="statsGrid">
+            <!-- Stats will be loaded here -->
+        </div>
+
+        <!-- PENDING PAYMENTS -->
+        <div class="section" id="pendingPaymentsSection">
+            <div class="section-header">
+                <div class="section-title">
+                    🔔 Pending Payments
+                    <span class="badge" id="pendingCount">0</span>
+                </div>
+                <a href="admin-payments.html" class="btn-secondary">View All</a>
+            </div>
+            <div id="pendingPaymentsList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 12px;">Loading payments...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECENT SUBSCRIPTIONS -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">👥 Recent Subscriptions</div>
+                <a href="admin-subscriptions.html" class="btn-secondary">View All</a>
+            </div>
+            <div id="recentSubscriptionsList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 12px;">Loading subscriptions...</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ovszuxerimbmzfblzkgd.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
+        let sb;
+
+        // Initialize
+        window.onload = async function() {
+            // Check admin access
+            const hasAccess = await AdminGuard.requireAdmin();
+            if (!hasAccess) return;
+
+            // Initialize Supabase
+            sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+            // Load admin info
+            const adminUser = await AdminGuard.getAdminUser();
+            if (adminUser) {
+                document.getElementById('adminName').textContent = adminUser.email;
+            }
+
+            // Load dashboard data
+            await loadStats();
+            await loadPendingPayments();
+            await loadRecentSubscriptions();
+        };
+
+        // Load stats
+        async function loadStats() {
+            try {
+                // Get total users
+                const { data: profiles, error: profilesError } = await sb
+                    .from('profiles')
+                    .select('id', { count: 'exact', head: true });
+
+                // Get active subscriptions
+                const { data: activeSubscriptions, error: activeError } = await sb
+                    .from('subscriptions')
+                    .select('*', { count: 'exact' })
+                    .eq('status', 'active');
+
+                // Get active trials
+                const { data: activeTrials, error: trialsError } = await sb
+                    .from('subscriptions')
+                    .select('*', { count: 'exact' })
+                    .eq('status', 'active')
+                    .eq('tier', 'free_trial');
+
+                // Calculate revenue (sum of active paid subscriptions)
+                let revenue = 0;
+                if (activeSubscriptions) {
+                    const tierPrices = {
+                        'thinker': 399,
+                        'legend': 499,
+                        'champion': 699,
+                        'scholar': 999,
+                        'champion_annual': 1249,
+                        'elite': 1499,
+                        'family': 1799
+                    };
+                    
+                    activeSubscriptions.forEach(sub => {
+                        if (sub.tier !== 'free_trial') {
+                            revenue += tierPrices[sub.tier] || 0;
+                        }
+                    });
+                }
+
+                // Render stats
+                const statsHTML = `
+                    <div class="stat-card">
+                        <div class="stat-icon blue">👥</div>
+                        <div class="stat-value">${profiles?.length || 0}</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon green">✅</div>
+                        <div class="stat-value">${activeSubscriptions?.length || 0}</div>
+                        <div class="stat-label">Active Subscriptions</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon yellow">🎁</div>
+                        <div class="stat-value">${activeTrials?.length || 0}</div>
+                        <div class="stat-label">Active Free Trials</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon purple">💰</div>
+                        <div class="stat-value">৳${revenue.toLocaleString()}</div>
+                        <div class="stat-label">Monthly Revenue (MRR)</div>
+                    </div>
+                `;
+
+                document.getElementById('statsGrid').innerHTML = statsHTML;
+
+            } catch (err) {
+                console.error('Error loading stats:', err);
+            }
+        }
+
+        // Load pending payments (placeholder - no database table yet)
+        async function loadPendingPayments() {
+            // For now, show empty state
+            // In future, this will query a 'pending_payments' table
+
+            document.getElementById('pendingCount').textContent = '0';
+            document.getElementById('pendingPaymentsList').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <div class="empty-state-text">No pending payments</div>
+                    <p style="margin-top: 8px; font-size: 13px;">
+                        Payments will appear here when users send bKash screenshots
+                    </p>
+                </div>
+            `;
+        }
+
+        // Load recent subscriptions
+        async function loadRecentSubscriptions() {
+            try {
+                const { data: subscriptions, error } = await sb
+                    .from('subscriptions')
+                    .select(`
+                        *,
+                        profiles!inner(email, full_name)
+                    `)
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+
+                if (!subscriptions || subscriptions.length === 0) {
+                    document.getElementById('recentSubscriptionsList').innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div class="empty-state-text">No subscriptions yet</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Calculate days remaining
+                const now = new Date();
+                const tableHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Tier</th>
+                                <th>Status</th>
+                                <th>End Date</th>
+                                <th>Days Left</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${subscriptions.map(sub => {
+                                const endDate = new Date(sub.end_date);
+                                const daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
+                                
+                                return `
+                                    <tr>
+                                        <td>
+                                            <div style="font-weight: 600;">${sub.profiles.full_name || 'User'}</div>
+                                            <div style="font-size: 12px; color: #9CA3AF;">${sub.profiles.email}</div>
+                                        </td>
+                                        <td>
+                                            <span style="text-transform: capitalize; font-weight: 600;">
+                                                ${sub.tier.replace('_', ' ')}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge ${sub.status}">
+                                                ${sub.status}
+                                            </span>
+                                        </td>
+                                        <td>${new Date(sub.end_date).toLocaleDateString()}</td>
+                                        <td>
+                                            <span style="font-weight: 600; color: ${daysLeft > 7 ? '#10B981' : '#EF4444'};">
+                                                ${daysLeft} days
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                document.getElementById('recentSubscriptionsList').innerHTML = tableHTML;
+
+            } catch (err) {
+                console.error('Error loading subscriptions:', err);
+                document.getElementById('recentSubscriptionsList').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <div class="empty-state-text">Error loading subscriptions</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Logout
+        async function logout() {
+            await sb.auth.signOut();
+            window.location.href = 'login.html';
+        }
+    </script>
+
+</body>
+</html>
