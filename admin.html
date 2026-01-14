@@ -607,7 +607,10 @@
           <div class="hd">
             <h2>Regular Problems</h2>
             <div class="actions">
-              <span class="pill"><span class="muted">Showing</span> <code id="regularRowCount">0</code></span>
+              
+        <a id="btnVisitSite" class="btn secondary" href="/" target="_blank" rel="noopener">Visit site</a>
+        <button id="btnLogout" class="btn secondary" type="button">Logout</button>
+<span class="pill"><span class="muted">Showing</span> <code id="regularRowCount">0</code></span>
               <button class="btn" id="btnLoadMoreRegular">Load More</button>
             </div>
           </div>
@@ -957,7 +960,13 @@
     
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ====== ALLOWED SKILL TRACKS (FROM ORIGINAL) ======
+    
+    // Safety check: make sure Supabase credentials are configured
+    if (!SUPABASE_URL || SUPABASE_URL.includes('YOUR_') || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes('YOUR_')) {
+      toast('Config missing', 'Set SUPABASE_URL and SUPABASE_ANON_KEY at the top of this file. Buttons won\'t work without it.');
+      console.warn('Supabase config placeholders detected.');
+    }
+// ====== ALLOWED SKILL TRACKS (FROM ORIGINAL) ======
     const ALLOWED_SKILL_TRACKS = [
       'constraints',
       'counting',
@@ -1586,46 +1595,46 @@
     }
 
     // ====== EVENT LISTENERS ======
-    $('btnRefresh').addEventListener('click', () => loadViewData(currentView));
-    $('btnQuickAdd').addEventListener('click', () => $('modalAdd').classList.add('show'));
+    $('btnRefresh')?.addEventListener('click', () => loadViewData(currentView));
+    $('btnQuickAdd')?.addEventListener('click', () => $('modalAdd').classList.add('show'));
     
-    $('btnClose').addEventListener('click', closeModal);
-    $('btnSave').addEventListener('click', saveEdits);
-    $('btnArchive').addEventListener('click', archiveProblem);
-    $('btnReset').addEventListener('click', () => {
+    $('btnClose')?.addEventListener('click', closeModal);
+    $('btnSave')?.addEventListener('click', saveEdits);
+    $('btnArchive')?.addEventListener('click', archiveProblem);
+    $('btnReset')?.addEventListener('click', () => {
       if (originalRow) openEditModal(originalRow.id, originalRow.section);
     });
-    $('btnCopyId').addEventListener('click', () => {
+    $('btnCopyId')?.addEventListener('click', () => {
       if (originalRow) {
         navigator.clipboard.writeText(originalRow.id);
         toast("Copied", "Problem ID copied to clipboard");
       }
     });
 
-    $('btnAddClose').addEventListener('click', () => $('modalAdd').classList.remove('show'));
-    $('btnAddCreate').addEventListener('click', createQuickProblem);
+    $('btnAddClose')?.addEventListener('click', () => $('modalAdd').classList.remove('show'));
+    $('btnAddCreate')?.addEventListener('click', createQuickProblem);
 
-    $('btnApplyRegular').addEventListener('click', () => {
+    $('btnApplyRegular')?.addEventListener('click', () => {
       regularPage = 0;
       loadRegularProblems();
     });
     
-    $('btnApplyOlympiad').addEventListener('click', () => {
+    $('btnApplyOlympiad')?.addEventListener('click', () => {
       olympiadPage = 0;
       loadOlympiadProblems();
     });
 
-    $('btnLoadMoreRegular').addEventListener('click', () => {
+    $('btnLoadMoreRegular')?.addEventListener('click', () => {
       regularPage++;
       loadRegularProblems();
     });
 
-    $('btnLoadMoreOlympiad').addEventListener('click', () => {
+    $('btnLoadMoreOlympiad')?.addEventListener('click', () => {
       olympiadPage++;
       loadOlympiadProblems();
     });
 
-    $('btnResetRegular').addEventListener('click', () => {
+    $('btnResetRegular')?.addEventListener('click', () => {
       $('regularSearch').value = '';
       $('regularDifficulty').value = '';
       $('regularAge').value = '';
@@ -1633,6 +1642,23 @@
       regularPage = 0;
       loadRegularProblems();
     });
+    // Expose functions used by inline onclick handlers
+    Object.assign(window, { switchMainView, openEditModal, toggleActive, quickAssign });
+
+    // Header actions
+    $('btnLogout')?.addEventListener('click', async () => {
+      try {
+        await supabase.auth.signOut();
+      } catch (e) {
+        console.warn('Logout failed', e);
+      } finally {
+        // If you have a dedicated login page, redirect there instead:
+        // window.location.href = '/admin-login.html';
+        window.location.reload();
+      }
+    });
+
+
 
     // ====== INITIALIZATION ======
     fillSkillTrackDropdowns();
