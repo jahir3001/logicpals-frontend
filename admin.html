@@ -3,11 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LogicPals Admin — Enterprise Console</title>
+  <title>LogicPals Admin — Problems Review</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0b1220;
@@ -17,8 +16,7 @@
       --text: rgba(255,255,255,0.92);
       --muted: rgba(255,255,255,0.68);
       --subtle: rgba(255,255,255,0.50);
-      --brand: #22c55e;
-      --brand-blue: #3b82f6;
+      --brand: #22c55e; /* green */
       --warn: #f59e0b;
       --danger: #ef4444;
       --shadow: 0 20px 60px rgba(0,0,0,0.45);
@@ -26,23 +24,18 @@
       --radius2: 12px;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
-    
     * { box-sizing: border-box; }
-    
     body {
       margin: 0;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
       color: var(--text);
       background: radial-gradient(1200px 900px at 20% 0%, rgba(34,197,94,0.12), transparent 60%),
                   radial-gradient(1000px 800px at 80% 10%, rgba(59,130,246,0.10), transparent 55%),
                   var(--bg);
       min-height: 100vh;
     }
-    
     a { color: inherit; text-decoration: none; }
-    .wrap { max-width: 1400px; margin: 0 auto; padding: 22px; }
-    
-    /* Header */
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 22px; }
     header {
       display: flex; gap: 16px; align-items: center; justify-content: space-between;
       padding: 14px 16px;
@@ -52,32 +45,23 @@
       box-shadow: var(--shadow);
       position: sticky; top: 14px; z-index: 20;
       backdrop-filter: blur(10px);
-      flex-wrap: wrap;
     }
-    
     .brand {
       display: flex; align-items: center; gap: 12px;
     }
-    
     .logo {
       width: 38px; height: 38px; border-radius: 12px;
       background: linear-gradient(135deg, rgba(34,197,94,0.95), rgba(59,130,246,0.85));
       box-shadow: 0 10px 30px rgba(34,197,94,0.20);
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 18px; color: white;
     }
-    
     .title {
       display: flex; flex-direction: column; line-height: 1.1;
     }
-    
     .title strong { font-size: 14px; letter-spacing: .2px; }
     .title span { font-size: 12px; color: var(--muted); }
-    
     .right {
       display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
     }
-    
     .pill {
       font-size: 12px; color: var(--muted);
       border: 1px solid var(--border);
@@ -86,30 +70,21 @@
       padding: 8px 10px;
       display: inline-flex; align-items: center; gap: 8px;
     }
-    
     .pill code { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.85); }
-    
-    /* Buttons */
     .btn {
       border: 1px solid var(--border);
       background: rgba(255,255,255,0.06);
       color: var(--text);
-      padding: 10px 14px;
+      padding: 10px 12px;
       border-radius: 12px;
       cursor: pointer;
       font-weight: 600;
       font-size: 12px;
       transition: transform .06s ease, background .2s ease, border-color .2s ease;
       user-select: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
     }
-    
     .btn:hover { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.22); }
     .btn:active { transform: translateY(1px); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    
     .btn.primary {
       border-color: rgba(34,197,94,0.35);
       background: rgba(34,197,94,0.14);
@@ -118,7 +93,6 @@
       background: rgba(34,197,94,0.20);
       border-color: rgba(34,197,94,0.55);
     }
-    
     .btn.danger {
       border-color: rgba(239,68,68,0.35);
       background: rgba(239,68,68,0.12);
@@ -127,57 +101,17 @@
       background: rgba(239,68,68,0.18);
       border-color: rgba(239,68,68,0.55);
     }
-    
-    /* Main Tabs */
-    .main-tabs {
-      display: flex;
-      gap: 8px;
-      padding: 14px 16px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.04);
-      border-radius: var(--radius);
-      margin-top: 16px;
-      overflow-x: auto;
-    }
-    
-    .main-tab {
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--muted);
-      cursor: pointer;
-      border: 1px solid transparent;
-      background: transparent;
-      transition: all .2s ease;
-      white-space: nowrap;
-    }
-    
-    .main-tab:hover {
-      background: rgba(255,255,255,0.06);
-    }
-    
-    .main-tab.active {
-      color: rgba(255,255,255,0.95);
-      background: rgba(255,255,255,0.10);
-      border-color: var(--border);
-    }
-    
-    /* Grid */
     .grid {
       display: grid;
-      grid-template-columns: 380px 1fr;
+      grid-template-columns: 360px 1fr;
       gap: 16px;
       margin-top: 16px;
       align-items: start;
     }
-    
-    @media (max-width: 1080px) {
+    @media (max-width: 980px) {
       .grid { grid-template-columns: 1fr; }
       header { position: relative; top: auto; }
     }
-    
-    /* Panel */
     .panel {
       border: 1px solid var(--border);
       background: rgba(255,255,255,0.05);
@@ -185,24 +119,18 @@
       box-shadow: var(--shadow);
       overflow: hidden;
     }
-    
     .panel .hd {
       padding: 14px 16px;
       border-bottom: 1px solid var(--border);
       background: rgba(255,255,255,0.04);
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
-      flex-wrap: wrap;
     }
-    
     .panel .hd h2 {
       margin: 0;
       font-size: 13px;
       letter-spacing: .2px;
     }
-    
     .panel .bd { padding: 14px 16px; }
-    
-    /* Tabs (sub-navigation) */
     .tabs {
       display: inline-flex;
       border: 1px solid var(--border);
@@ -211,9 +139,8 @@
       padding: 4px;
       gap: 4px;
     }
-    
     .tab {
-      padding: 8px 12px;
+      padding: 8px 10px;
       border-radius: 999px;
       font-size: 12px;
       font-weight: 700;
@@ -221,27 +148,21 @@
       cursor: pointer;
       border: 0;
       background: transparent;
-      transition: all .2s ease;
     }
-    
     .tab.active {
       color: rgba(255,255,255,0.95);
       background: rgba(255,255,255,0.10);
     }
-    
-    /* Form Fields */
     .field {
       display: grid;
       gap: 6px;
       margin-bottom: 12px;
     }
-    
     .field label {
       font-size: 12px;
       color: var(--muted);
       font-weight: 600;
     }
-    
     input, select, textarea {
       width: 100%;
       padding: 10px 12px;
@@ -251,54 +172,38 @@
       color: var(--text);
       outline: none;
       font-size: 13px;
-      font-family: inherit;
-      transition: border-color .2s ease;
     }
-    
-    input:focus, select:focus, textarea:focus {
-      border-color: rgba(34,197,94,0.5);
-    }
-    
     textarea { min-height: 110px; resize: vertical; }
     input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.35); }
-    
     .row {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
-    
     .help {
       font-size: 12px; color: var(--subtle); line-height: 1.35;
     }
-    
-    /* KPI */
     .kpi {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
     }
-    
     .kpi .card {
       border: 1px solid var(--border);
       background: rgba(255,255,255,0.04);
       border-radius: 14px;
       padding: 12px;
     }
-    
     .kpi .n {
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 800;
       letter-spacing: .2px;
     }
-    
     .kpi .t {
       font-size: 12px;
       color: var(--muted);
       margin-top: 4px;
     }
-    
-    /* Table */
     table {
       width: 100%;
       border-collapse: separate;
@@ -308,7 +213,6 @@
       border-radius: 14px;
       background: rgba(255,255,255,0.03);
     }
-    
     thead th {
       text-align: left;
       font-size: 12px;
@@ -318,24 +222,19 @@
       background: rgba(255,255,255,0.03);
       font-weight: 800;
     }
-    
     tbody td {
       padding: 12px 12px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       vertical-align: top;
       font-size: 13px;
     }
-    
     tbody tr:hover td {
       background: rgba(255,255,255,0.04);
     }
-    
     tbody tr:last-child td { border-bottom: 0; }
-    
-    /* Badges */
     .badge {
       display: inline-flex; align-items: center; gap: 6px;
-      padding: 6px 10px;
+      padding: 6px 9px;
       border-radius: 999px;
       border: 1px solid var(--border);
       background: rgba(255,255,255,0.04);
@@ -344,34 +243,26 @@
       font-weight: 700;
       white-space: nowrap;
     }
-    
     .badge.ok {
       border-color: rgba(34,197,94,0.35);
       background: rgba(34,197,94,0.10);
     }
-    
     .badge.warn {
       border-color: rgba(245,158,11,0.38);
       background: rgba(245,158,11,0.10);
     }
-    
     .badge.danger {
       border-color: rgba(239,68,68,0.38);
       background: rgba(239,68,68,0.10);
     }
-    
     .muted { color: var(--muted); }
     .mono { font-family: var(--mono); font-size: 12px; color: rgba(255,255,255,0.80); }
-    
     .actions {
       display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap;
     }
-    
     .divider {
       height: 1px; background: rgba(255,255,255,0.10); margin: 14px 0;
     }
-    
-    /* Toast */
     .toast {
       position: fixed; right: 18px; bottom: 18px;
       max-width: 420px;
@@ -379,74 +270,61 @@
       gap: 10px;
       z-index: 60;
     }
-    
     .toast .item {
       border: 1px solid var(--border);
-      background: rgba(12,18,32,0.95);
+      background: rgba(12,18,32,0.92);
       backdrop-filter: blur(10px);
       border-radius: 14px;
-      padding: 12px 14px;
+      padding: 12px 12px;
       box-shadow: var(--shadow);
       display: grid;
       gap: 4px;
     }
-    
     .toast .item .h { font-weight: 800; font-size: 12px; }
     .toast .item .b { font-size: 12px; color: var(--muted); line-height: 1.35; }
-    
-    /* Modal */
     .modal {
       position: fixed; inset: 0;
-      background: rgba(0,0,0,0.65);
+      background: rgba(0,0,0,0.55);
       display: none;
       align-items: center;
       justify-content: center;
       padding: 18px;
       z-index: 50;
     }
-    
     .modal.show { display: flex; }
-    
     .modal .card {
-      width: min(1080px, 100%);
-      max-height: 90vh;
+      width: min(980px, 100%);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      background: rgba(12,18,32,0.98);
+      background: rgba(12,18,32,0.96);
       box-shadow: var(--shadow);
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
     }
-    
     .modal .card .top {
       padding: 14px 16px;
       border-bottom: 1px solid var(--border);
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
-      flex-shrink: 0;
     }
-    
     .modal .card .top .left {
       display: grid; gap: 4px;
     }
-    
-    .modal .card .top .left strong { font-size: 14px; }
+    .modal .card .top .left strong { font-size: 13px; }
     .modal .card .top .left span { font-size: 12px; color: var(--muted); }
-    
     .modal .card .content {
-      padding: 16px;
+      padding: 14px 16px;
+      max-height: min(72vh, 720px);
       overflow: auto;
-      flex: 1;
     }
-    
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+    }
     .footer {
       padding: 12px 16px;
       border-top: 1px solid var(--border);
       display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;
       background: rgba(255,255,255,0.03);
-      flex-shrink: 0;
     }
-    
     .hint {
       padding: 10px 12px;
       border: 1px solid rgba(245,158,11,0.35);
@@ -456,318 +334,254 @@
       font-size: 12px;
       line-height: 1.35;
     }
-    
-    .small {
-      font-size: 12px;
-      color: var(--muted);
-    }
-    
-    /* View Container */
-    .view-container {
-      display: none;
-    }
-    
-    .view-container.active {
-      display: block;
-    }
-  </style>
+  
+/* --- Enterprise nav + auth modal --- */
+.lp-nav{
+  margin: 14px auto 0;
+  max-width: 1180px;
+  width: calc(100% - 40px);
+  background: rgba(20,30,40,.55);
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  border-radius: 18px;
+  padding: 10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  backdrop-filter: blur(12px);
+}
+.lp-tab{
+  appearance:none;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.88);
+  padding: 9px 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor:pointer;
+  user-select:none;
+  transition: transform .08s ease, background .15s ease, border-color .15s ease;
+}
+.lp-tab:hover{ background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.16); }
+.lp-tab:active{ transform: translateY(1px); }
+.lp-tab.is-active{ background: rgba(34,197,94,.14); border-color: rgba(34,197,94,.35); }
+.lp-tab-link{ text-decoration:none; display:inline-flex; align-items:center; }
+.lp-nav-spacer{ flex:1; }
+.lp-tab-quiet{ background: transparent; border-color: rgba(255,255,255,.08); }
+.lp-tab-quiet:hover{ background: rgba(255,255,255,.06); }
+
+.lp-modal-backdrop{
+  position: fixed; inset:0;
+  background: rgba(0,0,0,.58);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 24px;
+  z-index: 50;
+}
+.lp-modal{
+  width: min(560px, 100%);
+  background: rgba(16,24,32,.92);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.55);
+  overflow:hidden;
+  backdrop-filter: blur(12px);
+}
+.lp-modal-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.lp-modal-body{ padding: 16px; }
+.lp-icon-btn{
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.88);
+  border-radius: 12px;
+  padding: 6px 10px;
+  cursor:pointer;
+}
+.lp-icon-btn:hover{ background: rgba(255,255,255,.07); }
+.lp-form{ display:grid; gap:10px; margin-top: 12px; }
+.lp-form input{
+  width:100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.92);
+  outline: none;
+}
+.lp-form input:focus{ border-color: rgba(34,197,94,.35); box-shadow: 0 0 0 4px rgba(34,197,94,.10); }
+.lp-form-row{ display:flex; gap:10px; margin-top: 2px; }
+.lp-btn{
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(34,197,94,.16);
+  color: rgba(255,255,255,.92);
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor:pointer;
+}
+.lp-btn:hover{ background: rgba(34,197,94,.22); }
+.lp-btn-ghost{
+  background: rgba(255,255,255,.04);
+}
+.lp-btn-ghost:hover{ background: rgba(255,255,255,.07); }
+.lp-note{ color: rgba(255,255,255,.78); font-size: 13px; min-height: 18px; }
+</style>
 </head>
 <body>
   <div class="wrap">
-    <!-- Header -->
     <header>
       <div class="brand">
-        <div class="logo">LP</div>
+        <div class="logo" aria-hidden="true"></div>
         <div class="title">
           <strong>LogicPals Admin</strong>
-          <span>Enterprise Console — Complete Management System</span>
+          <span>Enterprise review console — Regular + Olympiad tracks</span>
         </div>
       </div>
       <div class="right">
         <div class="pill">Project <code>LogicPals-App</code></div>
-        <button class="btn" id="btnRefresh">🔄 Refresh</button>
-        <button class="btn primary" id="btnQuickAdd">+ Quick Add</button>
+        <button class="btn" id="btnRefresh">Refresh</button>
+        <button class="btn primary" id="btnQuickAdd">Quick Add (Regular)</button>
+        <button class="btn ghost" id="btnAuth">Sign in</button>
+        <button class="btn ghost" id="btnLogout" hidden>Log out</button>
       </div>
     </header>
 
-    <!-- Main Navigation Tabs -->
-    <div class="main-tabs">
-      <button class="main-tab active" data-view="dashboard">📊 Dashboard</button>
-      <button class="main-tab" data-view="regular">📝 Regular Problems</button>
-      <button class="main-tab" data-view="olympiad">🏆 Olympiad Review</button>
-      <button class="main-tab" data-view="payments">💳 Payments</button>
-      <button class="main-tab" data-view="subscriptions">📋 Subscriptions</button>
-      <button class="main-tab" data-view="users">👥 Users</button>
-    </div>
+  <nav class="lp-nav" aria-label="Primary">
+    <button class="lp-tab is-active" data-view="dashboard">Dashboard</button>
+    <button class="lp-tab" data-view="regular">Regular Problems</button>
+    <button class="lp-tab" data-view="olympiad">Olympiad Review</button>
+    <a class="lp-tab lp-tab-link" data-view="payments" href="./admin-payments.html" target="_blank" rel="noopener">Payments</a>
+    <a class="lp-tab lp-tab-link" data-view="subscriptions" href="./admin-subscriptions.html" target="_blank" rel="noopener">Subscriptions</a>
+    <button class="lp-tab" data-view="users">Users</button>
+    <div class="lp-nav-spacer"></div>
+    <button class="lp-tab lp-tab-quiet" id="btnVisitSite" title="Open LogicPals site in a new tab">Visit site</button>
+    <button class="lp-tab lp-tab-quiet" id="btnStudentDash" title="Open Student Dashboard in a new tab">Student dashboard</button>
+    <button class="lp-tab lp-tab-quiet" id="btnRoles" title="Manage admin roles (super_admin only)" style="display:none;">Roles</button>
+  </nav>
 
-    <!-- DASHBOARD VIEW -->
-    <div id="view-dashboard" class="view-container active">
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 16px;">
-        <div class="panel">
-          <div class="bd" style="padding: 20px;">
-            <div class="kpi">
-              <div class="card">
-                <div class="n" id="statRegular">—</div>
-                <div class="t">Regular Problems</div>
-              </div>
-              <div class="card">
-                <div class="n" id="statOlympiad">—</div>
-                <div class="t">Olympiad Problems</div>
-              </div>
-            </div>
+
+    <div class="grid">
+      <!-- LEFT: Controls -->
+      <div class="panel">
+        <div class="hd">
+          <h2>Review Mode</h2>
+          <div class="tabs" role="tablist" aria-label="Review sections">
+            <button class="tab active" data-tab="regular" role="tab" aria-selected="true">Regular</button>
+            <button class="tab" data-tab="olympiad" role="tab" aria-selected="false">Olympiad</button>
           </div>
         </div>
-        
-        <div class="panel">
-          <div class="bd">
-            <div class="hint" style="margin-bottom: 12px;">
-              <strong>🎯 Quick Actions</strong>
+        <div class="bd">
+          <div id="kpis" class="kpi">
+            <div class="card">
+              <div class="n" id="kpiQueue">—</div>
+              <div class="t" id="kpiQueueLabel">Regular — recent</div>
             </div>
-            <div style="display: grid; gap: 10px;">
-              <button class="btn primary" style="width: 100%;" onclick="switchMainView('regular')">📝 Manage Regular</button>
-              <button class="btn primary" style="width: 100%;" onclick="switchMainView('olympiad')">🏆 Review Olympiad</button>
+            <div class="card">
+              <div class="n" id="kpiAttention">—</div>
+              <div class="t" id="kpiAttentionLabel">Needs attention</div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- REGULAR PROBLEMS VIEW -->
-    <div id="view-regular" class="view-container">
-      <div class="grid">
-        <!-- Left: Filters -->
-        <div class="panel">
-          <div class="hd">
-            <h2>Filters</h2>
-            <button class="btn" id="btnResetRegular">Reset</button>
+          <div class="divider"></div>
+
+          <div class="field">
+            <label>Search</label>
+            <input id="q" placeholder="Title / tag / category / skill_track..." />
           </div>
-          <div class="bd">
-            <div class="hint">
-              <strong>📝 Regular Problems</strong><br>
-              Fast-track for general learning. Quick add, activate/deactivate, lightweight editing.
-            </div>
-            
-            <div class="divider"></div>
-            
-            <div id="regularKpi" class="kpi">
-              <div class="card">
-                <div class="n" id="regularCount">—</div>
-                <div class="t">Recent</div>
-              </div>
-              <div class="card">
-                <div class="n" id="regularInactive">—</div>
-                <div class="t">Inactive</div>
-              </div>
-            </div>
 
-            <div class="divider"></div>
-
+          <div class="row">
             <div class="field">
-              <label>Search</label>
-              <input id="regularSearch" placeholder="Title, text, category..." />
-            </div>
-
-            <div class="row">
-              <div class="field">
-                <label>Difficulty</label>
-                <select id="regularDifficulty">
-                  <option value="">Any</option>
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Age</label>
-                <select id="regularAge">
-                  <option value="">Any</option>
-                  <option value="8-9">8-9</option>
-                  <option value="9-10">9-10</option>
-                  <option value="10-11">10-11</option>
-                  <option value="11-12">11-12</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="field">
-              <label>Status</label>
-              <select id="regularStatus">
-                <option value="true">Active Only</option>
+              <label>Difficulty</label>
+              <select id="difficulty">
                 <option value="">Any</option>
-                <option value="false">Inactive Only</option>
+                <option value="easy">easy</option>
+                <option value="medium">medium</option>
+                <option value="hard">hard</option>
               </select>
             </div>
-
-            <button class="btn primary" id="btnApplyRegular" style="width: 100%;">Apply Filters</button>
-          </div>
-        </div>
-
-        <!-- Right: Table -->
-        <div class="panel">
-          <div class="hd">
-            <h2>Regular Problems</h2>
-            <div class="actions">
-              
-        <a id="btnVisitSite" class="btn secondary" href="/" target="_blank" rel="noopener">Visit site</a>
-        <button id="btnLogout" class="btn secondary" type="button">Logout</button>
-<span class="pill"><span class="muted">Showing</span> <code id="regularRowCount">0</code></span>
-              <button class="btn" id="btnLoadMoreRegular">Load More</button>
-            </div>
-          </div>
-          <div class="bd" style="padding: 0;">
-            <div id="regularTableWrap"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- OLYMPIAD REVIEW VIEW (PRESERVE ALL ORIGINAL LOGIC) -->
-    <div id="view-olympiad" class="view-container">
-      <div class="grid">
-        <!-- Left: Controls -->
-        <div class="panel">
-          <div class="hd">
-            <h2>Review Controls</h2>
-          </div>
-          <div class="bd">
-            <div class="hint" style="background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.35);">
-              <strong>🏆 Olympiad Track is Strict</strong><br>
-              You MUST set <span class="mono">skill_track</span> + <span class="mono">review_reason</span> before publishing.
-            </div>
-
-            <div class="divider"></div>
-
-            <div id="olympiadKpi" class="kpi">
-              <div class="card">
-                <div class="n" id="olympiadQueue">—</div>
-                <div class="t">In Queue</div>
-              </div>
-              <div class="card">
-                <div class="n" id="olympiadAttention">—</div>
-                <div class="t">Needs Attention</div>
-              </div>
-            </div>
-
-            <div class="divider"></div>
-
             <div class="field">
-              <label>Search</label>
-              <input id="olympiadSearch" placeholder="Title, text, skill_track..." />
+              <label>Age</label>
+              <select id="age">
+                <option value="">Any</option>
+                <option value="8-9">8-9</option>
+                <option value="9-10">9-10</option>
+                <option value="10-11">10-11</option>
+                <option value="11-12">11-12</option>
+              </select>
             </div>
+          </div>
 
+          <div class="row">
+            <div class="field">
+              <label>Category</label>
+              <input id="category" placeholder="e.g., logic, arithmetic, geometry..." />
+            </div>
             <div class="field">
               <label>Skill Track</label>
-              <select id="olympiadSkillTrack">
+              <select id="skillTrack">
                 <option value="">Any</option>
               </select>
             </div>
+          </div>
 
+          <div class="row">
             <div class="field">
-              <label>Publish State</label>
-              <select id="olympiadPublishState">
+              <label>Only Active</label>
+              <select id="onlyActive">
+                <option value="true">Yes</option>
                 <option value="">Any</option>
-                <option value="draft">Draft</option>
-                <option value="review">In Review</option>
-                <option value="published">Published</option>
-                <option value="archived">Archived</option>
+                <option value="false">No</option>
               </select>
             </div>
-
-            <button class="btn primary" id="btnApplyOlympiad" style="width: 100%;">Apply Filters</button>
-
-            <div class="divider"></div>
-
-            <div class="help">
-              <strong>Olympiad Review Process:</strong><br>
-              1. Check skill_track (must match allowed list)<br>
-              2. Add review_reason (explain decision)<br>
-              3. Set publish_state = 'published'<br>
-              4. Problems without these show as "Needs Attention"
+            <div class="field">
+              <label>Sort</label>
+              <select id="sort">
+                <option value="created_at_desc">Newest first</option>
+                <option value="created_at_asc">Oldest first</option>
+              </select>
             </div>
           </div>
-        </div>
 
-        <!-- Right: Table -->
-        <div class="panel">
-          <div class="hd">
-            <h2>Olympiad Review Queue</h2>
-            <div class="actions">
-              <span class="pill"><span class="muted">Showing</span> <code id="olympiadRowCount">0</code></span>
-              <button class="btn" id="btnLoadMoreOlympiad">Load More</button>
-            </div>
-          </div>
-          <div class="bd" style="padding: 0;">
-            <div id="olympiadTableWrap"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+          <button class="btn primary" id="btnApply" style="width:100%;">Apply Filters</button>
 
-    <!-- PAYMENTS VIEW (Placeholder) -->
-    <div id="view-payments" class="view-container">
-      <div class="panel">
-        <div class="hd">
-          <h2>Payment Activation</h2>
-          <button class="btn primary">+ Manual Payment</button>
-        </div>
-        <div class="bd">
+          <div class="divider"></div>
+
           <div class="hint">
-            <strong>💳 Payment Management</strong><br>
-            Activate subscriptions manually, track bKash/Nagad payments, manage free trials.
+            <strong>Olympiad track is strict.</strong><br/>
+            You should set <span class="mono">skill_track</span> + a clear <span class="mono">review_reason</span> before publishing.
+            For Regular, you can quickly edit, activate/deactivate, or archive.
           </div>
-          
-          <div style="margin-top: 16px; padding: 40px; text-align: center; border: 2px dashed var(--border); border-radius: 14px;">
-            <div style="font-size: 48px; margin-bottom: 16px;">💳</div>
-            <div style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">Payment System</div>
-            <div class="muted">Integration from admin-payments.html will go here</div>
+
+          <div class="divider"></div>
+          <div class="help">
+            <div><span class="mono">Supabase</span> URL is embedded in this file. Later we’ll move keys to secure config (roadmap Step 5+).</div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- SUBSCRIPTIONS VIEW (Placeholder) -->
-    <div id="view-subscriptions" class="view-container">
+      <!-- RIGHT: Table -->
       <div class="panel">
         <div class="hd">
-          <h2>Subscription Management</h2>
-          <button class="btn primary">+ New Subscription</button>
-        </div>
-        <div class="bd">
-          <div class="hint">
-            <strong>📋 Subscription Management</strong><br>
-            View all subscriptions, track expirations, manage renewals and upgrades.
-          </div>
-          
-          <div style="margin-top: 16px; padding: 40px; text-align: center; border: 2px dashed var(--border); border-radius: 14px;">
-            <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
-            <div style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">Subscription System</div>
-            <div class="muted">Integration from admin-subscriptions.html will go here</div>
+          <h2 id="tableTitle">Regular Problems</h2>
+          <div class="actions">
+            <span class="pill"><span class="muted">Rows</span> <code id="rowCount">0</code></span>
+            <button class="btn" id="btnLoadMore">Load more</button>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- USERS VIEW (Placeholder) -->
-    <div id="view-users" class="view-container">
-      <div class="panel">
-        <div class="hd">
-          <h2>User Management</h2>
-        </div>
-        <div class="bd">
-          <div style="padding: 40px; text-align: center;">
-            <div style="font-size: 48px; margin-bottom: 16px;">👥</div>
-            <div style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">Users Coming Soon</div>
-            <div class="muted">Student accounts, progress tracking, and analytics</div>
-          </div>
+        <div class="bd" style="padding-top: 0;">
+          <div id="tableWrap"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Toast Container -->
-  <div class="toast" id="toast"></div>
-
-  <!-- Edit Modal (ORIGINAL FROM admin_enterprise.html) -->
+  <!-- EDIT MODAL -->
   <div class="modal" id="modal">
     <div class="card">
       <div class="top">
@@ -816,16 +630,12 @@
           </div>
           <div class="field">
             <label>Curriculum Tags (JSON array)</label>
-            <input id="f_tags" placeholder='e.g., ["bdmo","geometry"]' />
+            <input id="f_tags" placeholder='e.g., ["bdmo","geometry","angles"]' />
           </div>
         </div>
 
-        <!-- OLYMPIAD-SPECIFIC FIELDS (PRESERVED FROM ORIGINAL) -->
         <div id="olympiadFields" style="display:none;">
           <div class="divider"></div>
-          <div class="hint" style="background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.35);">
-            <strong>⚠️ Olympiad Required Fields</strong>
-          </div>
           <div class="row">
             <div class="field">
               <label>Skill Track (must match allowed list)</label>
@@ -879,6 +689,12 @@
             <input id="f_updated_at" disabled />
           </div>
         </div>
+
+        <div class="divider"></div>
+        <div class="help">
+          <strong>Enterprise hygiene:</strong> Olympiad edits should keep an audit trail via <span class="mono">review_reason</span>.
+          Regular edits should remain lightweight.
+        </div>
       </div>
       <div class="footer">
         <div class="small" id="mFooterLeft">—</div>
@@ -890,13 +706,13 @@
     </div>
   </div>
 
-  <!-- Quick Add Modal (ORIGINAL FROM admin_enterprise.html) -->
+  <!-- QUICK ADD MODAL -->
   <div class="modal" id="modalAdd">
     <div class="card">
       <div class="top">
         <div class="left">
           <strong>Quick Add — Regular Problem</strong>
-          <span class="small">Creates a new regular problem</span>
+          <span class="small">Creates a new regular problem (draft/active defaults)</span>
         </div>
         <div class="actions">
           <button class="btn" id="btnAddClose">Close</button>
@@ -928,13 +744,17 @@
           </div>
         </div>
         <div class="field">
+          <label>Curriculum Tags (JSON array)</label>
+          <input id="a_tags" placeholder='e.g., ["logic","patterns"]' />
+        </div>
+        <div class="field">
           <label>Problem Text</label>
           <textarea id="a_problem_text" placeholder="Write the full problem..."></textarea>
         </div>
         <div class="row">
           <div class="field">
             <label>Answer Key</label>
-            <textarea id="a_answer_key" placeholder="answer"></textarea>
+            <textarea id="a_answer_key" placeholder="answer|acceptable|variations"></textarea>
           </div>
           <div class="field">
             <label>Solution Explanation</label>
@@ -943,7 +763,7 @@
         </div>
       </div>
       <div class="footer">
-        <div class="small">Quick add for Regular section only</div>
+        <div class="small">Tip: keep Regular problems fast to review.</div>
         <div class="actions">
           <button class="btn primary" id="btnAddCreate">Create</button>
         </div>
@@ -951,44 +771,38 @@
     </div>
   </div>
 
+  <div class="toast" id="toast"></div>
+
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-    // ====== CONFIGURATION ======
-    const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE';
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
-    
+    // NOTE: Later move these keys to a secure config layer (roadmap Step 5+).
+    const SUPABASE_URL = 'https://ovszuxerimbmzfblzkgd.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    
-    // Safety check: make sure Supabase credentials are configured
-    if (!SUPABASE_URL || SUPABASE_URL.includes('YOUR_') || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes('YOUR_')) {
-      toast('Config missing', 'Set SUPABASE_URL and SUPABASE_ANON_KEY at the top of this file. Buttons won\'t work without it.');
-      console.warn('Supabase config placeholders detected.');
-    }
-// ====== ALLOWED SKILL TRACKS (FROM ORIGINAL) ======
+    // ====== Allowed Skill Tracks ======
+    // Keep in sync with DB constraint. (Your DB currently includes 'geometry_no_formulas', not 'geometry'.)
     const ALLOWED_SKILL_TRACKS = [
-      'constraints',
-      'counting',
-      'divisibility',
-      'geometry',
-      'geometry_no_formulas',
-      'invariants',
-      'mixed',
-      'patterns',
-      'worst_case',
+      "constraints",
+      "counting",
+      "divisibility",
+      "geometry_no_formulas",
+      "invariants",
+      "mixed",
+      "worst_case",
+      "patterns"
     ];
 
-    // ====== STATE ======
-    let currentView = 'dashboard';
-    let currentSection = 'regular'; // 'regular' or 'olympiad'
-    let regularPage = 0;
-    let olympiadPage = 0;
+    // ====== UI State ======
+    let currentTab = "regular";
+    let page = 0;
     const PAGE_SIZE = 30;
     let currentRows = [];
     let originalRow = null;
 
-    // ====== HELPERS (FROM ORIGINAL) ======
+    // ====== Helpers ======
     const $ = (id) => document.getElementById(id);
 
     function toast(title, body, type="info") {
@@ -1026,8 +840,8 @@
       }
     }
 
-    function badgeFor(row, section) {
-      if (section === "olympiad") {
+    function badgeFor(row) {
+      if (currentTab === "olympiad") {
         const st = row.skill_track;
         const rr = row.review_reason;
         const ps = row.publish_state;
@@ -1057,328 +871,234 @@
       return s.length > n ? s.slice(0, n) + "…" : s;
     }
 
-    // ====== VIEW SWITCHING ======
-    function switchMainView(view) {
-      currentView = view;
-      
-      // Hide all views
-      document.querySelectorAll('.view-container').forEach(v => {
-        v.classList.remove('active');
+    function setTab(tab) {
+      currentTab = tab;
+      page = 0;
+      currentRows = [];
+      document.querySelectorAll(".tab").forEach(btn => {
+        const on = btn.dataset.tab === tab;
+        btn.classList.toggle("active", on);
+        btn.setAttribute("aria-selected", on ? "true" : "false");
       });
-      
-      // Show selected view
-      const viewEl = $(`view-${view}`);
-      if (viewEl) viewEl.classList.add('active');
-      
-      // Update active tab
-      document.querySelectorAll('.main-tab').forEach(tab => {
-        tab.classList.remove('active');
-        if (tab.dataset.view === view) {
-          tab.classList.add('active');
-        }
-      });
-      
-      // Load data
-      loadViewData(view);
+      $("tableTitle").textContent = tab === "olympiad" ? "Olympiad Review Queue" : "Regular Problems";
+      $("kpiQueueLabel").textContent = tab === "olympiad" ? "Olympiad — queue" : "Regular — recent";
+      $("kpiAttentionLabel").textContent = tab === "olympiad" ? "Missing skill_track/reason" : "Inactive / needs edit";
+      renderTable([]);
+      refresh();
     }
 
-    // Make it global
-    window.switchMainView = switchMainView;
-
-    // ====== INITIALIZE ======
-    document.querySelectorAll('.main-tab').forEach(tab => {
-      tab.addEventListener('click', () => switchMainView(tab.dataset.view));
-    });
-
-    // Fill skill track dropdowns
     function fillSkillTrackDropdowns() {
-      const olympiadSel = $("olympiadSkillTrack");
+      const filterSel = $("skillTrack");
       const editSel = $("f_skill_track");
-      const opts = ALLOWED_SKILL_TRACKS.map(v => `<option value="${v}">${v}</option>`).join("");
-      olympiadSel.innerHTML = `<option value="">Any</option>` + opts;
-      editSel.innerHTML = `<option value="">(unchanged)</option>` + opts;
+      filterSel.innerHTML = `<option value="">Any</option>` + ALLOWED_SKILL_TRACKS.map(v => `<option value="${v}">${v}</option>`).join("");
+      editSel.innerHTML = `<option value="">(unchanged)</option>` + ALLOWED_SKILL_TRACKS.map(v => `<option value="${v}">${v}</option>`).join("");
     }
 
-    // ====== DATA LOADING ======
-    async function loadViewData(view) {
-      if (view === 'dashboard') {
-        await loadDashboardStats();
-      } else if (view === 'regular') {
-        await loadRegularProblems();
-      } else if (view === 'olympiad') {
-        await loadOlympiadProblems();
+    // ====== Query Builder ======
+    function buildQuery() {
+      const q = ($("q").value || "").trim();
+      const difficulty = $("difficulty").value || "";
+      const age = $("age").value || "";
+      const category = ($("category").value || "").trim();
+      const skillTrack = $("skillTrack").value || "";
+      const onlyActive = $("onlyActive").value;
+      const sort = $("sort").value;
+
+      let query = supabase.from("problems").select("*", { count: "exact" });
+
+      // Section split
+      query = query.eq("section", currentTab);
+
+      // Default for olympiad: show queue of missing skill_track OR missing review_reason OR still draft/review
+      if (currentTab === "olympiad") {
+        // Keep it broad but useful: show draft/review by default, unless user searches
+        query = query.in("publish_state", ["draft", "review", "published"]).order("created_at", { ascending: false });
+        // When no explicit search/filters, prefer "needs attention" rows first
+      } else {
+        query = query.order("created_at", { ascending: sort === "created_at_asc" });
       }
-    }
 
-    async function loadDashboardStats() {
-      try {
-        const { count: regular } = await supabase
-          .from('problems')
-          .select('*', { count: 'exact', head: true })
-          .eq('section', 'regular');
-        
-        const { count: olympiad } = await supabase
-          .from('problems')
-          .select('*', { count: 'exact', head: true })
-          .eq('section', 'olympiad');
-        
-        $('statRegular').textContent = regular || 0;
-        $('statOlympiad').textContent = olympiad || 0;
-      } catch (error) {
-        console.error('Error loading dashboard:', error);
+      if (difficulty) query = query.eq("difficulty", difficulty);
+      if (age) query = query.eq("age_category", age);
+      if (category) query = query.ilike("category", `%${category}%`);
+      if (skillTrack) query = query.eq("skill_track", skillTrack);
+
+      if (onlyActive === "true") query = query.eq("is_active", true);
+      if (onlyActive === "false") query = query.eq("is_active", false);
+
+      if (q) {
+        // Search across title/category/skill_track + tags/text (best-effort)
+        // Note: PostgREST OR syntax
+        const ors = [
+          `title.ilike.%${q}%`,
+          `category.ilike.%${q}%`,
+          `skill_track.ilike.%${q}%`,
+          `problem_text.ilike.%${q}%`,
+          `review_reason.ilike.%${q}%`
+        ];
+        query = query.or(ors.join(","));
       }
+
+      const from = page * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      query = query.range(from, to);
+
+      return query;
     }
 
-    async function loadRegularProblems() {
+    async function refreshKpis() {
       try {
-        const search = $('regularSearch').value.trim();
-        const difficulty = $('regularDifficulty').value;
-        const age = $('regularAge').value;
-        const status = $('regularStatus').value;
+        // Queue count
+        let q1 = supabase.from("problems").select("id", { count: "exact", head: true }).eq("section", currentTab);
+        // Attention count
+        let q2 = supabase.from("problems").select("id", { count: "exact", head: true }).eq("section", currentTab);
 
-        let query = supabase
-          .from('problems')
-          .select('*', { count: 'exact' })
-          .eq('section', 'regular')
-          .order('created_at', { ascending: false })
-          .range(regularPage * PAGE_SIZE, (regularPage + 1) * PAGE_SIZE - 1);
-
-        if (search) {
-          query = query.or(`title.ilike.%${search}%,problem_text.ilike.%${search}%,category.ilike.%${search}%`);
+        if (currentTab === "olympiad") {
+          q1 = q1.in("publish_state", ["draft","review"]);
+          q2 = q2.or("skill_track.is.null,review_reason.is.null").in("publish_state", ["draft","review"]);
+        } else {
+          q2 = q2.eq("is_active", false);
         }
-        if (difficulty) query = query.eq('difficulty', difficulty);
-        if (age) query = query.eq('age_category', age);
-        if (status === 'true') query = query.eq('is_active', true);
-        if (status === 'false') query = query.eq('is_active', false);
 
-        const { data, error, count } = await query;
-
-        if (error) throw error;
-
-        currentRows = data || [];
-        renderRegularTable(currentRows);
-        $('regularRowCount').textContent = count || 0;
-
-        // KPIs
-        const { count: inactive } = await supabase
-          .from('problems')
-          .select('*', { count: 'exact', head: true })
-          .eq('section', 'regular')
-          .eq('is_active', false);
-        
-        $('regularCount').textContent = count || 0;
-        $('regularInactive').textContent = inactive || 0;
-
-      } catch (error) {
-        console.error('Error loading regular problems:', error);
-        toast('Error', 'Failed to load regular problems', 'danger');
+        const [r1, r2] = await Promise.all([q1, q2]);
+        $("kpiQueue").textContent = String(r1.count ?? "—");
+        $("kpiAttention").textContent = String(r2.count ?? "—");
+      } catch {
+        // ignore
       }
     }
 
-    async function loadOlympiadProblems() {
-      try {
-        const search = $('olympiadSearch').value.trim();
-        const skillTrack = $('olympiadSkillTrack').value;
-        const publishState = $('olympiadPublishState').value;
+    // ====== Data Fetch / Render ======
+    async function fetchRows(append=false) {
+      $("btnLoadMore").disabled = true;
 
-        let query = supabase
-          .from('problems')
-          .select('*', { count: 'exact' })
-          .eq('section', 'olympiad')
-          .order('created_at', { ascending: false })
-          .range(olympiadPage * PAGE_SIZE, (olympiadPage + 1) * PAGE_SIZE - 1);
+      const query = buildQuery();
+      const { data, error, count } = await query;
 
-        if (search) {
-          query = query.or(`title.ilike.%${search}%,problem_text.ilike.%${search}%,skill_track.ilike.%${search}%`);
-        }
-        if (skillTrack) query = query.eq('skill_track', skillTrack);
-        if (publishState) query = query.eq('publish_state', publishState);
+      if (error) {
+        toast("Query failed", error.message || String(error), "danger");
+        $("btnLoadMore").disabled = false;
+        return;
+      }
 
-        const { data, error, count } = await query;
+      $("rowCount").textContent = String(count ?? (append ? currentRows.length : (data?.length ?? 0)));
 
-        if (error) throw error;
+      const rows = (data ?? []);
+      if (append) currentRows = currentRows.concat(rows);
+      else currentRows = rows;
 
-        // Sort so incomplete problems appear first
-        const sorted = (data || []).sort((a,b) => {
+      // For olympiad, sort so "needs attention" appear first (client-side)
+      if (currentTab === "olympiad") {
+        currentRows.sort((a,b) => {
           const aBad = (!a.skill_track || !a.review_reason) ? 0 : 1;
           const bBad = (!b.skill_track || !b.review_reason) ? 0 : 1;
           if (aBad !== bBad) return aBad - bBad;
-          return new Date(b.created_at) - new Date(a.created_at);
+          return new Date(b.created_at ?? 0) - new Date(a.created_at ?? 0);
         });
-
-        currentRows = sorted;
-        renderOlympiadTable(sorted);
-        $('olympiadRowCount').textContent = count || 0;
-
-        // KPIs
-        const { count: queue } = await supabase
-          .from('problems')
-          .select('*', { count: 'exact', head: true })
-          .eq('section', 'olympiad')
-          .in('publish_state', ['draft', 'review']);
-        
-        const { count: attention } = await supabase
-          .from('problems')
-          .select('*', { count: 'exact', head: true })
-          .eq('section', 'olympiad')
-          .or('skill_track.is.null,review_reason.is.null')
-          .in('publish_state', ['draft', 'review']);
-        
-        $('olympiadQueue').textContent = queue || 0;
-        $('olympiadAttention').textContent = attention || 0;
-
-      } catch (error) {
-        console.error('Error loading olympiad problems:', error);
-        toast('Error', 'Failed to load olympiad problems', 'danger');
       }
+
+      renderTable(currentRows);
+      $("btnLoadMore").disabled = false;
     }
 
-    // ====== RENDER TABLES ======
-    function renderRegularTable(rows) {
-      const wrap = $('regularTableWrap');
-      
+    function renderTable(rows) {
+      const wrap = $("tableWrap");
       if (!rows || rows.length === 0) {
-        wrap.innerHTML = `<div style="padding: 40px; text-align: center;">
-          <div class="muted">No regular problems found. Try adjusting filters or click Quick Add to create one.</div>
-        </div>`;
+        wrap.innerHTML = `<div class="bd" style="padding:14px 16px;"><div class="muted">No rows yet. Try adjusting filters, or refresh.</div></div>`;
         return;
       }
 
-      const cols = ["Status", "Title", "Age", "Difficulty", "Category", "Created", "Actions"];
+      const isOlympiad = currentTab === "olympiad";
+      const cols = isOlympiad
+        ? ["Status", "Title", "Skill Track", "Tags", "Created", "Actions"]
+        : ["Status", "Title", "Age", "Difficulty", "Category", "Created", "Actions"];
+
       const head = `<thead><tr>${cols.map(c => `<th>${c}</th>`).join("")}</tr></thead>`;
 
       const body = rows.map(r => {
-        const status = badgeFor(r, 'regular');
+        const status = badgeFor(r);
         const title = `<div style="display:grid;gap:6px;">
-          <div style="font-weight:800;">${escapeHtml(r.title || "Untitled")}</div>
-          <div class="muted" style="line-height:1.3;">${escapeHtml(safePreview(r.problem_text, 120))}</div>
-          <div class="mono">${escapeHtml(r.id)}</div>
-        </div>`;
-        const age = `<span class="muted">${escapeHtml(r.age_category || "—")}</span>`;
-        const diff = `<span class="badge">${escapeHtml(r.difficulty || "—")}</span>`;
-        const cat = `<span class="muted">${escapeHtml(r.category || "—")}</span>`;
+            <div style="font-weight:800;">${escapeHtml(r.title || "Untitled")}</div>
+            <div class="muted" style="line-height:1.3;">${escapeHtml(safePreview(r.problem_text, 120))}</div>
+            <div class="mono">${escapeHtml(r.id)}</div>
+          </div>`;
+
+        const tags = Array.isArray(r.curriculum_tags) ? r.curriculum_tags : null;
+        const tagsCell = tags ? `<span class="mono">${escapeHtml(JSON.stringify(tags))}</span>` : `<span class="muted">—</span>`;
+
         const created = `<span class="muted">${escapeHtml(fmtTime(r.created_at))}</span>`;
+
         const actions = `<div class="actions">
-          <button class="btn" onclick="openEditModal('${r.id}', 'regular')">Edit</button>
-          <button class="btn ${r.is_active ? 'danger' : 'primary'}" onclick="toggleActive('${r.id}', 'regular')">${r.is_active ? "Deactivate" : "Activate"}</button>
-        </div>`;
-
-        return `<tr>
-          <td>${status}</td>
-          <td>${title}</td>
-          <td>${age}</td>
-          <td>${diff}</td>
-          <td>${cat}</td>
-          <td>${created}</td>
-          <td>${actions}</td>
-        </tr>`;
-      }).join("");
-
-      wrap.innerHTML = `<table>${head}<tbody>${body}</tbody></table>`;
-    }
-
-    function renderOlympiadTable(rows) {
-      const wrap = $('olympiadTableWrap');
-      
-      if (!rows || rows.length === 0) {
-        wrap.innerHTML = `<div style="padding: 40px; text-align: center;">
-          <div class="muted">No olympiad problems in queue. All problems are processed!</div>
-        </div>`;
-        return;
-      }
-
-      const cols = ["Status", "Title", "Skill Track", "Tags", "Created", "Actions"];
-      const head = `<thead><tr>${cols.map(c => `<th>${c}</th>`).join("")}</tr></thead>`;
-
-      const body = rows.map(r => {
-        const status = badgeFor(r, 'olympiad');
-        const title = `<div style="display:grid;gap:6px;">
-          <div style="font-weight:800;">${escapeHtml(r.title || "Untitled")}</div>
-          <div class="muted" style="line-height:1.3;">${escapeHtml(safePreview(r.problem_text, 120))}</div>
-          <div class="mono">${escapeHtml(r.id)}</div>
-        </div>`;
-        
-        const skill = r.skill_track 
-          ? `<span class="badge">${escapeHtml(r.skill_track)}</span>` 
-          : `<span class="badge warn">NULL</span>`;
-        
-        const skillDetail = r.review_reason 
-          ? `<div class="muted" style="margin-top:6px;line-height:1.35;">${escapeHtml(safePreview(r.review_reason, 90))}</div>`
-          : `<div class="badge warn" style="margin-top:6px;">No review_reason</div>`;
-        
-        const tags = Array.isArray(r.curriculum_tags) 
-          ? `<span class="mono">${escapeHtml(JSON.stringify(r.curriculum_tags))}</span>` 
-          : `<span class="muted">—</span>`;
-        
-        const created = `<span class="muted">${escapeHtml(fmtTime(r.created_at))}</span>`;
-        
-        const actions = `<div class="actions">
-          <button class="btn" onclick="openEditModal('${r.id}', 'olympiad')">Edit</button>
-          <button class="btn primary" onclick="quickAssign('${r.id}')">Quick Assign</button>
-        </div>`;
-
-        return `<tr>
-          <td>${status}</td>
-          <td>${title}</td>
-          <td>${skill}${skillDetail}</td>
-          <td>${tags}</td>
-          <td>${created}</td>
-          <td>${actions}</td>
-        </tr>`;
-      }).join("");
-
-      wrap.innerHTML = `<table>${head}<tbody>${body}</tbody></table>`;
-    }
-
-    // ====== MODAL FUNCTIONS (FROM ORIGINAL) ======
-    async function openEditModal(problemId, section) {
-      try {
-        const { data, error } = await supabase
-          .from('problems')
-          .select('*')
-          .eq('id', problemId)
-          .single();
-
-        if (error) throw error;
-
-        originalRow = structuredClone(data);
-        
-        $('mTitle').textContent = data.title || "Edit Problem";
-        $('mMeta').textContent = `Section: ${data.section} • Created: ${fmtTime(data.created_at)}`;
-        $('mFooterLeft').textContent = `ID: ${data.id}`;
-
-        $('f_title').value = data.title ?? "";
-        $('f_section').value = data.section ?? "";
-        $('f_age_category').value = data.age_category ?? "";
-        $('f_difficulty').value = "";
-        $('f_category').value = data.category ?? "";
-        $('f_tags').value = Array.isArray(data.curriculum_tags) ? JSON.stringify(data.curriculum_tags) : "";
-        $('f_problem_text').value = data.problem_text ?? "";
-        $('f_answer_key').value = data.answer_key ?? "";
-        $('f_solution_explanation').value = data.solution_explanation ?? "";
-        $('f_is_active').value = "";
-        $('f_updated_at').value = fmtTime(data.updated_at ?? data.created_at);
-
-        const isOlympiad = data.section === "olympiad";
-        $('olympiadFields').style.display = isOlympiad ? "" : "none";
+            <button class="btn" data-act="edit" data-id="${r.id}">Open</button>
+            ${
+              isOlympiad
+                ? `<button class="btn primary" data-act="quick-assign" data-id="${r.id}">Assign</button>`
+                : `<button class="btn" data-act="toggle-active" data-id="${r.id}">${r.is_active === false ? "Activate" : "Deactivate"}</button>`
+            }
+          </div>`;
 
         if (isOlympiad) {
-          $('f_skill_track').value = "";
-          $('f_review_reason').value = data.review_reason ?? "";
-          $('f_publish_state').value = "";
+          const skill = r.skill_track ? `<span class="badge">${escapeHtml(r.skill_track)}</span>` : `<span class="badge warn">NULL</span>`;
+          return `<tr>
+            <td>${status}</td>
+            <td>${title}</td>
+            <td>${skill}<div class="muted" style="margin-top:6px;line-height:1.35;">${escapeHtml(safePreview(r.review_reason, 90) || "")}</div></td>
+            <td>${tagsCell}</td>
+            <td>${created}</td>
+            <td>${actions}</td>
+          </tr>`;
+        } else {
+          const age = `<span class="muted">${escapeHtml(r.age_category || "—")}</span>`;
+          const diff = `<span class="badge">${escapeHtml(r.difficulty || "—")}</span>`;
+          const cat = `<span class="muted">${escapeHtml(r.category || "—")}</span>`;
+          return `<tr>
+            <td>${status}</td>
+            <td>${title}</td>
+            <td>${age}</td>
+            <td>${diff}</td>
+            <td>${cat}</td>
+            <td>${created}</td>
+            <td>${actions}</td>
+          </tr>`;
         }
+      }).join("");
 
-        $('modal').classList.add('show');
-      } catch (error) {
-        console.error('Error loading problem:', error);
-        toast('Error', 'Failed to load problem', 'danger');
-      }
+      wrap.innerHTML = `<table>${head}<tbody>${body}</tbody></table>`;
     }
 
-    window.openEditModal = openEditModal;
+    // ====== Modal (Edit) ======
+    function openModal(row) {
+      originalRow = structuredClone(row);
+      $("mTitle").textContent = row.title || "Edit Problem";
+      $("mMeta").textContent = `Section: ${row.section} • Created: ${fmtTime(row.created_at)}`;
+      $("mFooterLeft").textContent = `ID: ${row.id}`;
+
+      $("f_title").value = row.title ?? "";
+      $("f_section").value = row.section ?? "";
+      $("f_age_category").value = row.age_category ?? "";
+      $("f_difficulty").value = "";
+      $("f_category").value = row.category ?? "";
+      $("f_tags").value = Array.isArray(row.curriculum_tags) ? JSON.stringify(row.curriculum_tags) : "";
+      $("f_problem_text").value = row.problem_text ?? "";
+      $("f_answer_key").value = row.answer_key ?? "";
+      $("f_solution_explanation").value = row.solution_explanation ?? "";
+      $("f_is_active").value = "";
+      $("f_updated_at").value = fmtTime(row.updated_at ?? row.created_at);
+
+      const isOlympiad = row.section === "olympiad";
+      $("olympiadFields").style.display = isOlympiad ? "" : "none";
+
+      if (isOlympiad) {
+        $("f_skill_track").value = "";
+        $("f_review_reason").value = row.review_reason ?? "";
+        $("f_publish_state").value = "";
+      }
+
+      $("modal").classList.add("show");
+    }
 
     function closeModal() {
-      $('modal').classList.remove('show');
+      $("modal").classList.remove("show");
       originalRow = null;
     }
 
@@ -1387,49 +1107,37 @@
 
       const payload = {};
 
-      if ($('f_title').value.trim() !== originalRow.title) 
-        payload.title = $('f_title').value.trim();
+      // Always safe fields
+      if ($("f_title").value.trim() !== originalRow.title) payload.title = $("f_title").value.trim();
 
-      if ($('f_difficulty').value) 
-        payload.difficulty = $('f_difficulty').value;
+      // Only update difficulty if user selected one explicitly
+      if ($("f_difficulty").value) payload.difficulty = $("f_difficulty").value;
 
-      const age = $('f_age_category').value.trim();
-      if (age !== (originalRow.age_category ?? "")) 
-        payload.age_category = age;
+      const age = $("f_age_category").value.trim();
+      if (age !== (originalRow.age_category ?? "")) payload.age_category = age;
 
-      const cat = $('f_category').value.trim();
-      if (cat !== (originalRow.category ?? "")) 
-        payload.category = cat;
+      const cat = $("f_category").value.trim();
+      if (cat !== (originalRow.category ?? "")) payload.category = cat;
 
-      const tags = parseJsonArray($('f_tags').value);
+      const tags = parseJsonArray($("f_tags").value);
       if (tags !== null) payload.curriculum_tags = tags;
 
-      const pt = $('f_problem_text').value;
-      if (pt !== (originalRow.problem_text ?? "")) 
-        payload.problem_text = pt;
+      const pt = $("f_problem_text").value;
+      if (pt !== (originalRow.problem_text ?? "")) payload.problem_text = pt;
 
-      const ak = $('f_answer_key').value;
-      if (ak !== (originalRow.answer_key ?? "")) 
-        payload.answer_key = ak;
+      const ak = $("f_answer_key").value;
+      if (ak !== (originalRow.answer_key ?? "")) payload.answer_key = ak;
 
-      const se = $('f_solution_explanation').value;
-      if (se !== (originalRow.solution_explanation ?? "")) 
-        payload.solution_explanation = se;
+      const se = $("f_solution_explanation").value;
+      if (se !== (originalRow.solution_explanation ?? "")) payload.solution_explanation = se;
 
-      if ($('f_is_active').value) 
-        payload.is_active = ($('f_is_active').value === "true");
+      if ($("f_is_active").value) payload.is_active = ($("f_is_active").value === "true");
 
-      // OLYMPIAD-SPECIFIC (FROM ORIGINAL)
       if (originalRow.section === "olympiad") {
-        if ($('f_skill_track').value) 
-          payload.skill_track = $('f_skill_track').value;
-        
-        const rr = $('f_review_reason').value.trim();
-        if (rr !== (originalRow.review_reason ?? "")) 
-          payload.review_reason = rr;
-        
-        if ($('f_publish_state').value) 
-          payload.publish_state = $('f_publish_state').value;
+        if ($("f_skill_track").value) payload.skill_track = $("f_skill_track").value;
+        const rr = $("f_review_reason").value.trim();
+        if (rr !== (originalRow.review_reason ?? "")) payload.review_reason = rr;
+        if ($("f_publish_state").value) payload.publish_state = $("f_publish_state").value;
       }
 
       return payload;
@@ -1444,37 +1152,17 @@
         return;
       }
 
-            // OLYMPIAD SAFETY CHECK (enterprise): block unsafe publish transitions
-            if (originalRow.section === "olympiad") {
-              const nextPublish = payload.publish_state ?? originalRow.publish_state;
-              const nextSkill = payload.skill_track ?? originalRow.skill_track;
-              const nextReason = payload.review_reason ?? originalRow.review_reason;
+      // Olympiad safety: if user sets skill_track, encourage review_reason
+      if (originalRow.section === "olympiad") {
+        const nextSkill = payload.skill_track ?? originalRow.skill_track;
+        const nextReason = payload.review_reason ?? originalRow.review_reason;
+        if (nextSkill && !nextReason) {
+          toast("Olympiad policy", "Please add review_reason for auditability before publishing.");
+          // Still allow save, but warn.
+        }
+      }
 
-              // 1) If skill_track provided, it must be one of the allowed values.
-              if (nextSkill != null && String(nextSkill).trim() !== "" && !ALLOWED_SKILL_TRACKS.includes(String(nextSkill))) {
-                toast(
-                  "Invalid skill_track",
-                  `skill_track must be one of: ${ALLOWED_SKILL_TRACKS.join(", ")}`,
-                  "danger"
-                );
-                return;
-              }
-
-              // 2) If moving into review/published, require explainable assignment.
-              if (
-                (nextPublish === "review" || nextPublish === "published") &&
-                (!nextSkill || String(nextSkill).trim() === "" || !nextReason || String(nextReason).trim() === "")
-              ) {
-                toast(
-                  "Blocked: Olympiad requires explainable assignment",
-                  "Before setting publish_state to review/published, you MUST set both skill_track and review_reason.",
-                  "danger"
-                );
-                return;
-              }
-            }
-
-            const { error } = await supabase
+      const { error } = await supabase
         .from("problems")
         .update(payload)
         .eq("id", originalRow.id);
@@ -1486,183 +1174,496 @@
 
       toast("Saved", "Problem updated successfully.");
       closeModal();
-      loadViewData(currentView);
+      refresh();
     }
 
-    async function toggleActive(problemId, section) {
-      const row = currentRows.find(r => r.id === problemId);
-      if (!row) return;
-      
-      const next = !(row.is_active === true);
-      const { error } = await supabase
-        .from("problems")
-        .update({ is_active: next })
-        .eq("id", problemId);
-
-      if (error) {
-        toast("Update failed", error.message || String(error), "danger");
-        return;
-      }
-
-      toast("Updated", next ? "Activated" : "Deactivated");
-      loadViewData(currentView);
-    }
-
-    window.toggleActive = toggleActive;
-
-    async function archiveProblem() {
-      if (!originalRow) return;
-      
+    async function archiveProblem(id) {
+      // Enterprise-safe default: soft archive.
+      // Uses is_active=false, and publish_state='archived' if the column exists / accepted.
+      const row = currentRows.find(r => r.id === id);
       const payload = { is_active: false };
-      if (originalRow.section === "olympiad") 
-        payload.publish_state = "archived";
+      if (row?.section === "olympiad") payload.publish_state = "archived";
 
-      const { error } = await supabase
-        .from("problems")
-        .update(payload)
-        .eq("id", originalRow.id);
-
+      const { error } = await supabase.from("problems").update(payload).eq("id", id);
       if (error) {
         toast("Archive failed", error.message || String(error), "danger");
         return;
       }
-
-      toast("Archived", "Problem archived successfully.");
+      toast("Archived", "Problem was archived (is_active=false).");
       closeModal();
-      loadViewData(currentView);
+      refresh();
     }
 
-    async function quickAssign(problemId) {
-      // Open modal in olympiad mode
-      await openEditModal(problemId, 'olympiad');
-      
-      toast("Quick Assign", "Set skill_track and review_reason, then save.");
+    async function toggleActive(id) {
+      const row = currentRows.find(r => r.id === id);
+      if (!row) return;
+      const next = !(row.is_active === true);
+      const { error } = await supabase.from("problems").update({ is_active: next }).eq("id", id);
+      if (error) {
+        toast("Update failed", error.message || String(error), "danger");
+        return;
+      }
+      toast("Updated", next ? "Activated" : "Deactivated");
+      refresh();
     }
 
-    window.quickAssign = quickAssign;
+    async function quickAssign(id) {
+      // Mini-flow for olympiad: set skill_track + review_reason quickly.
+      const row = currentRows.find(r => r.id === id);
+      if (!row) return;
 
-    // ====== QUICK ADD (FROM ORIGINAL) ======
-    async function createQuickProblem() {
-      const title = $('a_title').value.trim();
-      const age = $('a_age_category').value.trim();
-      const difficulty = $('a_difficulty').value;
-      const category = $('a_category').value.trim();
-      const problem_text = $('a_problem_text').value.trim();
-      const answer_key = $('a_answer_key').value.trim();
-      const solution = $('a_solution_explanation').value.trim();
+      const defaultSkill = (() => {
+        const tags = Array.isArray(row.curriculum_tags) ? row.curriculum_tags.join(" ").toLowerCase() : "";
+        const title = (row.title || "").toLowerCase();
+        const blob = `${title} ${tags} ${(row.category||"").toLowerCase()}`;
+        if (blob.includes("geometry") || blob.includes("angle")) return "geometry_no_formulas";
+        if (blob.includes("divis")) return "divisibility";
+        if (blob.includes("count")) return "counting";
+        if (blob.includes("pattern")) return "patterns";
+        if (blob.includes("invariant")) return "invariants";
+        if (blob.includes("worst")) return "worst_case";
+        return "mixed";
+      })();
+
+      const reason = `Manual assignment: title/tags indicate ${defaultSkill}.`;
+      const { error } = await supabase
+        .from("problems")
+        .update({
+          skill_track: defaultSkill,
+          review_reason: row.review_reason || reason
+        })
+        .eq("id", id);
+
+      if (error) {
+        toast("Assign failed", error.message || String(error), "danger");
+        return;
+      }
+      toast("Assigned", `skill_track → ${defaultSkill}`);
+      refresh();
+    }
+
+    // ====== Quick Add (Regular) ======
+    function openAdd() {
+      $("modalAdd").classList.add("show");
+      $("a_title").value = "";
+      $("a_age_category").value = "";
+      $("a_difficulty").value = "medium";
+      $("a_category").value = "";
+      $("a_tags").value = "";
+      $("a_problem_text").value = "";
+      $("a_answer_key").value = "";
+      $("a_solution_explanation").value = "";
+    }
+    function closeAdd() { $("modalAdd").classList.remove("show"); }
+
+    async function createRegular() {
+      const title = $("a_title").value.trim();
+      const age_category = $("a_age_category").value.trim();
+      const difficulty = $("a_difficulty").value;
+      const category = $("a_category").value.trim();
+      const tags = parseJsonArray($("a_tags").value) ?? [];
+      const problem_text = $("a_problem_text").value;
+      const answer_key = $("a_answer_key").value;
+      const solution_explanation = $("a_solution_explanation").value;
 
       if (!title || !problem_text) {
-        toast("Validation", "Title and problem text are required.");
+        toast("Missing fields", "Title and Problem Text are required.");
         return;
       }
 
-      const newProblem = {
-        section: 'regular',
+      const payload = {
+        section: "regular",
         title,
-        age_category: age || null,
-        difficulty: difficulty || 'medium',
-        category: category || null,
+        age_category,
+        difficulty,
+        category,
+        curriculum_tags: tags,
         problem_text,
-        answer_key: answer_key || null,
-        solution_explanation: solution || null,
-        is_active: true,
-        created_at: new Date().toISOString()
+        answer_key,
+        solution_explanation,
+        is_active: true
       };
 
-      const { error } = await supabase
-        .from('problems')
-        .insert([newProblem]);
-
+      const { error } = await supabase.from("problems").insert(payload);
       if (error) {
         toast("Create failed", error.message || String(error), "danger");
         return;
       }
-
-      toast("Created", "Regular problem created successfully!");
-      $('modalAdd').classList.remove('show');
-      
-      // Clear form
-      $('a_title').value = '';
-      $('a_age_category').value = '';
-      $('a_category').value = '';
-      $('a_problem_text').value = '';
-      $('a_answer_key').value = '';
-      $('a_solution_explanation').value = '';
-
-      if (currentView === 'regular') {
-        loadRegularProblems();
-      }
+      toast("Created", "Regular problem added.");
+      closeAdd();
+      setTab("regular");
     }
 
-    // ====== EVENT LISTENERS ======
-    $('btnRefresh')?.addEventListener('click', () => loadViewData(currentView));
-    $('btnQuickAdd')?.addEventListener('click', () => $('modalAdd').classList.add('show'));
-    
-    $('btnClose')?.addEventListener('click', closeModal);
-    $('btnSave')?.addEventListener('click', saveEdits);
-    $('btnArchive')?.addEventListener('click', archiveProblem);
-    $('btnReset')?.addEventListener('click', () => {
-      if (originalRow) openEditModal(originalRow.id, originalRow.section);
-    });
-    $('btnCopyId')?.addEventListener('click', () => {
-      if (originalRow) {
-        navigator.clipboard.writeText(originalRow.id);
-        toast("Copied", "Problem ID copied to clipboard");
-      }
-    });
+    // ====== Main refresh ======
+    async function refresh() {
+      await refreshKpis();
+      await fetchRows(false);
+    }
 
-    $('btnAddClose')?.addEventListener('click', () => $('modalAdd').classList.remove('show'));
-    $('btnAddCreate')?.addEventListener('click', createQuickProblem);
+    // ====== Wire up ======
+    function wire() {
+      fillSkillTrackDropdowns();
 
-    $('btnApplyRegular')?.addEventListener('click', () => {
-      regularPage = 0;
-      loadRegularProblems();
-    });
-    
-    $('btnApplyOlympiad')?.addEventListener('click', () => {
-      olympiadPage = 0;
-      loadOlympiadProblems();
-    });
+      document.querySelectorAll(".tab").forEach(btn => {
+        btn.addEventListener("click", () => setTab(btn.dataset.tab));
+      });
 
-    $('btnLoadMoreRegular')?.addEventListener('click', () => {
-      regularPage++;
-      loadRegularProblems();
-    });
+      $("btnApply").addEventListener("click", () => {
+        page = 0;
+        refresh();
+      });
 
-    $('btnLoadMoreOlympiad')?.addEventListener('click', () => {
-      olympiadPage++;
-      loadOlympiadProblems();
-    });
+      $("btnRefresh").addEventListener("click", () => {
+        page = 0;
+        refresh();
+      });
 
-    $('btnResetRegular')?.addEventListener('click', () => {
-      $('regularSearch').value = '';
-      $('regularDifficulty').value = '';
-      $('regularAge').value = '';
-      $('regularStatus').value = 'true';
-      regularPage = 0;
-      loadRegularProblems();
-    });
-    // Expose functions used by inline onclick handlers
-    Object.assign(window, { switchMainView, openEditModal, toggleActive, quickAssign });
+      $("btnLoadMore").addEventListener("click", async () => {
+        page += 1;
+        await fetchRows(true);
+      });
 
-    // Header actions
-    $('btnLogout')?.addEventListener('click', async () => {
-      try {
-        await supabase.auth.signOut();
-      } catch (e) {
-        console.warn('Logout failed', e);
-      } finally {
-        // If you have a dedicated login page, redirect there instead:
-        // window.location.href = '/admin-login.html';
-        window.location.reload();
-      }
-    });
+      $("tableWrap").addEventListener("click", (e) => {
+        const b = e.target.closest("button");
+        if (!b) return;
+        const id = b.dataset.id;
+        const act = b.dataset.act;
+        if (!id || !act) return;
+
+        if (act === "edit") {
+          const row = currentRows.find(r => r.id === id);
+          if (row) openModal(row);
+        }
+        if (act === "toggle-active") toggleActive(id);
+        if (act === "quick-assign") quickAssign(id);
+      });
+
+      $("btnClose").addEventListener("click", closeModal);
+      $("btnReset").addEventListener("click", () => {
+        if (originalRow) openModal(originalRow);
+      });
+      $("btnSave").addEventListener("click", saveEdits);
+
+      $("btnArchive").addEventListener("click", () => {
+        if (!originalRow) return;
+        const ok = confirm("Archive this problem? (Sets is_active=false. Olympiad also sets publish_state=archived.)");
+        if (ok) archiveProblem(originalRow.id);
+      });
+
+      $("btnCopyId").addEventListener("click", async () => {
+        if (!originalRow) return;
+        await navigator.clipboard.writeText(originalRow.id);
+        toast("Copied", "Problem ID copied to clipboard.");
+      });
+
+      // Quick Add
+      $("btnQuickAdd").addEventListener("click", openAdd);
+      $("btnAddClose").addEventListener("click", closeAdd);
+      $("btnAddCreate").addEventListener("click", createRegular);
+
+      // Escape to close
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          if ($("modal").classList.contains("show")) closeModal();
+          if ($("modalAdd").classList.contains("show")) closeAdd();
+        }
+      });
+
+      // Click backdrop to close
+      $("modal").addEventListener("click", (e) => {
+        if (e.target === $("modal")) closeModal();
+      });
+      $("modalAdd").addEventListener("click", (e) => {
+        if (e.target === $("modalAdd")) closeAdd();
+      });
+    }
+
+    wire();
+    refresh();
+  
+// --- Enterprise navigation + optional Auth ---
+const LP_SITE_URL = localStorage.getItem("lp_site_url") || "./";
+const LP_STUDENT_DASH_URL = localStorage.getItem("lp_student_dash_url") || "./";
+
+const btnVisitSite = document.getElementById("btnVisitSite");
+const btnStudentDash = document.getElementById("btnStudentDash");
+btnVisitSite?.addEventListener("click", () => window.open(LP_SITE_URL, "_blank", "noopener"));
+btnStudentDash?.addEventListener("click", () => window.open(LP_STUDENT_DASH_URL, "_blank", "noopener"));
+
+// Nav view switching (keeps your existing Regular/Olympiad logic intact)
+const navEl = document.querySelector(".lp-nav");
+const setNavActive = (view) => {
+  if (!navEl) return;
+  navEl.querySelectorAll(".lp-tab").forEach(el => el.classList.remove("is-active"));
+  const active = navEl.querySelector(`[data-view="${view}"]`);
+  active?.classList.add("is-active");
+};
+
+navEl?.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-view]");
+  if (!el) return;
+  const view = el.getAttribute("data-view");
+  if (!view) return;
+  // Links open in new tab; don't toggle active for them
+  if (el.tagName.toLowerCase() === "a") return;
+
+  if (view === "regular") {
+    document.querySelector('.tab[data-tab="regular"]')?.click();
+    setNavActive("regular");
+  } else if (view === "olympiad") {
+    document.querySelector('.tab[data-tab="olympiad"]')?.click();
+    setNavActive("olympiad");
+  } else if (view === "dashboard") {
+    // Dashboard = whichever mode is selected; just scroll top for now
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setNavActive("dashboard");
+  } else if (view === "users") {
+    setNavActive("users");
+    alert("Users panel is coming next. We'll wire this once you enable Auth/RLS for enterprise-grade admin roles.");
+  }
+});
+
+// --- Auth + RLS (ENFORCED) ---
+(async () => {
+const btnAuth = document.getElementById("btnAuth");
+const btnLogout = document.getElementById("btnLogout");
+const btnRoles = document.getElementById("btnRoles");
+
+const authBackdrop = document.getElementById("authBackdrop");
+const authClose = document.getElementById("authClose");
+const authCancel = document.getElementById("authCancel");
+const authEmail = document.getElementById("authEmail");
+const authPassword = document.getElementById("authPassword");
+const authSignIn = document.getElementById("authSignIn");
+const authMsg = document.getElementById("authMsg");
+
+const rolesBackdrop = document.getElementById("rolesBackdrop");
+const rolesClose = document.getElementById("btnRolesClose");
+const rolesEmail = document.getElementById("rolesEmail");
+const rolesRole = document.getElementById("rolesRole");
+const rolesStatus = document.getElementById("rolesStatus");
+const rolesOutput = document.getElementById("rolesOutput");
+
+const openAuth = () => { authBackdrop.hidden = false; authEmail?.focus(); };
+const closeAuth = () => { authBackdrop.hidden = true; authMsg.textContent = ""; };
+
+authClose?.addEventListener("click", closeAuth);
+authCancel?.addEventListener("click", closeAuth);
+authBackdrop?.addEventListener("click", (e) => { if (e.target === authBackdrop) closeAuth(); });
+btnAuth?.addEventListener("click", openAuth);
+
+function lockApp(locked){
+  const lock = document.getElementById("appLock");
+  if(!lock) return;
+  lock.hidden = !locked;
+}
+
+let currentUser = null;
+let currentRoles = [];
+
+async function loadMyRoles(){
+  currentRoles = [];
+  if(!currentUser) return;
+  const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", currentUser.id);
+  if(error){
+    console.warn("Could not load roles. Run the Step 5.3 SQL.", error);
+    currentRoles = [];
+    return;
+  }
+  currentRoles = (data || []).map(r => r.role);
+}
+
+function hasRole(role){ return currentRoles.includes(role); }
+
+function applyRoleGates(){
+  const isSuper = hasRole("super_admin");
+  const canRegular = isSuper || hasRole("admin_regular");
+  const canOlympiad = isSuper || hasRole("admin_olympiad");
+  const canRead = canRegular || canOlympiad || isSuper || hasRole("support_readonly");
+
+  if(btnRoles) btnRoles.style.display = isSuper ? "inline-flex" : "none";
+
+  const tReg = document.getElementById("toggleRegular");
+  const tOly = document.getElementById("toggleOlympiad");
+  if(tReg) tReg.disabled = !canRegular;
+  if(tOly) tOly.disabled = !canOlympiad;
+
+  if(canRegular && !canOlympiad) state.mode = "regular";
+  if(canOlympiad && !canRegular) state.mode = "olympiad";
+
+  if(!canRead){
+    lockApp(true);
+    toast("No admin role assigned yet. Ask a super_admin to assign you a role.");
+  }
+}
+
+async function refreshAuthUI(){
+  const { data } = await supabase.auth.getSession();
+  const session = data?.session;
+  currentUser = session?.user || null;
+
+  if(currentUser){
+    btnAuth.hidden = true;
+    btnLogout.hidden = false;
+    btnLogout.textContent = `Log out (${currentUser.email || "admin"})`;
+    await loadMyRoles();
+    applyRoleGates();
+    lockApp(false);
+  } else {
+    btnAuth.hidden = false;
+    btnLogout.hidden = true;
+    btnLogout.textContent = "Log out";
+    lockApp(true);
+  }
+}
+
+authSignIn?.addEventListener("click", async () => {
+  const email = (authEmail?.value || "").trim();
+  const password = authPassword?.value || "";
+  authMsg.textContent = "Signing in…";
+  try {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    authMsg.textContent = "Signed in.";
+    await refreshAuthUI();
+    setTimeout(closeAuth, 350);
+    await refresh();
+  } catch (err) {
+    authMsg.textContent = `Sign in failed: ${err?.message || err}`;
+  }
+});
+
+btnLogout?.addEventListener("click", async () => {
+  try { await supabase.auth.signOut(); } catch (_) {}
+  await refreshAuthUI();
+  await refresh();
+});
+
+// Enforce login: if user closes auth without signing in, keep locked
+const _closeAuth = closeAuth;
+function enforcedCloseAuth(){
+  _closeAuth();
+  if(!currentUser) lockApp(true);
+}
+authClose?.removeEventListener("click", closeAuth);
+authCancel?.removeEventListener("click", closeAuth);
+authClose?.addEventListener("click", enforcedCloseAuth);
+authCancel?.addEventListener("click", enforcedCloseAuth);
+
+// Roles modal
+function openRoles(){
+  rolesBackdrop.hidden = false;
+  rolesEmail?.focus();
+  rolesStatus.textContent = "";
+  rolesOutput.textContent = "";
+}
+function closeRoles(){
+  rolesBackdrop.hidden = true;
+  rolesStatus.textContent = "";
+}
+btnRoles?.addEventListener("click", openRoles);
+rolesClose?.addEventListener("click", closeRoles);
+rolesBackdrop?.addEventListener("click", (e) => { if(e.target === rolesBackdrop) closeRoles(); });
+
+document.getElementById("btnSetRole")?.addEventListener("click", async () => {
+  const email = (rolesEmail?.value || "").trim();
+  const role = rolesRole?.value;
+  if(!email) return toast("Enter an email");
+  rolesStatus.textContent = "Assigning…";
+  const { data, error } = await supabase.rpc("admin_set_role", { target_email: email, new_role: role });
+  rolesOutput.textContent = JSON.stringify({ data, error }, null, 2);
+  rolesStatus.textContent = error ? "Failed" : "Done";
+  if(!error) toast("Role assigned");
+});
+
+document.getElementById("btnListRoles")?.addEventListener("click", async () => {
+  await loadMyRoles();
+  rolesOutput.textContent = JSON.stringify({ user: currentUser?.email, roles: currentRoles }, null, 2);
+});
+
+// Auth state changes
+supabase.auth.onAuthStateChange(async (_event, session) => {
+  currentUser = session?.user || null;
+  await refreshAuthUI();
+  await refresh();
+});
+
+// Initialize (locked until signed-in)
+await refreshAuthUI();
+if(!currentUser) openAuth();
+// Initial load (will show empty/error until signed-in if RLS enabled)
+await refresh();
+})();
 
 
+</script>
 
-    // ====== INITIALIZATION ======
-    fillSkillTrackDropdowns();
-    loadDashboardStats();
-  </script>
+  <!-- Auth modal (optional; becomes required when you enable RLS later) -->
+  <div class="lp-modal-backdrop" id="authBackdrop" hidden>
+    <div class="lp-modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <div class="lp-modal-head">
+        <h3 id="authTitle">Admin sign in</h3>
+        <button class="lp-icon-btn" id="authClose" aria-label="Close">✕</button>
+      </div>
+      <div class="lp-modal-body">
+        <p class="lp-muted">This console is protected by Supabase Auth + Row Level Security (RLS). You must sign in to continue.</p>
+        <div class="lp-form">
+          <label>Email</label>
+          <input id="authEmail" type="email" placeholder="admin@logicpals.com" autocomplete="username" />
+          <label>Password</label>
+          <input id="authPassword" type="password" placeholder="••••••••" autocomplete="current-password" />
+          <div class="lp-form-row">
+            <button class="lp-btn" id="authSignIn">Sign in</button>
+            <button class="lp-btn lp-btn-ghost" id="authCancel">Cancel</button>
+          </div>
+          <div class="lp-note" id="authMsg" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Roles Modal (super admin) -->
+  <div class="lp-modal-backdrop" id="rolesBackdrop" hidden>
+    <div class="lp-modal" role="dialog" aria-modal="true" aria-labelledby="rolesTitle" style="max-width:760px;">
+      <div class="lp-modal-head">
+        <h3 id="rolesTitle">Admin roles</h3>
+        <button class="lp-icon-btn" id="btnRolesClose" aria-label="Close">✕</button>
+      </div>
+      <div class="lp-modal-body">
+        <p class="lp-muted">Assign enterprise-grade roles for this console. Only <b>super_admin</b> can change roles.</p>
+
+        <div class="lp-grid-2">
+          <div>
+            <label class="lp-label">User email</label>
+            <input class="lp-input" id="rolesEmail" placeholder="e.g. reviewer@logicpals.com" />
+            <div class="lp-muted" style="margin-top:6px;">The user must have signed up at least once (exists in <code>auth.users</code>).</div>
+          </div>
+          <div>
+            <label class="lp-label">Role</label>
+            <select class="lp-select" id="rolesRole">
+              <option value="admin_regular">admin_regular — manage Regular problems</option>
+              <option value="admin_olympiad">admin_olympiad — manage Olympiad review</option>
+              <option value="support_readonly">support_readonly — view only</option>
+              <option value="super_admin">super_admin — full control</option>
+            </select>
+            <div class="lp-muted" style="margin-top:6px;">Tip: keep <b>super_admin</b> very small (1–2 people).</div>
+          </div>
+        </div>
+
+        <div class="lp-form-row" style="margin-top:12px; gap:10px;">
+          <button class="lp-btn" id="btnSetRole">Assign role</button>
+          <button class="lp-btn lp-btn-ghost" id="btnListRoles">List my roles</button>
+          <div class="lp-note" id="rolesStatus" style="margin-left:auto;"></div>
+        </div>
+
+        <pre class="lp-code" id="rolesOutput" style="max-height:220px; overflow:auto; margin-top:12px;"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- App lock (blocks UI until signed in) -->
+  <div id="appLock" hidden style="position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter: blur(6px); z-index:50;"></div>
+
 </body>
 </html>
