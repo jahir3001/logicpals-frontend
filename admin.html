@@ -1483,6 +1483,11 @@ function applyRoleGates(){
 
   if(btnRoles) btnRoles.style.display = isSuper ? "inline-flex" : "none";
 
+  // Safety: if a non-super user somehow has the Roles modal open, close it.
+  try{
+    if(!isSuper && rolesBackdrop && rolesBackdrop.hidden === false) closeRoles();
+  }catch(_e){}
+
   const tReg = document.getElementById("toggleRegular");
   const tOly = document.getElementById("toggleOlympiad");
   if(tReg) tReg.disabled = !canRegular;
@@ -1569,11 +1574,46 @@ document.getElementById("btnSetRole")?.addEventListener("click", async () => {
   const email = (rolesEmail?.value || "").trim();
   const role = rolesRole?.value;
   if(!email) return toast("Enter an email");
+
+  // UX: prevent double-submits
+  const btn = document.getElementById("btnSetRole");
+  if(btn) btn.disabled = true;
+
   rolesStatus.textContent = "Assigning…";
-  const { data, error } = await supabase.rpc("admin_set_role", { target_email: email, new_role: role });
-  rolesOutput.textContent = JSON.stringify({ data, error }, null, 2);
-  rolesStatus.textContent = error ? "Failed" : "Done";
-  if(!error) toast("Role assigned");
+  rolesOutput.textContent = "";
+
+  // Hard timeout so the UI never gets stuck forever (common on CORS/auth/RLS issues)
+  const timeoutMs = 15000;
+  const withTimeout = (p) => Promise.race([
+    p,
+    new Promise((_, rej) => setTimeout(() => rej(new Error("Timed out (15s). Check browser console/network for the failed request.")), timeoutMs))
+  ]);
+
+  try{
+    const { data, error } = await withTimeout(supabase.rpc("admin_set_role", { target_email: email, new_role: role }));
+    rolesOutput.textContent = JSON.stringify({ data, error }, null, 2);
+
+    if(error){
+      rolesStatus.textContent = "Failed";
+      toast("Role assignment failed (see details). Most common: you're not signed in, or you're not super_admin, or RLS is blocking.");
+      console.error("admin_set_role error:", error);
+      return;
+    }
+
+    rolesStatus.textContent = "Done";
+    toast("Role assigned");
+
+    // Close the modal after success (you can re-open from Users → Roles anytime)
+    closeRoles();
+
+  }catch(e){
+    rolesStatus.textContent = "Failed";
+    rolesOutput.textContent = JSON.stringify({ error: String(e?.message || e) }, null, 2);
+    toast("Role assignment failed (network/timeout). Open DevTools → Console/Network to see why.");
+    console.error(e);
+  }finally{
+    if(btn) btn.disabled = false;
+  }
 });
 
 document.getElementById("btnListRoles")?.addEventListener("click", async () => {
