@@ -380,6 +380,11 @@
   padding: 24px;
   z-index: 50;
 }
+
+/* Ensure hidden modals stay hidden (author CSS overrides UA [hidden]) */
+.lp-modal-backdrop[hidden]{display:none !important;}
+.lp-app-lock[hidden]{display:none !important;}
+
 .lp-modal{
   width: min(560px, 100%);
   background: rgba(16,24,32,.92);
@@ -774,6 +779,25 @@
   <div class="toast" id="toast"></div>
 
   <script type="module">
+
+    // --- IMPORTANT: kill old Service Worker caches for this scope ---
+    // We previously served admin.html through a Service Worker, which can keep an older version of this file
+    // and make it look like fixes "didn't deploy". On admin.html we *always* unregister SW to avoid that.
+    (async () => {
+      try {
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(r => r.unregister()));
+        }
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+      } catch (e) {
+        // ignore
+      }
+    })();
+
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
     // NOTE: Later move these keys to a secure config layer (roadmap Step 5+).
