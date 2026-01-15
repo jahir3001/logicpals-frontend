@@ -1428,6 +1428,7 @@ navEl?.addEventListener("click", (e) => {
 const btnAuth = document.getElementById("btnAuth");
 const btnLogout = document.getElementById("btnLogout");
 const btnRoles = document.getElementById("btnRoles");
+btnRoles.addEventListener('click', () => openRoles());
 
 const authBackdrop = document.getElementById("authBackdrop");
 const authClose = document.getElementById("authClose");
@@ -1483,7 +1484,8 @@ function applyRoleGates(){
 
   if(btnRoles) btnRoles.style.display = isSuper ? "inline-flex" : "none";
 
-  // Safety: if a non-super user somehow has the Roles modal open, close it.
+    if(!hasRole('super_admin')) closeRoles();
+// Safety: if a non-super user somehow has the Roles modal open, close it.
   try{
     if(!isSuper && rolesBackdrop && rolesBackdrop.hidden === false) closeRoles();
   }catch(_e){}
@@ -1512,6 +1514,7 @@ async function refreshAuthUI(){
     btnLogout.hidden = false;
     btnLogout.textContent = `Log out (${currentUser.email || "admin"})`;
     await loadMyRoles();
+  btnRoles.style.display = (currentUser && (currentRoles || []).includes('super_admin')) ? 'inline-flex' : 'none';
     applyRoleGates();
     lockApp(false);
   } else {
@@ -1556,7 +1559,9 @@ authClose?.addEventListener("click", enforcedCloseAuth);
 authCancel?.addEventListener("click", enforcedCloseAuth);
 
 // Roles modal
-function openRoles(){
+function openRoles() {
+  if (!currentUser) { openAuth(); toast('Please sign in first.'); return; }
+  if (!(currentRoles || []).includes('super_admin')) { toast('Only super_admin can assign roles.'); return; }
   rolesBackdrop.hidden = false;
   rolesEmail?.focus();
   rolesStatus.textContent = "";
@@ -1628,6 +1633,7 @@ supabase.auth.onAuthStateChange(async (_event, session) => {
   await refresh();
 });
 
+closeRoles();
 // Initialize (locked until signed-in)
 await refreshAuthUI();
 if(!currentUser) openAuth();
@@ -1664,7 +1670,7 @@ await refresh();
 
 
   <!-- Roles Modal (super admin) -->
-  <div class="lp-modal-backdrop" id="rolesBackdrop" style="display:none">
+  <div class="lp-modal-backdrop" id="rolesBackdrop" hidden>
     <div class="lp-modal" role="dialog" aria-modal="true" aria-labelledby="rolesTitle" style="max-width:760px;">
       <div class="lp-modal-head">
         <h3 id="rolesTitle">Admin roles</h3>
