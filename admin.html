@@ -1576,48 +1576,66 @@ rolesClose?.addEventListener("click", closeRoles);
 rolesBackdrop?.addEventListener("click", (e) => { if(e.target === rolesBackdrop) closeRoles(); });
 
 document.getElementById("btnSetRole")?.addEventListener("click", async () => {
-  const email = (rolesEmail?.value || "").trim();
-  const role = rolesRole?.value;
-  if(!email) return toast("Enter an email");
+  const email = (document.getElementById("roleEmail")?.value || "").trim();
+  const role = document.getElementById("roleSel")?.value;
 
-  // UX: prevent double-submits
-  const btn = document.getElementById("btnSetRole");
-  if(btn) btn.disabled = true;
+  document.getElementById("roleMsg").textContent = "Assigning...";
+  if (!email) {
+    document.getElementById("roleMsg").textContent = "Please enter a user email.";
+    return;
+  }
 
-  rolesStatus.textContent = "Assigning…";
-  rolesOutput.textContent = "";
+  try {
+    // Primary: Supabase RPC
+    const result = await withTimeout(
+      supabase.rpc("admin_set_role", { target_email: email, new_role: role }),
+      30_000
+    );
 
-  // Hard timeout so the UI never gets stuck forever (common on CORS/auth/RLS issues)
-  const timeoutMs = 15000;
-  const withTimeout = (p) => Promise.race([
-    p,
-    new Promise((_, rej) => setTimeout(() => rej(new Error("Timed out (15s). Check browser console/network for the failed request.")), timeoutMs))
-  ]);
+    // Some versions return { data, error }, others might throw - normalize
+    if (result?.error) throw result.error;
 
-  try{
-    const { data, error } = await withTimeout(supabase.rpc("admin_set_role", { target_email: email, new_role: role }));
-    rolesOutput.textContent = JSON.stringify({ data, error }, null, 2);
+    const data = result?.data ?? result;
+    document.getElementById("roleMsg").textContent = "✅ " + JSON.stringify(data);
 
-    if(error){
-      rolesStatus.textContent = "Failed";
-      toast("Role assignment failed (see details). Most common: you're not signed in, or you're not super_admin, or RLS is blocking.");
-      console.error("admin_set_role error:", error);
-      return;
+    // Refresh our cached roles so UI gating updates immediately
+    await loadMyRoles();
+    applyRoleGates();
+    return;
+  } catch (e1) {
+    console.warn("RPC failed, trying direct fetch fallback:", e1);
+    try {
+      // Fallback: direct PostgREST call (helps diagnose CORS / headers / auth)
+      const session = (await supabase.auth.getSession()).data?.session;
+      if (!session?.access_token) throw new Error("No session access_token. Please sign in again.");
+
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), 30_000);
+
+      const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_set_role`, {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ target_email: email, new_role: role }),
+        signal: controller.signal,
+      }).finally(() => clearTimeout(t));
+
+      const bodyText = await resp.text();
+      if (!resp.ok) {
+        throw new Error(`HTTP ${resp.status} ${resp.statusText}: ${bodyText}`);
+      }
+
+      document.getElementById("roleMsg").textContent = "✅ " + bodyText;
+      await loadMyRoles();
+      applyRoleGates();
+    } catch (e2) {
+      console.error("Role assignment failed:", e2);
+      document.getElementById("roleMsg").textContent =
+        "❌ " + (e2?.message || e1?.message || String(e2 || e1));
     }
-
-    rolesStatus.textContent = "Done";
-    toast("Role assigned");
-
-    // Close the modal after success (you can re-open from Users → Roles anytime)
-    closeRoles();
-
-  }catch(e){
-    rolesStatus.textContent = "Failed";
-    rolesOutput.textContent = JSON.stringify({ error: String(e?.message || e) }, null, 2);
-    toast("Role assignment failed (network/timeout). Open DevTools → Console/Network to see why.");
-    console.error(e);
-  }finally{
-    if(btn) btn.disabled = false;
   }
 });
 
