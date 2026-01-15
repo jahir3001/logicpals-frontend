@@ -806,6 +806,16 @@
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Keep UI in sync across pages/tabs (index.html <-> admin.html)
+supabase.auth.onAuthStateChange(async (_event, _session) => {
+  try {
+    await refreshAuthUI();
+    if (currentUser) await loadMyRoles();
+  } catch (e) {
+    console.warn("Auth state sync failed", e);
+  }
+});
+
     // ====== Allowed Skill Tracks ======
     // Keep in sync with DB constraint. (Your DB currently includes 'geometry_no_formulas', not 'geometry'.)
     const ALLOWED_SKILL_TRACKS = [
@@ -1489,13 +1499,34 @@ let currentRoles = [];
 async function loadMyRoles(){
   currentRoles = [];
   if(!currentUser) return;
-  const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", currentUser.id);
+
+  // Preferred: RPC (enterprise-safe; works even if table RLS blocks direct selects)
+  try{
+    const { data: rpcData, error: rpcErr } = await supabase.rpc("admin_get_my_roles");
+    if(!rpcErr && rpcData){
+      let roles = [];
+      if(Array.isArray(rpcData)) roles = rpcData;
+      else if(rpcData.roles && Array.isArray(rpcData.roles)) roles = rpcData.roles;
+      else if(rpcData.data && Array.isArray(rpcData.data)) roles = rpcData.data;
+      roles = roles.map(String);
+      if(roles.length){
+        currentRoles = roles;
+        return;
+      }
+    }
+  }catch(_e){ /* ignore */ }
+
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", currentUser.id);
+
   if(error){
-    console.warn("Could not load roles. Run the Step 5.3 SQL.", error);
     currentRoles = [];
+    toast("Role lookup failed: " + error.message);
     return;
   }
-  currentRoles = (data || []).map(r => r.role);
+  currentRoles = (data || []).map(r => String(r.role));
 }
 
 function hasRole(role){ return currentRoles.includes(role); }
@@ -1553,6 +1584,10 @@ authSignIn?.addEventListener("click", async () => {
   const email = (authEmail?.value || "").trim();
   const password = authPassword?.value || "";
   authMsg.textContent = "Signing in…";
+  if (location.protocol === 'file:') {
+    authMsg.textContent = "This page must be served over http(s) (not file://) for Supabase requests. Use a local server (e.g., npx serve) or deploy to Vercel.";
+    return;
+  }
   try {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
@@ -1724,7 +1759,7 @@ await refresh();
         <div class="lp-grid-2">
           <div>
             <label class="lp-label">User email</label>
-            <input class="lp-input" id="rolesEmail" placeholder="e.g. reviewer@logicpals.com" />
+            <input class="lp-input" id="rolesEmail" placeholder="e.g. reviewer@logicpals.com" / autocomplete="off" autocapitalize="none" spellcheck="false">
             <div class="lp-muted" style="margin-top:6px;">The user must have signed up at least once (exists in <code>auth.users</code>).</div>
           </div>
           <div>
