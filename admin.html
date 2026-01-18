@@ -3,1790 +3,603 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LogicPals Admin — Problems Review</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>LogicPals Admin</title>
   <style>
-    :root {
-      --bg: #0b1220;
-      --panel: rgba(255,255,255,0.06);
-      --panel2: rgba(255,255,255,0.08);
-      --border: rgba(255,255,255,0.12);
-      --text: rgba(255,255,255,0.92);
-      --muted: rgba(255,255,255,0.68);
-      --subtle: rgba(255,255,255,0.50);
-      --brand: #22c55e; /* green */
-      --warn: #f59e0b;
-      --danger: #ef4444;
-      --shadow: 0 20px 60px rgba(0,0,0,0.45);
-      --radius: 16px;
-      --radius2: 12px;
+    :root{
+      --bg0:#05080c; --bg1:#071018; --card:#0b1622; --card2:#0e1c2b;
+      --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.14);
+      --text:rgba(255,255,255,.92); --muted:rgba(255,255,255,.68);
+      --muted2:rgba(255,255,255,.52);
+      --accent:#32d296; --accent2:#1ea7ff; --warn:#f59e0b; --danger:#ef4444;
+      --shadow: 0 20px 70px rgba(0,0,0,.55);
+      --r12:12px; --r16:16px; --r20:20px;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
     }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      color: var(--text);
-      background: radial-gradient(1200px 900px at 20% 0%, rgba(34,197,94,0.12), transparent 60%),
-                  radial-gradient(1000px 800px at 80% 10%, rgba(59,130,246,0.10), transparent 55%),
-                  var(--bg);
-      min-height: 100vh;
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 900px at 15% 10%, rgba(50,210,150,.20), transparent 55%),
+        radial-gradient(1200px 900px at 85% 15%, rgba(30,167,255,.14), transparent 55%),
+        radial-gradient(900px 700px at 35% 85%, rgba(245,158,11,.10), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
     }
-    a { color: inherit; text-decoration: none; }
-    .wrap { max-width: 1240px; margin: 0 auto; padding: 22px; }
-    header {
-      display: flex; gap: 16px; align-items: center; justify-content: space-between;
-      padding: 14px 16px;
-      border: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      position: sticky; top: 14px; z-index: 20;
+
+    /* Top bar */
+    .topbar{
+      position:sticky; top:0; z-index:10;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:18px 22px;
+      background: linear-gradient(180deg, rgba(8,16,24,.78), rgba(8,16,24,.46));
       backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,.06);
     }
-    .brand {
-      display: flex; align-items: center; gap: 12px;
+    .brand{ display:flex; gap:12px; align-items:center; }
+    .logo{
+      width:42px; height:42px; border-radius:14px;
+      background: radial-gradient(circle at 30% 30%, rgba(50,210,150,.95), rgba(30,167,255,.9));
+      box-shadow: 0 12px 35px rgba(0,0,0,.35);
     }
-    .logo {
-      width: 38px; height: 38px; border-radius: 12px;
-      background: linear-gradient(135deg, rgba(34,197,94,0.95), rgba(59,130,246,0.85));
-      box-shadow: 0 10px 30px rgba(34,197,94,0.20);
+    .brand h1{ margin:0; font-size:16px; line-height:1.1; letter-spacing:.2px; }
+    .brand .sub{ margin-top:3px; color:var(--muted2); font-size:12px; }
+
+    .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+    .pill{ display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; border:1px solid var(--line); background: rgba(255,255,255,.04); color:var(--muted); font-size:12px; }
+
+    .btn{
+      cursor:pointer; user-select:none;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      padding:9px 12px;
+      border-radius:12px;
+      font-size:13px;
+      display:inline-flex; align-items:center; gap:8px;
+      transition: transform .06s ease, background .12s ease, border-color .12s ease;
     }
-    .title {
-      display: flex; flex-direction: column; line-height: 1.1;
+    .btn:hover{ background: rgba(255,255,255,.07); border-color: var(--line2); }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{ background: rgba(50,210,150,.12); border-color: rgba(50,210,150,.35); }
+    .btn.primary:hover{ background: rgba(50,210,150,.17); }
+    .btn.danger{ background: rgba(239,68,68,.10); border-color: rgba(239,68,68,.35); }
+
+    /* Layout */
+    .wrap{ max-width: 1200px; margin:0 auto; padding: 18px 22px 36px; }
+    .grid{ display:grid; grid-template-columns: 360px 1fr; gap:16px; }
+    @media (max-width: 980px){ .grid{ grid-template-columns: 1fr; } }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
     }
-    .title strong { font-size: 14px; letter-spacing: .2px; }
-    .title span { font-size: 12px; color: var(--muted); }
-    .right {
-      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    .card .hd{ padding:16px 16px 10px; border-bottom: 1px solid rgba(255,255,255,.07); display:flex; justify-content:space-between; align-items:center; }
+    .card .hd h2{ margin:0; font-size:14px; letter-spacing:.2px; }
+    .card .bd{ padding:16px; }
+
+    .tabs{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:14px; }
+    .tab{ padding:8px 12px; border-radius:999px; border:1px solid var(--line); background: rgba(255,255,255,.04); color:var(--muted); font-size:12px; cursor:pointer; }
+    .tab.active{ background: rgba(50,210,150,.12); border-color: rgba(50,210,150,.35); color:var(--text); }
+
+    /* Login overlay */
+    .screen{
+      position:fixed; inset:0; z-index:50;
+      display:flex; align-items:center; justify-content:center;
+      padding:28px;
+      background:
+        radial-gradient(1200px 900px at 15% 10%, rgba(50,210,150,.18), transparent 55%),
+        radial-gradient(1200px 900px at 85% 15%, rgba(30,167,255,.13), transparent 55%),
+        linear-gradient(180deg, rgba(3,6,10,.96), rgba(6,12,18,.94));
     }
-    .pill {
-      font-size: 12px; color: var(--muted);
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.04);
-      border-radius: 999px;
-      padding: 8px 10px;
-      display: inline-flex; align-items: center; gap: 8px;
+    .login{
+      width:min(520px, 100%);
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+      box-shadow: 0 30px 110px rgba(0,0,0,.65);
+      overflow:hidden;
     }
-    .pill code { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.85); }
-    .btn {
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.06);
+    .loginTop{ padding:18px 18px 14px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,.08); }
+    .loginTop .left{ display:flex; gap:12px; align-items:center; }
+    .loginTop h3{ margin:0; font-size:14px; }
+    .loginTop p{ margin:3px 0 0; color:var(--muted2); font-size:12px; }
+    .loginBd{ padding:18px; }
+    .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+    .field label{ color:var(--muted); font-size:12px; }
+    .input{
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
       color: var(--text);
-      padding: 10px 12px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 12px;
-      transition: transform .06s ease, background .2s ease, border-color .2s ease;
-      user-select: none;
-    }
-    .btn:hover { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.22); }
-    .btn:active { transform: translateY(1px); }
-    .btn.primary {
-      border-color: rgba(34,197,94,0.35);
-      background: rgba(34,197,94,0.14);
-    }
-    .btn.primary:hover {
-      background: rgba(34,197,94,0.20);
-      border-color: rgba(34,197,94,0.55);
-    }
-    .btn.danger {
-      border-color: rgba(239,68,68,0.35);
-      background: rgba(239,68,68,0.12);
-    }
-    .btn.danger:hover {
-      background: rgba(239,68,68,0.18);
-      border-color: rgba(239,68,68,0.55);
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 16px;
-      margin-top: 16px;
-      align-items: start;
-    }
-    @media (max-width: 980px) {
-      .grid { grid-template-columns: 1fr; }
-      header { position: relative; top: auto; }
-    }
-    .panel {
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.05);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-    .panel .hd {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255,255,255,0.04);
-      display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    }
-    .panel .hd h2 {
-      margin: 0;
-      font-size: 13px;
-      letter-spacing: .2px;
-    }
-    .panel .bd { padding: 14px 16px; }
-    .tabs {
-      display: inline-flex;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.03);
-      border-radius: 999px;
-      padding: 4px;
-      gap: 4px;
-    }
-    .tab {
-      padding: 8px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--muted);
-      cursor: pointer;
-      border: 0;
-      background: transparent;
-    }
-    .tab.active {
-      color: rgba(255,255,255,0.95);
-      background: rgba(255,255,255,0.10);
-    }
-    .field {
-      display: grid;
-      gap: 6px;
-      margin-bottom: 12px;
-    }
-    .field label {
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 600;
-    }
-    input, select, textarea {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(0,0,0,0.20);
-      color: var(--text);
-      outline: none;
-      font-size: 13px;
-    }
-    textarea { min-height: 110px; resize: vertical; }
-    input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.35); }
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    .help {
-      font-size: 12px; color: var(--subtle); line-height: 1.35;
-    }
-    .kpi {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .kpi .card {
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.04);
       border-radius: 14px;
-      padding: 12px;
+      padding: 11px 12px;
+      outline:none;
     }
-    .kpi .n {
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: .2px;
-    }
-    .kpi .t {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-    table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      overflow: hidden;
-      border: 1px solid var(--border);
+    .input:focus{ border-color: rgba(30,167,255,.55); box-shadow: 0 0 0 4px rgba(30,167,255,.14); }
+    .row{ display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+    .hint{ color:var(--muted2); font-size:12px; }
+    .msg{
+      margin-top:10px;
+      padding:10px 12px;
       border-radius: 14px;
-      background: rgba(255,255,255,0.03);
-    }
-    thead th {
-      text-align: left;
-      font-size: 12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
       color: var(--muted);
-      padding: 12px 12px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255,255,255,0.03);
-      font-weight: 800;
+      font-size:12px;
+      white-space:pre-wrap;
+      font-family: var(--mono);
+      display:none;
     }
-    tbody td {
-      padding: 12px 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      vertical-align: top;
-      font-size: 13px;
-    }
-    tbody tr:hover td {
-      background: rgba(255,255,255,0.04);
-    }
-    tbody tr:last-child td { border-bottom: 0; }
-    .badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 6px 9px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.04);
-      font-size: 12px;
-      color: rgba(255,255,255,0.86);
-      font-weight: 700;
-      white-space: nowrap;
-    }
-    .badge.ok {
-      border-color: rgba(34,197,94,0.35);
-      background: rgba(34,197,94,0.10);
-    }
-    .badge.warn {
-      border-color: rgba(245,158,11,0.38);
-      background: rgba(245,158,11,0.10);
-    }
-    .badge.danger {
-      border-color: rgba(239,68,68,0.38);
-      background: rgba(239,68,68,0.10);
-    }
-    .muted { color: var(--muted); }
-    .mono { font-family: var(--mono); font-size: 12px; color: rgba(255,255,255,0.80); }
-    .actions {
-      display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap;
-    }
-    .divider {
-      height: 1px; background: rgba(255,255,255,0.10); margin: 14px 0;
-    }
-    .toast {
-      position: fixed; right: 18px; bottom: 18px;
-      max-width: 420px;
-      display: grid;
-      gap: 10px;
-      z-index: 60;
-    }
-    .toast .item {
-      border: 1px solid var(--border);
-      background: rgba(12,18,32,0.92);
-      backdrop-filter: blur(10px);
-      border-radius: 14px;
-      padding: 12px 12px;
-      box-shadow: var(--shadow);
-      display: grid;
-      gap: 4px;
-    }
-    .toast .item .h { font-weight: 800; font-size: 12px; }
-    .toast .item .b { font-size: 12px; color: var(--muted); line-height: 1.35; }
-    .modal {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.55);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-      z-index: 50;
-    }
-    .modal.show { display: flex; }
-    .modal .card {
-      width: min(980px, 100%);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: rgba(12,18,32,0.96);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-    .modal .card .top {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    }
-    .modal .card .top .left {
-      display: grid; gap: 4px;
-    }
-    .modal .card .top .left strong { font-size: 13px; }
-    .modal .card .top .left span { font-size: 12px; color: var(--muted); }
-    .modal .card .content {
-      padding: 14px 16px;
-      max-height: min(72vh, 720px);
-      overflow: auto;
-    }
-    .small {
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .footer {
-      padding: 12px 16px;
-      border-top: 1px solid var(--border);
-      display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;
-      background: rgba(255,255,255,0.03);
-    }
-    .hint {
-      padding: 10px 12px;
-      border: 1px solid rgba(245,158,11,0.35);
-      border-radius: 14px;
-      background: rgba(245,158,11,0.08);
-      color: rgba(255,255,255,0.86);
-      font-size: 12px;
-      line-height: 1.35;
-    }
-  
-/* --- Enterprise nav + auth modal --- */
-.lp-nav{
-  margin: 14px auto 0;
-  max-width: 1180px;
-  width: calc(100% - 40px);
-  background: rgba(20,30,40,.55);
-  border: 1px solid rgba(255,255,255,.08);
-  box-shadow: 0 10px 30px rgba(0,0,0,.35);
-  border-radius: 18px;
-  padding: 10px;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  backdrop-filter: blur(12px);
-}
-.lp-tab{
-  appearance:none;
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.05);
-  color: rgba(255,255,255,.88);
-  padding: 9px 12px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 13px;
-  cursor:pointer;
-  user-select:none;
-  transition: transform .08s ease, background .15s ease, border-color .15s ease;
-}
-.lp-tab:hover{ background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.16); }
-.lp-tab:active{ transform: translateY(1px); }
-.lp-tab.is-active{ background: rgba(34,197,94,.14); border-color: rgba(34,197,94,.35); }
-.lp-tab-link{ text-decoration:none; display:inline-flex; align-items:center; }
-.lp-nav-spacer{ flex:1; }
-.lp-tab-quiet{ background: transparent; border-color: rgba(255,255,255,.08); }
-.lp-tab-quiet:hover{ background: rgba(255,255,255,.06); }
+    .msg.show{ display:block; }
 
-.lp-modal-backdrop{
-  position: fixed; inset:0;
-  background: rgba(0,0,0,.58);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding: 24px;
-  z-index: 50;
-}
+    /* Modal */
+    .modalBackdrop{ position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center; padding:18px; background: rgba(0,0,0,.55); backdrop-filter: blur(6px); }
+    .modalBackdrop.show{ display:flex; }
+    .modal{ width:min(720px, 100%); border-radius: 18px; border:1px solid rgba(255,255,255,.12); background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04)); box-shadow: 0 40px 120px rgba(0,0,0,.70); overflow:hidden; }
+    .modal .mhd{ padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.08); display:flex; align-items:center; justify-content:space-between; }
+    .modal .mhd strong{ font-size:14px; }
+    .modal .mbd{ padding:16px; }
+    .closeX{ width:34px; height:34px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color:var(--text); cursor:pointer; }
+    .closeX:hover{ background: rgba(255,255,255,.07); }
 
-/* Ensure hidden modals stay hidden (author CSS overrides UA [hidden]) */
-.lp-modal-backdrop[hidden]{display:none !important;}
-.lp-app-lock[hidden]{display:none !important;}
+    .kpi{ display:flex; gap:8px; flex-wrap:wrap; }
+    .kpi .chip{ padding:8px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.18); color: var(--muted); font-size:12px; }
 
-.lp-modal{
-  width: min(560px, 100%);
-  background: rgba(16,24,32,.92);
-  border: 1px solid rgba(255,255,255,.10);
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.55);
-  overflow:hidden;
-  backdrop-filter: blur(12px);
-}
-.lp-modal-head{
-  display:flex; align-items:center; justify-content:space-between;
-  padding: 14px 16px;
-  border-bottom: 1px solid rgba(255,255,255,.08);
-}
-.lp-modal-body{ padding: 16px; }
-.lp-icon-btn{
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.04);
-  color: rgba(255,255,255,.88);
-  border-radius: 12px;
-  padding: 6px 10px;
-  cursor:pointer;
-}
-.lp-icon-btn:hover{ background: rgba(255,255,255,.07); }
-.lp-form{ display:grid; gap:10px; margin-top: 12px; }
-.lp-form input{
-  width:100%;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.05);
-  color: rgba(255,255,255,.92);
-  outline: none;
-}
-.lp-form input:focus{ border-color: rgba(34,197,94,.35); box-shadow: 0 0 0 4px rgba(34,197,94,.10); }
-.lp-form-row{ display:flex; gap:10px; margin-top: 2px; }
-.lp-btn{
-  border:1px solid rgba(255,255,255,.12);
-  background: rgba(34,197,94,.16);
-  color: rgba(255,255,255,.92);
-  padding: 10px 12px;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor:pointer;
-}
-.lp-btn:hover{ background: rgba(34,197,94,.22); }
-.lp-btn-ghost{
-  background: rgba(255,255,255,.04);
-}
-.lp-btn-ghost:hover{ background: rgba(255,255,255,.07); }
-.lp-note{ color: rgba(255,255,255,.78); font-size: 13px; min-height: 18px; }
-</style>
+    .muted{ color:var(--muted); }
+    .muted2{ color:var(--muted2); }
+    .small{ font-size:12px; }
+    .mono{ font-family: var(--mono); }
+    .hidden{ display:none !important; }
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <div class="title">
-          <strong>LogicPals Admin</strong>
-          <span>Enterprise review console — Regular + Olympiad tracks</span>
+  <!-- LOGIN SCREEN (only when NOT authenticated) -->
+  <div id="loginScreen" class="screen" aria-hidden="false">
+    <div class="login" role="dialog" aria-modal="true" aria-label="Admin sign in">
+      <div class="loginTop">
+        <div class="left">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <h3>LogicPals Admin</h3>
+            <p>Secure console access (enterprise-grade)</p>
+          </div>
+        </div>
+        <div class="pill" title="Project">Project: LogicPals-App</div>
+      </div>
+      <div class="loginBd">
+        <div class="field">
+          <label for="loginEmail">Email</label>
+          <input id="loginEmail" class="input" type="email" placeholder="you@logicpals.com" autocomplete="username" />
+        </div>
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <input id="loginPassword" class="input" type="password" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <div class="row">
+          <button id="btnSignIn" class="btn primary">Sign in</button>
+          <div class="hint">Only users with admin roles can access this console.</div>
+        </div>
+        <div id="loginMsg" class="msg" aria-live="polite"></div>
+        <div style="margin-top:12px" class="muted2 small">
+          Tip: If you opened this file by double-click (file:///...), use a local server. Modules + CORS require http://localhost.
         </div>
       </div>
-      <div class="right">
-        <div class="pill">Project <code>LogicPals-App</code></div>
-        <button class="btn" id="btnRefresh">Refresh</button>
-        <button class="btn primary" id="btnQuickAdd">Quick Add (Regular)</button>
-        <button class="btn ghost" id="btnAuth">Sign in</button>
-        <button class="btn ghost" id="btnLogout" hidden>Log out</button>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>LogicPals Admin</h1>
+        <div class="sub">Enterprise review console — Regular + Olympiad tracks</div>
       </div>
-    </header>
+    </div>
 
-  <nav class="lp-nav" aria-label="Primary">
-    <button class="lp-tab is-active" data-view="dashboard">Dashboard</button>
-    <button class="lp-tab" data-view="regular">Regular Problems</button>
-    <button class="lp-tab" data-view="olympiad">Olympiad Review</button>
-    <a class="lp-tab lp-tab-link" data-view="payments" href="./admin-payments.html" target="_blank" rel="noopener">Payments</a>
-    <a class="lp-tab lp-tab-link" data-view="subscriptions" href="./admin-subscriptions.html" target="_blank" rel="noopener">Subscriptions</a>
-    <button class="lp-tab" data-view="users">Users</button>
-    <div class="lp-nav-spacer"></div>
-    <button class="lp-tab lp-tab-quiet" id="btnVisitSite" title="Open LogicPals site in a new tab">Visit site</button>
-    <button class="lp-tab lp-tab-quiet" id="btnStudentDash" title="Open Student Dashboard in a new tab">Student dashboard</button>
-    <button class="lp-tab lp-tab-quiet" id="btnRoles" title="Manage admin roles (super_admin only)" style="display:none;">Roles</button>
-  </nav>
+    <div class="actions">
+      <span id="whoami" class="pill hidden"></span>
+      <button id="btnVisit" class="btn">Visit site</button>
+      <button id="btnStudent" class="btn">Student dashboard</button>
+      <button id="btnRoleMgmt" class="btn hidden">Admin roles</button>
+      <button id="btnLogout" class="btn danger hidden">Log out</button>
+    </div>
+  </header>
 
+  <main class="wrap">
+    <div class="tabs" id="mainTabs">
+      <div class="tab active" data-tab="dashboard">Dashboard</div>
+      <div class="tab" data-tab="regular">Regular review</div>
+      <div class="tab" data-tab="olympiad">Olympiad review</div>
+      <div class="tab" data-tab="payments">Payments</div>
+      <div class="tab" data-tab="subscriptions">Subscriptions</div>
+      <div class="tab" data-tab="users">Users</div>
+    </div>
+
+    <div style="height:14px"></div>
 
     <div class="grid">
-      <!-- LEFT: Controls -->
-      <div class="panel">
+      <section class="card">
         <div class="hd">
-          <h2>Review Mode</h2>
-          <div class="tabs" role="tablist" aria-label="Review sections">
-            <button class="tab active" data-tab="regular" role="tab" aria-selected="true">Regular</button>
-            <button class="tab" data-tab="olympiad" role="tab" aria-selected="false">Olympiad</button>
-          </div>
+          <h2>Console status</h2>
+          <span id="roleChips" class="kpi"></span>
         </div>
         <div class="bd">
-          <div id="kpis" class="kpi">
-            <div class="card">
-              <div class="n" id="kpiQueue">—</div>
-              <div class="t" id="kpiQueueLabel">Regular — recent</div>
-            </div>
-            <div class="card">
-              <div class="n" id="kpiAttention">—</div>
-              <div class="t" id="kpiAttentionLabel">Needs attention</div>
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="field">
-            <label>Search</label>
-            <input id="q" placeholder="Title / tag / category / skill_track..." />
-          </div>
-
-          <div class="row">
-            <div class="field">
-              <label>Difficulty</label>
-              <select id="difficulty">
-                <option value="">Any</option>
-                <option value="easy">easy</option>
-                <option value="medium">medium</option>
-                <option value="hard">hard</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Age</label>
-              <select id="age">
-                <option value="">Any</option>
-                <option value="8-9">8-9</option>
-                <option value="9-10">9-10</option>
-                <option value="10-11">10-11</option>
-                <option value="11-12">11-12</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="field">
-              <label>Category</label>
-              <input id="category" placeholder="e.g., logic, arithmetic, geometry..." />
-            </div>
-            <div class="field">
-              <label>Skill Track</label>
-              <select id="skillTrack">
-                <option value="">Any</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="field">
-              <label>Only Active</label>
-              <select id="onlyActive">
-                <option value="true">Yes</option>
-                <option value="">Any</option>
-                <option value="false">No</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Sort</label>
-              <select id="sort">
-                <option value="created_at_desc">Newest first</option>
-                <option value="created_at_asc">Oldest first</option>
-              </select>
-            </div>
-          </div>
-
-          <button class="btn primary" id="btnApply" style="width:100%;">Apply Filters</button>
-
-          <div class="divider"></div>
-
-          <div class="hint">
-            <strong>Olympiad track is strict.</strong><br/>
-            You should set <span class="mono">skill_track</span> + a clear <span class="mono">review_reason</span> before publishing.
-            For Regular, you can quickly edit, activate/deactivate, or archive.
-          </div>
-
-          <div class="divider"></div>
-          <div class="help">
-            <div><span class="mono">Supabase</span> URL is embedded in this file. Later we’ll move keys to secure config (roadmap Step 5+).</div>
-          </div>
+          <div class="muted small">Access is controlled by <span class="mono">public.user_roles</span> and enforced by RPCs + RLS.</div>
+          <div style="height:10px"></div>
+          <div id="accessState" class="mono small muted">Checking session…</div>
+          <div style="height:14px"></div>
+          <button id="btnOpenRoleMgmt" class="btn hidden">Assign roles</button>
+          <div class="muted2 small" style="margin-top:10px">Only <span class="mono">super_admin</span> can change roles.</div>
         </div>
-      </div>
+      </section>
 
-      <!-- RIGHT: Table -->
-      <div class="panel">
+      <section class="card">
         <div class="hd">
-          <h2 id="tableTitle">Regular Problems</h2>
-          <div class="actions">
-            <span class="pill"><span class="muted">Rows</span> <code id="rowCount">0</code></span>
-            <button class="btn" id="btnLoadMore">Load more</button>
-          </div>
+          <h2 id="panelTitle">Dashboard</h2>
+          <div class="pill" id="panelHint">Ready</div>
         </div>
-        <div class="bd" style="padding-top: 0;">
-          <div id="tableWrap"></div>
+        <div class="bd" id="panelBody">
+          <div class="muted">Sign in to start reviewing problems.</div>
         </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ROLE MANAGEMENT MODAL (never auto-opens) -->
+  <div id="roleModal" class="modalBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Admin roles">
+      <div class="mhd">
+        <strong>Admin roles</strong>
+        <button id="btnCloseRoleModal" class="closeX" aria-label="Close">✕</button>
+      </div>
+      <div class="mbd">
+        <div class="muted small">Assign enterprise-grade roles for this console. Only <span class="mono">super_admin</span> can change roles.</div>
+        <div style="height:12px"></div>
+
+        <div class="field">
+          <label for="targetEmail">User email</label>
+          <input id="targetEmail" class="input" type="email" placeholder="e.g. reviewer@logicpals.com" />
+          <div class="muted2 small">The user must have signed up at least once (exists in <span class="mono">auth.users</span>).</div>
+        </div>
+
+        <div class="field">
+          <label for="targetRole">Role</label>
+          <select id="targetRole" class="input">
+            <option value="admin_regular">admin_regular — manage Regular problems</option>
+            <option value="admin_olympiad">admin_olympiad — manage Olympiad review</option>
+            <option value="super_admin">super_admin — full control</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <button id="btnAssignRole" class="btn primary">Assign role</button>
+          <button id="btnListMyRoles" class="btn">List my roles</button>
+        </div>
+
+        <div id="roleMsg" class="msg" aria-live="polite"></div>
       </div>
     </div>
   </div>
-
-  <!-- EDIT MODAL -->
-  <div class="modal" id="modal">
-    <div class="card">
-      <div class="top">
-        <div class="left">
-          <strong id="mTitle">Edit Problem</strong>
-          <span id="mMeta" class="small">—</span>
-        </div>
-        <div class="actions">
-          <button class="btn" id="btnCopyId">Copy ID</button>
-          <button class="btn danger" id="btnArchive">Archive</button>
-          <button class="btn" id="btnClose">Close</button>
-        </div>
-      </div>
-      <div class="content">
-        <div class="row">
-          <div class="field">
-            <label>Title</label>
-            <input id="f_title" />
-          </div>
-          <div class="field">
-            <label>Section</label>
-            <input id="f_section" disabled />
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label>Age Category</label>
-            <input id="f_age_category" placeholder="e.g., 9-10" />
-          </div>
-          <div class="field">
-            <label>Difficulty</label>
-            <select id="f_difficulty">
-              <option value="">(unchanged)</option>
-              <option value="easy">easy</option>
-              <option value="medium">medium</option>
-              <option value="hard">hard</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label>Category</label>
-            <input id="f_category" placeholder="e.g., logic" />
-          </div>
-          <div class="field">
-            <label>Curriculum Tags (JSON array)</label>
-            <input id="f_tags" placeholder='e.g., ["bdmo","geometry","angles"]' />
-          </div>
-        </div>
-
-        <div id="olympiadFields" style="display:none;">
-          <div class="divider"></div>
-          <div class="row">
-            <div class="field">
-              <label>Skill Track (must match allowed list)</label>
-              <select id="f_skill_track"></select>
-            </div>
-            <div class="field">
-              <label>Publish State</label>
-              <select id="f_publish_state">
-                <option value="">(unchanged)</option>
-                <option value="draft">draft</option>
-                <option value="review">review</option>
-                <option value="published">published</option>
-                <option value="archived">archived</option>
-              </select>
-            </div>
-          </div>
-          <div class="field">
-            <label>Review Reason (explainable + audit-friendly)</label>
-            <textarea id="f_review_reason" placeholder="Explain why the chosen skill_track is correct. Mention title/tags, key concept, and any ambiguity."></textarea>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="field">
-          <label>Problem Text</label>
-          <textarea id="f_problem_text" placeholder="Problem text..."></textarea>
-        </div>
-        <div class="row">
-          <div class="field">
-            <label>Answer Key</label>
-            <textarea id="f_answer_key" placeholder="answer|acceptable|variations"></textarea>
-          </div>
-          <div class="field">
-            <label>Solution Explanation</label>
-            <textarea id="f_solution_explanation" placeholder="Explain solution step-by-step."></textarea>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label>Is Active</label>
-            <select id="f_is_active">
-              <option value="">(unchanged)</option>
-              <option value="true">true</option>
-              <option value="false">false</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Last Updated</label>
-            <input id="f_updated_at" disabled />
-          </div>
-        </div>
-
-        <div class="divider"></div>
-        <div class="help">
-          <strong>Enterprise hygiene:</strong> Olympiad edits should keep an audit trail via <span class="mono">review_reason</span>.
-          Regular edits should remain lightweight.
-        </div>
-      </div>
-      <div class="footer">
-        <div class="small" id="mFooterLeft">—</div>
-        <div class="actions">
-          <button class="btn" id="btnReset">Reset</button>
-          <button class="btn primary" id="btnSave">Save</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- QUICK ADD MODAL -->
-  <div class="modal" id="modalAdd">
-    <div class="card">
-      <div class="top">
-        <div class="left">
-          <strong>Quick Add — Regular Problem</strong>
-          <span class="small">Creates a new regular problem (draft/active defaults)</span>
-        </div>
-        <div class="actions">
-          <button class="btn" id="btnAddClose">Close</button>
-        </div>
-      </div>
-      <div class="content">
-        <div class="row">
-          <div class="field">
-            <label>Title</label>
-            <input id="a_title" placeholder="e.g., Train Tickets Puzzle" />
-          </div>
-          <div class="field">
-            <label>Age Category</label>
-            <input id="a_age_category" placeholder="e.g., 9-10" />
-          </div>
-        </div>
-        <div class="row">
-          <div class="field">
-            <label>Difficulty</label>
-            <select id="a_difficulty">
-              <option value="easy">easy</option>
-              <option value="medium" selected>medium</option>
-              <option value="hard">hard</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Category</label>
-            <input id="a_category" placeholder="e.g., logic" />
-          </div>
-        </div>
-        <div class="field">
-          <label>Curriculum Tags (JSON array)</label>
-          <input id="a_tags" placeholder='e.g., ["logic","patterns"]' />
-        </div>
-        <div class="field">
-          <label>Problem Text</label>
-          <textarea id="a_problem_text" placeholder="Write the full problem..."></textarea>
-        </div>
-        <div class="row">
-          <div class="field">
-            <label>Answer Key</label>
-            <textarea id="a_answer_key" placeholder="answer|acceptable|variations"></textarea>
-          </div>
-          <div class="field">
-            <label>Solution Explanation</label>
-            <textarea id="a_solution_explanation" placeholder="Explain briefly."></textarea>
-          </div>
-        </div>
-      </div>
-      <div class="footer">
-        <div class="small">Tip: keep Regular problems fast to review.</div>
-        <div class="actions">
-          <button class="btn primary" id="btnAddCreate">Create</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast"></div>
 
   <script type="module">
-
-    // --- IMPORTANT: kill old Service Worker caches for this scope ---
-    // We previously served admin.html through a Service Worker, which can keep an older version of this file
-    // and make it look like fixes "didn't deploy". On admin.html we *always* unregister SW to avoid that.
-    (async () => {
-      try {
-        if ('serviceWorker' in navigator) {
-          const regs = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(regs.map(r => r.unregister()));
-        }
-        if ('caches' in window) {
-          const keys = await caches.keys();
-          await Promise.all(keys.map(k => caches.delete(k)));
-        }
-      } catch (e) {
-        // ignore
-      }
-    })();
-
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-    // NOTE: Later move these keys to a secure config layer (roadmap Step 5+).
+    // ---- Supabase (same as your current project) ----
     const SUPABASE_URL = 'https://ovszuxerimbmzfblzkgd.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
-
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Keep UI in sync across pages/tabs (index.html <-> admin.html)
-supabase.auth.onAuthStateChange(async (_event, _session) => {
-  try {
-    await refreshAuthUI();
-    if (currentUser) await loadMyRoles();
-  } catch (e) {
-    console.warn("Auth state sync failed", e);
-  }
-});
-
-    // ====== Allowed Skill Tracks ======
-    // Keep in sync with DB constraint. (Your DB currently includes 'geometry_no_formulas', not 'geometry'.)
-    const ALLOWED_SKILL_TRACKS = [
-      "constraints",
-      "counting",
-      "divisibility",
-      "geometry_no_formulas",
-      "invariants",
-      "mixed",
-      "worst_case",
-      "patterns"
-    ];
-
-    // ====== UI State ======
-    let currentTab = "regular";
-    let page = 0;
-    const PAGE_SIZE = 30;
-    let currentRows = [];
-    let originalRow = null;
-
-    // ====== Helpers ======
+    // ---- DOM ----
     const $ = (id) => document.getElementById(id);
+    const loginScreen = $('loginScreen');
+    const loginEmail = $('loginEmail');
+    const loginPassword = $('loginPassword');
+    const loginMsg = $('loginMsg');
+    const btnSignIn = $('btnSignIn');
 
-    function toast(title, body, type="info") {
-      const t = $("toast");
-      const el = document.createElement("div");
-      el.className = "item";
-      el.innerHTML = `<div class="h">${escapeHtml(title)}</div><div class="b">${escapeHtml(body)}</div>`;
-      t.appendChild(el);
-      setTimeout(() => {
-        el.style.opacity = "0";
-        el.style.transform = "translateY(6px)";
-        el.style.transition = "opacity .3s ease, transform .3s ease";
-        setTimeout(() => el.remove(), 320);
-      }, 3600);
+    const whoami = $('whoami');
+    const btnLogout = $('btnLogout');
+    const btnVisit = $('btnVisit');
+    const btnStudent = $('btnStudent');
+
+    const btnRoleMgmt = $('btnRoleMgmt');
+    const btnOpenRoleMgmt = $('btnOpenRoleMgmt');
+
+    const roleChips = $('roleChips');
+    const accessState = $('accessState');
+
+    const roleModal = $('roleModal');
+    const btnCloseRoleModal = $('btnCloseRoleModal');
+    const btnAssignRole = $('btnAssignRole');
+    const btnListMyRoles = $('btnListMyRoles');
+    const roleMsg = $('roleMsg');
+    const targetEmail = $('targetEmail');
+    const targetRole = $('targetRole');
+
+    const panelTitle = $('panelTitle');
+    const panelHint = $('panelHint');
+    const panelBody = $('panelBody');
+
+    const mainTabs = $('mainTabs');
+
+    // ---- State ----
+    let session = null;
+    let myRoles = [];
+
+    function showMsg(el, objOrString){
+      const s = typeof objOrString === 'string' ? objOrString : JSON.stringify(objOrString, null, 2);
+      el.textContent = s;
+      el.classList.add('show');
+    }
+    function clearMsg(el){
+      el.textContent = '';
+      el.classList.remove('show');
     }
 
-    function escapeHtml(str) {
-      return String(str ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+    function setLoggedOutUI(){
+      session = null;
+      myRoles = [];
+      whoami.classList.add('hidden');
+      btnLogout.classList.add('hidden');
+      btnRoleMgmt.classList.add('hidden');
+      btnOpenRoleMgmt.classList.add('hidden');
+      roleChips.innerHTML = '';
+      accessState.textContent = 'Not signed in.';
+      panelTitle.textContent = 'Dashboard';
+      panelHint.textContent = 'Sign in';
+      panelBody.innerHTML = '<div class="muted">Please sign in to access the admin console.</div>';
     }
 
-    function parseJsonArray(str) {
-      const s = (str ?? "").trim();
-      if (!s) return null;
-      try {
-        const v = JSON.parse(s);
-        if (Array.isArray(v)) return v;
-        return null;
-      } catch {
-        return null;
-      }
-    }
-
-    function badgeFor(row) {
-      if (currentTab === "olympiad") {
-        const st = row.skill_track;
-        const rr = row.review_reason;
-        const ps = row.publish_state;
-        if (!st) return `<span class="badge warn">Needs skill_track</span>`;
-        if (!rr) return `<span class="badge warn">Needs review_reason</span>`;
-        if (ps === "published") return `<span class="badge ok">Published</span>`;
-        if (ps === "review") return `<span class="badge warn">In review</span>`;
-        return `<span class="badge">Draft</span>`;
-      } else {
-        if (row.is_active === false) return `<span class="badge danger">Inactive</span>`;
-        return `<span class="badge ok">Active</span>`;
-      }
-    }
-
-    function fmtTime(ts) {
-      if (!ts) return "—";
-      try {
-        const d = new Date(ts);
-        return d.toLocaleString();
-      } catch {
-        return String(ts);
-      }
-    }
-
-    function safePreview(text, n=110) {
-      const s = String(text ?? "");
-      return s.length > n ? s.slice(0, n) + "…" : s;
-    }
-
-    function setTab(tab) {
-      currentTab = tab;
-      page = 0;
-      currentRows = [];
-      document.querySelectorAll(".tab").forEach(btn => {
-        const on = btn.dataset.tab === tab;
-        btn.classList.toggle("active", on);
-        btn.setAttribute("aria-selected", on ? "true" : "false");
-      });
-      $("tableTitle").textContent = tab === "olympiad" ? "Olympiad Review Queue" : "Regular Problems";
-      $("kpiQueueLabel").textContent = tab === "olympiad" ? "Olympiad — queue" : "Regular — recent";
-      $("kpiAttentionLabel").textContent = tab === "olympiad" ? "Missing skill_track/reason" : "Inactive / needs edit";
-      renderTable([]);
-      refresh();
-    }
-
-    function fillSkillTrackDropdowns() {
-      const filterSel = $("skillTrack");
-      const editSel = $("f_skill_track");
-      filterSel.innerHTML = `<option value="">Any</option>` + ALLOWED_SKILL_TRACKS.map(v => `<option value="${v}">${v}</option>`).join("");
-      editSel.innerHTML = `<option value="">(unchanged)</option>` + ALLOWED_SKILL_TRACKS.map(v => `<option value="${v}">${v}</option>`).join("");
-    }
-
-    // ====== Query Builder ======
-    function buildQuery() {
-      const q = ($("q").value || "").trim();
-      const difficulty = $("difficulty").value || "";
-      const age = $("age").value || "";
-      const category = ($("category").value || "").trim();
-      const skillTrack = $("skillTrack").value || "";
-      const onlyActive = $("onlyActive").value;
-      const sort = $("sort").value;
-
-      let query = supabase.from("problems").select("*", { count: "exact" });
-
-      // Section split
-      query = query.eq("section", currentTab);
-
-      // Default for olympiad: show queue of missing skill_track OR missing review_reason OR still draft/review
-      if (currentTab === "olympiad") {
-        // Keep it broad but useful: show draft/review by default, unless user searches
-        query = query.in("publish_state", ["draft", "review", "published"]).order("created_at", { ascending: false });
-        // When no explicit search/filters, prefer "needs attention" rows first
-      } else {
-        query = query.order("created_at", { ascending: sort === "created_at_asc" });
-      }
-
-      if (difficulty) query = query.eq("difficulty", difficulty);
-      if (age) query = query.eq("age_category", age);
-      if (category) query = query.ilike("category", `%${category}%`);
-      if (skillTrack) query = query.eq("skill_track", skillTrack);
-
-      if (onlyActive === "true") query = query.eq("is_active", true);
-      if (onlyActive === "false") query = query.eq("is_active", false);
-
-      if (q) {
-        // Search across title/category/skill_track + tags/text (best-effort)
-        // Note: PostgREST OR syntax
-        const ors = [
-          `title.ilike.%${q}%`,
-          `category.ilike.%${q}%`,
-          `skill_track.ilike.%${q}%`,
-          `problem_text.ilike.%${q}%`,
-          `review_reason.ilike.%${q}%`
-        ];
-        query = query.or(ors.join(","));
-      }
-
-      const from = page * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
-      query = query.range(from, to);
-
-      return query;
-    }
-
-    async function refreshKpis() {
-      try {
-        // Queue count
-        let q1 = supabase.from("problems").select("id", { count: "exact", head: true }).eq("section", currentTab);
-        // Attention count
-        let q2 = supabase.from("problems").select("id", { count: "exact", head: true }).eq("section", currentTab);
-
-        if (currentTab === "olympiad") {
-          q1 = q1.in("publish_state", ["draft","review"]);
-          q2 = q2.or("skill_track.is.null,review_reason.is.null").in("publish_state", ["draft","review"]);
-        } else {
-          q2 = q2.eq("is_active", false);
-        }
-
-        const [r1, r2] = await Promise.all([q1, q2]);
-        $("kpiQueue").textContent = String(r1.count ?? "—");
-        $("kpiAttention").textContent = String(r2.count ?? "—");
-      } catch {
-        // ignore
-      }
-    }
-
-    // ====== Data Fetch / Render ======
-    async function fetchRows(append=false) {
-      $("btnLoadMore").disabled = true;
-
-      const query = buildQuery();
-      const { data, error, count } = await query;
-
-      if (error) {
-        toast("Query failed", error.message || String(error), "danger");
-        $("btnLoadMore").disabled = false;
-        return;
-      }
-
-      $("rowCount").textContent = String(count ?? (append ? currentRows.length : (data?.length ?? 0)));
-
-      const rows = (data ?? []);
-      if (append) currentRows = currentRows.concat(rows);
-      else currentRows = rows;
-
-      // For olympiad, sort so "needs attention" appear first (client-side)
-      if (currentTab === "olympiad") {
-        currentRows.sort((a,b) => {
-          const aBad = (!a.skill_track || !a.review_reason) ? 0 : 1;
-          const bBad = (!b.skill_track || !b.review_reason) ? 0 : 1;
-          if (aBad !== bBad) return aBad - bBad;
-          return new Date(b.created_at ?? 0) - new Date(a.created_at ?? 0);
-        });
-      }
-
-      renderTable(currentRows);
-      $("btnLoadMore").disabled = false;
-    }
-
-    function renderTable(rows) {
-      const wrap = $("tableWrap");
-      if (!rows || rows.length === 0) {
-        wrap.innerHTML = `<div class="bd" style="padding:14px 16px;"><div class="muted">No rows yet. Try adjusting filters, or refresh.</div></div>`;
-        return;
-      }
-
-      const isOlympiad = currentTab === "olympiad";
-      const cols = isOlympiad
-        ? ["Status", "Title", "Skill Track", "Tags", "Created", "Actions"]
-        : ["Status", "Title", "Age", "Difficulty", "Category", "Created", "Actions"];
-
-      const head = `<thead><tr>${cols.map(c => `<th>${c}</th>`).join("")}</tr></thead>`;
-
-      const body = rows.map(r => {
-        const status = badgeFor(r);
-        const title = `<div style="display:grid;gap:6px;">
-            <div style="font-weight:800;">${escapeHtml(r.title || "Untitled")}</div>
-            <div class="muted" style="line-height:1.3;">${escapeHtml(safePreview(r.problem_text, 120))}</div>
-            <div class="mono">${escapeHtml(r.id)}</div>
-          </div>`;
-
-        const tags = Array.isArray(r.curriculum_tags) ? r.curriculum_tags : null;
-        const tagsCell = tags ? `<span class="mono">${escapeHtml(JSON.stringify(tags))}</span>` : `<span class="muted">—</span>`;
-
-        const created = `<span class="muted">${escapeHtml(fmtTime(r.created_at))}</span>`;
-
-        const actions = `<div class="actions">
-            <button class="btn" data-act="edit" data-id="${r.id}">Open</button>
-            ${
-              isOlympiad
-                ? `<button class="btn primary" data-act="quick-assign" data-id="${r.id}">Assign</button>`
-                : `<button class="btn" data-act="toggle-active" data-id="${r.id}">${r.is_active === false ? "Activate" : "Deactivate"}</button>`
-            }
-          </div>`;
-
-        if (isOlympiad) {
-          const skill = r.skill_track ? `<span class="badge">${escapeHtml(r.skill_track)}</span>` : `<span class="badge warn">NULL</span>`;
-          return `<tr>
-            <td>${status}</td>
-            <td>${title}</td>
-            <td>${skill}<div class="muted" style="margin-top:6px;line-height:1.35;">${escapeHtml(safePreview(r.review_reason, 90) || "")}</div></td>
-            <td>${tagsCell}</td>
-            <td>${created}</td>
-            <td>${actions}</td>
-          </tr>`;
-        } else {
-          const age = `<span class="muted">${escapeHtml(r.age_category || "—")}</span>`;
-          const diff = `<span class="badge">${escapeHtml(r.difficulty || "—")}</span>`;
-          const cat = `<span class="muted">${escapeHtml(r.category || "—")}</span>`;
-          return `<tr>
-            <td>${status}</td>
-            <td>${title}</td>
-            <td>${age}</td>
-            <td>${diff}</td>
-            <td>${cat}</td>
-            <td>${created}</td>
-            <td>${actions}</td>
-          </tr>`;
-        }
-      }).join("");
-
-      wrap.innerHTML = `<table>${head}<tbody>${body}</tbody></table>`;
-    }
-
-    // ====== Modal (Edit) ======
-    function openModal(row) {
-      originalRow = structuredClone(row);
-      $("mTitle").textContent = row.title || "Edit Problem";
-      $("mMeta").textContent = `Section: ${row.section} • Created: ${fmtTime(row.created_at)}`;
-      $("mFooterLeft").textContent = `ID: ${row.id}`;
-
-      $("f_title").value = row.title ?? "";
-      $("f_section").value = row.section ?? "";
-      $("f_age_category").value = row.age_category ?? "";
-      $("f_difficulty").value = "";
-      $("f_category").value = row.category ?? "";
-      $("f_tags").value = Array.isArray(row.curriculum_tags) ? JSON.stringify(row.curriculum_tags) : "";
-      $("f_problem_text").value = row.problem_text ?? "";
-      $("f_answer_key").value = row.answer_key ?? "";
-      $("f_solution_explanation").value = row.solution_explanation ?? "";
-      $("f_is_active").value = "";
-      $("f_updated_at").value = fmtTime(row.updated_at ?? row.created_at);
-
-      const isOlympiad = row.section === "olympiad";
-      $("olympiadFields").style.display = isOlympiad ? "" : "none";
-
-      if (isOlympiad) {
-        $("f_skill_track").value = "";
-        $("f_review_reason").value = row.review_reason ?? "";
-        $("f_publish_state").value = "";
-      }
-
-      $("modal").classList.add("show");
-    }
-
-    function closeModal() {
-      $("modal").classList.remove("show");
-      originalRow = null;
-    }
-
-    function getEditPayload() {
-      if (!originalRow) return null;
-
-      const payload = {};
-
-      // Always safe fields
-      if ($("f_title").value.trim() !== originalRow.title) payload.title = $("f_title").value.trim();
-
-      // Only update difficulty if user selected one explicitly
-      if ($("f_difficulty").value) payload.difficulty = $("f_difficulty").value;
-
-      const age = $("f_age_category").value.trim();
-      if (age !== (originalRow.age_category ?? "")) payload.age_category = age;
-
-      const cat = $("f_category").value.trim();
-      if (cat !== (originalRow.category ?? "")) payload.category = cat;
-
-      const tags = parseJsonArray($("f_tags").value);
-      if (tags !== null) payload.curriculum_tags = tags;
-
-      const pt = $("f_problem_text").value;
-      if (pt !== (originalRow.problem_text ?? "")) payload.problem_text = pt;
-
-      const ak = $("f_answer_key").value;
-      if (ak !== (originalRow.answer_key ?? "")) payload.answer_key = ak;
-
-      const se = $("f_solution_explanation").value;
-      if (se !== (originalRow.solution_explanation ?? "")) payload.solution_explanation = se;
-
-      if ($("f_is_active").value) payload.is_active = ($("f_is_active").value === "true");
-
-      if (originalRow.section === "olympiad") {
-        if ($("f_skill_track").value) payload.skill_track = $("f_skill_track").value;
-        const rr = $("f_review_reason").value.trim();
-        if (rr !== (originalRow.review_reason ?? "")) payload.review_reason = rr;
-        if ($("f_publish_state").value) payload.publish_state = $("f_publish_state").value;
-      }
-
-      return payload;
-    }
-
-    async function saveEdits() {
-      const payload = getEditPayload();
-      if (!payload) return;
-
-      if (Object.keys(payload).length === 0) {
-        toast("Nothing to save", "No changes detected.");
-        return;
-      }
-
-      // Olympiad safety: if user sets skill_track, encourage review_reason
-      if (originalRow.section === "olympiad") {
-        const nextSkill = payload.skill_track ?? originalRow.skill_track;
-        const nextReason = payload.review_reason ?? originalRow.review_reason;
-        if (nextSkill && !nextReason) {
-          toast("Olympiad policy", "Please add review_reason for auditability before publishing.");
-          // Still allow save, but warn.
-        }
-      }
-
-      const { error } = await supabase
-        .from("problems")
-        .update(payload)
-        .eq("id", originalRow.id);
-
-      if (error) {
-        toast("Save failed", error.message || String(error), "danger");
-        return;
-      }
-
-      toast("Saved", "Problem updated successfully.");
-      closeModal();
-      refresh();
-    }
-
-    async function archiveProblem(id) {
-      // Enterprise-safe default: soft archive.
-      // Uses is_active=false, and publish_state='archived' if the column exists / accepted.
-      const row = currentRows.find(r => r.id === id);
-      const payload = { is_active: false };
-      if (row?.section === "olympiad") payload.publish_state = "archived";
-
-      const { error } = await supabase.from("problems").update(payload).eq("id", id);
-      if (error) {
-        toast("Archive failed", error.message || String(error), "danger");
-        return;
-      }
-      toast("Archived", "Problem was archived (is_active=false).");
-      closeModal();
-      refresh();
-    }
-
-    async function toggleActive(id) {
-      const row = currentRows.find(r => r.id === id);
-      if (!row) return;
-      const next = !(row.is_active === true);
-      const { error } = await supabase.from("problems").update({ is_active: next }).eq("id", id);
-      if (error) {
-        toast("Update failed", error.message || String(error), "danger");
-        return;
-      }
-      toast("Updated", next ? "Activated" : "Deactivated");
-      refresh();
-    }
-
-    async function quickAssign(id) {
-      // Mini-flow for olympiad: set skill_track + review_reason quickly.
-      const row = currentRows.find(r => r.id === id);
-      if (!row) return;
-
-      const defaultSkill = (() => {
-        const tags = Array.isArray(row.curriculum_tags) ? row.curriculum_tags.join(" ").toLowerCase() : "";
-        const title = (row.title || "").toLowerCase();
-        const blob = `${title} ${tags} ${(row.category||"").toLowerCase()}`;
-        if (blob.includes("geometry") || blob.includes("angle")) return "geometry_no_formulas";
-        if (blob.includes("divis")) return "divisibility";
-        if (blob.includes("count")) return "counting";
-        if (blob.includes("pattern")) return "patterns";
-        if (blob.includes("invariant")) return "invariants";
-        if (blob.includes("worst")) return "worst_case";
-        return "mixed";
-      })();
-
-      const reason = `Manual assignment: title/tags indicate ${defaultSkill}.`;
-      const { error } = await supabase
-        .from("problems")
-        .update({
-          skill_track: defaultSkill,
-          review_reason: row.review_reason || reason
-        })
-        .eq("id", id);
-
-      if (error) {
-        toast("Assign failed", error.message || String(error), "danger");
-        return;
-      }
-      toast("Assigned", `skill_track → ${defaultSkill}`);
-      refresh();
-    }
-
-    // ====== Quick Add (Regular) ======
-    function openAdd() {
-      $("modalAdd").classList.add("show");
-      $("a_title").value = "";
-      $("a_age_category").value = "";
-      $("a_difficulty").value = "medium";
-      $("a_category").value = "";
-      $("a_tags").value = "";
-      $("a_problem_text").value = "";
-      $("a_answer_key").value = "";
-      $("a_solution_explanation").value = "";
-    }
-    function closeAdd() { $("modalAdd").classList.remove("show"); }
-
-    async function createRegular() {
-      const title = $("a_title").value.trim();
-      const age_category = $("a_age_category").value.trim();
-      const difficulty = $("a_difficulty").value;
-      const category = $("a_category").value.trim();
-      const tags = parseJsonArray($("a_tags").value) ?? [];
-      const problem_text = $("a_problem_text").value;
-      const answer_key = $("a_answer_key").value;
-      const solution_explanation = $("a_solution_explanation").value;
-
-      if (!title || !problem_text) {
-        toast("Missing fields", "Title and Problem Text are required.");
-        return;
-      }
-
-      const payload = {
-        section: "regular",
-        title,
-        age_category,
-        difficulty,
-        category,
-        curriculum_tags: tags,
-        problem_text,
-        answer_key,
-        solution_explanation,
-        is_active: true
+    function setLoggedInUI(){
+      const email = session?.user?.email || 'Signed in';
+      whoami.textContent = `Signed in: ${email}`;
+      whoami.classList.remove('hidden');
+      btnLogout.classList.remove('hidden');
+
+      // chips
+      roleChips.innerHTML = '';
+      const addChip = (t) => {
+        const span = document.createElement('span');
+        span.className = 'chip';
+        span.textContent = t;
+        roleChips.appendChild(span);
       };
+      if (!myRoles.length) addChip('role: none');
+      myRoles.forEach(r => addChip(`role: ${r}`));
 
-      const { error } = await supabase.from("problems").insert(payload);
-      if (error) {
-        toast("Create failed", error.message || String(error), "danger");
+      const isSuper = myRoles.includes('super_admin');
+      btnRoleMgmt.classList.toggle('hidden', !isSuper);
+      btnOpenRoleMgmt.classList.toggle('hidden', !isSuper);
+
+      if (!myRoles.length){
+        accessState.innerHTML = `Access denied. No admin role found for <span class="mono">${email}</span>.`;
+        panelHint.textContent = 'No access';
+        panelBody.innerHTML = '<div class="muted">Ask a super_admin to assign you an admin role.</div>';
         return;
       }
-      toast("Created", "Regular problem added.");
-      closeAdd();
-      setTab("regular");
+
+      accessState.innerHTML = `Access OK. Roles loaded for <span class="mono">${email}</span>.`;
+      panelHint.textContent = 'Ready';
+      renderTab(document.querySelector('.tab.active')?.dataset?.tab || 'dashboard');
     }
 
-    // ====== Main refresh ======
-    async function refresh() {
-      await refreshKpis();
-      await fetchRows(false);
-    }
-
-    // ====== Wire up ======
-    function wire() {
-      fillSkillTrackDropdowns();
-
-      document.querySelectorAll(".tab").forEach(btn => {
-        btn.addEventListener("click", () => setTab(btn.dataset.tab));
-      });
-
-      $("btnApply").addEventListener("click", () => {
-        page = 0;
-        refresh();
-      });
-
-      $("btnRefresh").addEventListener("click", () => {
-        page = 0;
-        refresh();
-      });
-
-      $("btnLoadMore").addEventListener("click", async () => {
-        page += 1;
-        await fetchRows(true);
-      });
-
-      $("tableWrap").addEventListener("click", (e) => {
-        const b = e.target.closest("button");
-        if (!b) return;
-        const id = b.dataset.id;
-        const act = b.dataset.act;
-        if (!id || !act) return;
-
-        if (act === "edit") {
-          const row = currentRows.find(r => r.id === id);
-          if (row) openModal(row);
+    async function fetchMyRoles(){
+      // Uses your existing RPC from earlier versions. Expected to return array of rows like [{role:"super_admin"}, ...]
+      const { data, error } = await supabase.rpc('admin_get_my_roles');
+      if (error){
+        // fallback: try direct table read (works only if RLS allows for own row)
+        const fallback = await supabase.from('user_roles').select('role').limit(10);
+        if (!fallback.error){
+          return (fallback.data || []).map(r => r.role);
         }
-        if (act === "toggle-active") toggleActive(id);
-        if (act === "quick-assign") quickAssign(id);
-      });
-
-      $("btnClose").addEventListener("click", closeModal);
-      $("btnReset").addEventListener("click", () => {
-        if (originalRow) openModal(originalRow);
-      });
-      $("btnSave").addEventListener("click", saveEdits);
-
-      $("btnArchive").addEventListener("click", () => {
-        if (!originalRow) return;
-        const ok = confirm("Archive this problem? (Sets is_active=false. Olympiad also sets publish_state=archived.)");
-        if (ok) archiveProblem(originalRow.id);
-      });
-
-      $("btnCopyId").addEventListener("click", async () => {
-        if (!originalRow) return;
-        await navigator.clipboard.writeText(originalRow.id);
-        toast("Copied", "Problem ID copied to clipboard.");
-      });
-
-      // Quick Add
-      $("btnQuickAdd").addEventListener("click", openAdd);
-      $("btnAddClose").addEventListener("click", closeAdd);
-      $("btnAddCreate").addEventListener("click", createRegular);
-
-      // Escape to close
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-          if ($("modal").classList.contains("show")) closeModal();
-          if ($("modalAdd").classList.contains("show")) closeAdd();
-        }
-      });
-
-      // Click backdrop to close
-      $("modal").addEventListener("click", (e) => {
-        if (e.target === $("modal")) closeModal();
-      });
-      $("modalAdd").addEventListener("click", (e) => {
-        if (e.target === $("modalAdd")) closeAdd();
-      });
+        throw error;
+      }
+      if (Array.isArray(data)){
+        return data.map(r => r.role).filter(Boolean);
+      }
+      // some implementations return {roles:[...]}
+      if (data?.roles && Array.isArray(data.roles)) return data.roles;
+      return [];
     }
 
-    wire();
-    refresh();
-  
-// --- Enterprise navigation + optional Auth ---
-const LP_SITE_URL = localStorage.getItem("lp_site_url") || "./";
-const LP_STUDENT_DASH_URL = localStorage.getItem("lp_student_dash_url") || "./";
+    async function refreshAuthState(){
+      const res = await supabase.auth.getSession();
+      session = res?.data?.session || null;
 
-const btnVisitSite = document.getElementById("btnVisitSite");
-const btnStudentDash = document.getElementById("btnStudentDash");
-btnVisitSite?.addEventListener("click", () => window.open(LP_SITE_URL, "_blank", "noopener"));
-btnStudentDash?.addEventListener("click", () => window.open(LP_STUDENT_DASH_URL, "_blank", "noopener"));
+      if (!session){
+        loginScreen.classList.remove('hidden');
+        loginScreen.setAttribute('aria-hidden','false');
+        setLoggedOutUI();
+        return;
+      }
 
-// Nav view switching (keeps your existing Regular/Olympiad logic intact)
-const navEl = document.querySelector(".lp-nav");
-const setNavActive = (view) => {
-  if (!navEl) return;
-  navEl.querySelectorAll(".lp-tab").forEach(el => el.classList.remove("is-active"));
-  const active = navEl.querySelector(`[data-view="${view}"]`);
-  active?.classList.add("is-active");
-};
+      loginScreen.classList.add('hidden');
+      loginScreen.setAttribute('aria-hidden','true');
 
-navEl?.addEventListener("click", (e) => {
-  const el = e.target.closest("[data-view]");
-  if (!el) return;
-  const view = el.getAttribute("data-view");
-  if (!view) return;
-  // Links open in new tab; don't toggle active for them
-  if (el.tagName.toLowerCase() === "a") return;
+      try{
+        myRoles = await fetchMyRoles();
+      }catch(e){
+        myRoles = [];
+        console.error(e);
+      }
 
-  if (view === "regular") {
-    document.querySelector('.tab[data-tab="regular"]')?.click();
-    setNavActive("regular");
-  } else if (view === "olympiad") {
-    document.querySelector('.tab[data-tab="olympiad"]')?.click();
-    setNavActive("olympiad");
-  } else if (view === "dashboard") {
-    // Dashboard = whichever mode is selected; just scroll top for now
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    setNavActive("dashboard");
-  } else if (view === "users") {
-    setNavActive("users");
-    alert("Users panel is coming next. We'll wire this once you enable Auth/RLS for enterprise-grade admin roles.");
-  }
-});
+      setLoggedInUI();
+    }
 
-// --- Auth + RLS (ENFORCED) ---
-(async () => {
-const btnAuth = document.getElementById("btnAuth");
-const btnLogout = document.getElementById("btnLogout");
-const btnRoles = document.getElementById("btnRoles");
-btnRoles.addEventListener('click', () => openRoles());
+    // ---- Navigation ----
+    function setActiveTab(name){
+      [...document.querySelectorAll('.tab')].forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    }
 
-const authBackdrop = document.getElementById("authBackdrop");
-const authClose = document.getElementById("authClose");
-const authCancel = document.getElementById("authCancel");
-const authEmail = document.getElementById("authEmail");
-const authPassword = document.getElementById("authPassword");
-const authSignIn = document.getElementById("authSignIn");
-const authMsg = document.getElementById("authMsg");
+    function renderTab(name){
+      setActiveTab(name);
 
-const rolesBackdrop = document.getElementById("rolesBackdrop");
-const rolesClose = document.getElementById("btnRolesClose");
-const rolesEmail = document.getElementById("rolesEmail");
-const rolesRole = document.getElementById("rolesRole");
-const rolesStatus = document.getElementById("rolesStatus");
-const rolesOutput = document.getElementById("rolesOutput");
+      const canRegular = myRoles.includes('admin_regular') || myRoles.includes('super_admin');
+      const canOlympiad = myRoles.includes('admin_olympiad') || myRoles.includes('super_admin');
 
-const openAuth = () => { authBackdrop.hidden = false; authEmail?.focus(); };
-const closeAuth = () => { authBackdrop.hidden = true; authMsg.textContent = ""; };
+      if (name === 'dashboard'){
+        panelTitle.textContent = 'Dashboard';
+        panelBody.innerHTML = `
+          <div class="muted">Welcome. Use the tabs to review problems or manage roles.</div>
+          <div style="height:12px"></div>
+          <div class="muted2 small">Current roles: <span class="mono">${(myRoles.length? myRoles.join(', ') : 'none')}</span></div>
+        `;
+        return;
+      }
 
-authClose?.addEventListener("click", closeAuth);
-authCancel?.addEventListener("click", closeAuth);
-authBackdrop?.addEventListener("click", (e) => { if (e.target === authBackdrop) closeAuth(); });
-btnAuth?.addEventListener("click", openAuth);
+      if (name === 'regular'){
+        panelTitle.textContent = 'Regular review';
+        if (!canRegular){
+          panelBody.innerHTML = '<div class="muted">You do not have permission for Regular review.</div>';
+          return;
+        }
+        panelBody.innerHTML = '<div class="muted">Regular Review Queue — connect to your problems table / filters next.</div>';
+        return;
+      }
 
-function lockApp(locked){
-  const lock = document.getElementById("appLock");
-  if(!lock) return;
-  lock.hidden = !locked;
-}
+      if (name === 'olympiad'){
+        panelTitle.textContent = 'Olympiad review';
+        if (!canOlympiad){
+          panelBody.innerHTML = '<div class="muted">You do not have permission for Olympiad review.</div>';
+          return;
+        }
+        panelBody.innerHTML = '<div class="muted">Olympiad Review Queue — connect to olympiad rubric gating next.</div>';
+        return;
+      }
 
-let currentUser = null;
-let currentRoles = [];
-
-async function loadMyRoles(){
-  currentRoles = [];
-  if(!currentUser) return;
-
-  // Preferred: RPC (enterprise-safe; works even if table RLS blocks direct selects)
-  try{
-    const { data: rpcData, error: rpcErr } = await supabase.rpc("admin_get_my_roles");
-    if(!rpcErr && rpcData){
-      let roles = [];
-      if(Array.isArray(rpcData)) roles = rpcData;
-      else if(rpcData.roles && Array.isArray(rpcData.roles)) roles = rpcData.roles;
-      else if(rpcData.data && Array.isArray(rpcData.data)) roles = rpcData.data;
-      roles = roles.map(String);
-      if(roles.length){
-        currentRoles = roles;
+      if (name === 'payments'){
+        window.location.href = './admin-payments.html';
+        return;
+      }
+      if (name === 'subscriptions'){
+        window.location.href = './admin-subscriptions.html';
+        return;
+      }
+      if (name === 'users'){
+        panelTitle.textContent = 'Users';
+        panelBody.innerHTML = '<div class="muted">User tools placeholder (roles are managed via the Admin roles dialog).</div>';
         return;
       }
     }
-  }catch(_e){ /* ignore */ }
 
-  const { data, error } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", currentUser.id);
+    // ---- Role modal ----
+    function openRoleModal(){
+      clearMsg(roleMsg);
+      roleModal.classList.add('show');
+      roleModal.setAttribute('aria-hidden','false');
+      targetEmail.focus();
+    }
+    function closeRoleModal(){
+      roleModal.classList.remove('show');
+      roleModal.setAttribute('aria-hidden','true');
+    }
 
-  if(error){
-    currentRoles = [];
-    toast("Role lookup failed: " + error.message);
-    return;
-  }
-  currentRoles = (data || []).map(r => String(r.role));
-}
+    // ---- Handlers ----
+    btnVisit.addEventListener('click', () => { window.location.href = './index.html'; });
+    btnStudent.addEventListener('click', () => { window.location.href = './dashboard.html'; });
 
-function hasRole(role){ return currentRoles.includes(role); }
+    btnLogout.addEventListener('click', async () => {
+      try{ await supabase.auth.signOut(); }catch(e){ console.warn(e); }
+      await refreshAuthState();
+    });
 
-function applyRoleGates(){
-  const isSuper = hasRole("super_admin");
-  const canRegular = isSuper || hasRole("admin_regular");
-  const canOlympiad = isSuper || hasRole("admin_olympiad");
-  const canRead = canRegular || canOlympiad || isSuper || hasRole("support_readonly");
+    btnSignIn.addEventListener('click', async () => {
+      clearMsg(loginMsg);
+      const email = (loginEmail.value || '').trim();
+      const password = (loginPassword.value || '').trim();
+      if (!email || !password){
+        showMsg(loginMsg, 'Please enter email and password.');
+        return;
+      }
+      btnSignIn.disabled = true;
+      btnSignIn.textContent = 'Signing in…';
+      try{
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        await refreshAuthState();
+      }catch(e){
+        showMsg(loginMsg, { error: e?.message || String(e) });
+      }finally{
+        btnSignIn.disabled = false;
+        btnSignIn.textContent = 'Sign in';
+      }
+    });
 
-  if(btnRoles) btnRoles.style.display = isSuper ? "inline-flex" : "none";
+    // Enter-to-submit on password
+    loginPassword.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') btnSignIn.click();
+    });
 
-    if(!hasRole('super_admin')) closeRoles();
-// Safety: if a non-super user somehow has the Roles modal open, close it.
-  try{
-    if(!isSuper && rolesBackdrop && rolesBackdrop.hidden === false) closeRoles();
-  }catch(_e){}
+    // Role management open buttons
+    btnRoleMgmt.addEventListener('click', openRoleModal);
+    btnOpenRoleMgmt.addEventListener('click', openRoleModal);
+    btnCloseRoleModal.addEventListener('click', closeRoleModal);
+    roleModal.addEventListener('click', (e) => { if (e.target === roleModal) closeRoleModal(); });
 
-  const tReg = document.getElementById("toggleRegular");
-  const tOly = document.getElementById("toggleOlympiad");
-  if(tReg) tReg.disabled = !canRegular;
-  if(tOly) tOly.disabled = !canOlympiad;
+    btnListMyRoles.addEventListener('click', async () => {
+      clearMsg(roleMsg);
+      try{
+        const roles = await fetchMyRoles();
+        showMsg(roleMsg, { ok: true, roles });
+      }catch(e){
+        showMsg(roleMsg, { error: e?.message || String(e) });
+      }
+    });
 
-  if(canRegular && !canOlympiad) state.mode = "regular";
-  if(canOlympiad && !canRegular) state.mode = "olympiad";
-
-  if(!canRead){
-    lockApp(true);
-    toast("No admin role assigned yet. Ask a super_admin to assign you a role.");
-  }
-}
-
-async function refreshAuthUI(){
-  const { data } = await supabase.auth.getSession();
-  const session = data?.session;
-  currentUser = session?.user || null;
-
-  if(currentUser){
-    btnAuth.hidden = true;
-    btnLogout.hidden = false;
-    btnLogout.textContent = `Log out (${currentUser.email || "admin"})`;
-    await loadMyRoles();
-  btnRoles.style.display = (currentUser && (currentRoles || []).includes('super_admin')) ? 'inline-flex' : 'none';
-    applyRoleGates();
-    lockApp(false);
-  } else {
-    btnAuth.hidden = false;
-    btnLogout.hidden = true;
-    btnLogout.textContent = "Log out";
-    lockApp(true);
-  }
-}
-
-authSignIn?.addEventListener("click", async () => {
-  const email = (authEmail?.value || "").trim();
-  const password = authPassword?.value || "";
-  authMsg.textContent = "Signing in…";
-  if (location.protocol === 'file:') {
-    authMsg.textContent = "This page must be served over http(s) (not file://) for Supabase requests. Use a local server (e.g., npx serve) or deploy to Vercel.";
-    return;
-  }
-  try {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    authMsg.textContent = "Signed in.";
-    await refreshAuthUI();
-    setTimeout(closeAuth, 350);
-    await refresh();
-  } catch (err) {
-    authMsg.textContent = `Sign in failed: ${err?.message || err}`;
-  }
-});
-
-btnLogout?.addEventListener("click", async () => {
-  try { await supabase.auth.signOut(); } catch (_) {}
-  await refreshAuthUI();
-  await refresh();
-});
-
-// Enforce login: if user closes auth without signing in, keep locked
-const _closeAuth = closeAuth;
-function enforcedCloseAuth(){
-  _closeAuth();
-  if(!currentUser) lockApp(true);
-}
-authClose?.removeEventListener("click", closeAuth);
-authCancel?.removeEventListener("click", closeAuth);
-authClose?.addEventListener("click", enforcedCloseAuth);
-authCancel?.addEventListener("click", enforcedCloseAuth);
-
-// Roles modal
-function openRoles() {
-  if (!currentUser) { openAuth(); toast('Please sign in first.'); return; }
-  if (!(currentRoles || []).includes('super_admin')) { toast('Only super_admin can assign roles.'); return; }
-  rolesBackdrop.hidden = false;
-  rolesEmail?.focus();
-  rolesStatus.textContent = "";
-  rolesOutput.textContent = "";
-}
-function closeRoles(){
-  rolesBackdrop.hidden = true;
-  rolesStatus.textContent = "";
-}
-btnRoles?.addEventListener("click", openRoles);
-rolesClose?.addEventListener("click", closeRoles);
-rolesBackdrop?.addEventListener("click", (e) => { if(e.target === rolesBackdrop) closeRoles(); });
-
-document.getElementById("btnSetRole")?.addEventListener("click", async () => {
-  const email = (document.getElementById("roleEmail")?.value || "").trim();
-  const role = document.getElementById("roleSel")?.value;
-
-  document.getElementById("roleMsg").textContent = "Assigning...";
-  if (!email) {
-    document.getElementById("roleMsg").textContent = "Please enter a user email.";
-    return;
-  }
-
-  try {
-    // Primary: Supabase RPC
-    const result = await withTimeout(
-      supabase.rpc("admin_set_role", { target_email: email, new_role: role }),
-      30_000
-    );
-
-    // Some versions return { data, error }, others might throw - normalize
-    if (result?.error) throw result.error;
-
-    const data = result?.data ?? result;
-    document.getElementById("roleMsg").textContent = "✅ " + JSON.stringify(data);
-
-    // Refresh our cached roles so UI gating updates immediately
-    await loadMyRoles();
-    applyRoleGates();
-    return;
-  } catch (e1) {
-    console.warn("RPC failed, trying direct fetch fallback:", e1);
-    try {
-      // Fallback: direct PostgREST call (helps diagnose CORS / headers / auth)
-      const session = (await supabase.auth.getSession()).data?.session;
-      if (!session?.access_token) throw new Error("No session access_token. Please sign in again.");
-
-      const controller = new AbortController();
-      const t = setTimeout(() => controller.abort(), 30_000);
-
-      const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_set_role`, {
-        method: "POST",
-        headers: {
-          "apikey": SUPABASE_ANON_KEY,
-          "Authorization": `Bearer ${session.access_token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ target_email: email, new_role: role }),
-        signal: controller.signal,
-      }).finally(() => clearTimeout(t));
-
-      const bodyText = await resp.text();
-      if (!resp.ok) {
-        throw new Error(`HTTP ${resp.status} ${resp.statusText}: ${bodyText}`);
+    btnAssignRole.addEventListener('click', async () => {
+      clearMsg(roleMsg);
+      const email = (targetEmail.value || '').trim();
+      const role = targetRole.value;
+      if (!email){
+        showMsg(roleMsg, 'Please enter a user email.');
+        return;
+      }
+      if (!myRoles.includes('super_admin')){
+        showMsg(roleMsg, { error: 'Not authorized. Only super_admin can assign roles.' });
+        return;
       }
 
-      document.getElementById("roleMsg").textContent = "✅ " + bodyText;
-      await loadMyRoles();
-      applyRoleGates();
-    } catch (e2) {
-      console.error("Role assignment failed:", e2);
-      document.getElementById("roleMsg").textContent =
-        "❌ " + (e2?.message || e1?.message || String(e2 || e1));
-    }
-  }
-});
+      btnAssignRole.disabled = true;
+      btnAssignRole.textContent = 'Assigning…';
+      try{
+        // IMPORTANT: Use supabase.rpc so it carries the user JWT. Do NOT use fetch to /rest/v1/rpc.
+        const { data, error } = await supabase.rpc('admin_set_role', { target_email: email, new_role: role });
+        if (error) throw error;
+        showMsg(roleMsg, data || { ok:true });
+      }catch(e){
+        showMsg(roleMsg, { error: e?.message || String(e) });
+      }finally{
+        btnAssignRole.disabled = false;
+        btnAssignRole.textContent = 'Assign role';
+      }
+    });
 
-document.getElementById("btnListRoles")?.addEventListener("click", async () => {
-  await loadMyRoles();
-  rolesOutput.textContent = JSON.stringify({ user: currentUser?.email, roles: currentRoles }, null, 2);
-});
+    // Tabs
+    mainTabs.addEventListener('click', (e) => {
+      const tab = e.target?.closest?.('.tab');
+      if (!tab) return;
+      renderTab(tab.dataset.tab);
+    });
 
-// Auth state changes
-supabase.auth.onAuthStateChange(async (_event, session) => {
-  currentUser = session?.user || null;
-  await refreshAuthUI();
-  await refresh();
-});
+    // Supabase auth subscription
+    supabase.auth.onAuthStateChange(async (_evt, newSession) => {
+      session = newSession;
+      await refreshAuthState();
+    });
 
-closeRoles();
-// Initialize (locked until signed-in)
-await refreshAuthUI();
-if(!currentUser) openAuth();
-// Initial load (will show empty/error until signed-in if RLS enabled)
-await refresh();
-})();
+    // Boot
+    await refreshAuthState();
 
+    // Safety: never auto-open role modal.
+    closeRoleModal();
 
-</script>
-
-  <!-- Auth modal (optional; becomes required when you enable RLS later) -->
-  <div class="lp-modal-backdrop" id="authBackdrop" hidden>
-    <div class="lp-modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-      <div class="lp-modal-head">
-        <h3 id="authTitle">Admin sign in</h3>
-        <button class="lp-icon-btn" id="authClose" aria-label="Close">✕</button>
-      </div>
-      <div class="lp-modal-body">
-        <p class="lp-muted">This console is protected by Supabase Auth + Row Level Security (RLS). You must sign in to continue.</p>
-        <div class="lp-form">
-          <label>Email</label>
-          <input id="authEmail" type="email" placeholder="admin@logicpals.com" autocomplete="username" />
-          <label>Password</label>
-          <input id="authPassword" type="password" placeholder="••••••••" autocomplete="current-password" />
-          <div class="lp-form-row">
-            <button class="lp-btn" id="authSignIn">Sign in</button>
-            <button class="lp-btn lp-btn-ghost" id="authCancel">Cancel</button>
-          </div>
-          <div class="lp-note" id="authMsg" role="status" aria-live="polite"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- Roles Modal (super admin) -->
-  <div class="lp-modal-backdrop" id="rolesBackdrop" hidden>
-    <div class="lp-modal" role="dialog" aria-modal="true" aria-labelledby="rolesTitle" style="max-width:760px;">
-      <div class="lp-modal-head">
-        <h3 id="rolesTitle">Admin roles</h3>
-        <button class="lp-icon-btn" id="btnRolesClose" aria-label="Close">✕</button>
-      </div>
-      <div class="lp-modal-body">
-        <p class="lp-muted">Assign enterprise-grade roles for this console. Only <b>super_admin</b> can change roles.</p>
-
-        <div class="lp-grid-2">
-          <div>
-            <label class="lp-label">User email</label>
-            <input class="lp-input" id="rolesEmail" placeholder="e.g. reviewer@logicpals.com" / autocomplete="off" autocapitalize="none" spellcheck="false">
-            <div class="lp-muted" style="margin-top:6px;">The user must have signed up at least once (exists in <code>auth.users</code>).</div>
-          </div>
-          <div>
-            <label class="lp-label">Role</label>
-            <select class="lp-select" id="rolesRole">
-              <option value="admin_regular">admin_regular — manage Regular problems</option>
-              <option value="admin_olympiad">admin_olympiad — manage Olympiad review</option>
-              <option value="support_readonly">support_readonly — view only</option>
-              <option value="super_admin">super_admin — full control</option>
-            </select>
-            <div class="lp-muted" style="margin-top:6px;">Tip: keep <b>super_admin</b> very small (1–2 people).</div>
-          </div>
-        </div>
-
-        <div class="lp-form-row" style="margin-top:12px; gap:10px;">
-          <button class="lp-btn" id="btnSetRole">Assign role</button>
-          <button class="lp-btn lp-btn-ghost" id="btnListRoles">List my roles</button>
-          <div class="lp-note" id="rolesStatus" style="margin-left:auto;"></div>
-        </div>
-
-        <pre class="lp-code" id="rolesOutput" style="max-height:220px; overflow:auto; margin-top:12px;"></pre>
-      </div>
-    </div>
-  </div>
-
-  <!-- App lock (blocks UI until signed in) -->
-  <div id="appLock" hidden style="position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter: blur(6px); z-index:50;"></div>
-
+  </script>
 </body>
 </html>
