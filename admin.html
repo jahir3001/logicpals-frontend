@@ -315,12 +315,17 @@
     const SUPABASE_URL = "https://ovszuxerimbmzfblzkgd.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14";
 
-    // IMPORTANT: persist session so coming back from /payments.html keeps you signed in.
+    // IMPORTANT:
+    // - persistSession keeps login stable across refresh.
+    // - autoRefreshToken prevents “random sign-outs” when the access token expires.
+    // - detectSessionInUrl is OFF because this is a static page (no OAuth redirect hash).
+    // - use localStorage explicitly so all admin pages share the same auth state.
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: true
+        detectSessionInUrl: false,
+        storage: window.localStorage,
       }
     });
 
@@ -527,9 +532,26 @@ async function getMyRole() {
         const { data, error } = await supabase.rpc(fn);
         if (error) continue;
         if (data == null) continue;
-        if (Array.isArray(data)) return data[0] || null;
-        if (typeof data === 'object' && data.role) return data.role;
-        if (typeof data === 'string') return data;
+        const normalize = (v) => {
+          if (!v) return null;
+          if (typeof v === 'string') return v;
+          if (typeof v === 'object') {
+            // expected: { role: 'super_admin' }
+            if (typeof v.role === 'string') return v.role;
+            // older variants may return other keys
+            for (const k of ['app_role','roles','my_role']) {
+              if (typeof v[k] === 'string') return v[k];
+            }
+            // last resort: first string value in the object
+            for (const val of Object.values(v)) {
+              if (typeof val === 'string') return val;
+            }
+          }
+          return null;
+        };
+
+        if (Array.isArray(data)) return normalize(data[0]);
+        return normalize(data);
       } catch (_) {}
     }
 
