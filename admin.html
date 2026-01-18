@@ -762,8 +762,10 @@
     btnVisit.onclick = ()=> window.location.href = '/';
     btnStudent.onclick = ()=> window.location.href = '/dashboard.html';
 
-    btnOpenPayments.onclick = ()=> window.open('/payments.html', '_blank', 'noopener');
-    btnOpenSubs.onclick = ()=> window.open('/subscriptions.html', '_blank', 'noopener');
+    // These pages are shipped as separate static files. Keep the filenames in sync with what you deploy.
+    // We use admin-payments.html and admin-subscriptions.html to avoid clashing with any future public pages.
+    btnOpenPayments.onclick = ()=> window.location.href = './admin-payments.html';
+    btnOpenSubs.onclick = ()=> window.location.href = './admin-subscriptions.html';
 
     btnSignIn.onclick = ()=> {
       const saved = localStorage.getItem('logicpals_admin_last_email');
