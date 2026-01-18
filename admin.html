@@ -6,599 +6,858 @@
   <title>LogicPals Admin</title>
   <style>
     :root{
-      --bg0:#05080c; --bg1:#071018; --card:#0b1622; --card2:#0e1c2b;
-      --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.14);
-      --text:rgba(255,255,255,.92); --muted:rgba(255,255,255,.68);
-      --muted2:rgba(255,255,255,.52);
-      --accent:#32d296; --accent2:#1ea7ff; --warn:#f59e0b; --danger:#ef4444;
-      --shadow: 0 20px 70px rgba(0,0,0,.55);
-      --r12:12px; --r16:16px; --r20:20px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      --bg1:#071019;--bg2:#04211c;--bg3:#0a1530;--card:rgba(255,255,255,.06);
+      --card2:rgba(255,255,255,.08);--text:rgba(255,255,255,.92);--muted:rgba(255,255,255,.68);
+      --line:rgba(255,255,255,.10);--accent:#2ee59d;--danger:#ff4d4d;
+      --shadow:0 18px 50px rgba(0,0,0,.45);
+      --r:16px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
     }
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    body{
-      margin:0;
-      font-family:var(--sans);
-      color:var(--text);
-      background:
-        radial-gradient(1200px 900px at 15% 10%, rgba(50,210,150,.20), transparent 55%),
-        radial-gradient(1200px 900px at 85% 15%, rgba(30,167,255,.14), transparent 55%),
-        radial-gradient(900px 700px at 35% 85%, rgba(245,158,11,.10), transparent 55%),
-        linear-gradient(180deg, var(--bg0), var(--bg1));
-      overflow-x:hidden;
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;color:var(--text);background:radial-gradient(1200px 800px at 15% 25%, rgba(46,229,157,.20), transparent 60%),
+                                   radial-gradient(900px 700px at 75% 30%, rgba(64,120,255,.18), transparent 55%),
+                                   radial-gradient(700px 650px at 40% 75%, rgba(255,255,255,.06), transparent 55%),
+                                   linear-gradient(135deg,var(--bg2),var(--bg1) 50%, var(--bg3));
+         overflow-x:hidden;
     }
-
-    /* Top bar */
-    .topbar{
-      position:sticky; top:0; z-index:10;
-      display:flex; align-items:center; justify-content:space-between;
-      padding:18px 22px;
-      background: linear-gradient(180deg, rgba(8,16,24,.78), rgba(8,16,24,.46));
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255,255,255,.06);
+    a{color:inherit}
+    .wrap{max-width:1180px;margin:0 auto;padding:22px 18px 40px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border:1px solid var(--line);border-radius:22px;padding:14px 16px;backdrop-filter: blur(10px);box-shadow:var(--shadow);
     }
-    .brand{ display:flex; gap:12px; align-items:center; }
-    .logo{
-      width:42px; height:42px; border-radius:14px;
-      background: radial-gradient(circle at 30% 30%, rgba(50,210,150,.95), rgba(30,167,255,.9));
-      box-shadow: 0 12px 35px rgba(0,0,0,.35);
+    .brand{display:flex;align-items:center;gap:12px;min-width:260px}
+    .logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#34f5c5,#3f7cff);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .title{font-weight:700;line-height:1.05}
+    .sub{font-size:12px;color:var(--muted)}
+    .nav{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+    .pill{border:1px solid var(--line);background:rgba(0,0,0,.10);padding:9px 12px;border-radius:999px;color:var(--muted);
+      cursor:pointer;user-select:none;font-size:13px;transition:all .12s ease}
+    .pill:hover{transform:translateY(-1px);background:rgba(255,255,255,.07);color:var(--text)}
+    .pill.active{border-color:rgba(46,229,157,.45);background:rgba(46,229,157,.10);color:var(--text)}
+
+    .right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .badge{border:1px solid var(--line);background:rgba(0,0,0,.14);padding:8px 10px;border-radius:999px;font-size:12px;color:var(--muted)}
+    .btn{border:1px solid var(--line);background:rgba(255,255,255,.06);padding:9px 12px;border-radius:12px;color:var(--text);
+      cursor:pointer;font-size:13px;transition:all .12s ease}
+    .btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.09)}
+    .btn.primary{border-color:rgba(46,229,157,.45);background:rgba(46,229,157,.12)}
+    .btn.danger{border-color:rgba(255,77,77,.35);background:rgba(255,77,77,.12)}
+
+    .grid{margin-top:18px;display:grid;grid-template-columns:360px 1fr;gap:16px}
+    @media (max-width: 960px){.grid{grid-template-columns:1fr}}
+
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));border:1px solid var(--line);
+      border-radius:var(--r);box-shadow:var(--shadow);padding:14px 14px 12px;backdrop-filter: blur(10px);
     }
-    .brand h1{ margin:0; font-size:16px; line-height:1.1; letter-spacing:.2px; }
-    .brand .sub{ margin-top:3px; color:var(--muted2); font-size:12px; }
+    .card h3{margin:0 0 10px 0;font-size:14px;letter-spacing:.2px}
+    .muted{color:var(--muted)}
+    .k{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    .small{font-size:12px}
 
-    .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
-    .pill{ display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; border:1px solid var(--line); background: rgba(255,255,255,.04); color:var(--muted); font-size:12px; }
+    .panelTitle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .statusPill{border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:rgba(0,0,0,.14);font-size:12px;color:var(--muted)}
 
-    .btn{
-      cursor:pointer; user-select:none;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      color:var(--text);
-      padding:9px 12px;
-      border-radius:12px;
-      font-size:13px;
-      display:inline-flex; align-items:center; gap:8px;
-      transition: transform .06s ease, background .12s ease, border-color .12s ease;
+    .filters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 12px}
+    .filters .full{grid-column:1/-1}
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+    input,select,textarea{
+      width:100%;border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.18);color:var(--text);
+      padding:10px 10px;font-size:13px;outline:none
     }
-    .btn:hover{ background: rgba(255,255,255,.07); border-color: var(--line2); }
-    .btn:active{ transform: translateY(1px); }
-    .btn.primary{ background: rgba(50,210,150,.12); border-color: rgba(50,210,150,.35); }
-    .btn.primary:hover{ background: rgba(50,210,150,.17); }
-    .btn.danger{ background: rgba(239,68,68,.10); border-color: rgba(239,68,68,.35); }
+    textarea{min-height:110px;resize:vertical}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
 
-    /* Layout */
-    .wrap{ max-width: 1200px; margin:0 auto; padding: 18px 22px 36px; }
-    .grid{ display:grid; grid-template-columns: 360px 1fr; gap:16px; }
-    @media (max-width: 980px){ .grid{ grid-template-columns: 1fr; } }
-
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 18px;
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .card .hd{ padding:16px 16px 10px; border-bottom: 1px solid rgba(255,255,255,.07); display:flex; justify-content:space-between; align-items:center; }
-    .card .hd h2{ margin:0; font-size:14px; letter-spacing:.2px; }
-    .card .bd{ padding:16px; }
-
-    .tabs{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:14px; }
-    .tab{ padding:8px 12px; border-radius:999px; border:1px solid var(--line); background: rgba(255,255,255,.04); color:var(--muted); font-size:12px; cursor:pointer; }
-    .tab.active{ background: rgba(50,210,150,.12); border-color: rgba(50,210,150,.35); color:var(--text); }
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{border-bottom:1px solid rgba(255,255,255,.08);padding:10px 8px;text-align:left;vertical-align:top}
+    th{color:var(--muted);font-weight:600}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
 
     /* Login overlay */
-    .screen{
-      position:fixed; inset:0; z-index:50;
-      display:flex; align-items:center; justify-content:center;
-      padding:28px;
-      background:
-        radial-gradient(1200px 900px at 15% 10%, rgba(50,210,150,.18), transparent 55%),
-        radial-gradient(1200px 900px at 85% 15%, rgba(30,167,255,.13), transparent 55%),
-        linear-gradient(180deg, rgba(3,6,10,.96), rgba(6,12,18,.94));
+    .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;
+      background:radial-gradient(900px 700px at 40% 30%, rgba(0,0,0,.50), rgba(0,0,0,.82));
+      backdrop-filter: blur(6px);z-index:50
     }
-    .login{
-      width:min(520px, 100%);
-      border-radius: 22px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
-      box-shadow: 0 30px 110px rgba(0,0,0,.65);
-      overflow:hidden;
+    .overlay.show{display:flex}
+    .loginCard{width:min(560px, 100%);background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.04));
+      border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:18px 18px 14px
     }
-    .loginTop{ padding:18px 18px 14px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,.08); }
-    .loginTop .left{ display:flex; gap:12px; align-items:center; }
-    .loginTop h3{ margin:0; font-size:14px; }
-    .loginTop p{ margin:3px 0 0; color:var(--muted2); font-size:12px; }
-    .loginBd{ padding:18px; }
-    .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
-    .field label{ color:var(--muted); font-size:12px; }
-    .input{
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      color: var(--text);
-      border-radius: 14px;
-      padding: 11px 12px;
-      outline:none;
-    }
-    .input:focus{ border-color: rgba(30,167,255,.55); box-shadow: 0 0 0 4px rgba(30,167,255,.14); }
-    .row{ display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
-    .hint{ color:var(--muted2); font-size:12px; }
-    .msg{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.20);
-      color: var(--muted);
-      font-size:12px;
-      white-space:pre-wrap;
-      font-family: var(--mono);
-      display:none;
-    }
-    .msg.show{ display:block; }
+    .loginHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .loginTitle{display:flex;align-items:center;gap:12px}
+    .loginTitle h2{margin:0;font-size:16px}
+    .x{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);
+      cursor:pointer}
 
     /* Modal */
-    .modalBackdrop{ position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center; padding:18px; background: rgba(0,0,0,.55); backdrop-filter: blur(6px); }
-    .modalBackdrop.show{ display:flex; }
-    .modal{ width:min(720px, 100%); border-radius: 18px; border:1px solid rgba(255,255,255,.12); background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04)); box-shadow: 0 40px 120px rgba(0,0,0,.70); overflow:hidden; }
-    .modal .mhd{ padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.08); display:flex; align-items:center; justify-content:space-between; }
-    .modal .mhd strong{ font-size:14px; }
-    .modal .mbd{ padding:16px; }
-    .closeX{ width:34px; height:34px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color:var(--text); cursor:pointer; }
-    .closeX:hover{ background: rgba(255,255,255,.07); }
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.62);z-index:60}
+    .modal.show{display:flex}
+    .modalCard{width:min(720px,100%);background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:16px
+    }
 
-    .kpi{ display:flex; gap:8px; flex-wrap:wrap; }
-    .kpi .chip{ padding:8px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.18); color: var(--muted); font-size:12px; }
+    .toast{position:fixed;right:18px;bottom:18px;max-width:min(520px, calc(100vw - 36px));
+      background:rgba(0,0,0,.65);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:12px 14px;display:none;z-index:80
+    }
+    .toast.show{display:block}
+    .toast .t1{font-weight:700;font-size:13px;margin-bottom:4px}
+    .toast .t2{font-size:12px;color:var(--muted)}
 
-    .muted{ color:var(--muted); }
-    .muted2{ color:var(--muted2); }
-    .small{ font-size:12px; }
-    .mono{ font-family: var(--mono); }
-    .hidden{ display:none !important; }
+    .hint{font-size:12px;color:var(--muted);margin-top:6px}
   </style>
 </head>
 <body>
-  <!-- LOGIN SCREEN (only when NOT authenticated) -->
-  <div id="loginScreen" class="screen" aria-hidden="false">
-    <div class="login" role="dialog" aria-modal="true" aria-label="Admin sign in">
-      <div class="loginTop">
-        <div class="left">
-          <div class="logo" aria-hidden="true"></div>
-          <div>
-            <h3>LogicPals Admin</h3>
-            <p>Secure console access (enterprise-grade)</p>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <div class="title">LogicPals Admin</div>
+          <div class="sub">Enterprise review console — Regular + Olympiad tracks</div>
+        </div>
+      </div>
+
+      <div class="nav" id="nav"></div>
+
+      <div class="right">
+        <div class="badge" id="who">Signed out</div>
+        <button class="btn" id="btnVisit">Visit site</button>
+        <button class="btn" id="btnStudent">Student dashboard</button>
+        <button class="btn" id="btnRoles" style="display:none">Admin roles</button>
+        <button class="btn primary" id="btnSignIn">Sign in</button>
+        <button class="btn danger" id="btnSignOut" style="display:none">Log out</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card" id="leftCard">
+        <div class="panelTitle">
+          <h3>Console status</h3>
+          <span class="statusPill" id="roleBadge">role: -</span>
+        </div>
+        <div class="small muted" id="statusText">Sign in to start.</div>
+        <div style="height:10px"></div>
+        <div class="k"><div class="muted small">Project</div><div class="mono small" id="projectName">LogicPals-App</div></div>
+        <div class="k"><div class="muted small">Auth</div><div class="mono small" id="authState">none</div></div>
+        <div class="k"><div class="muted small">Role source</div><div class="mono small" id="roleSource">-</div></div>
+        <div class="k"><div class="muted small">Notes</div><div class="small muted">Access is controlled by <span class="mono">public.user_roles</span> and enforced by RPCs + RLS.</div></div>
+      </div>
+
+      <div class="card" id="mainCard">
+        <div class="panelTitle">
+          <h3 id="viewTitle">Dashboard</h3>
+          <span class="statusPill" id="accessPill">Ready</span>
+        </div>
+
+        <div id="viewDashboard">
+          <div class="muted">This console supports:</div>
+          <ul class="muted" style="margin-top:8px">
+            <li><b>Regular review</b> (admin_regular, super_admin)</li>
+            <li><b>Olympiad review</b> (admin_olympiad, super_admin)</li>
+            <li><b>Role assignment</b> (super_admin only)</li>
+          </ul>
+          <div class="hint">Tip: keep <span class="mono">super_admin</span> very small (1–2 people).</div>
+        </div>
+
+        <div id="viewQueue" style="display:none">
+          <div class="filters">
+            <div class="full">
+              <label>Search</label>
+              <input id="qSearch" placeholder="title / tag / category / skill_track..." />
+            </div>
+            <div>
+              <label>Difficulty</label>
+              <select id="qDifficulty">
+                <option value="">Any</option>
+                <option>easy</option><option>medium</option><option>hard</option>
+              </select>
+            </div>
+            <div>
+              <label>Age</label>
+              <select id="qAge">
+                <option value="">Any</option>
+                <option>8-9</option><option>9-10</option><option>10-11</option><option>11-12</option>
+              </select>
+            </div>
+            <div>
+              <label>Only Active</label>
+              <select id="qActive">
+                <option value="">Any</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+            <div>
+              <label>Sort</label>
+              <select id="qSort">
+                <option value="new">Newest first</option>
+                <option value="old">Oldest first</option>
+              </select>
+            </div>
+            <div class="full row">
+              <button class="btn primary" id="btnApply">Apply filters</button>
+              <button class="btn" id="btnRefresh">Refresh</button>
+              <button class="btn" id="btnAdd" title="Create a new problem (requires DB permissions)">Add problem</button>
+              <div class="badge" id="rowsBadge">Rows 0</div>
+            </div>
+          </div>
+
+          <div id="queueEmpty" class="muted">No rows yet. Try adjusting filters, or refresh.</div>
+          <div style="overflow:auto" id="queueTableWrap"></div>
+        </div>
+
+        <div id="viewUsers" style="display:none">
+          <div class="muted">Use this panel to check roles for emails. Role assignment is in <b>Admin roles</b> (super_admin only).</div>
+          <div class="filters" style="margin-top:12px">
+            <div class="full">
+              <label>User email</label>
+              <input id="uEmail" placeholder="e.g. jahir3001@gmail.com" />
+            </div>
+            <div class="full row">
+              <button class="btn primary" id="btnLookup">Lookup role</button>
+              <button class="btn" id="btnListMe">List my roles</button>
+            </div>
+          </div>
+          <pre class="mono" id="usersOut" style="white-space:pre-wrap;margin:0;background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:14px;padding:10px;min-height:80px"></pre>
+        </div>
+
+        <div id="viewPayments" style="display:none">
+          <div class="muted">Payments dashboard lives on its own page. Open it in a new tab (keeps your admin session here).</div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn primary" id="btnOpenPayments">Open Payments page</button>
           </div>
         </div>
-        <div class="pill" title="Project">Project: LogicPals-App</div>
-      </div>
-      <div class="loginBd">
-        <div class="field">
-          <label for="loginEmail">Email</label>
-          <input id="loginEmail" class="input" type="email" placeholder="you@logicpals.com" autocomplete="username" />
+
+        <div id="viewSubs" style="display:none">
+          <div class="muted">Subscriptions dashboard lives on its own page. Open it in a new tab (keeps your admin session here).</div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn primary" id="btnOpenSubs">Open Subscriptions page</button>
+          </div>
         </div>
-        <div class="field">
-          <label for="loginPassword">Password</label>
-          <input id="loginPassword" class="input" type="password" placeholder="••••••••" autocomplete="current-password" />
-        </div>
-        <div class="row">
-          <button id="btnSignIn" class="btn primary">Sign in</button>
-          <div class="hint">Only users with admin roles can access this console.</div>
-        </div>
-        <div id="loginMsg" class="msg" aria-live="polite"></div>
-        <div style="margin-top:12px" class="muted2 small">
-          Tip: If you opened this file by double-click (file:///...), use a local server. Modules + CORS require http://localhost.
-        </div>
+
       </div>
     </div>
   </div>
 
-  <!-- APP -->
-  <header class="topbar">
-    <div class="brand">
-      <div class="logo" aria-hidden="true"></div>
-      <div>
-        <h1>LogicPals Admin</h1>
-        <div class="sub">Enterprise review console — Regular + Olympiad tracks</div>
+  <!-- Login overlay -->
+  <div class="overlay" id="loginOverlay" aria-hidden="true">
+    <div class="loginCard">
+      <div class="loginHead">
+        <div class="loginTitle">
+          <div class="logo" style="width:36px;height:36px;border-radius:12px"></div>
+          <div>
+            <h2>LogicPals Admin</h2>
+            <div class="sub">Secure console access (enterprise-grade)</div>
+          </div>
+        </div>
+        <button class="x" id="loginClose" title="Close">✕</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr;gap:10px">
+        <div>
+          <label>Email</label>
+          <input id="loginEmail" placeholder="Email" autocomplete="email" />
+        </div>
+        <div>
+          <label>Password</label>
+          <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password" />
+        </div>
+
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <button class="btn primary" id="loginBtn">Sign in</button>
+          <div class="small muted">Only users with admin roles can access this console.</div>
+        </div>
+        <div class="hint">Tip: If you opened this file by double-click (file:///...), use a local server. Modules + CORS require http://localhost.</div>
+        <pre class="mono" id="loginOut" style="white-space:pre-wrap;margin:0;background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:14px;padding:10px;min-height:52px"></pre>
       </div>
     </div>
+  </div>
 
-    <div class="actions">
-      <span id="whoami" class="pill hidden"></span>
-      <button id="btnVisit" class="btn">Visit site</button>
-      <button id="btnStudent" class="btn">Student dashboard</button>
-      <button id="btnRoleMgmt" class="btn hidden">Admin roles</button>
-      <button id="btnLogout" class="btn danger hidden">Log out</button>
-    </div>
-  </header>
-
-  <main class="wrap">
-    <div class="tabs" id="mainTabs">
-      <div class="tab active" data-tab="dashboard">Dashboard</div>
-      <div class="tab" data-tab="regular">Regular review</div>
-      <div class="tab" data-tab="olympiad">Olympiad review</div>
-      <div class="tab" data-tab="payments">Payments</div>
-      <div class="tab" data-tab="subscriptions">Subscriptions</div>
-      <div class="tab" data-tab="users">Users</div>
-    </div>
-
-    <div style="height:14px"></div>
-
-    <div class="grid">
-      <section class="card">
-        <div class="hd">
-          <h2>Console status</h2>
-          <span id="roleChips" class="kpi"></span>
-        </div>
-        <div class="bd">
-          <div class="muted small">Access is controlled by <span class="mono">public.user_roles</span> and enforced by RPCs + RLS.</div>
-          <div style="height:10px"></div>
-          <div id="accessState" class="mono small muted">Checking session…</div>
-          <div style="height:14px"></div>
-          <button id="btnOpenRoleMgmt" class="btn hidden">Assign roles</button>
-          <div class="muted2 small" style="margin-top:10px">Only <span class="mono">super_admin</span> can change roles.</div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="hd">
-          <h2 id="panelTitle">Dashboard</h2>
-          <div class="pill" id="panelHint">Ready</div>
-        </div>
-        <div class="bd" id="panelBody">
-          <div class="muted">Sign in to start reviewing problems.</div>
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <!-- ROLE MANAGEMENT MODAL (never auto-opens) -->
-  <div id="roleModal" class="modalBackdrop" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-label="Admin roles">
-      <div class="mhd">
-        <strong>Admin roles</strong>
-        <button id="btnCloseRoleModal" class="closeX" aria-label="Close">✕</button>
+  <!-- Role assignment modal (super_admin only) -->
+  <div class="modal" id="rolesModal" aria-hidden="true">
+    <div class="modalCard">
+      <div class="panelTitle">
+        <h3>Admin roles</h3>
+        <button class="x" id="rolesClose" title="Close">✕</button>
       </div>
-      <div class="mbd">
-        <div class="muted small">Assign enterprise-grade roles for this console. Only <span class="mono">super_admin</span> can change roles.</div>
-        <div style="height:12px"></div>
-
-        <div class="field">
-          <label for="targetEmail">User email</label>
-          <input id="targetEmail" class="input" type="email" placeholder="e.g. reviewer@logicpals.com" />
-          <div class="muted2 small">The user must have signed up at least once (exists in <span class="mono">auth.users</span>).</div>
+      <div class="muted small">Assign enterprise-grade roles for this console. Only <b>super_admin</b> can change roles.</div>
+      <div class="filters" style="margin-top:12px">
+        <div class="full">
+          <label>User email</label>
+          <input id="rEmail" placeholder="e.g. reviewer@logicpals.com" />
+          <div class="hint">The user must have signed up at least once (exists in <span class="mono">auth.users</span>).</div>
         </div>
-
-        <div class="field">
-          <label for="targetRole">Role</label>
-          <select id="targetRole" class="input">
+        <div class="full">
+          <label>Role</label>
+          <select id="rRole">
             <option value="admin_regular">admin_regular — manage Regular problems</option>
             <option value="admin_olympiad">admin_olympiad — manage Olympiad review</option>
             <option value="super_admin">super_admin — full control</option>
           </select>
         </div>
-
-        <div class="row">
-          <button id="btnAssignRole" class="btn primary">Assign role</button>
-          <button id="btnListMyRoles" class="btn">List my roles</button>
+        <div class="full row">
+          <button class="btn primary" id="rAssign">Assign role</button>
+          <button class="btn" id="rList">List my roles</button>
         </div>
-
-        <div id="roleMsg" class="msg" aria-live="polite"></div>
       </div>
+      <pre class="mono" id="rolesOut" style="white-space:pre-wrap;margin:0;background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:14px;padding:10px;min-height:80px"></pre>
     </div>
   </div>
+
+  <div class="toast" id="toast"><div class="t1" id="toastT1"></div><div class="t2" id="toastT2"></div></div>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-    // ---- Supabase (same as your current project) ----
-    const SUPABASE_URL = 'https://ovszuxerimbmzfblzkgd.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // =====================
+    // CONFIG (same as before)
+    // =====================
+    const SUPABASE_URL = "https://ovszuxerimbmzfblzkgd.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14";
 
-    // ---- DOM ----
-    const $ = (id) => document.getElementById(id);
-    const loginScreen = $('loginScreen');
-    const loginEmail = $('loginEmail');
-    const loginPassword = $('loginPassword');
-    const loginMsg = $('loginMsg');
-    const btnSignIn = $('btnSignIn');
+    // IMPORTANT: persist session so coming back from /payments.html keeps you signed in.
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
 
-    const whoami = $('whoami');
-    const btnLogout = $('btnLogout');
-    const btnVisit = $('btnVisit');
-    const btnStudent = $('btnStudent');
+    // ===============
+    // UI references
+    // ===============
+    const nav = document.getElementById('nav');
+    const who = document.getElementById('who');
+    const roleBadge = document.getElementById('roleBadge');
+    const statusText = document.getElementById('statusText');
+    const authState = document.getElementById('authState');
+    const roleSource = document.getElementById('roleSource');
+    const viewTitle = document.getElementById('viewTitle');
+    const accessPill = document.getElementById('accessPill');
 
-    const btnRoleMgmt = $('btnRoleMgmt');
-    const btnOpenRoleMgmt = $('btnOpenRoleMgmt');
+    const btnVisit = document.getElementById('btnVisit');
+    const btnStudent = document.getElementById('btnStudent');
+    const btnRoles = document.getElementById('btnRoles');
+    const btnSignIn = document.getElementById('btnSignIn');
+    const btnSignOut = document.getElementById('btnSignOut');
 
-    const roleChips = $('roleChips');
-    const accessState = $('accessState');
+    const loginOverlay = document.getElementById('loginOverlay');
+    const loginClose = document.getElementById('loginClose');
+    const loginEmail = document.getElementById('loginEmail');
+    const loginPassword = document.getElementById('loginPassword');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginOut = document.getElementById('loginOut');
 
-    const roleModal = $('roleModal');
-    const btnCloseRoleModal = $('btnCloseRoleModal');
-    const btnAssignRole = $('btnAssignRole');
-    const btnListMyRoles = $('btnListMyRoles');
-    const roleMsg = $('roleMsg');
-    const targetEmail = $('targetEmail');
-    const targetRole = $('targetRole');
+    const rolesModal = document.getElementById('rolesModal');
+    const rolesClose = document.getElementById('rolesClose');
+    const rEmail = document.getElementById('rEmail');
+    const rRole = document.getElementById('rRole');
+    const rAssign = document.getElementById('rAssign');
+    const rList = document.getElementById('rList');
+    const rolesOut = document.getElementById('rolesOut');
 
-    const panelTitle = $('panelTitle');
-    const panelHint = $('panelHint');
-    const panelBody = $('panelBody');
+    const viewDashboard = document.getElementById('viewDashboard');
+    const viewQueue = document.getElementById('viewQueue');
+    const viewUsers = document.getElementById('viewUsers');
+    const viewPayments = document.getElementById('viewPayments');
+    const viewSubs = document.getElementById('viewSubs');
 
-    const mainTabs = $('mainTabs');
+    const qSearch = document.getElementById('qSearch');
+    const qDifficulty = document.getElementById('qDifficulty');
+    const qAge = document.getElementById('qAge');
+    const qActive = document.getElementById('qActive');
+    const qSort = document.getElementById('qSort');
+    const btnApply = document.getElementById('btnApply');
+    const btnRefresh = document.getElementById('btnRefresh');
+    const btnAdd = document.getElementById('btnAdd');
+    const queueEmpty = document.getElementById('queueEmpty');
+    const queueTableWrap = document.getElementById('queueTableWrap');
+    const rowsBadge = document.getElementById('rowsBadge');
 
-    // ---- State ----
-    let session = null;
-    let myRoles = [];
+    const uEmail = document.getElementById('uEmail');
+    const btnLookup = document.getElementById('btnLookup');
+    const btnListMe = document.getElementById('btnListMe');
+    const usersOut = document.getElementById('usersOut');
 
-    function showMsg(el, objOrString){
-      const s = typeof objOrString === 'string' ? objOrString : JSON.stringify(objOrString, null, 2);
-      el.textContent = s;
-      el.classList.add('show');
+    const btnOpenPayments = document.getElementById('btnOpenPayments');
+    const btnOpenSubs = document.getElementById('btnOpenSubs');
+
+    // ===============
+    // State
+    // ===============
+    const NAV_ITEMS = [
+      { id:'dashboard', label:'Dashboard' },
+      { id:'regular', label:'Regular review' },
+      { id:'olympiad', label:'Olympiad review' },
+      { id:'payments', label:'Payments' },
+      { id:'subs', label:'Subscriptions' },
+      { id:'users', label:'Users' },
+    ];
+
+    let currentView = 'dashboard';
+    let myRole = null; // 'super_admin' | 'admin_regular' | 'admin_olympiad' | null
+    let myUser = null;
+    let currentQueueMode = null; // 'regular' | 'olympiad'
+
+    // ===============
+    // Helpers
+    // ===============
+    function toast(t1, t2=''){
+      const t = document.getElementById('toast');
+      document.getElementById('toastT1').textContent = t1;
+      document.getElementById('toastT2').textContent = t2;
+      t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'), 4200);
     }
-    function clearMsg(el){
-      el.textContent = '';
-      el.classList.remove('show');
+
+    function showLoginOverlay(show){
+      loginOverlay.classList.toggle('show', !!show);
+      loginOverlay.setAttribute('aria-hidden', show ? 'false':'true');
     }
 
-    function setLoggedOutUI(){
-      session = null;
-      myRoles = [];
-      whoami.classList.add('hidden');
-      btnLogout.classList.add('hidden');
-      btnRoleMgmt.classList.add('hidden');
-      btnOpenRoleMgmt.classList.add('hidden');
-      roleChips.innerHTML = '';
-      accessState.textContent = 'Not signed in.';
-      panelTitle.textContent = 'Dashboard';
-      panelHint.textContent = 'Sign in';
-      panelBody.innerHTML = '<div class="muted">Please sign in to access the admin console.</div>';
+    function showRolesModal(show){
+      rolesModal.classList.toggle('show', !!show);
+      rolesModal.setAttribute('aria-hidden', show ? 'false':'true');
     }
 
-    function setLoggedInUI(){
-      const email = session?.user?.email || 'Signed in';
-      whoami.textContent = `Signed in: ${email}`;
-      whoami.classList.remove('hidden');
-      btnLogout.classList.remove('hidden');
+    function setAccessPill(text, kind='ok'){
+      accessPill.textContent = text;
+      const map = { ok:'rgba(46,229,157,.10)', warn:'rgba(255,200,0,.12)', err:'rgba(255,77,77,.12)' };
+      accessPill.style.background = map[kind] || map.ok;
+      accessPill.style.borderColor = kind==='err' ? 'rgba(255,77,77,.30)' : kind==='warn' ? 'rgba(255,200,0,.28)' : 'rgba(255,255,255,.10)';
+    }
 
-      // chips
-      roleChips.innerHTML = '';
-      const addChip = (t) => {
-        const span = document.createElement('span');
-        span.className = 'chip';
-        span.textContent = t;
-        roleChips.appendChild(span);
-      };
-      if (!myRoles.length) addChip('role: none');
-      myRoles.forEach(r => addChip(`role: ${r}`));
+    function canAccess(view){
+      if(view==='dashboard') return true;
+      if(!myRole) return false;
+      if(myRole==='super_admin') return true;
+      if(view==='regular') return myRole==='admin_regular';
+      if(view==='olympiad') return myRole==='admin_olympiad';
+      if(view==='users') return true; // let admins view roles (read-only)
+      if(view==='payments' || view==='subs') return true; // pages can exist without DB access
+      return false;
+    }
 
-      const isSuper = myRoles.includes('super_admin');
-      btnRoleMgmt.classList.toggle('hidden', !isSuper);
-      btnOpenRoleMgmt.classList.toggle('hidden', !isSuper);
+    function renderNav(){
+      nav.innerHTML = '';
+      NAV_ITEMS.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'pill' + (item.id===currentView ? ' active':'');
+        el.textContent = item.label;
+        el.onclick = ()=> setView(item.id);
+        nav.appendChild(el);
+      });
+    }
 
-      if (!myRoles.length){
-        accessState.innerHTML = `Access denied. No admin role found for <span class="mono">${email}</span>.`;
-        panelHint.textContent = 'No access';
-        panelBody.innerHTML = '<div class="muted">Ask a super_admin to assign you an admin role.</div>';
+    function showOnly(id){
+      viewDashboard.style.display = id==='dashboard' ? '' : 'none';
+      viewQueue.style.display = (id==='regular' || id==='olympiad') ? '' : 'none';
+      viewUsers.style.display = id==='users' ? '' : 'none';
+      viewPayments.style.display = id==='payments' ? '' : 'none';
+      viewSubs.style.display = id==='subs' ? '' : 'none';
+    }
+
+    async function setView(id){
+      currentView = id;
+      renderNav();
+      showOnly(id);
+
+      viewTitle.textContent = NAV_ITEMS.find(x=>x.id===id)?.label || 'Dashboard';
+
+      if(!myUser){
+        setAccessPill('Signed out', 'warn');
+        statusText.textContent = 'Sign in to start.';
         return;
       }
 
-      accessState.innerHTML = `Access OK. Roles loaded for <span class="mono">${email}</span>.`;
-      panelHint.textContent = 'Ready';
-      renderTab(document.querySelector('.tab.active')?.dataset?.tab || 'dashboard');
-    }
-
-    async function fetchMyRoles(){
-      // Uses your existing RPC from earlier versions. Expected to return array of rows like [{role:"super_admin"}, ...]
-      const { data, error } = await supabase.rpc('admin_get_my_roles');
-      if (error){
-        // fallback: try direct table read (works only if RLS allows for own row)
-        const fallback = await supabase.from('user_roles').select('role').limit(10);
-        if (!fallback.error){
-          return (fallback.data || []).map(r => r.role);
+      if(!canAccess(id)){
+        setAccessPill('No access', 'err');
+        statusText.textContent = myRole ? `Your role (${myRole}) cannot access this view.` : 'Ask a super_admin to assign you an admin role.';
+        if(id==='regular' || id==='olympiad'){
+          queueEmpty.textContent = 'No access.';
+          queueTableWrap.innerHTML = '';
+          rowsBadge.textContent = 'Rows 0';
         }
-        throw error;
-      }
-      if (Array.isArray(data)){
-        return data.map(r => r.role).filter(Boolean);
-      }
-      // some implementations return {roles:[...]}
-      if (data?.roles && Array.isArray(data.roles)) return data.roles;
-      return [];
-    }
-
-    async function refreshAuthState(){
-      const res = await supabase.auth.getSession();
-      session = res?.data?.session || null;
-
-      if (!session){
-        loginScreen.classList.remove('hidden');
-        loginScreen.setAttribute('aria-hidden','false');
-        setLoggedOutUI();
         return;
       }
 
-      loginScreen.classList.add('hidden');
-      loginScreen.setAttribute('aria-hidden','true');
+      setAccessPill('Ready','ok');
 
-      try{
-        myRoles = await fetchMyRoles();
-      }catch(e){
-        myRoles = [];
-        console.error(e);
+      if(id==='regular'){ currentQueueMode='regular'; await loadQueue(); }
+      if(id==='olympiad'){ currentQueueMode='olympiad'; await loadQueue(); }
+    }
+
+    // =====================
+    // Role + session loading
+    // =====================
+    async function getMyRole(){
+      // Preferred: RPC that returns role text.
+      // Fallback: query user_roles for current user_id.
+      if(!myUser) return { role:null, source:'none' };
+
+      // Try RPC: admin_get_my_roles() or get_my_role()
+      const rpcCandidates = ['admin_get_my_roles','get_my_role'];
+      for(const fn of rpcCandidates){
+        try{
+          const { data, error } = await supabase.rpc(fn);
+          if(!error && data){
+            // data can be [{role:'super_admin'}] or {role:'super_admin'} or 'super_admin'
+            let r = null;
+            if(typeof data === 'string') r = data;
+            else if(Array.isArray(data) && data.length) r = data[0]?.role || data[0]?.role_name || null;
+            else if(typeof data === 'object') r = data.role || data.role_name || null;
+            if(r){
+              return { role: String(r), source:`rpc:${fn}` };
+            }
+          }
+        } catch(e){ /* ignore */ }
       }
 
-      setLoggedInUI();
+      // Fallback table query
+      const { data: rows, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', myUser.id)
+        .limit(1);
+
+      if(error){
+        return { role:null, source:'user_roles:error' };
+      }
+      const r = rows?.[0]?.role ?? null;
+      return { role: r ? String(r) : null, source:'user_roles' };
     }
 
-    // ---- Navigation ----
-    function setActiveTab(name){
-      [...document.querySelectorAll('.tab')].forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    async function refreshSessionUI(){
+      const { data } = await supabase.auth.getSession();
+      const session = data?.session || null;
+      myUser = session?.user || null;
+
+      if(!myUser){
+        myRole = null;
+        who.textContent = 'Signed out';
+        authState.textContent = 'none';
+        roleBadge.textContent = 'role: -';
+        roleSource.textContent = '-';
+        btnSignIn.style.display = '';
+        btnSignOut.style.display = 'none';
+        btnRoles.style.display = 'none';
+        statusText.textContent = 'Sign in to start.';
+        setAccessPill('Signed out','warn');
+        return;
+      }
+
+      authState.textContent = 'session';
+      who.textContent = `Signed in: ${myUser.email}`;
+
+      const { role, source } = await getMyRole();
+      myRole = role;
+      roleSource.textContent = source;
+      roleBadge.textContent = `role: ${myRole ?? 'none'}`;
+
+      btnSignIn.style.display = 'none';
+      btnSignOut.style.display = '';
+      btnRoles.style.display = (myRole === 'super_admin') ? '' : 'none';
+
+      if(!myRole){
+        statusText.innerHTML = `Access denied. No admin role found for <span class="mono">${myUser.email}</span>.\n\nOnly <span class="mono">super_admin</span> can change roles.`;
+        setAccessPill('No access','err');
+      } else {
+        statusText.textContent = 'Signed in. Choose a section from the top navigation.';
+        setAccessPill('Ready','ok');
+      }
     }
 
-    function renderTab(name){
-      setActiveTab(name);
+    // =====================
+    // Queue logic
+    // =====================
+    async function loadQueue(){
+      if(!myUser || !currentQueueMode) return;
 
-      const canRegular = myRoles.includes('admin_regular') || myRoles.includes('super_admin');
-      const canOlympiad = myRoles.includes('admin_olympiad') || myRoles.includes('super_admin');
+      queueEmpty.textContent = 'Loading…';
+      queueTableWrap.innerHTML = '';
+      rowsBadge.textContent = 'Rows 0';
 
-      if (name === 'dashboard'){
-        panelTitle.textContent = 'Dashboard';
-        panelBody.innerHTML = `
-          <div class="muted">Welcome. Use the tabs to review problems or manage roles.</div>
-          <div style="height:12px"></div>
-          <div class="muted2 small">Current roles: <span class="mono">${(myRoles.length? myRoles.join(', ') : 'none')}</span></div>
+      // Query rules:
+      // - Regular: is_exam_style = false
+      // - Olympiad: is_exam_style = true
+      // You can adjust later to use a dedicated review_queue table.
+      let query = supabase
+        .from('problems')
+        .select('id,title,age_category,difficulty,category,is_exam_style,is_active,created_at')
+        .eq('is_exam_style', currentQueueMode === 'olympiad');
+
+      const s = (qSearch.value || '').trim();
+      if(s){
+        // best-effort search across title/category (ILIKE)
+        query = query.or(`title.ilike.%${escapeLike(s)}%,category.ilike.%${escapeLike(s)}%`);
+      }
+      if(qDifficulty.value){ query = query.eq('difficulty', qDifficulty.value); }
+      if(qAge.value){ query = query.eq('age_category', qAge.value); }
+      if(qActive.value==='true'){ query = query.eq('is_active', true); }
+      if(qActive.value==='false'){ query = query.eq('is_active', false); }
+
+      query = (qSort.value==='old') ? query.order('created_at', { ascending:true }) : query.order('created_at', { ascending:false });
+      query = query.limit(50);
+
+      const { data, error } = await query;
+      if(error){
+        queueEmpty.textContent = `Error loading queue: ${error.message}`;
+        setAccessPill('DB error','err');
+        return;
+      }
+
+      const rows = data || [];
+      rowsBadge.textContent = `Rows ${rows.length}`;
+      if(!rows.length){
+        queueEmpty.textContent = 'No rows yet. Try adjusting filters, or refresh.';
+        return;
+      }
+
+      queueEmpty.textContent = '';
+      queueTableWrap.innerHTML = renderTable(rows);
+      bindRowActions(rows);
+    }
+
+    function escapeLike(s){
+      // Basic escape for Supabase OR filter string.
+      return s.replace(/%/g,'\\%').replace(/,/g,'\\,');
+    }
+
+    function renderTable(rows){
+      const head = `
+        <table>
+          <thead>
+            <tr>
+              <th style="min-width:260px">Title</th>
+              <th>Age</th>
+              <th>Difficulty</th>
+              <th>Category</th>
+              <th>Active</th>
+              <th style="min-width:220px">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      const body = rows.map(r => {
+        const safeTitle = (r.title || '(untitled)').replace(/</g,'&lt;');
+        return `
+          <tr data-id="${r.id}">
+            <td>
+              <div style="font-weight:700">${safeTitle}</div>
+              <div class="mono small muted">${r.id}</div>
+            </td>
+            <td>${r.age_category ?? ''}</td>
+            <td>${r.difficulty ?? ''}</td>
+            <td>${r.category ?? ''}</td>
+            <td>${r.is_active ? 'Yes' : 'No'}</td>
+            <td>
+              <div class="actions">
+                <button class="btn" data-action="view">View</button>
+                <button class="btn primary" data-action="activate">Activate</button>
+                <button class="btn" data-action="deactivate">Deactivate</button>
+              </div>
+            </td>
+          </tr>
         `;
-        return;
-      }
+      }).join('');
 
-      if (name === 'regular'){
-        panelTitle.textContent = 'Regular review';
-        if (!canRegular){
-          panelBody.innerHTML = '<div class="muted">You do not have permission for Regular review.</div>';
+      return head + body + '</tbody></table>';
+    }
+
+    async function bindRowActions(rows){
+      const idToRow = new Map(rows.map(r=>[String(r.id), r]));
+      queueTableWrap.querySelectorAll('tr[data-id]').forEach(tr => {
+        const id = tr.getAttribute('data-id');
+        tr.querySelectorAll('button[data-action]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const action = btn.getAttribute('data-action');
+            const row = idToRow.get(id);
+            if(!row) return;
+
+            if(action==='view'){
+              toast('Problem ID copied', id);
+              navigator.clipboard?.writeText(id).catch(()=>{});
+              return;
+            }
+
+            if(action==='activate'){
+              await setActive(id, true);
+              await loadQueue();
+              return;
+            }
+
+            if(action==='deactivate'){
+              await setActive(id, false);
+              await loadQueue();
+              return;
+            }
+          });
+        });
+      });
+    }
+
+    async function setActive(id, isActive){
+      try{
+        const { error } = await supabase.from('problems').update({ is_active: isActive }).eq('id', id);
+        if(error){
+          toast('Update failed', error.message);
           return;
         }
-        panelBody.innerHTML = '<div class="muted">Regular Review Queue — connect to your problems table / filters next.</div>';
-        return;
-      }
-
-      if (name === 'olympiad'){
-        panelTitle.textContent = 'Olympiad review';
-        if (!canOlympiad){
-          panelBody.innerHTML = '<div class="muted">You do not have permission for Olympiad review.</div>';
-          return;
-        }
-        panelBody.innerHTML = '<div class="muted">Olympiad Review Queue — connect to olympiad rubric gating next.</div>';
-        return;
-      }
-
-      if (name === 'payments'){
-        window.location.href = './admin-payments.html';
-        return;
-      }
-      if (name === 'subscriptions'){
-        window.location.href = './admin-subscriptions.html';
-        return;
-      }
-      if (name === 'users'){
-        panelTitle.textContent = 'Users';
-        panelBody.innerHTML = '<div class="muted">User tools placeholder (roles are managed via the Admin roles dialog).</div>';
-        return;
+        toast(isActive ? 'Activated' : 'Deactivated', String(id));
+      } catch(e){
+        toast('Update failed', String(e?.message || e));
       }
     }
 
-    // ---- Role modal ----
-    function openRoleModal(){
-      clearMsg(roleMsg);
-      roleModal.classList.add('show');
-      roleModal.setAttribute('aria-hidden','false');
-      targetEmail.focus();
+    // =====================
+    // Users panel helpers
+    // =====================
+    async function lookupRoleByEmail(email){
+      const clean = String(email||'').trim().toLowerCase();
+      if(!clean) return { error:'Email required' };
+
+      // Prefer RPC if available (lets DB do auth.users join securely)
+      const candidates = ['admin_lookup_role_by_email','user_role_lookup_by_email'];
+      for(const fn of candidates){
+        try{
+          const { data, error } = await supabase.rpc(fn, { target_email: clean });
+          if(!error && data){
+            return { ok:true, source:`rpc:${fn}`, data };
+          }
+        } catch(e){ /* ignore */ }
+      }
+
+      return { error: 'No lookup RPC found. Use Supabase SQL helper query (join auth.users) instead.' };
     }
-    function closeRoleModal(){
-      roleModal.classList.remove('show');
-      roleModal.setAttribute('aria-hidden','true');
+
+    // =====================
+    // Role assignment (super_admin)
+    // =====================
+    async function assignRole(email, role){
+      const target_email = String(email||'').trim().toLowerCase();
+      if(!target_email) return { error:'Email required' };
+
+      // Function signature in your DB: admin_set_role(target_email text, new_role app_role)
+      // We pass role as text; Postgres should cast if function argument is app_role.
+      const { data, error } = await supabase.rpc('admin_set_role', { target_email, new_role: role });
+      if(error) return { error: error.message };
+      return { ok:true, data };
     }
 
-    // ---- Handlers ----
-    btnVisit.addEventListener('click', () => { window.location.href = './index.html'; });
-    btnStudent.addEventListener('click', () => { window.location.href = './dashboard.html'; });
+    async function listMyRoles(){
+      const { data, error } = await supabase.rpc('admin_get_my_roles');
+      if(!error && data) return { ok:true, data };
+      // fallback
+      if(!myUser) return { error:'Not signed in' };
+      const { data: rows, error: e2 } = await supabase.from('user_roles').select('role').eq('user_id', myUser.id);
+      if(e2) return { error:e2.message };
+      return { ok:true, data: rows };
+    }
 
-    btnLogout.addEventListener('click', async () => {
-      try{ await supabase.auth.signOut(); }catch(e){ console.warn(e); }
-      await refreshAuthState();
-    });
+    // =====================
+    // Events
+    // =====================
+    btnVisit.onclick = ()=> window.location.href = '/';
+    btnStudent.onclick = ()=> window.location.href = '/dashboard.html';
 
-    btnSignIn.addEventListener('click', async () => {
-      clearMsg(loginMsg);
-      const email = (loginEmail.value || '').trim();
-      const password = (loginPassword.value || '').trim();
-      if (!email || !password){
-        showMsg(loginMsg, 'Please enter email and password.');
+    btnOpenPayments.onclick = ()=> window.open('/payments.html', '_blank', 'noopener');
+    btnOpenSubs.onclick = ()=> window.open('/subscriptions.html', '_blank', 'noopener');
+
+    btnSignIn.onclick = ()=> {
+      const saved = localStorage.getItem('logicpals_admin_last_email');
+      if(saved) loginEmail.value = saved;
+      showLoginOverlay(true);
+      loginOut.textContent = '';
+    };
+    loginClose.onclick = ()=> showLoginOverlay(false);
+
+    loginBtn.onclick = async ()=> {
+      loginOut.textContent = 'Signing in…';
+      const email = String(loginEmail.value||'').trim();
+      const password = String(loginPassword.value||'');
+      localStorage.setItem('logicpals_admin_last_email', email);
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if(error){
+        loginOut.textContent = JSON.stringify({ error: error.message }, null, 2);
+        toast('Sign in failed', error.message);
         return;
       }
-      btnSignIn.disabled = true;
-      btnSignIn.textContent = 'Signing in…';
-      try{
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        await refreshAuthState();
-      }catch(e){
-        showMsg(loginMsg, { error: e?.message || String(e) });
-      }finally{
-        btnSignIn.disabled = false;
-        btnSignIn.textContent = 'Sign in';
-      }
-    });
+      loginOut.textContent = JSON.stringify({ ok:true, user: data?.user?.email }, null, 2);
+      toast('Signed in', data?.user?.email || '');
+      showLoginOverlay(false);
+      await refreshSessionUI();
+      await setView(currentView);
+    };
 
-    // Enter-to-submit on password
-    loginPassword.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') btnSignIn.click();
-    });
+    btnSignOut.onclick = async ()=> {
+      await supabase.auth.signOut();
+      toast('Signed out');
+      await refreshSessionUI();
+      await setView('dashboard');
+    };
 
-    // Role management open buttons
-    btnRoleMgmt.addEventListener('click', openRoleModal);
-    btnOpenRoleMgmt.addEventListener('click', openRoleModal);
-    btnCloseRoleModal.addEventListener('click', closeRoleModal);
-    roleModal.addEventListener('click', (e) => { if (e.target === roleModal) closeRoleModal(); });
+    btnRoles.onclick = ()=> {
+      rolesOut.textContent = '';
+      rEmail.value = '';
+      showRolesModal(true);
+    };
+    rolesClose.onclick = ()=> showRolesModal(false);
 
-    btnListMyRoles.addEventListener('click', async () => {
-      clearMsg(roleMsg);
-      try{
-        const roles = await fetchMyRoles();
-        showMsg(roleMsg, { ok: true, roles });
-      }catch(e){
-        showMsg(roleMsg, { error: e?.message || String(e) });
-      }
-    });
-
-    btnAssignRole.addEventListener('click', async () => {
-      clearMsg(roleMsg);
-      const email = (targetEmail.value || '').trim();
-      const role = targetRole.value;
-      if (!email){
-        showMsg(roleMsg, 'Please enter a user email.');
+    rAssign.onclick = async ()=> {
+      if(myRole !== 'super_admin'){
+        rolesOut.textContent = JSON.stringify({ error:'Only super_admin can assign roles' }, null, 2);
         return;
       }
-      if (!myRoles.includes('super_admin')){
-        showMsg(roleMsg, { error: 'Not authorized. Only super_admin can assign roles.' });
-        return;
-      }
+      rolesOut.textContent = 'Assigning…';
+      const res = await assignRole(rEmail.value, rRole.value);
+      rolesOut.textContent = JSON.stringify(res, null, 2);
+      if(res.ok) toast('Role assigned', `${rEmail.value} → ${rRole.value}`);
+    };
 
-      btnAssignRole.disabled = true;
-      btnAssignRole.textContent = 'Assigning…';
-      try{
-        // IMPORTANT: Use supabase.rpc so it carries the user JWT. Do NOT use fetch to /rest/v1/rpc.
-        const { data, error } = await supabase.rpc('admin_set_role', { target_email: email, new_role: role });
-        if (error) throw error;
-        showMsg(roleMsg, data || { ok:true });
-      }catch(e){
-        showMsg(roleMsg, { error: e?.message || String(e) });
-      }finally{
-        btnAssignRole.disabled = false;
-        btnAssignRole.textContent = 'Assign role';
-      }
+    rList.onclick = async ()=> {
+      rolesOut.textContent = 'Loading…';
+      const res = await listMyRoles();
+      rolesOut.textContent = JSON.stringify(res, null, 2);
+    };
+
+    btnApply.onclick = loadQueue;
+    btnRefresh.onclick = loadQueue;
+    btnAdd.onclick = ()=> toast('Add problem', 'Hook this to your content pipeline or an RPC later.');
+
+    btnLookup.onclick = async ()=> {
+      usersOut.textContent = 'Loading…';
+      const res = await lookupRoleByEmail(uEmail.value);
+      usersOut.textContent = JSON.stringify(res, null, 2);
+    };
+
+    btnListMe.onclick = async ()=> {
+      usersOut.textContent = 'Loading…';
+      const res = await listMyRoles();
+      usersOut.textContent = JSON.stringify(res, null, 2);
+    };
+
+    // Keep UI in sync across refresh/navigation
+    supabase.auth.onAuthStateChange(async (_event, _session) => {
+      await refreshSessionUI();
+      await setView(currentView);
     });
 
-    // Tabs
-    mainTabs.addEventListener('click', (e) => {
-      const tab = e.target?.closest?.('.tab');
-      if (!tab) return;
-      renderTab(tab.dataset.tab);
-    });
-
-    // Supabase auth subscription
-    supabase.auth.onAuthStateChange(async (_evt, newSession) => {
-      session = newSession;
-      await refreshAuthState();
-    });
-
+    // ===============
     // Boot
-    await refreshAuthState();
+    // ===============
+    renderNav();
+    await refreshSessionUI();
 
-    // Safety: never auto-open role modal.
-    closeRoleModal();
+    // If user opens /admin.html directly while signed out, show login overlay.
+    const { data } = await supabase.auth.getSession();
+    if(!data?.session){
+      showLoginOverlay(true);
+    }
+
+    await setView('dashboard');
 
   </script>
 </body>
