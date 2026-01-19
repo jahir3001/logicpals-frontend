@@ -640,14 +640,30 @@ async function refreshSessionUI(){
       queueTableWrap.innerHTML = '';
       rowsBadge.textContent = 'Rows 0';
 
-      // Query rules:
-      // - Regular: is_exam_style = false
-      // - Olympiad: is_exam_style = true
-      // You can adjust later to use a dedicated review_queue table.
+      // Query rules (robust):
+      // We prioritize explicit Olympiad markers (tags/title/category) because is_exam_style
+      // may be inconsistent in early data imports.
       let query = supabase
         .from('problems')
-        .select('id,title,age_category,difficulty,category,is_exam_style,is_active,created_at')
-        .eq('is_exam_style', currentQueueMode === 'olympiad');
+        .select('id,title,age_category,difficulty,category,curriculum_tags,is_exam_style,is_active,created_at');
+
+      if(currentQueueMode === 'olympiad'){
+        // Olympiad = BdMO/GSO tagged OR clearly marked in title/category OR exam-style
+        query = query.or(
+          'curriculum_tags.cs.{BdMO},curriculum_tags.cs.{GSO},' +
+          'title.ilike.%BdMO%,title.ilike.%GSO%,' +
+          'category.ilike.%bdmo%,category.ilike.%olym%,is_exam_style.eq.true'
+        );
+      } else {
+        // Regular = exclude olympiad markers
+        query = query
+          .not('curriculum_tags','cs','{BdMO}')
+          .not('curriculum_tags','cs','{GSO}')
+          .not('title','ilike','%BdMO%')
+          .not('title','ilike','%GSO%')
+          .not('category','ilike','%bdmo%')
+          .not('category','ilike','%olym%');
+      }
 
       const s = (qSearch.value || '').trim();
       if(s){
@@ -809,20 +825,19 @@ async function refreshSessionUI(){
     }
 
     async function listMyRoles(){
-      const { data, error } = await supabase.rpc('admin_get_my_roles');
-      if(!error && data) return { ok:true, data };
-      // fallback
-      if(!myUser) return { error:'Not signed in' };
-      const { data: rows, error: e2 } = await supabase.from('user_roles').select('role').eq('user_id', myUser.id);
-      if(e2) return { error:e2.message };
-      return { ok:true, data: rows };
+      const r = await getMyRole();
+      if(r && r.ok && r.data) return { ok:true, data: [{ role: r.data }] };
+      if(!myUser) return { error:"Not signed in" };
+      const { data: rows, error: e2 } = await supabase.from("user_roles").select("role").eq("user_id", myUser.id);
+      if(e2) return { error: e2.message };
+      return { ok:true, data: rows||[] };
     }
 
     // =====================
     // Events
     // =====================
-    btnVisit.onclick = ()=> window.location.href = '/';
-    btnStudent.onclick = ()=> window.location.href = '/dashboard.html';
+    btnVisit.onclick = ()=> window.open('/','_blank');
+    btnStudent.onclick = ()=> window.open('/dashboard.html','_blank');
 
     // These pages are shipped as separate static files. Keep the filenames in sync with what you deploy.
     // We use admin-payments.html and admin-subscriptions.html to avoid clashing with any future public pages.
