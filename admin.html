@@ -517,76 +517,80 @@ function getCachedRole(userId){
   return entry.role || null;
 }
 
-async function getMyRole() {
-  // IMPORTANT: don't immediately wipe role to null when auth is still settling.
-  // We'll retry a few times before concluding "no role".
 
+async function getMyRole() {
+  // Returns: { role: string|null, source: string }
   const session = (await supabase.auth.getSession()).data.session;
   const userId = session?.user?.id;
-  if(!userId) return null;
+  if(!userId) return { role: null, source: 'no-session' };
 
-  const tryFetch = async () => {
-    // Prefer RPC (stable + RLS-safe)
-    for (const fn of ['admin_get_my_role','admin_get_my_roles']) {
-      try {
-        const { data, error } = await supabase.rpc(fn);
-        if (error) continue;
-        if (data == null) continue;
-        const normalize = (v) => {
-          if (!v) return null;
-          if (typeof v === 'string') return v;
-          if (typeof v === 'object') {
-            // expected: { role: 'super_admin' }
-            if (typeof v.role === 'string') return v.role;
-            // older variants may return other keys
-            for (const k of ['app_role','roles','my_role']) {
-              if (typeof v[k] === 'string') return v[k];
-            }
-            // last resort: first string value in the object
-            for (const val of Object.values(v)) {
-              if (typeof val === 'string') return val;
-            }
-          }
-          return null;
-        };
+  const tryRpc = async (fn) => {
+    const { data, error } = await supabase.rpc(fn);
+    if (error) return { role: null, source: `rpc:${fn}:error` };
+    if (data == null) return { role: null, source: `rpc:${fn}:empty` };
 
-        if (Array.isArray(data)) return normalize(data[0]);
-        return normalize(data);
-      } catch (_) {}
-    }
+    const normalize = (v) => {
+      if (!v) return null;
+      if (typeof v === 'string') return v;
+      if (typeof v === 'object') {
+        if (typeof v.role === 'string') return v.role;
+        for (const k of ['app_role','roles','my_role']) {
+          if (typeof v[k] === 'string') return v[k];
+        }
+        for (const val of Object.values(v)) {
+          if (typeof val === 'string') return val;
+        }
+      }
+      return null;
+    };
 
-    // Fallback: read from table (may be blocked by RLS in some setups)
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
-      if (!error && data?.role) return data.role;
-    } catch (_) {}
+    if (Array.isArray(data)) return { role: normalize(data[0]), source: `rpc:${fn}` };
+    return { role: normalize(data), source: `rpc:${fn}` };
+  };
 
-    return null;
+  const tryTable = async () => {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) return { role: null, source: `table:user_roles:error` };
+    return { role: data?.role || null, source: 'table:user_roles' };
   };
 
   const backoff = [0, 200, 600, 1200];
-  let role = null;
   for (let i=0; i<backoff.length; i++){
     if(backoff[i]) await new Promise(r=>setTimeout(r, backoff[i]));
-    role = await tryFetch();
-    if(role) break;
+
+    // Prefer RPCs first (RLS-safe)
+    for (const fn of ['admin_get_my_role','admin_get_my_roles']){
+      try{
+        const r = await tryRpc(fn);
+        if(r.role){
+          saveRoleCache(userId, r.role);
+          return r;
+        }
+      }catch(_){/*ignore*/}
+    }
+
+    // Fallback: direct table read (works if you have "read own role" policy)
+    try{
+      const r = await tryTable();
+      if(r.role){
+        saveRoleCache(userId, r.role);
+        return r;
+      }
+    }catch(_){/*ignore*/}
   }
 
-  if(role){
-    saveRoleCache(userId, role);
-    return role;
-  }
-
-  // If we couldn't fetch, keep cached role (prevents flicker)
+  // Final fallback: cached role to avoid flicker
   const cached = getCachedRole(userId);
-  return cached;
+  if(cached) return { role: cached, source: 'cache' };
+  return { role: null, source: 'none' };
 }
 
 async function refreshSessionUI(){
+
       const { data } = await supabase.auth.getSession();
       const session = data?.session || null;
       myUser = session?.user || null;
@@ -608,9 +612,9 @@ async function refreshSessionUI(){
       authState.textContent = 'session';
       who.textContent = `Signed in: ${myUser.email}`;
 
-      const { role, source } = await getMyRole();
-      myRole = role;
-      roleSource.textContent = source;
+      const r = await getMyRole();
+      myRole = r?.role ?? null;
+      roleSource.textContent = r?.source ?? '-';
       roleBadge.textContent = `role: ${myRole ?? 'none'}`;
 
       btnSignIn.style.display = 'none';
