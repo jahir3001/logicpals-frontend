@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!doctype html>
 <html lang="en">
 <head>
@@ -84,3 +85,91 @@
   </script>
 </body>
 </html>
+=======
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LogicPals Admin — Payments</title>
+  <style>
+    :root{color-scheme:dark;}
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:#070b10;color:#e8eef8;}
+    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px;}
+    .card{width:min(860px,96vw);border-radius:18px;padding:20px 22px;background:rgba(15,22,35,.72);box-shadow:0 20px 80px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.08)}
+    .row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .title{font-weight:700;font-size:18px;letter-spacing:.2px}
+    .pill{font-size:12px;opacity:.9;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)}
+    .btn{cursor:pointer;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#e8eef8;padding:9px 12px;border-radius:12px;font-weight:600}
+    .btn:hover{background:rgba(255,255,255,.09)}
+    .muted{opacity:.8}
+    .grid{margin-top:16px;display:grid;grid-template-columns:1fr;gap:12px}
+    .box{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03);border-radius:14px;padding:14px}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="row">
+        <div>
+          <div class="title">LogicPals Admin — Payments</div>
+          <div class="muted" style="margin-top:6px">This page is a placeholder shell. We will wire real payment events in later roadmap steps.</div>
+        </div>
+        <div class="row" style="gap:10px">
+          <span id="sessionPill" class="pill">Checking session…</span>
+          <button class="btn" id="btnBack">Back to Admin</button>
+          <button class="btn" id="btnLogout">Log out</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="box">
+          <b>Status</b>
+          <div id="status" class="muted" style="margin-top:6px">Loading…</div>
+        </div>
+        <div class="box">
+          <b>Next step</b>
+          <div class="muted" style="margin-top:6px">Once roles are working, we will add “Payments feed” + filtering + export.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    // IMPORTANT: keep these in sync with admin.html (we will move keys to secure config later).
+    const SUPABASE_URL = 'https://ovszuxerimbmzfblzkgd.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const $ = (id)=>document.getElementById(id);
+    const status = $('status');
+    const pill = $('sessionPill');
+
+    $('btnBack').onclick = ()=> window.location.href = '/admin.html';
+    $('btnLogout').onclick = async ()=> {
+      await supabase.auth.signOut();
+      window.location.href = '/admin.html';
+    };
+
+    async function boot(){
+      const { data: { session } } = await supabase.auth.getSession();
+      if(!session){
+        pill.textContent = 'Not signed in';
+        status.textContent = 'No active session. Redirecting to admin login…';
+        setTimeout(()=> window.location.href='/admin.html', 600);
+        return;
+      }
+      const email = session.user?.email || 'signed in';
+      pill.textContent = `Signed in: ${email}`;
+      status.innerHTML = `Session OK. User id: <code>${session.user.id}</code>`;
+    }
+
+    boot();
+  </script>
+</body>
+</html>
+>>>>>>> 8bc5b78514e083aaa9d6e1eda3db2fdf1c3d5e9c
