@@ -1,0 +1,16 @@
+{
+  "active_v1": [
+    "OUTPUT RULES (ACTIVE ATTEMPT):",
+    "- DO NOT reveal final answer or full solution.",
+    "- DO NOT use phrases like 'final answer', 'answer is', or show computed results.",
+    "- Ask ONE focused question OR give ONE small hint.",
+    "- Keep it short (max ~80 words).",
+    "- Do not provide step-by-step solution."
+  ],
+  "review_v1": [
+    "OUTPUT RULES (REVIEW MODE):",
+    "- Student already submitted; provide full solution clearly.",
+    "- Include final answer and explain reasoning.",
+    "- Use steps if helpful."
+  ]
+}

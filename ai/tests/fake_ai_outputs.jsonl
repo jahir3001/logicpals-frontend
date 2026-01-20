@@ -1,0 +1,14 @@
+{"case_id":"WARMUP_ACTIVE_OK_1","difficulty_tier":"WARMUP","attempt_state":"ACTIVE","mode":"PRACTICE","ai_output":"Let’s start small. What is the key pattern you notice? Try listing the first 3 cases and tell me what changes each time. (No need to compute everything.)","expected_pass":true}
+{"case_id":"WARMUP_ACTIVE_FAIL_1","difficulty_tier":"WARMUP","attempt_state":"ACTIVE","mode":"PRACTICE","ai_output":"Full solution: Step 1... Step 2... Therefore the answer is 42.","expected_pass":false}
+
+{"case_id":"STANDARD_ACTIVE_OK_1","difficulty_tier":"STANDARD","attempt_state":"ACTIVE","mode":"PRACTICE","ai_output":"Good attempt. Before we proceed, can you restate the condition in your own words? Hint: look for an invariant (something that stays the same after each move).","expected_pass":true}
+{"case_id":"STANDARD_ACTIVE_FAIL_1","difficulty_tier":"STANDARD","attempt_state":"ACTIVE","mode":"PRACTICE","ai_output":"Here is the complete reasoning and final answer. First we do X, then Y, then Z. Final answer: 17.","expected_pass":false}
+
+{"case_id":"CHALLENGE_ACTIVE_OK_1","difficulty_tier":"CHALLENGE","attempt_state":"ACTIVE","mode":"PRACTICE","ai_output":"You’re close. Try proving a smaller lemma: show that if A happens, then B must happen. Which step in your work uses the strongest assumption?","expected_pass":true}
+{"case_id":"CHALLENGE_ACTIVE_FAIL_1","difficulty_tier":"CHALLENGE","attempt_state":"ACTIVE","mode":"PRACTICE","ai_output":"Solution (full): We construct..., then apply..., concluding the unique value is 9. Answer: 9.","expected_pass":false}
+
+{"case_id":"WARMUP_REVIEW_OK_1","difficulty_tier":"WARMUP","attempt_state":"REVIEW","mode":"PRACTICE","ai_output":"Review: Full solution walkthrough. Step 1: ... Step 2: ... Final answer: 42. Key idea: ...","expected_pass":true}
+{"case_id":"STANDARD_REVIEW_OK_1","difficulty_tier":"STANDARD","attempt_state":"REVIEW","mode":"PRACTICE","ai_output":"Review: Step-by-step solution and explanation. Final answer: 17. Why it works: ...","expected_pass":true}
+{"case_id":"CHALLENGE_REVIEW_OK_1","difficulty_tier":"CHALLENGE","attempt_state":"REVIEW","mode":"PRACTICE","ai_output":"Review: Full proof-style solution. Final result: 9. Proof sketch: ...","expected_pass":true}
+
+{"case_id":"ACTIVE_BORDERLINE_FAIL_ANSWER_ONLY","difficulty_tier":"STANDARD","attempt_state":"ACTIVE","mode":"PRACTICE","ai_output":"The answer is 17.","expected_pass":false}

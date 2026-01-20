@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!doctype html>
 <html lang="en">
 <head>
@@ -77,3 +78,84 @@
   </script>
 </body>
 </html>
+=======
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LogicPals Admin — Subscriptions</title>
+  <style>
+    :root{color-scheme:dark;}
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:#070b10;color:#e8eef8;}
+    .wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+    .card{width:min(920px,100%);background:rgba(18,25,35,.78);border:1px solid rgba(255,255,255,.10);border-radius:20px;box-shadow:0 18px 60px rgba(0,0,0,.55);backdrop-filter:blur(18px);padding:18px 18px 14px;}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;}
+    h1{margin:0;font-size:18px;}
+    p{margin:10px 0 0;opacity:.85;line-height:1.35;}
+    .btns{display:flex;gap:10px;flex-wrap:wrap;}
+    .btn{appearance:none;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#e8eef8;border-radius:12px;padding:10px 12px;font-weight:600;cursor:pointer;}
+    .btn:hover{background:rgba(255,255,255,.10);} 
+    .pill{font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);}
+    .muted{opacity:.7}
+    .err{margin-top:10px;color:#ffb3b3;white-space:pre-wrap;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="row">
+        <div>
+          <h1>LogicPals Admin — Subscriptions</h1>
+          <div class="pill muted" id="sessionPill">Checking session…</div>
+        </div>
+        <div class="btns">
+          <button class="btn" id="backBtn">Back to Admin</button>
+          <button class="btn" id="logoutBtn">Log out</button>
+        </div>
+      </div>
+      <p>
+        This page is a placeholder for your subscriptions dashboard. It is deployed as a separate static HTML so the Admin console can open it without any framework build.
+      </p>
+      <p class="muted">
+        Next: wire to your <code>subscriptions</code> tables / Stripe webhooks when you reach the Payments &amp; Billing step on the roadmap.
+      </p>
+      <div class="err" id="err"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://ovszuxerimbmzfblzkgd.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const sessionPill = document.getElementById('sessionPill');
+    const errEl = document.getElementById('err');
+
+    const goAdmin = () => window.location.href = '/admin.html';
+    document.getElementById('backBtn').onclick = goAdmin;
+
+    document.getElementById('logoutBtn').onclick = async () => {
+      await supabase.auth.signOut();
+      goAdmin();
+    };
+
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      if (!session?.user) {
+        sessionPill.textContent = 'Not signed in';
+        goAdmin();
+      } else {
+        sessionPill.textContent = `Signed in: ${session.user.email ?? session.user.id}`;
+      }
+    } catch (e) {
+      errEl.textContent = String(e?.message ?? e);
+      sessionPill.textContent = 'Session error';
+    }
+  </script>
+</body>
+</html>
+>>>>>>> 8bc5b78514e083aaa9d6e1eda3db2fdf1c3d5e9c
