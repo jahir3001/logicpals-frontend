@@ -6,6 +6,8 @@
     <title>LogicPals Tutor</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/api/env"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="/app/guards/subscription-guard.js"></script>
     <style>
@@ -306,12 +308,12 @@
     <script>
         // (All existing learn.html JavaScript code stays the same)
         // Just adding subscription checking at the beginning
+        // Runtime config injected by Vercel (public values only)
+        const { SUPABASE_URL: SB_URL, SUPABASE_ANON_KEY: SB_KEY } = window.__LP_ENV || {};
+        if (!SB_URL || !SB_KEY) {
+            alert("Missing Supabase config. Set SUPABASE_URL and SUPABASE_ANON_KEY in Vercel Environment Variables.");
+        }
 
-        const k1 = "sk-proj-dT54l3-DsOdBbN4RqvflV3Kv3BuIN0lBCFaDAgGgaNqGsMKS96CY8";
-        const k2 = "2GX1gIJYa-RRmguTUOjkDT3BlbkFJmdKpyH1FXStC45hPW1983ZlAGV2j7KE7dFNyFJ3JywFTdR6YEpCQ1OEgtJ0REg1gkIOBy_vVYA";
-        const OPENAI_API_KEY = k1 + k2;
-        const SB_URL = 'https://ovszuxerimbmzfblzkgd.supabase.co';
-        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
 
         let sb, currentProblem, currentChildId;
         let hintsUsed = 0, chatLog = [], startTime, timerInt;
@@ -534,26 +536,17 @@
             }
 
             try {
-                const res = await fetch("https://api.openai.com/v1/chat/completions", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${OPENAI_API_KEY}` },
+                const res = await fetch('/api/tutor', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        model: "gpt-4o-mini",
-                        messages: [
-                            { role: 'system', content: `You are a Socratic Tutor for a child. 
-                            Problem: "${currentProblem.problem_text}". 
-                            Answer: "${currentProblem.solution_explanation}". 
-                            
-                            RULES:
-                            1. NEVER reveal the answer directly. If they don't know, give a definition, synonym, or rhyme.
-                            2. If they are close, encourage them.
-                            3. Keep it short (max 30 words).` },
-                            ...chatLog
-                        ]
+                        problem_text: currentProblem.problem_text,
+                        solution_explanation: currentProblem.solution_explanation,
+                        chatLog
                     })
                 });
                 const data = await res.json();
-                const reply = data.choices[0].message.content;
+                const reply = (data && data.reply) ? data.reply : 'Sorry, something went wrong.';
                 addMessage('ai', reply);
                 chatLog.push({ role: 'assistant', content: reply });
                 saveState();
