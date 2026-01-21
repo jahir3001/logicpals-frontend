@@ -1,85 +1,88 @@
-// Vercel Serverless Function: /api/tutor
-// Receives: { messages: [{role: 'system'|'user'|'assistant', content: string}] }
-// Returns: { content: string }
-
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-  if (!OPENAI_API_KEY) {
-    return res.status(500).json({ error: 'Missing OPENAI_API_KEY in environment variables.' });
-  }
-
-  let body;
   try {
-    body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-  } catch {
-    return res.status(400).json({ error: 'Invalid JSON body.' });
-  }
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Method not allowed" });
+    }
 
-  const messages = Array.isArray(body?.messages) ? body.messages : [];
-  const safeMessages = messages
-    .filter(m => m && typeof m.role === 'string' && typeof m.content === 'string')
-    .slice(-20) // simple cap
-    .map(m => ({ role: m.role, content: m.content }));
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: "Missing OPENAI_API_KEY in Vercel Environment Variables" });
+    }
 
-  // Choose a default model; you can override by setting OPENAI_MODEL in Vercel.
-  const model = process.env.OPENAI_MODEL || 'gpt-5';
+    const body = req.body || {};
 
-  try {
-    const resp = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST',
+    // Accept BOTH formats:
+    // A) { messages: [...] }  (curl test format)
+    // B) { problem_text, solution_explanation, chatLog } (learn.html format)
+    let messages = body.messages;
+
+    if (!Array.isArray(messages)) {
+      const problemText = String(body.problem_text || "").trim();
+      const solutionExplanation = String(body.solution_explanation || "").trim();
+      const chatLog = Array.isArray(body.chatLog) ? body.chatLog : [];
+
+      if (!problemText) {
+        return res.status(400).json({ error: "Missing problem_text (or messages[])" });
+      }
+
+      // Convert chatLog -> messages (keep last ~20 turns to be safe)
+      const converted = chatLog
+        .filter(m => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+        .slice(-20)
+        .map(m => ({ role: m.role, content: m.content }));
+
+      const system = [
+        "You are LogicPals Socratic Tutor.",
+        "Help the student solve the problem step-by-step without giving the final answer immediately.",
+        "Ask short guiding questions. Give hints when needed.",
+        "If the student asks for the final answer, first explain reasoning, then provide it.",
+      ].join(" ");
+
+      messages = [
+        { role: "system", content: system },
+        {
+          role: "user",
+          content:
+            `Problem:\n${problemText}\n\n` +
+            (solutionExplanation ? `Teacher reference (do not reveal directly):\n${solutionExplanation}\n\n` : "") +
+            `Conversation so far:\n${converted.map(m => `${m.role}: ${m.content}`).join("\n")}\n\n` +
+            `Now respond as the tutor.`
+        }
+      ];
+    }
+
+    // Call OpenAI Responses API
+    const response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model,
-        input: safeMessages,
+        model: "gpt-4.1-mini",
+        input: messages,
       }),
     });
 
-    const data = await resp.json();
+    const raw = await response.text();
+    let data;
+    try { data = JSON.parse(raw); } catch { data = null; }
 
-    if (!resp.ok) {
-      return res.status(resp.status).json({
-        error: 'OpenAI request failed',
-        details: data,
+    if (!response.ok) {
+      return res.status(response.status).json({
+        error: "OpenAI request failed",
+        details: data || raw
       });
     }
 
-    // The Responses API provides output_text in many examples.
-    // Fall back to walking the structure if needed.
-    const content =
-      (typeof data.output_text === 'string' && data.output_text.trim())
-        ? data.output_text.trim()
-        : extractTextFallback(data);
+    // Extract text from Responses API
+    const reply =
+      (data && data.output_text) ||
+      (data && data.output && data.output[0] && data.output[0].content && data.output[0].content[0] && data.output[0].content[0].text) ||
+      "";
 
-    return res.status(200).json({ content });
+    return res.status(200).json({ reply });
   } catch (err) {
-    return res.status(500).json({ error: 'Server error', details: String(err) });
+    return res.status(500).json({ error: "Server error", details: String(err?.message || err) });
   }
-}
-
-function extractTextFallback(data) {
-  try {
-    const out = data?.output;
-    if (Array.isArray(out)) {
-      for (const item of out) {
-        const contentArr = item?.content;
-        if (Array.isArray(contentArr)) {
-          for (const c of contentArr) {
-            if (c?.type === 'output_text' && typeof c?.text === 'string') {
-              const t = c.text.trim();
-              if (t) return t;
-            }
-          }
-        }
-      }
-    }
-  } catch {}
-  return '';
 }
