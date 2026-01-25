@@ -12,7 +12,7 @@
   <script src="/api/env"></script>
 
   <!-- Supabase client (UMD) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@sb/sb-js@2"></script>
 
   <style>
     /* Force “clean white” admin surface even if lp_design.css changes later */
@@ -211,7 +211,7 @@
     }
 
     // --- Supabase init ---
-    let supabase = null;
+    let sb = null;
 
     function getEnv(){
       // window.__LP_ENV comes from /api/env
@@ -227,11 +227,11 @@
       // Fallback: try view/table read (will succeed only if your RLS permits).
       try{
         // Preferred: RPC (change name if needed)
-        const { data, error } = await supabase.rpc('rpc_lp_my_role');
+        const { data, error } = await sb.rpc('rpc_lp_my_role');
         if(!error && data) return data;
       }catch(_){}
       try{
-        const { data, error } = await supabase
+        const { data, error } = await sb
           .from('user_roles')
           .select('role')
           .eq('user_id', userId)
@@ -242,7 +242,7 @@
     }
 
     async function refreshAuth(){
-      const { data } = await supabase.auth.getSession();
+      const { data } = await sb.auth.getSession();
       const session = data?.session || null;
       if(!session){
         setAuthPill('none', null);
@@ -263,7 +263,7 @@
       const email = $('loginEmail').value.trim();
       const pass = $('loginPass').value;
       $('loginOut').style.display = 'none';
-      const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
       if(error){
         $('loginOut').style.display = 'block';
         $('loginOut').textContent = 'Login failed: ' + error.message;
@@ -274,7 +274,7 @@
     }
 
     async function doLogout(){
-      await supabase.auth.signOut();
+      await sb.auth.signOut();
       await refreshAuth();
     }
 
@@ -284,12 +284,12 @@
       // Always keep “Payments/Subscriptions/Visit/Dashboard” as real links even if JS fails.
       // (They are anchors already.)
 
-      // Build supabase client using env
+      // Build sb client using env
       const env = getEnv();
       if(!window.supabase || !window.supabase.createClient){
-        throw new Error('Supabase UMD did not load. Check network for https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+        throw new Error('Supabase UMD did not load. Check network for https://cdn.jsdelivr.net/npm/@sb/sb-js@2');
       }
-      supabase = window.supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+      sb = window.supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
 
       // wire buttons
       $('btnSignIn').addEventListener('click', ()=> $('dlgLogin').showModal());
@@ -304,7 +304,7 @@
       $('btnRoleManager').addEventListener('click', ()=>alert('Role manager: super_admin-only RPC.'));
       $('btnAudit').addEventListener('click', ()=>alert('Audit viewer: read-only safe view.'));
 
-      supabase.auth.onAuthStateChange(()=>{ refreshAuth(); });
+      sb.auth.onAuthStateChange(()=>{ refreshAuth(); });
 
       await refreshAuth();
     });
