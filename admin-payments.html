@@ -1,829 +1,185 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LogicPals Payment Activation Console</title>
-  
-  <style>
-    /* ============================================
-       DESIGN SYSTEM - Enterprise Grade (Matching Admin Console)
-       ============================================ */
-    
-    :root {
-      /* Primary Brand Colors */
-      --primary-50: #f0f4ff;
-      --primary-100: #e0e7ff;
-      --primary-200: #c7d2fe;
-      --primary-300: #a5b4fc;
-      --primary-400: #818cf8;
-      --primary-500: #6366f1;
-      --primary-600: #4f46e5;
-      --primary-700: #4338ca;
-      --primary-800: #3730a3;
-      --primary-900: #312e81;
-      
-      /* Accent Colors */
-      --accent-500: #06b6d4;
-      --accent-600: #0891b2;
-      
-      /* Semantic Colors */
-      --success: #10b981;
-      --success-bg: #d1fae5;
-      --warning: #f59e0b;
-      --warning-bg: #fef3c7;
-      --danger: #ef4444;
-      --danger-bg: #fee2e2;
-      --info: #3b82f6;
-      --info-bg: #dbeafe;
-      
-      /* Neutral Palette */
-      --gray-50: #f9fafb;
-      --gray-100: #f3f4f6;
-      --gray-200: #e5e7eb;
-      --gray-300: #d1d5db;
-      --gray-400: #9ca3af;
-      --gray-500: #6b7280;
-      --gray-600: #4b5563;
-      --gray-700: #374151;
-      --gray-800: #1f2937;
-      --gray-900: #111827;
-      
-      /* Surface Colors */
-      --surface-primary: #ffffff;
-      --surface-secondary: #f9fafb;
-      --surface-elevated: #ffffff;
-      
-      /* Text Colors */
-      --text-primary: #111827;
-      --text-secondary: #4b5563;
-      --text-tertiary: #9ca3af;
-      
-      /* Border & Divider */
-      --border-light: #e5e7eb;
-      --border-medium: #d1d5db;
-      
-      /* Shadows */
-      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-      
-      /* Typography */
-      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-      --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Menlo, Consolas, monospace;
-      
-      /* Spacing */
-      --space-2: 0.5rem;
-      --space-3: 0.75rem;
-      --space-4: 1rem;
-      --space-5: 1.25rem;
-      --space-6: 1.5rem;
-      --space-8: 2rem;
-      --space-10: 2.5rem;
-      
-      /* Border Radius */
-      --radius-md: 0.5rem;
-      --radius-lg: 0.75rem;
-      --radius-xl: 1rem;
-      --radius-2xl: 1.5rem;
-      --radius-full: 9999px;
-      
-      /* Transitions */
-      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-      --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    html {
-      font-size: 16px;
-      -webkit-font-smoothing: antialiased;
-    }
-    
-    body {
-      font-family: var(--font-sans);
-      background: linear-gradient(135deg, var(--gray-50) 0%, var(--primary-50) 100%);
-      color: var(--text-primary);
-      line-height: 1.6;
-      min-height: 100vh;
-    }
-    
-    /* Layout */
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: var(--space-8);
-    }
-    
-    /* Header */
-    .header {
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(20px) saturate(180%);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-2xl);
-      padding: var(--space-5);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-6);
-      box-shadow: var(--shadow-lg);
-      margin-bottom: var(--space-8);
-      position: sticky;
-      top: var(--space-8);
-      z-index: 100;
-    }
-    
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: var(--space-4);
-    }
-    
-    .logo {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-800) 100%);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-md);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      color: white;
-      font-size: 1.25rem;
-      letter-spacing: -0.02em;
-    }
-    
-    .brand-text h1 {
-      font-size: 1.125rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: -0.02em;
-      margin-bottom: 2px;
-    }
-    
-    .brand-text p {
-      font-size: 0.75rem;
-      color: var(--text-tertiary);
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.02em;
-    }
-    
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-    }
-    
-    /* Buttons */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-2);
-      padding: var(--space-2) var(--space-5);
-      border-radius: var(--radius-lg);
-      font-size: 0.875rem;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      white-space: nowrap;
-    }
-    
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
-      color: white;
-      box-shadow: var(--shadow-md);
-    }
-    
-    .btn-primary:hover {
-      background: linear-gradient(135deg, var(--primary-700) 0%, var(--primary-800) 100%);
-      box-shadow: var(--shadow-lg);
-      transform: translateY(-1px);
-    }
-    
-    .btn-secondary {
-      background: var(--surface-primary);
-      color: var(--text-primary);
-      border: 1px solid var(--border-medium);
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .btn-secondary:hover {
-      background: var(--gray-50);
-      box-shadow: var(--shadow-md);
-    }
-    
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none !important;
-    }
-    
-    /* Page Header */
-    .page-header {
-      margin-bottom: var(--space-8);
-    }
-    
-    .page-title {
-      font-size: 2rem;
-      font-weight: 800;
-      color: var(--text-primary);
-      letter-spacing: -0.03em;
-      margin-bottom: var(--space-2);
-    }
-    
-    .page-subtitle {
-      font-size: 1rem;
-      color: var(--text-secondary);
-      font-weight: 500;
-    }
-    
-    /* Grid Layout */
-    .grid {
-      display: grid;
-      grid-template-columns: 520px 1fr;
-      gap: var(--space-8);
-      align-items: start;
-    }
-    
-    @media (max-width: 1200px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-    }
-    
-    /* Card */
-    .card {
-      background: var(--surface-elevated);
-      border-radius: var(--radius-2xl);
-      border: 1px solid var(--border-light);
-      box-shadow: var(--shadow-lg);
-      overflow: hidden;
-      transition: all var(--transition-base);
-    }
-    
-    .card:hover {
-      box-shadow: var(--shadow-xl);
-    }
-    
-    .card-header {
-      padding: var(--space-6);
-      border-bottom: 1px solid var(--border-light);
-      background: linear-gradient(to bottom, var(--surface-primary), var(--surface-secondary));
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    
-    .card-title {
-      font-size: 1.125rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: -0.02em;
-    }
-    
-    .card-body {
-      padding: var(--space-6);
-    }
-    
-    /* Form Elements */
-    .form-group {
-      margin-bottom: var(--space-5);
-    }
-    
-    label {
-      display: block;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: var(--space-2);
-    }
-    
-    input[type="email"],
-    input[type="number"],
-    input[type="text"],
-    select {
-      width: 100%;
-      padding: var(--space-3) var(--space-4);
-      border: 1px solid var(--border-medium);
-      border-radius: var(--radius-lg);
-      font-size: 0.875rem;
-      font-family: var(--font-sans);
-      color: var(--text-primary);
-      background: var(--surface-primary);
-      transition: all var(--transition-fast);
-      outline: none;
-    }
-    
-    input:focus,
-    select:focus {
-      border-color: var(--primary-500);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    }
-    
-    .help-text {
-      font-size: 0.75rem;
-      color: var(--text-tertiary);
-      margin-top: var(--space-2);
-    }
-    
-    /* Tier Grid */
-    .tier-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: var(--space-3);
-      margin-top: var(--space-2);
-    }
-    
-    .tier-option {
-      border: 2px solid var(--border-light);
-      background: var(--surface-primary);
-      border-radius: var(--radius-xl);
-      padding: var(--space-5);
-      text-align: center;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-    }
-    
-    .tier-option:hover {
-      background: var(--gray-50);
-      border-color: var(--primary-400);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-    }
-    
-    .tier-option.selected {
-      background: linear-gradient(135deg, var(--primary-50), var(--primary-100));
-      border-color: var(--primary-600);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-    }
-    
-    .tier-name {
-      font-size: 0.875rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: var(--space-2);
-    }
-    
-    .tier-price {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: var(--primary-600);
-    }
-    
-    .divider {
-      height: 1px;
-      background: var(--border-light);
-      margin: var(--space-5) 0;
-    }
-    
-    /* Success Alert */
-    .success-alert {
-      padding: var(--space-4);
-      background: var(--success-bg);
-      border: 1px solid var(--success);
-      border-radius: var(--radius-lg);
-      margin-bottom: var(--space-6);
-      display: none;
-      animation: slideDown 0.3s ease;
-    }
-    
-    .success-alert.show {
-      display: block;
-    }
-    
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    .success-title {
-      font-size: 0.875rem;
-      font-weight: 700;
-      color: var(--success);
-      margin-bottom: var(--space-2);
-    }
-    
-    .success-text {
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-    }
-    
-    /* Table */
-    .table-wrapper {
-      border-radius: var(--radius-xl);
-      border: 1px solid var(--border-light);
-      overflow: hidden;
-      background: var(--surface-primary);
-    }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    
-    thead {
-      background: linear-gradient(to bottom, var(--gray-50), var(--gray-100));
-      border-bottom: 2px solid var(--border-medium);
-    }
-    
-    th {
-      padding: var(--space-4);
-      text-align: left;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    
-    td {
-      padding: var(--space-4);
-      font-size: 0.875rem;
-      color: var(--text-primary);
-      border-bottom: 1px solid var(--border-light);
-    }
-    
-    tbody tr {
-      transition: background var(--transition-fast);
-    }
-    
-    tbody tr:hover {
-      background: var(--surface-secondary);
-    }
-    
-    tbody tr:last-child td {
-      border-bottom: none;
-    }
-    
-    /* Badge */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 10px;
-      border-radius: var(--radius-full);
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-    }
-    
-    .badge-success {
-      background: var(--success-bg);
-      color: var(--success);
-    }
-    
-    .badge-neutral {
-      background: var(--gray-100);
-      color: var(--gray-700);
-    }
-    
-    /* Empty State */
-    .empty-state {
-      text-align: center;
-      padding: var(--space-10);
-      color: var(--text-tertiary);
-    }
-    
-    .empty-icon {
-      font-size: 3rem;
-      margin-bottom: var(--space-4);
-      opacity: 0.5;
-    }
-    
-    /* Toast */
-    .toast-container {
-      position: fixed;
-      top: var(--space-8);
-      right: var(--space-8);
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-3);
-    }
-    
-    .toast {
-      background: var(--surface-elevated);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius-lg);
-      padding: var(--space-4);
-      box-shadow: var(--shadow-xl);
-      min-width: 300px;
-      animation: slideIn 0.3s ease;
-    }
-    
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateX(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-    
-    .toast-title {
-      font-size: 0.875rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: var(--space-2);
-    }
-    
-    .toast-message {
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-    }
-    
-    /* Responsive */
-    @media (max-width: 768px) {
-      .container {
-        padding: var(--space-4);
-      }
-      
-      .header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      
-      .tier-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-  </style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>LogicPals Console — Payments</title>
+  <link rel="stylesheet" href="/lp_design.css"/>
   <script src="/api/env"></script>
-  <script src="lp_auth.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body{background:#f5f7fb;}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px;}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:16px;padding:14px 16px;box-shadow:0 10px 30px rgba(2,6,23,.06);}
+    .h{display:flex;align-items:center;gap:12px;}
+    .logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#5b8cff,#7c3aed);color:#fff;font-weight:800}
+    .btn{appearance:none;border:1px solid rgba(15,23,42,.12);background:#fff;border-radius:12px;padding:10px 12px;font-weight:700;font-size:13px;color:#0f172a;cursor:pointer;text-decoration:none;display:inline-flex;gap:8px;align-items:center}
+    .btn.primary{background:#4f46e5;color:#fff;border-color:transparent}
+    .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(15,23,42,.10);background:#fff;border-radius:999px;padding:8px 12px;font-size:12px;color:#0f172a}
+    .dot{width:8px;height:8px;border-radius:999px;background:#94a3b8}
+    .dot.ok{background:#22c55e}
+    .card{margin-top:18px;background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:16px;box-shadow:0 10px 30px rgba(2,6,23,.06);padding:16px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:820px){.row{grid-template-columns:1fr}}
+    input,select{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(15,23,42,.12)}
+    label{font-size:12px;color:#64748b}
+    pre{white-space:pre-wrap;background:#0b1220;color:#e5e7eb;padding:12px;border-radius:12px;margin-top:12px}
+    .muted{color:#64748b;font-size:13px}
+  </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Header -->
-    <header class="header">
-      <div class="brand">
+  <div class="wrap">
+    <div class="top">
+      <div class="h">
         <div class="logo">LP</div>
-        <div class="brand-text">
-          <h1>Payment Activation Console</h1>
-          <p>Enterprise Subscription Management</p>
+        <div>
+          <div style="font-weight:900;color:#0f172a;">Payments</div>
+          <div class="muted">Admin-only — refund / charge / reconcile (RPC-only)</div>
         </div>
       </div>
-      <div class="header-actions">
-        <button class="btn btn-secondary" onclick="window.location.href='/admin.html'">← Back to Admin</button>
-        <button class="btn btn-secondary" onclick="loadRecentActivations()">↻ Refresh</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;align-items:center">
+        <div class="pill" id="authPill"><span class="dot" id="dot"></span><span id="authText">Loading…</span></div>
+        <a class="btn" href="/admin.html">Back to Admin</a>
+        <button class="btn primary" id="btnSignIn">Sign in</button>
+        <button class="btn" id="btnSignOut" style="display:none;">Log out</button>
       </div>
-    </header>
-
-    <!-- Page Header -->
-    <div class="page-header">
-      <h2 class="page-title">Manual Payment Activation</h2>
-      <p class="page-subtitle">Activate subscriptions for verified bKash/Nagad payments</p>
     </div>
 
-    <!-- Success Alert -->
-    <div class="success-alert" id="successAlert">
-      <div class="success-title">✓ Subscription Activated Successfully</div>
-      <div class="success-text" id="successText"></div>
-    </div>
-
-    <!-- Main Grid -->
-    <div class="grid">
-      <!-- Activation Form -->
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title">Activation Form</h3>
+    <div class="card">
+      <div class="row">
+        <div>
+          <label>Customer email</label>
+          <input id="email" placeholder="student_or_parent@email.com"/>
         </div>
-        <div class="card-body">
-          <form id="activationForm" onsubmit="activateSubscription(event)">
-            <div class="form-group">
-              <label>User Email Address</label>
-              <input 
-                type="email" 
-                id="userEmail" 
-                placeholder="user@example.com"
-                required
-              />
-              <div class="help-text">Email of the user who completed payment</div>
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="form-group">
-              <label>Subscription Tier</label>
-              <div class="tier-grid" id="tierGrid"></div>
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="form-group">
-              <label>Subscription Duration (Months)</label>
-              <input 
-                type="number" 
-                id="duration" 
-                value="1"
-                min="1"
-                max="12"
-                required
-              />
-              <div class="help-text">Standard: 1 month | Annual: 12 months</div>
-            </div>
-
-            <div class="form-group">
-              <label>Payment Reference (Optional)</label>
-              <input 
-                type="text" 
-                id="paymentRef" 
-                placeholder="bKash/Nagad transaction ID"
-              />
-              <div class="help-text">Transaction ID for record-keeping</div>
-            </div>
-
-            <div class="divider"></div>
-
-            <button type="submit" class="btn btn-primary" id="activateBtn" style="width: 100%; padding: 14px;">
-              ✓ Activate Subscription
-            </button>
-          </form>
+        <div>
+          <label>Track</label>
+          <select id="track">
+            <option value="regular">Regular</option>
+            <option value="olympiad">Olympiad</option>
+          </select>
+        </div>
+        <div>
+          <label>Action</label>
+          <select id="action">
+            <option value="list">List payments</option>
+            <option value="refund">Refund (requires receipt)</option>
+            <option value="reconcile">Reconcile status</option>
+          </select>
+        </div>
+        <div>
+          <label>Reference (receipt/txn id)</label>
+          <input id="ref" placeholder="optional"/>
         </div>
       </div>
 
-      <!-- Recent Activations -->
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title">Recent Activations</h3>
-          <span class="badge badge-neutral">Last 10</span>
-        </div>
-        <div class="card-body" style="padding: 0;">
-          <div id="recentActivations">
-            <div class="empty-state">
-              <div class="empty-icon">💳</div>
-              <p>Loading recent activations...</p>
-            </div>
-          </div>
-        </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+        <button class="btn primary" id="run">Run</button>
+        <button class="btn" id="trust">Load trust summary</button>
       </div>
+      <pre id="out">Waiting…</pre>
+      <div class="muted" style="margin-top:10px;">Expected RPCs: admin_list_payments, admin_refund_payment, admin_reconcile_payment, admin_trust_summary.</div>
     </div>
   </div>
 
-  <!-- Toast Container -->
-  <div class="toast-container" id="toastContainer"></div>
+  <dialog id="dlg" style="border:none;border-radius:16px;max-width:420px;width:calc(100% - 24px);padding:0;box-shadow:0 20px 70px rgba(2,6,23,.25);">
+    <div style="padding:16px 16px 0 16px;background:#fff;border-bottom:1px solid rgba(15,23,42,.08);border-top-left-radius:16px;border-top-right-radius:16px;">
+      <b style="font-size:16px;color:#0f172a;">Sign in</b>
+      <div class="muted" style="font-size:13px;margin-top:4px;">Admin account email + password.</div>
+    </div>
+    <div style="padding:16px;background:#fff;border-bottom-left-radius:16px;border-bottom-right-radius:16px;">
+      <label>Email</label>
+      <input id="le" type="email" style="margin-top:6px"/>
+      <div style="height:10px"></div>
+      <label>Password</label>
+      <input id="lp" type="password" style="margin-top:6px"/>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap;">
+        <button class="btn" id="cancel" type="button">Cancel</button>
+        <button class="btn primary" id="go" type="button">Sign in</button>
+      </div>
+    </div>
+  </dialog>
 
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
-const SUPABASE_URL = window.SUPABASE_URL;
-const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
-
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error("Missing SUPABASE_URL / SUPABASE_ANON_KEY (did /api/env load?)");
-}
-
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-const tiers = [
-  { id: "regular_monthly", label: "Regular", sublabel: "Monthly", track: "regular", plan: "monthly" },
-  { id: "regular_annual",  label: "Regular", sublabel: "Annual",  track: "regular", plan: "annual" },
-  { id: "olympiad_monthly",label: "Olympiad", sublabel: "Monthly", track: "olympiad", plan: "monthly" },
-  { id: "olympiad_annual", label: "Olympiad", sublabel: "Annual",  track: "olympiad", plan: "annual" },
-];
-
-let selectedTier = tiers[0];
-
-function qs(id){ return document.getElementById(id); }
-
-function toast(msg, type="info"){
-  const el = qs("toastContainer");
-  if(!el) return alert(msg);
-  const div = document.createElement("div");
-  div.className = `toast ${type}`;
-  div.textContent = msg;
-  el.appendChild(div);
-  setTimeout(()=>div.remove(), 3500);
-}
-
-function setOutput(obj){
-  const out = qs("recentActivations");
-  if(out) out.textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
-}
-
-function renderTiers(){
-  const grid = qs("tierGrid");
-  if(!grid) return;
-  grid.innerHTML = "";
-  tiers.forEach(t => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "tier-card" + (t.id === selectedTier.id ? " selected" : "");
-    btn.innerHTML = `
-      <div class="tier-name">${t.label}</div>
-      <div class="tier-details">${t.sublabel}</div>
-    `;
-    btn.onclick = () => { selectedTier = t; renderTiers(); };
-    grid.appendChild(btn);
-  });
-}
-
-async function requireAdmin(){
-  const { data: { session } } = await sb.auth.getSession();
-  if(!session){
-    window.location.href = "/login.html";
-    return null;
-  }
-  // Optional DB function: public.lp_is_admin() -> boolean
-  try{
-    const { data, error } = await sb.rpc("lp_is_admin");
-    if(error) throw error;
-    if(data !== true){
-      toast("Admin access required.", "error");
-      window.location.href = "/dashboard.html";
-      return null;
+  <script>
+    const $=id=>document.getElementById(id);
+    function env(){
+      if(!window.__LP_ENV) throw new Error('Missing window.__LP_ENV. /api/env not loaded.');
+      return window.__LP_ENV;
     }
-  }catch(e){
-    console.warn("lp_is_admin check skipped/failed:", e?.message || e);
-  }
-  if(window.LPAuth) window.LPAuth.attach(sb, { requireAuth: true, redirectTo: "/login.html" });
-  return session;
-}
+    if(!window.supabase?.createClient) console.warn('Supabase UMD not loaded');
 
-window.activateSubscription = async function(ev){
-  ev.preventDefault();
-  const btn = qs("activateBtn");
-  if(btn) btn.disabled = true;
+    let sb=null;
 
-  try{
-    const email = (qs("userEmail")?.value || "").trim();
-    const months = parseInt(qs("duration")?.value || "1", 10);
-    const payment_ref = (qs("paymentRef")?.value || "").trim();
+    function setAuth(ok, email){
+      $('dot').className = ok ? 'dot ok' : 'dot';
+      $('authText').textContent = ok ? ('Signed in' + (email?': '+email:'')) : 'Signed out';
+      $('btnSignIn').style.display = ok ? 'none' : '';
+      $('btnSignOut').style.display = ok ? '' : 'none';
+    }
 
-    if(!email) throw new Error("Customer email is required.");
-    if(!Number.isFinite(months) || months < 1 || months > 24) throw new Error("Duration must be a valid month count.");
+    async function refresh(){
+      const { data } = await sb.auth.getSession();
+      const s = data?.session;
+      setAuth(!!s, s?.user?.email || '');
+    }
 
-    // 1) Record payment (optional but recommended)
-    const recordPayload = {
-      p_email: email,
-      p_track: selectedTier.track,
-      p_plan: selectedTier.plan,
-      p_months: months,
-      p_payment_ref: payment_ref || null
-    };
+    async function signin(){
+      const { error } = await sb.auth.signInWithPassword({ email: $('le').value.trim(), password: $('lp').value });
+      if(error){ $('out').textContent='Login failed: '+error.message; return; }
+      $('dlg').close(); await refresh();
+    }
+    async function signout(){ await sb.auth.signOut(); await refresh(); }
 
-    const { data: payRow, error: payErr } = await sb.rpc("admin_record_payment", recordPayload);
-    if(payErr) throw payErr;
+    async function callRpc(name, args){
+      const { data, error } = await sb.rpc(name, args||{});
+      if(error) throw error;
+      return data;
+    }
 
-    // 2) Activate entitlement/subscription
-    const activatePayload = {
-      p_email: email,
-      p_track: selectedTier.track,
-      p_months: months,
-      p_reason: payment_ref ? `manual_payment:${payment_ref}` : "manual_payment"
-    };
+    (async ()=>{
+      const e = env();
+      sb = window.supabase.createClient(e.SUPABASE_URL, e.SUPABASE_ANON_KEY);
+      sb.auth.onAuthStateChange(()=>refresh());
+      $('btnSignIn').onclick=()=>$('dlg').showModal();
+      $('cancel').onclick=()=>$('dlg').close();
+      $('go').onclick=signin;
+      $('btnSignOut').onclick=signout;
 
-    const { data: entRow, error: entErr } = await sb.rpc("admin_activate_entitlement", activatePayload);
-    if(entErr) throw entErr;
+      $('run').onclick=async ()=>{
+        $('out').textContent='Running…';
+        try{
+          const email = $('email').value.trim();
+          const track = $('track').value;
+          const action = $('action').value;
+          const ref = $('ref').value.trim() || null;
 
-    // Success UI
-    const alert = qs("successAlert");
-    const text = qs("successText");
-    if(alert) alert.style.display = "block";
-    if(text) text.textContent = `${email} activated: ${selectedTier.track.toUpperCase()} (${months} month${months>1?"s":""})`;
+          if(action==='list'){
+            const data = await callRpc('admin_list_payments', { p_email: email, p_track: track });
+            $('out').textContent = JSON.stringify(data, null, 2);
+          }else if(action==='refund'){
+            const data = await callRpc('admin_refund_payment', { p_email: email, p_track: track, p_reference: ref });
+            $('out').textContent = JSON.stringify(data, null, 2);
+          }else{
+            const data = await callRpc('admin_reconcile_payment', { p_email: email, p_track: track, p_reference: ref });
+            $('out').textContent = JSON.stringify(data, null, 2);
+          }
+        }catch(err){
+          $('out').textContent = 'ERROR: ' + (err?.message || String(err));
+        }
+      };
 
-    toast("Activated successfully.", "success");
-    setOutput({ payment: payRow, entitlement: entRow });
+      $('trust').onclick=async ()=>{
+        $('out').textContent='Loading trust summary…';
+        try{
+          const email = $('email').value.trim();
+          const data = await callRpc('admin_trust_summary', { p_email: email });
+          $('out').textContent = JSON.stringify(data, null, 2);
+        }catch(err){
+          $('out').textContent='ERROR: ' + (err?.message || String(err));
+        }
+      };
 
-  }catch(e){
-    console.error(e);
-    toast(e?.message || String(e), "error");
-    setOutput({ error: e?.message || String(e) });
-  }finally{
-    if(btn) btn.disabled = false;
-  }
-};
-
-async function loadRecent(){
-  try{
-    const { data, error } = await sb.rpc("admin_list_entitlements", { p_limit: 15 });
-    if(error) throw error;
-    setOutput(data || []);
-  }catch(e){
-    setOutput({ error: e?.message || String(e) });
-  }
-}
-
-(async function init(){
-  renderTiers();
-  await requireAdmin();
-  await loadRecent();
-})();
+      await refresh();
+    })();
   </script>
 </body>
 </html>
