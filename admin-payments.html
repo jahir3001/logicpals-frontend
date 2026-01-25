@@ -1,175 +1,251 @@
-<<<<<<< HEAD
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LogicPals Admin — Payments</title>
-  <style>
-    :root{color-scheme:dark;}
-    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:#070b10;color:#e8eef8;}
-    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px;}
-    .card{width:min(860px,96vw);border-radius:18px;padding:20px 22px;background:rgba(15,22,35,.72);box-shadow:0 20px 80px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.08)}
-    .row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-    .title{font-weight:700;font-size:18px;letter-spacing:.2px}
-    .pill{font-size:12px;opacity:.9;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)}
-    .btn{cursor:pointer;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#e8eef8;padding:9px 12px;border-radius:12px;font-weight:600}
-    .btn:hover{background:rgba(255,255,255,.09)}
-    .muted{opacity:.8}
-    .grid{margin-top:16px;display:grid;grid-template-columns:1fr;gap:12px}
-    .box{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03);border-radius:14px;padding:14px}
-    code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px}
-  </style>
+  <link rel="stylesheet" href="lp_design.css" />
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
-      <div class="row">
+    <div class="lp-topbar">
+      <div class="lp-brand">
+        <div class="lp-logo"></div>
         <div>
-          <div class="title">LogicPals Admin — Payments</div>
-          <div class="muted" style="margin-top:6px">This page is a placeholder shell. We will wire real payment events in later roadmap steps.</div>
-        </div>
-        <div class="row" style="gap:10px">
-          <span id="sessionPill" class="pill">Checking session…</span>
-          <button class="btn" id="btnBack">Back to Admin</button>
-          <button class="btn" id="btnLogout">Log out</button>
+          <div class="lp-title">Payments</div>
+          <div class="lp-sub">Admin-only — records + entitlements (RPC-only)</div>
         </div>
       </div>
+      <div class="lp-right">
+        <div class="lp-badge" id="who">Signed out</div>
+        <button class="lp-btn" id="btnBack">Back to Admin</button>
+        <button class="lp-btn danger" id="btnSignOut">Log out</button>
+      </div>
+    </div>
 
-      <div class="grid">
-        <div class="box">
-          <b>Status</b>
-          <div id="status" class="muted" style="margin-top:6px">Loading…</div>
+    <div class="lp-grid">
+      <div class="lp-card">
+        <div class="lp-panelTitle">
+          <h3>Record payment</h3>
+          <span class="lp-statusPill" id="pill">Ready</span>
         </div>
-        <div class="box">
-          <b>Next step</b>
-          <div class="muted" style="margin-top:6px">Once roles are working, we will add “Payments feed” + filtering + export.</div>
+        <div class="lp-muted">World-class principle: <b>front-end never writes payment tables directly</b>. This page uses RPCs only.</div>
+
+        <div class="filters" style="margin-top:12px">
+          <div class="full">
+            <label>Customer email</label>
+            <input id="email" placeholder="student_or_parent@email.com" autocomplete="email" />
+            <div class="lp-hint">In Bangladesh-first UX you may also capture phone locally, but Supabase Auth still needs a unique login identifier.</div>
+          </div>
+
+          <div>
+            <label>Amount (taka)</label>
+            <input id="amount" placeholder="1299" inputmode="numeric" />
+          </div>
+
+          <div>
+            <label>Provider</label>
+            <select id="provider">
+              <option value="manual">Manual</option>
+              <option value="bkash">bKash</option>
+              <option value="nagad">Nagad</option>
+              <option value="rocket">Rocket</option>
+              <option value="stripe">Stripe</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="full">
+            <label>Provider reference (trxID / receipt / note)</label>
+            <input id="ref" placeholder="e.g., bKash TrxID / bank reference / admin note" />
+          </div>
+
+          <div class="full row">
+            <button class="lp-btn primary" id="btnRecord">Record payment</button>
+            <button class="lp-btn" id="btnVerify">Verify customer status</button>
+          </div>
+        </div>
+
+        <pre class="lp-mono" id="out" style="white-space:pre-wrap;margin:0;background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:14px;padding:10px;min-height:110px"></pre>
+      </div>
+
+      <div class="lp-card">
+        <div class="lp-panelTitle">
+          <h3>Activate subscription / entitlement</h3>
+          <span class="lp-statusPill">Guarded</span>
+        </div>
+        <div class="lp-muted">This must be enforced by DB: plan → track boundaries, dates, and audit trail.</div>
+
+        <div class="filters" style="margin-top:12px">
+          <div>
+            <label>Track</label>
+            <select id="track">
+              <option value="regular">Regular</option>
+              <option value="olympiad">Olympiad</option>
+            </select>
+            <div class="lp-hint">Olympiad is separate and stricter by design (Step 6 & 7).</div>
+          </div>
+
+          <div>
+            <label>Plan</label>
+            <select id="plan">
+              <option value="regular_monthly">Regular Monthly</option>
+              <option value="olympiad_monthly">Olympiad Monthly</option>
+              <option value="olympiad_annual">Olympiad Annual</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Duration (months)</label>
+            <input id="months" placeholder="1" inputmode="numeric" />
+          </div>
+
+          <div class="full row">
+            <button class="lp-btn primary" id="btnActivate">Activate entitlement</button>
+            <button class="lp-btn" id="btnList">List current entitlements</button>
+          </div>
+        </div>
+
+        <div class="lp-hint">
+          Expected RPCs (DB-owned): <span class="lp-mono">admin_record_payment</span>,
+          <span class="lp-mono">admin_activate_entitlement</span>,
+          <span class="lp-mono">admin_list_entitlements</span>.
+          If your DB uses different names, change the function names below.
         </div>
       </div>
     </div>
   </div>
 
+  <script src="/api/env"></script>
   <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-    // IMPORTANT: keep these in sync with admin.html (we will move keys to secure config later).
-    const SUPABASE_URL = 'https://ovszuxerimbmzfblzkgd.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
-
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    const $ = (id)=>document.getElementById(id);
-    const status = $('status');
-    const pill = $('sessionPill');
-
-    $('btnBack').onclick = ()=> window.location.href = '/admin.html';
-    $('btnLogout').onclick = async ()=> {
-      await supabase.auth.signOut();
-      window.location.href = '/admin.html';
-    };
-
-    async function boot(){
-      const { data: { session } } = await supabase.auth.getSession();
-      if(!session){
-        pill.textContent = 'Not signed in';
-        status.textContent = 'No active session. Redirecting to admin login…';
-        setTimeout(()=> window.location.href='/admin.html', 600);
-        return;
-      }
-      const email = session.user?.email || 'signed in';
-      pill.textContent = `Signed in: ${email}`;
-      status.innerHTML = `Session OK. User id: <code>${session.user.id}</code>`;
+    const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.__LP_ENV || {};
+    if(!SUPABASE_URL || !SUPABASE_ANON_KEY){
+      alert("Missing Supabase env. Ensure /api/env is deployed and SUPABASE_URL / SUPABASE_ANON_KEY are set.");
     }
 
-    boot();
-  </script>
-</body>
-</html>
-=======
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LogicPals Admin — Payments</title>
-  <style>
-    :root{color-scheme:dark;}
-    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:#070b10;color:#e8eef8;}
-    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px;}
-    .card{width:min(860px,96vw);border-radius:18px;padding:20px 22px;background:rgba(15,22,35,.72);box-shadow:0 20px 80px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.08)}
-    .row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-    .title{font-weight:700;font-size:18px;letter-spacing:.2px}
-    .pill{font-size:12px;opacity:.9;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)}
-    .btn{cursor:pointer;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#e8eef8;padding:9px 12px;border-radius:12px;font-weight:600}
-    .btn:hover{background:rgba(255,255,255,.09)}
-    .muted{opacity:.8}
-    .grid{margin-top:16px;display:grid;grid-template-columns:1fr;gap:12px}
-    .box{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03);border-radius:14px;padding:14px}
-    code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px}
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="card">
-      <div class="row">
-        <div>
-          <div class="title">LogicPals Admin — Payments</div>
-          <div class="muted" style="margin-top:6px">This page is a placeholder shell. We will wire real payment events in later roadmap steps.</div>
-        </div>
-        <div class="row" style="gap:10px">
-          <span id="sessionPill" class="pill">Checking session…</span>
-          <button class="btn" id="btnBack">Back to Admin</button>
-          <button class="btn" id="btnLogout">Log out</button>
-        </div>
-      </div>
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:false, storage: window.localStorage }
+    });
 
-      <div class="grid">
-        <div class="box">
-          <b>Status</b>
-          <div id="status" class="muted" style="margin-top:6px">Loading…</div>
-        </div>
-        <div class="box">
-          <b>Next step</b>
-          <div class="muted" style="margin-top:6px">Once roles are working, we will add “Payments feed” + filtering + export.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-    // IMPORTANT: keep these in sync with admin.html (we will move keys to secure config later).
-    const SUPABASE_URL = 'https://ovszuxerimbmzfblzkgd.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
-
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    const $ = (id)=>document.getElementById(id);
-    const status = $('status');
-    const pill = $('sessionPill');
-
-    $('btnBack').onclick = ()=> window.location.href = '/admin.html';
-    $('btnLogout').onclick = async ()=> {
-      await supabase.auth.signOut();
-      window.location.href = '/admin.html';
+    const out = document.getElementById('out');
+    const pill = document.getElementById('pill');
+    const setPill = (t, kind='ok') => {
+      pill.textContent = t;
+      const map = { ok:'rgba(79,140,255,.14)', warn:'rgba(255,200,0,.12)', err:'rgba(255,77,77,.12)' };
+      pill.style.background = map[kind] || map.ok;
+      pill.style.borderColor = kind==='err' ? 'rgba(255,77,77,.30)' : kind==='warn' ? 'rgba(255,200,0,.28)' : 'rgba(255,255,255,.10)';
     };
 
-    async function boot(){
-      const { data: { session } } = await supabase.auth.getSession();
-      if(!session){
-        pill.textContent = 'Not signed in';
-        status.textContent = 'No active session. Redirecting to admin login…';
-        setTimeout(()=> window.location.href='/admin.html', 600);
-        return;
+    // Minimal guard: must be authenticated AND have any admin role.
+    async function getMyRole(){
+      for(const fn of ['admin_get_my_role','admin_get_my_roles']){
+        try{
+          const { data, error } = await sb.rpc(fn);
+          if(!error && data){
+            if(typeof data === 'string') return data;
+            if(Array.isArray(data) && data[0]) return (data[0].role || data[0]);
+            if(typeof data.role === 'string') return data.role;
+          }
+        }catch(_){}
       }
-      const email = session.user?.email || 'signed in';
-      pill.textContent = `Signed in: ${email}`;
-      status.innerHTML = `Session OK. User id: <code>${session.user.id}</code>`;
+      return null;
     }
 
-    boot();
+    // Attach auth + UI
+    const { session } = await window.LPAuth.attach(sb, { requireAuth:true, redirectTo:'login_unified.html' });
+
+    const role = await getMyRole();
+    if(!role){
+      out.textContent = JSON.stringify({ error:"No admin role. Ask a super_admin to assign you a role." }, null, 2);
+      setPill('No access','err');
+      throw new Error("No admin role");
+    }
+    setPill('Ready','ok');
+
+    document.getElementById('btnBack').onclick = ()=> window.location.href = './admin_clean_fixed.html';
+
+    // ---- Actions (RPC-only) ----
+    async function rpcCall(fn, args){
+      const { data, error } = await sb.rpc(fn, args || {});
+      if(error) throw error;
+      return data;
+    }
+
+    document.getElementById('btnVerify').onclick = async ()=>{
+      out.textContent = 'Checking…';
+      try{
+        const email = document.getElementById('email').value.trim().toLowerCase();
+        const data = await rpcCall('admin_lookup_user_status', { target_email: email });
+        out.textContent = JSON.stringify({ ok:true, source:'rpc:admin_lookup_user_status', data }, null, 2);
+      }catch(e){
+        out.textContent = JSON.stringify({
+          error: (e?.message || String(e)),
+          hint: "If admin_lookup_user_status RPC doesn't exist, create a Step 7 safe RPC to fetch user+role+subscription summary."
+        }, null, 2);
+      }
+    };
+
+    document.getElementById('btnRecord').onclick = async ()=>{
+      out.textContent = 'Recording…';
+      setPill('Working','warn');
+      try{
+        const email = document.getElementById('email').value.trim().toLowerCase();
+        const amount_taka = Number(String(document.getElementById('amount').value||'').trim() || 0);
+        const provider = document.getElementById('provider').value;
+        const provider_ref = document.getElementById('ref').value.trim();
+
+        const data = await rpcCall('admin_record_payment', { target_email: email, amount_taka, provider, provider_ref });
+        out.textContent = JSON.stringify({ ok:true, data }, null, 2);
+        setPill('Recorded','ok');
+      }catch(e){
+        out.textContent = JSON.stringify({
+          error: (e?.message || String(e)),
+          principle: "Do not insert into payments/subscriptions tables from the browser. Use RPC + RLS + audit.",
+          next: "Implement admin_record_payment(target_email, amount_taka, provider, provider_ref) in Step 7."
+        }, null, 2);
+        setPill('Failed','err');
+      }
+    };
+
+    document.getElementById('btnActivate').onclick = async ()=>{
+      out.textContent = 'Activating…';
+      setPill('Working','warn');
+      try{
+        const email = document.getElementById('email').value.trim().toLowerCase();
+        const track = document.getElementById('track').value;
+        const plan_code = document.getElementById('plan').value;
+        const months = Number(String(document.getElementById('months').value||'').trim() || 1);
+
+        const data = await rpcCall('admin_activate_entitlement', { target_email: email, track, plan_code, months });
+        out.textContent = JSON.stringify({ ok:true, data }, null, 2);
+        setPill('Activated','ok');
+      }catch(e){
+        out.textContent = JSON.stringify({
+          error: (e?.message || String(e)),
+          hint: "Create admin_activate_entitlement(target_email, track, plan_code, months) and enforce: track boundaries, max duration, audit log, idempotency."
+        }, null, 2);
+        setPill('Failed','err');
+      }
+    };
+
+    document.getElementById('btnList').onclick = async ()=>{
+      out.textContent = 'Loading…';
+      try{
+        const email = document.getElementById('email').value.trim().toLowerCase();
+        const data = await rpcCall('admin_list_entitlements', { target_email: email });
+        out.textContent = JSON.stringify({ ok:true, data }, null, 2);
+      }catch(e){
+        out.textContent = JSON.stringify({
+          error: (e?.message || String(e)),
+          hint: "Create admin_list_entitlements(target_email) as a safe view/RPC."
+        }, null, 2);
+      }
+    };
   </script>
+
+  <script src="lp_auth.js"></script>
 </body>
 </html>
->>>>>>> 8bc5b78514e083aaa9d6e1eda3db2fdf1c3d5e9c
