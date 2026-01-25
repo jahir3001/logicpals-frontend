@@ -1,1787 +1,313 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LogicPals Admin Console</title>
-  
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>LogicPals Console</title>
+
+  <!-- Shared design system -->
+  <link rel="stylesheet" href="/lp_design.css"/>
+
+  <!-- Env injector (must set window.__LP_ENV) -->
+  <script src="/api/env"></script>
+
+  <!-- Supabase client (UMD) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
-    /* ============================================
-       DESIGN SYSTEM - Enterprise Grade
-       ============================================ */
-    
-    :root {
-      /* Primary Brand Colors - Deep Purple/Indigo System */
-      --primary-50: #f0f4ff;
-      --primary-100: #e0e7ff;
-      --primary-200: #c7d2fe;
-      --primary-300: #a5b4fc;
-      --primary-400: #818cf8;
-      --primary-500: #6366f1;
-      --primary-600: #4f46e5;
-      --primary-700: #4338ca;
-      --primary-800: #3730a3;
-      --primary-900: #312e81;
-      
-      /* Accent Colors - Teal/Cyan for Success States */
-      --accent-50: #ecfeff;
-      --accent-100: #cffafe;
-      --accent-200: #a5f3fc;
-      --accent-300: #67e8f9;
-      --accent-400: #22d3ee;
-      --accent-500: #06b6d4;
-      --accent-600: #0891b2;
-      
-      /* Semantic Colors */
-      --success: #10b981;
-      --success-bg: #d1fae5;
-      --warning: #f59e0b;
-      --warning-bg: #fef3c7;
-      --danger: #ef4444;
-      --danger-bg: #fee2e2;
-      --info: #3b82f6;
-      --info-bg: #dbeafe;
-      
-      /* Neutral Palette - Sophisticated Grays */
-      --gray-50: #f9fafb;
-      --gray-100: #f3f4f6;
-      --gray-200: #e5e7eb;
-      --gray-300: #d1d5db;
-      --gray-400: #9ca3af;
-      --gray-500: #6b7280;
-      --gray-600: #4b5563;
-      --gray-700: #374151;
-      --gray-800: #1f2937;
-      --gray-900: #111827;
-      
-      /* Surface Colors */
-      --surface-primary: #ffffff;
-      --surface-secondary: #f9fafb;
-      --surface-tertiary: #f3f4f6;
-      --surface-elevated: #ffffff;
-      
-      /* Text Colors */
-      --text-primary: #111827;
-      --text-secondary: #4b5563;
-      --text-tertiary: #9ca3af;
-      --text-inverse: #ffffff;
-      
-      /* Border & Divider */
-      --border-light: #e5e7eb;
-      --border-medium: #d1d5db;
-      --border-strong: #9ca3af;
-      
-      /* Shadows - Layered depth system */
-      --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-      --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-      
-      /* Typography Scale */
-      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-      --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Menlo, Consolas, 'Courier New', monospace;
-      
-      /* Spacing System (4px base) */
-      --space-1: 0.25rem;
-      --space-2: 0.5rem;
-      --space-3: 0.75rem;
-      --space-4: 1rem;
-      --space-5: 1.25rem;
-      --space-6: 1.5rem;
-      --space-8: 2rem;
-      --space-10: 2.5rem;
-      --space-12: 3rem;
-      --space-16: 4rem;
-      
-      /* Border Radius */
-      --radius-sm: 0.375rem;
-      --radius-md: 0.5rem;
-      --radius-lg: 0.75rem;
-      --radius-xl: 1rem;
-      --radius-2xl: 1.5rem;
-      --radius-full: 9999px;
-      
-      /* Transitions */
-      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-      --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-      --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    /* ============================================
-       BASE STYLES
-       ============================================ */
-    
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    html {
-      font-size: 16px;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-    
-    body {
-      font-family: var(--font-sans);
-      background: linear-gradient(135deg, var(--gray-50) 0%, var(--primary-50) 100%);
-      color: var(--text-primary);
-      line-height: 1.6;
-      min-height: 100vh;
-    }
-    
-    /* ============================================
-       LAYOUT
-       ============================================ */
-    
-    .app-container {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    /* Header / Topbar */
-    .topbar {
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(20px) saturate(180%);
-      border-bottom: 1px solid var(--border-light);
-      padding: var(--space-4) var(--space-8);
-      display: flex;
-      align-items: center;
-      gap: var(--space-8);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: var(--space-4);
-      flex-shrink: 0;
-    }
-    
-    .logo {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-800) 100%);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-md);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      color: white;
-      font-size: 1.25rem;
-      letter-spacing: -0.02em;
-    }
-    
-    .brand-text {
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .brand-title {
-      font-size: 1.125rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: -0.02em;
-    }
-    
-    .brand-subtitle {
-      font-size: 0.75rem;
-      color: var(--text-tertiary);
-      font-weight: 500;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-    }
-    
-    /* Navigation */
-    .nav {
-      display: flex;
-      gap: var(--space-2);
-      flex: 1;
-      margin-left: var(--space-8);
-    }
-    
-    .nav-item {
-      padding: var(--space-2) var(--space-4);
-      border-radius: var(--radius-lg);
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text-secondary);
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      position: relative;
-      white-space: nowrap;
-    }
-    
-    .nav-item:hover {
-      background: var(--gray-100);
-      color: var(--text-primary);
-    }
-    
-    .nav-item.active {
-      background: var(--primary-600);
-      color: white;
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .nav-item.active::after {
-      content: '';
-      position: absolute;
-      bottom: -8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 4px;
-      height: 4px;
-      background: var(--primary-600);
-      border-radius: var(--radius-full);
-    }
-    
-    /* Topbar Actions */
-    .topbar-actions {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-      flex-shrink: 0;
-    }
-    
-    .user-badge {
-      padding: var(--space-2) var(--space-4);
-      background: var(--primary-50);
-      border: 1px solid var(--primary-200);
-      border-radius: var(--radius-full);
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--primary-700);
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
-    }
-    
-    .user-badge::before {
-      content: '';
-      width: 8px;
-      height: 8px;
-      background: var(--success);
-      border-radius: var(--radius-full);
-      box-shadow: 0 0 0 2px var(--primary-50);
-    }
-    
-    /* Main Content */
-    .main-content {
-      flex: 1;
-      padding: var(--space-8);
-      max-width: 1800px;
-      margin: 0 auto;
-      width: 100%;
-    }
-    
-    .content-grid {
-      display: grid;
-      grid-template-columns: 320px 1fr;
-      gap: var(--space-8);
-      align-items: start;
-    }
-    
-    /* ============================================
-       CARDS & PANELS
-       ============================================ */
-    
-    .card {
-      background: var(--surface-elevated);
-      border-radius: var(--radius-2xl);
-      border: 1px solid var(--border-light);
-      box-shadow: var(--shadow-lg);
-      overflow: hidden;
-      transition: all var(--transition-base);
-    }
-    
-    .card:hover {
-      box-shadow: var(--shadow-xl);
-    }
-    
-    .card-header {
-      padding: var(--space-6);
-      border-bottom: 1px solid var(--border-light);
-      background: linear-gradient(to bottom, var(--surface-primary), var(--surface-secondary));
-    }
-    
-    .card-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: var(--space-2);
-      letter-spacing: -0.02em;
-    }
-    
-    .card-subtitle {
-      font-size: 0.875rem;
-      color: var(--text-tertiary);
-      font-weight: 500;
-    }
-    
-    .card-body {
-      padding: var(--space-6);
-    }
-    
-    /* Status Card (Sidebar) */
-    .status-card {
-      position: sticky;
-      top: calc(80px + var(--space-8));
-    }
-    
-    .status-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      padding: var(--space-3) 0;
-      border-bottom: 1px solid var(--border-light);
-    }
-    
-    .status-item:last-child {
-      border-bottom: none;
-    }
-    
-    .status-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--text-tertiary);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    
-    .status-value {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      font-family: var(--font-mono);
-    }
-    
-    /* ============================================
-       BADGES & PILLS
-       ============================================ */
-    
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: var(--space-1) var(--space-3);
-      border-radius: var(--radius-full);
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      white-space: nowrap;
-    }
-    
-    .badge-primary {
-      background: var(--primary-100);
-      color: var(--primary-700);
-      border: 1px solid var(--primary-200);
-    }
-    
-    .badge-success {
-      background: var(--success-bg);
-      color: var(--success);
-      border: 1px solid var(--success);
-    }
-    
-    .badge-warning {
-      background: var(--warning-bg);
-      color: var(--warning);
-      border: 1px solid var(--warning);
-    }
-    
-    .badge-danger {
-      background: var(--danger-bg);
-      color: var(--danger);
-      border: 1px solid var(--danger);
-    }
-    
-    .badge-neutral {
-      background: var(--gray-100);
-      color: var(--gray-700);
-      border: 1px solid var(--gray-300);
-    }
-    
-    /* ============================================
-       BUTTONS
-       ============================================ */
-    
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-2);
-      padding: var(--space-2) var(--space-5);
-      border-radius: var(--radius-lg);
-      font-size: 0.875rem;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      outline: none;
-      text-decoration: none;
-      white-space: nowrap;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .btn::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      border-radius: var(--radius-full);
-      background: rgba(255, 255, 255, 0.3);
-      transform: translate(-50%, -50%);
-      transition: width 0.6s, height 0.6s;
-    }
-    
-    .btn:active::before {
-      width: 300px;
-      height: 300px;
-    }
-    
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
-      color: white;
-      box-shadow: var(--shadow-md);
-    }
-    
-    .btn-primary:hover {
-      background: linear-gradient(135deg, var(--primary-700) 0%, var(--primary-800) 100%);
-      box-shadow: var(--shadow-lg);
-      transform: translateY(-1px);
-    }
-    
-    .btn-secondary {
-      background: var(--surface-primary);
-      color: var(--text-primary);
-      border: 1px solid var(--border-medium);
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .btn-secondary:hover {
-      background: var(--gray-50);
-      border-color: var(--border-strong);
-      box-shadow: var(--shadow-md);
-    }
-    
-    .btn-danger {
-      background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
-      color: white;
-      box-shadow: var(--shadow-md);
-    }
-    
-    .btn-danger:hover {
-      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-      box-shadow: var(--shadow-lg);
-      transform: translateY(-1px);
-    }
-    
-    .btn-ghost {
-      background: transparent;
-      color: var(--text-secondary);
-      border: 1px solid transparent;
-    }
-    
-    .btn-ghost:hover {
-      background: var(--gray-100);
-      color: var(--text-primary);
-    }
-    
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
-    
-    /* ============================================
-       FORM ELEMENTS
-       ============================================ */
-    
-    .form-group {
-      margin-bottom: var(--space-5);
-    }
-    
-    label {
-      display: block;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: var(--space-2);
-      letter-spacing: -0.01em;
-    }
-    
-    input[type="text"],
-    input[type="email"],
-    input[type="password"],
-    select,
-    textarea {
-      width: 100%;
-      padding: var(--space-3) var(--space-4);
-      border: 1px solid var(--border-medium);
-      border-radius: var(--radius-lg);
-      font-size: 0.875rem;
-      font-family: var(--font-sans);
-      color: var(--text-primary);
-      background: var(--surface-primary);
-      transition: all var(--transition-fast);
-      outline: none;
-    }
-    
-    input[type="text"]:focus,
-    input[type="email"]:focus,
-    input[type="password"]:focus,
-    select:focus,
-    textarea:focus {
-      border-color: var(--primary-500);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    }
-    
-    input::placeholder,
-    textarea::placeholder {
-      color: var(--text-tertiary);
-    }
-    
-    textarea {
-      min-height: 120px;
-      resize: vertical;
-      line-height: 1.6;
-    }
-    
-    /* Filters Section */
-    .filters {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: var(--space-4);
-      padding: var(--space-6);
-      background: var(--surface-secondary);
-      border-radius: var(--radius-xl);
-      border: 1px solid var(--border-light);
-      margin-bottom: var(--space-6);
-    }
-    
-    .filters .full {
-      grid-column: 1 / -1;
-    }
-    
-    .filters-actions {
-      grid-column: 1 / -1;
-      display: flex;
-      gap: var(--space-3);
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    
-    /* ============================================
-       TABLE
-       ============================================ */
-    
-    .table-wrapper {
-      border-radius: var(--radius-xl);
-      border: 1px solid var(--border-light);
-      overflow: hidden;
-      background: var(--surface-primary);
-    }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    
-    thead {
-      background: linear-gradient(to bottom, var(--gray-50), var(--gray-100));
-      border-bottom: 2px solid var(--border-medium);
-    }
-    
-    th {
-      padding: var(--space-4) var(--space-5);
-      text-align: left;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    
-    td {
-      padding: var(--space-4) var(--space-5);
-      font-size: 0.875rem;
-      color: var(--text-primary);
-      border-bottom: 1px solid var(--border-light);
-    }
-    
-    tbody tr {
-      transition: background var(--transition-fast);
-    }
-    
-    tbody tr:hover {
-      background: var(--surface-secondary);
-    }
-    
-    tbody tr:last-child td {
-      border-bottom: none;
-    }
-    
-    /* ============================================
-       MODALS & OVERLAYS
-       ============================================ */
-    
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(8px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: var(--space-8);
-      animation: fadeIn var(--transition-base);
-    }
-    
-    .overlay[aria-hidden="false"] {
-      display: flex;
-    }
-    
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
-    }
-    
-    .modal {
-      background: var(--surface-elevated);
-      border-radius: var(--radius-2xl);
-      box-shadow: var(--shadow-2xl);
-      max-width: 600px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      animation: slideUp var(--transition-slow);
-      border: 1px solid var(--border-light);
-    }
-    
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    .modal-header {
-      padding: var(--space-6);
-      border-bottom: 1px solid var(--border-light);
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      background: linear-gradient(to bottom, var(--surface-primary), var(--surface-secondary));
-    }
-    
-    .modal-body {
-      padding: var(--space-6);
-    }
-    
-    .modal-close {
-      width: 32px;
-      height: 32px;
-      border-radius: var(--radius-lg);
-      background: var(--gray-100);
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      font-size: 1.25rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .modal-close:hover {
-      background: var(--gray-200);
-      color: var(--text-primary);
-    }
-    
-    /* ============================================
-       UTILITY CLASSES
-       ============================================ */
-    
-    .text-muted {
-      color: var(--text-tertiary);
-    }
-    
-    .text-mono {
-      font-family: var(--font-mono);
-      font-size: 0.875rem;
-    }
-    
-    .text-small {
-      font-size: 0.75rem;
-    }
-    
-    .flex {
-      display: flex;
-    }
-    
-    .flex-col {
-      flex-direction: column;
-    }
-    
-    .items-center {
-      align-items: center;
-    }
-    
-    .justify-between {
-      justify-content: space-between;
-    }
-    
-    .gap-2 {
-      gap: var(--space-2);
-    }
-    
-    .gap-4 {
-      gap: var(--space-4);
-    }
-    
-    .mt-4 {
-      margin-top: var(--space-4);
-    }
-    
-    .mb-4 {
-      margin-bottom: var(--space-4);
-    }
-    
-    .hidden {
-      display: none;
-    }
-    
-    /* Info Box */
-    .info-box {
-      padding: var(--space-4);
-      background: var(--info-bg);
-      border: 1px solid var(--info);
-      border-radius: var(--radius-lg);
-      color: var(--text-primary);
-      font-size: 0.875rem;
-      line-height: 1.6;
-    }
-    
-    .info-box strong {
-      color: var(--info);
-    }
-    
-    /* Code Block */
-    .code-block {
-      background: var(--gray-900);
-      color: var(--gray-100);
-      padding: var(--space-4);
-      border-radius: var(--radius-lg);
-      font-family: var(--font-mono);
-      font-size: 0.875rem;
-      overflow-x: auto;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-    
-    /* Empty State */
-    .empty-state {
-      text-align: center;
-      padding: var(--space-12) var(--space-6);
-      color: var(--text-tertiary);
-    }
-    
-    .empty-state-icon {
-      font-size: 3rem;
-      margin-bottom: var(--space-4);
-      opacity: 0.5;
-    }
-    
-    /* ============================================
-       RESPONSIVE
-       ============================================ */
-    
-    @media (max-width: 1200px) {
-      .content-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .status-card {
-        position: static;
-      }
-    }
-    
-    @media (max-width: 768px) {
-      .topbar {
-        flex-wrap: wrap;
-        padding: var(--space-4);
-      }
-      
-      .nav {
-        order: 3;
-        width: 100%;
-        margin-left: 0;
-        margin-top: var(--space-4);
-        overflow-x: auto;
-      }
-      
-      .main-content {
-        padding: var(--space-4);
-      }
-      
-      .filters {
-        grid-template-columns: 1fr;
-      }
-    }
+    /* Force “clean white” admin surface even if lp_design.css changes later */
+    body{background:var(--lp-bg, #f5f7fb);}
+    .lp-shell{max-width:1200px;margin:0 auto;padding:24px;}
+    .lp-topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:16px;padding:14px 16px;box-shadow:0 10px 30px rgba(2,6,23,.06);position:sticky;top:12px;z-index:10;}
+    .lp-brand{display:flex;align-items:center;gap:12px;}
+    .lp-logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#5b8cff,#7c3aed);color:#fff;font-weight:800;letter-spacing:.5px;}
+    .lp-title{line-height:1.1}
+    .lp-title b{display:block;font-size:16px;color:#0f172a}
+    .lp-title span{display:block;font-size:12px;color:#64748b}
+    .lp-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .lp-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(15,23,42,.10);background:#fff;border-radius:999px;padding:8px 12px;font-size:12px;color:#0f172a}
+    .dot{width:8px;height:8px;border-radius:999px;background:#94a3b8}
+    .dot.ok{background:#22c55e}
+    .dot.bad{background:#ef4444}
+    .lp-btn{appearance:none;border:1px solid rgba(15,23,42,.12);background:#fff;border-radius:12px;padding:10px 12px;font-weight:600;font-size:13px;color:#0f172a;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+    .lp-btn.primary{background:#4f46e5;color:#fff;border-color:transparent}
+    .lp-btn.danger{background:#fff;color:#b91c1c;border-color:rgba(185,28,28,.25)}
+    .lp-grid{display:grid;grid-template-columns:320px 1fr;gap:18px;margin-top:18px}
+    @media (max-width: 980px){.lp-grid{grid-template-columns:1fr}}
+    .card{background:#fff;border:1px solid rgba(15,23,42,.08);border-radius:16px;box-shadow:0 10px 30px rgba(2,6,23,.06);}
+    .card h3{margin:0;padding:16px 16px 0 16px;font-size:16px;color:#0f172a}
+    .card .sub{padding:6px 16px 16px 16px;color:#64748b;font-size:13px;border-bottom:1px solid rgba(15,23,42,.06)}
+    .kv{padding:12px 16px;display:grid;gap:10px}
+    .kv .row{display:flex;justify-content:space-between;gap:12px;color:#0f172a;font-size:13px}
+    .kv .row small{color:#64748b}
+    .tabs{display:flex;gap:10px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid rgba(15,23,42,.06)}
+    .tab{padding:10px 12px;border-radius:12px;border:1px solid rgba(15,23,42,.10);background:#fff;font-weight:700;font-size:13px;color:#0f172a;cursor:pointer}
+    .tab.active{background:#eef2ff;border-color:rgba(79,70,229,.25);color:#3730a3}
+    .panel{display:none;padding:16px}
+    .panel.active{display:block}
+    .notice{border:1px solid rgba(245,158,11,.25);background:#fffbeb;border-radius:14px;padding:12px 14px;color:#92400e;font-size:13px}
+    .good{border:1px solid rgba(34,197,94,.25);background:#f0fdf4;color:#166534}
+    .muted{color:#64748b}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .list{margin:0;padding-left:18px}
+    .list li{margin:8px 0}
   </style>
 </head>
+
 <body>
-  <div class="app-container">
-    <!-- Topbar -->
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo">LP</div>
-        <div class="brand-text">
-          <div class="brand-title">LogicPals Console</div>
-          <div class="brand-subtitle">Enterprise Admin System</div>
+  <div class="lp-shell">
+    <header class="lp-topbar">
+      <div class="lp-brand">
+        <div class="lp-logo">LP</div>
+        <div class="lp-title">
+          <b>LogicPals Console</b>
+          <span>Enterprise Admin System</span>
         </div>
       </div>
 
-      <nav class="nav" id="nav"></nav>
-
-      <div class="topbar-actions">
-        <div class="user-badge" id="who">Signed out</div>
-        <button class="btn btn-ghost" id="btnVisit">Visit Site</button>
-        <button class="btn btn-ghost" id="btnStudent">Dashboard</button>
-        <button class="btn btn-ghost hidden" id="btnRoles">Roles</button>
-        <button class="btn btn-primary" id="btnSignIn">Sign In</button>
-        <button class="btn btn-danger hidden" id="btnSignOut">Sign Out</button>
+      <div class="lp-actions">
+        <div class="lp-pill" id="authPill"><span class="dot" id="authDot"></span><span id="authText">Loading…</span></div>
+        <a class="lp-btn" href="/" id="btnVisit">Visit Site</a>
+        <a class="lp-btn" href="/dashboard.html" id="btnDashboard">Dashboard</a>
+        <button class="lp-btn primary" id="btnSignIn">Sign in</button>
+        <button class="lp-btn danger" id="btnSignOut" style="display:none;">Log out</button>
       </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="main-content">
-      <div class="content-grid">
-        <!-- Sidebar Status Card -->
-        <aside>
-          <div class="card status-card">
-            <div class="card-header">
-              <div class="card-title">Console Status</div>
-              <span class="badge badge-neutral" id="roleBadge">No Role</span>
-            </div>
-            <div class="card-body">
-              <div id="statusText" class="text-muted text-small mb-4">Awaiting authentication...</div>
-              
-              <div class="status-item">
-                <div class="status-label">Project</div>
-                <div class="status-value" id="projectName">LogicPals-App</div>
-              </div>
-              
-              <div class="status-item">
-                <div class="status-label">Auth State</div>
-                <div class="status-value" id="authState">none</div>
-              </div>
-              
-              <div class="status-item">
-                <div class="status-label">Role Source</div>
-                <div class="status-value" id="roleSource">—</div>
-              </div>
-              
-              <div class="info-box mt-4">
-                <strong>Security Note:</strong> Access controlled via <code class="text-mono">public.user_roles</code> with RLS enforcement
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        <!-- Main Panel -->
-        <div>
-          <div class="card">
-            <div class="card-header">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h2 class="card-title" id="viewTitle">Dashboard</h2>
-                  <div class="card-subtitle">System overview and quick access</div>
-                </div>
-                <span class="badge badge-success" id="accessPill">Ready</span>
-              </div>
-            </div>
-
-            <div class="card-body">
-              <!-- Dashboard View -->
-              <div id="viewDashboard">
-                <div class="info-box">
-                  <strong>Console Capabilities:</strong>
-                  <ul style="margin: var(--space-3) 0 0 var(--space-5); line-height: 1.8;">
-                    <li><strong>Regular Review</strong> — Content management for standard curriculum (admin_regular, super_admin)</li>
-                    <li><strong>Olympiad Review</strong> — Advanced problem management for competition prep (admin_olympiad, super_admin)</li>
-                    <li><strong>Role Management</strong> — User permission assignment (super_admin only)</li>
-                  </ul>
-                </div>
-                
-                <div class="info-box mt-4" style="background: var(--warning-bg); border-color: var(--warning);">
-                  <strong>⚠️ Security Best Practice:</strong> Limit <code class="text-mono">super_admin</code> to 1-2 trusted individuals only.
-                </div>
-              </div>
-
-              <!-- Queue View -->
-              <div id="viewQueue" class="hidden">
-                <div class="filters">
-                  <div class="full">
-                    <label>Search</label>
-                    <input id="qSearch" placeholder="Search by title, tag, category, skill track..." />
-                  </div>
-                  <div>
-                    <label>Difficulty</label>
-                    <select id="qDifficulty">
-                      <option value="">All Levels</option>
-                      <option>easy</option>
-                      <option>medium</option>
-                      <option>hard</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label>Age Category</label>
-                    <select id="qAge">
-                      <option value="">All Ages</option>
-                      <option>8-9</option>
-                      <option>9-10</option>
-                      <option>10-11</option>
-                      <option>11-12</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label>Active Status</label>
-                    <select id="qActive">
-                      <option value="">All</option>
-                      <option value="true">Active Only</option>
-                      <option value="false">Inactive Only</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label>Sort Order</label>
-                    <select id="qSort">
-                      <option value="new">Newest First</option>
-                      <option value="old">Oldest First</option>
-                    </select>
-                  </div>
-                  <div class="filters-actions">
-                    <button class="btn btn-primary" id="btnApply">Apply Filters</button>
-                    <button class="btn btn-secondary" id="btnRefresh">Refresh</button>
-                    <button class="btn btn-secondary" id="btnAdd">Add Problem</button>
-                    <span class="badge badge-neutral" id="rowsBadge">0 Problems</span>
-                  </div>
-                </div>
-
-                <div id="queueEmpty" class="empty-state">
-                  <div class="empty-state-icon">📋</div>
-                  <p>No problems found. Adjust filters or refresh to load content.</p>
-                </div>
-                <div id="queueTableWrap"></div>
-              </div>
-
-              <!-- Users View -->
-              <div id="viewUsers" class="hidden">
-                <div class="info-box mb-4">
-                  Use this panel to verify user roles. Role assignment requires <strong>super_admin</strong> access via the <strong>Admin Roles</strong> section.
-                </div>
-                
-                <div class="filters">
-                  <div class="full">
-                    <label>User Email Address</label>
-                    <input id="uEmail" placeholder="e.g., admin@logicpals.com" />
-                  </div>
-                  <div class="filters-actions">
-                    <button class="btn btn-primary" id="btnLookup">Lookup Role</button>
-                    <button class="btn btn-secondary" id="btnListMe">View My Roles</button>
-                  </div>
-                </div>
-                
-                <div class="code-block" id="usersOut">Awaiting query...</div>
-              </div>
-
-              <!-- Payments View -->
-              <div id="viewPayments" class="hidden">
-                <div class="info-box mb-4">
-                  The Payments Dashboard operates independently to maintain session integrity. It will open in a new browser tab.
-                </div>
-                <button class="btn btn-primary" id="btnOpenPayments">Open Payments Dashboard →</button>
-              </div>
-
-              <!-- Subscriptions View -->
-              <div id="viewSubs" class="hidden">
-                <div class="info-box mb-4">
-                  The Subscriptions Dashboard operates independently to maintain session integrity. It will open in a new browser tab.
-                </div>
-                <button class="btn btn-primary" id="btnOpenSubs">Open Subscriptions Dashboard →</button>
-              </div>
-
-            </div>
+    <div class="lp-grid">
+      <aside class="card">
+        <h3>Console Status</h3>
+        <div class="sub">Access controlled via DB roles + RPC gates (Step 7)</div>
+        <div class="kv">
+          <div class="row"><small>Project</small><span>LogicPals-App</span></div>
+          <div class="row"><small>Auth state</small><span id="authState" class="mono">unknown</span></div>
+          <div class="row"><small>Role</small><span id="roleBadge" class="mono">unknown</span></div>
+          <div class="row"><small>User</small><span id="userEmail" class="mono">—</span></div>
+          <div class="notice" id="roleNote">
+            Sign in to load admin capabilities. If your role is <span class="mono">super_admin</span>, you can assign roles and manage monetization.
           </div>
         </div>
-      </div>
-    </main>
-  </div>
+      </aside>
 
-  <!-- Login Overlay -->
-  <div class="overlay" id="loginOverlay" aria-hidden="true">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="brand">
-          <div class="logo">LP</div>
-          <div class="brand-text">
-            <h2 class="card-title" style="margin: 0;">Admin Authentication</h2>
-            <div class="text-muted text-small">Enterprise-grade secure access</div>
+      <main class="card">
+        <div class="tabs">
+          <button class="tab active" data-tab="overview">Overview</button>
+          <button class="tab" data-tab="content">Content</button>
+          <button class="tab" data-tab="monetization">Monetization</button>
+          <button class="tab" data-tab="access">Access</button>
+        </div>
+
+        <section class="panel active" id="tab-overview">
+          <div class="notice good"><b>Roadmap Contract:</b> Admin UI never directly writes protected tables. All mutations go through RPC + audit events.</div>
+          <br/>
+          <ul class="list">
+            <li><b>Regular Review</b> — manage regular content (admin_regular, super_admin)</li>
+            <li><b>Olympiad Review</b> — strict QC + blocking (admin_olympiad, super_admin)</li>
+            <li><b>Payments / Subscriptions</b> — RPC-only actions with receipts and audit</li>
+            <li><b>Role Management</b> — super_admin only</li>
+          </ul>
+        </section>
+
+        <section class="panel" id="tab-content">
+          <h3 style="margin:0 0 10px 0;">Content Operations</h3>
+          <div class="notice">
+            <b>Olympiad must remain strict & deterministic.</b> Any “approve/publish” action must be an RPC that enforces Gate results.
           </div>
-        </div>
-        <button class="modal-close" id="loginClose" title="Close">✕</button>
-      </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+            <button class="lp-btn" id="btnRegularUpload">Regular: Upload / Manage</button>
+            <button class="lp-btn" id="btnOlympiadUpload">Olympiad: Upload</button>
+            <button class="lp-btn primary" id="btnOlympiadReview">Olympiad: QC Review Queue</button>
+          </div>
+          <p class="muted" style="margin-top:12px;">
+            These buttons can route to dedicated pages later (recommended). For now they can open internal panels or placeholders.
+          </p>
+        </section>
 
-      <div class="modal-body">
-        <div class="form-group">
-          <label>Email Address</label>
-          <input id="loginEmail" type="email" placeholder="admin@logicpals.com" autocomplete="email" />
-        </div>
-        
-        <div class="form-group">
-          <label>Password</label>
-          <input id="loginPassword" type="password" placeholder="Enter your password" autocomplete="current-password" />
-        </div>
+        <section class="panel" id="tab-monetization">
+          <h3 style="margin:0 0 10px 0;">Monetization (RPC-only)</h3>
+          <div class="notice">
+            <b>No direct DB writes from browser.</b> Payments/subscriptions actions must be admin RPCs (Step 7).
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+            <a class="lp-btn primary" href="/admin-payments.html" id="linkPayments">Payments</a>
+            <a class="lp-btn" href="/admin-subscriptions.html" id="linkSubs">Subscriptions</a>
+          </div>
+        </section>
 
-        <div class="flex items-center justify-between gap-4 mb-4">
-          <button class="btn btn-primary" id="loginBtn">Sign In</button>
-          <div class="text-muted text-small">Admin roles required</div>
-        </div>
+        <section class="panel" id="tab-access">
+          <h3 style="margin:0 0 10px 0;">Access & Roles</h3>
+          <div class="notice">
+            Role assignment should be <b>super_admin</b> only. If your current user is not super_admin, this section will be read-only.
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+            <button class="lp-btn" id="btnRoleManager">Open Role Manager</button>
+            <button class="lp-btn" id="btnAudit">View Admin Audit</button>
+          </div>
+          <p class="muted" style="margin-top:12px;">We can wire these to Step 7 RPCs once you confirm your function names.</p>
+        </section>
 
-        <div class="info-box" style="background: var(--warning-bg); border-color: var(--warning);">
-          <strong>Development Note:</strong> If accessing via file:// protocol, use a local server (http://localhost) for proper module loading and CORS handling.
-        </div>
-
-        <div class="code-block mt-4" id="loginOut">Ready for authentication...</div>
-      </div>
+      </main>
     </div>
   </div>
 
-  <!-- Role Assignment Modal -->
-  <div class="overlay" id="rolesModal" aria-hidden="true">
-    <div class="modal">
-      <div class="modal-header">
-        <div>
-          <h2 class="card-title" style="margin: 0;">Role Management</h2>
-          <div class="text-muted text-small">Assign administrative permissions</div>
-        </div>
-        <button class="modal-close" id="rolesClose" title="Close">✕</button>
-      </div>
-
-      <div class="modal-body">
-        <div class="info-box mb-4">
-          Grant enterprise-grade roles for console access. Only <strong>super_admin</strong> users can modify role assignments.
-        </div>
-
-        <div class="form-group">
-          <label>User Email</label>
-          <input id="rEmail" placeholder="reviewer@logicpals.com" />
-          <div class="text-muted text-small mt-2">User must be registered in <code class="text-mono">auth.users</code></div>
-        </div>
-
-        <div class="form-group">
-          <label>Role Assignment</label>
-          <select id="rRole">
-            <option value="admin_regular">admin_regular — Regular Problem Management</option>
-            <option value="admin_olympiad">admin_olympiad — Olympiad Problem Management</option>
-            <option value="super_admin">super_admin — Full System Access</option>
-          </select>
-        </div>
-
-        <div class="flex gap-4 mb-4">
-          <button class="btn btn-primary" id="btnGrant">Grant Role</button>
-          <button class="btn btn-danger" id="btnRevoke">Revoke Role</button>
-        </div>
-
-        <div class="code-block" id="rolesOut">Awaiting action...</div>
-      </div>
+  <!-- Sign-in modal (simple, reliable) -->
+  <dialog id="dlgLogin" style="border:none;border-radius:16px;max-width:420px;width:calc(100% - 24px);padding:0;box-shadow:0 20px 70px rgba(2,6,23,.25);">
+    <div style="padding:16px 16px 0 16px;background:#fff;border-bottom:1px solid rgba(15,23,42,.08);border-top-left-radius:16px;border-top-right-radius:16px;">
+      <b style="font-size:16px;color:#0f172a;">Admin Sign in</b>
+      <div class="muted" style="font-size:13px;margin-top:4px;">Use your admin account email + password.</div>
     </div>
-  </div>
-
-  <!-- Problem Editor Modal -->
-  <div class="overlay" id="problemOverlay" aria-hidden="true">
-    <div class="modal" style="max-width: 900px;">
-      <div class="modal-header">
-        <div class="brand">
-          <div class="logo">LP</div>
-          <div class="brand-text">
-            <h2 class="card-title" style="margin: 0;" id="pmTitle">Problem Editor</h2>
-            <div class="text-muted text-small" id="pmSub">Create or modify problem content</div>
-          </div>
-        </div>
-        <button class="modal-close" id="pmClose" title="Close">✕</button>
+    <div style="padding:16px;background:#fff;border-bottom-left-radius:16px;border-bottom-right-radius:16px;">
+      <label class="muted" style="font-size:12px;">Email</label>
+      <input id="loginEmail" type="email" autocomplete="email" placeholder="you@example.com"
+             style="width:100%;margin-top:6px;padding:12px;border-radius:12px;border:1px solid rgba(15,23,42,.12);"/>
+      <div style="height:10px;"></div>
+      <label class="muted" style="font-size:12px;">Password</label>
+      <input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••"
+             style="width:100%;margin-top:6px;padding:12px;border-radius:12px;border:1px solid rgba(15,23,42,.12);"/>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap;">
+        <button class="lp-btn" id="btnCancelLogin" type="button">Cancel</button>
+        <button class="lp-btn primary" id="btnDoLogin" type="button">Sign in</button>
       </div>
-
-      <div class="modal-body">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4);">
-          <div class="form-group">
-            <label>Problem Title</label>
-            <input id="pm_problem_title" placeholder="e.g., The Mango Basket Challenge" />
-          </div>
-          <div class="form-group">
-            <label>Category</label>
-            <input id="pm_problem_category" placeholder="logic, arithmetic, patterns..." />
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4);">
-          <div class="form-group">
-            <label>Age Category</label>
-            <input id="pm_problem_age" placeholder="e.g., 9-10" />
-          </div>
-          <div class="form-group">
-            <label>Difficulty Level</label>
-            <select id="pm_problem_difficulty">
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-            </select>
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4);">
-          <div class="form-group">
-            <label>Track Type</label>
-            <select id="pm_problem_track">
-              <option value="regular">Regular Track (is_exam_style = false)</option>
-              <option value="olympiad">Olympiad Track (is_exam_style = true)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Active Status</label>
-            <select id="pm_problem_active">
-              <option value="true">Active (Visible to students)</option>
-              <option value="false">Inactive (Hidden)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Problem Statement</label>
-          <textarea id="pm_problem_text" placeholder="Write the complete problem description here..."></textarea>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4);">
-          <div class="form-group">
-            <label>Answer Key (pipe-separated)</label>
-            <input id="pm_problem_answer" placeholder="12|twelve|12.0" />
-          </div>
-          <div class="form-group">
-            <label>Curriculum Tags (comma-separated)</label>
-            <input id="pm_problem_tags" placeholder="Patterns, Logic, BdMO" />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Solution Explanation</label>
-          <textarea id="pm_problem_solution" placeholder="Explain the reasoning and solution approach..."></textarea>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4);">
-          <div class="form-group">
-            <label>Hints (JSON Array)</label>
-            <textarea id="pm_problem_hints" placeholder='["First hint...", "Second hint...", "Third hint..."]'></textarea>
-          </div>
-          <div class="form-group">
-            <label>Socratic Questions (JSON Array)</label>
-            <textarea id="pm_problem_socratic" placeholder='["What patterns do you see?", "How might you start?"]'></textarea>
-          </div>
-        </div>
-
-        <div class="flex gap-4 items-center justify-between">
-          <button class="btn btn-danger hidden" id="pmDelete">Delete Problem</button>
-          <div class="flex gap-4">
-            <button class="btn btn-secondary" id="pmClose2">Cancel</button>
-            <button class="btn btn-primary" id="pmSave">Save Problem</button>
-          </div>
-        </div>
-
-        <div class="code-block mt-4" id="pmOut">Ready to save...</div>
-      </div>
+      <pre id="loginOut" class="mono" style="white-space:pre-wrap;background:#0b1220;color:#e5e7eb;padding:12px;border-radius:12px;margin-top:12px;display:none;"></pre>
     </div>
-  </div>
+  </dialog>
 
-  <script type="module">
-    // Import Supabase client
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+  <script>
+    // --- Guard: stop hard failures from killing the UI ---
+    function safe(fn){ try{ fn(); } catch(e){ console.error(e); } }
 
-    // Initialize Supabase
-    const SUPABASE_URL = 'https://ewrwkfdxzzwdpcczipzb.supabase.co';
-    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3cndmZGR4enpkpcY1pcGliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU2NzU5OTMsImV4cCI6MjA1MTI1MTk5M30.F0-F1rZQ_6B5m5jGG-59xmv5xWglJfzLKuQR5wULH9w';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+    const $ = (id)=>document.getElementById(id);
 
-    // Global state
-    let session = null;
-    let userRole = null;
-    let currentView = 'dashboard';
-    let currentMode = 'regular';
-    let editingProblemId = null;
-
-    // DOM elements
-    const nav = document.getElementById('nav');
-    const who = document.getElementById('who');
-    const btnSignIn = document.getElementById('btnSignIn');
-    const btnSignOut = document.getElementById('btnSignOut');
-    const btnVisit = document.getElementById('btnVisit');
-    const btnStudent = document.getElementById('btnStudent');
-    const btnRoles = document.getElementById('btnRoles');
-    const roleBadge = document.getElementById('roleBadge');
-    const statusText = document.getElementById('statusText');
-    const authState = document.getElementById('authState');
-    const roleSource = document.getElementById('roleSource');
-    const projectName = document.getElementById('projectName');
-    const accessPill = document.getElementById('accessPill');
-    const viewTitle = document.getElementById('viewTitle');
-
-    // Views
-    const viewDashboard = document.getElementById('viewDashboard');
-    const viewQueue = document.getElementById('viewQueue');
-    const viewUsers = document.getElementById('viewUsers');
-    const viewPayments = document.getElementById('viewPayments');
-    const viewSubs = document.getElementById('viewSubs');
-
-    // Queue controls
-    const qSearch = document.getElementById('qSearch');
-    const qDifficulty = document.getElementById('qDifficulty');
-    const qAge = document.getElementById('qAge');
-    const qActive = document.getElementById('qActive');
-    const qSort = document.getElementById('qSort');
-    const btnApply = document.getElementById('btnApply');
-    const btnRefresh = document.getElementById('btnRefresh');
-    const btnAdd = document.getElementById('btnAdd');
-    const rowsBadge = document.getElementById('rowsBadge');
-    const queueEmpty = document.getElementById('queueEmpty');
-    const queueTableWrap = document.getElementById('queueTableWrap');
-
-    // User lookup
-    const uEmail = document.getElementById('uEmail');
-    const btnLookup = document.getElementById('btnLookup');
-    const btnListMe = document.getElementById('btnListMe');
-    const usersOut = document.getElementById('usersOut');
-
-    // Payments & Subs
-    const btnOpenPayments = document.getElementById('btnOpenPayments');
-    const btnOpenSubs = document.getElementById('btnOpenSubs');
-
-    // Login overlay
-    const loginOverlay = document.getElementById('loginOverlay');
-    const loginEmail = document.getElementById('loginEmail');
-    const loginPassword = document.getElementById('loginPassword');
-    const loginBtn = document.getElementById('loginBtn');
-    const loginClose = document.getElementById('loginClose');
-    const loginOut = document.getElementById('loginOut');
-
-    // Roles modal
-    const rolesModal = document.getElementById('rolesModal');
-    const rEmail = document.getElementById('rEmail');
-    const rRole = document.getElementById('rRole');
-    const btnGrant = document.getElementById('btnGrant');
-    const btnRevoke = document.getElementById('btnRevoke');
-    const rolesOut = document.getElementById('rolesOut');
-    const rolesClose = document.getElementById('rolesClose');
-
-    // Problem modal
-    const problemOverlay = document.getElementById('problemOverlay');
-    const pmTitle = document.getElementById('pmTitle');
-    const pmSub = document.getElementById('pmSub');
-    const pmClose = document.getElementById('pmClose');
-    const pmClose2 = document.getElementById('pmClose2');
-    const pmSave = document.getElementById('pmSave');
-    const pmDelete = document.getElementById('pmDelete');
-    const pmOut = document.getElementById('pmOut');
-
-    // Problem fields
-    const pm_problem_title = document.getElementById('pm_problem_title');
-    const pm_problem_category = document.getElementById('pm_problem_category');
-    const pm_problem_age = document.getElementById('pm_problem_age');
-    const pm_problem_difficulty = document.getElementById('pm_problem_difficulty');
-    const pm_problem_track = document.getElementById('pm_problem_track');
-    const pm_problem_active = document.getElementById('pm_problem_active');
-    const pm_problem_text = document.getElementById('pm_problem_text');
-    const pm_problem_answer = document.getElementById('pm_problem_answer');
-    const pm_problem_tags = document.getElementById('pm_problem_tags');
-    const pm_problem_solution = document.getElementById('pm_problem_solution');
-    const pm_problem_hints = document.getElementById('pm_problem_hints');
-    const pm_problem_socratic = document.getElementById('pm_problem_socratic');
-
-    // Helper Functions
-    function showLoginOverlay(show) {
-      loginOverlay.setAttribute('aria-hidden', show ? 'false' : 'true');
+    function setAuthPill(state, email){
+      const dot = $('authDot');
+      const text = $('authText');
+      $('authState').textContent = state;
+      $('userEmail').textContent = email || '—';
+      if(state === 'authenticated'){
+        dot.className = 'dot ok';
+        text.textContent = `Signed in${email ? ': ' + email : ''}`;
+      }else{
+        dot.className = 'dot';
+        text.textContent = 'Signed out';
+      }
     }
 
-    function showRolesModal(show) {
-      rolesModal.setAttribute('aria-hidden', show ? 'false' : 'true');
+    function setRole(role){
+      $('roleBadge').textContent = role || 'none';
+      // optional: show/hide certain buttons based on role
     }
 
-    function showProblemOverlay(show) {
-      problemOverlay.setAttribute('aria-hidden', show ? 'false' : 'true');
+    function initTabs(){
+      document.querySelectorAll('.tab').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+          document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+          btn.classList.add('active');
+          const id = 'tab-' + btn.dataset.tab;
+          const panel = document.getElementById(id);
+          if(panel) panel.classList.add('active');
+        });
+      });
     }
 
-    function setStatus(msg) {
-      statusText.textContent = msg;
+    // --- Supabase init ---
+    let supabase = null;
+
+    function getEnv(){
+      // window.__LP_ENV comes from /api/env
+      if(!window.__LP_ENV || !window.__LP_ENV.SUPABASE_URL || !window.__LP_ENV.SUPABASE_ANON_KEY){
+        throw new Error('Missing window.__LP_ENV. /api/env did not load or did not set SUPABASE_URL/ANON_KEY.');
+      }
+      return window.__LP_ENV;
     }
 
-    function toast(title, msg) {
-      alert(`${title}\n${msg}`);
+    async function fetchRole(userId){
+      // Best-effort role lookup.
+      // If you already have an RPC like public.rpc_lp_my_role() use it here.
+      // Fallback: try view/table read (will succeed only if your RLS permits).
+      try{
+        // Preferred: RPC (change name if needed)
+        const { data, error } = await supabase.rpc('rpc_lp_my_role');
+        if(!error && data) return data;
+      }catch(_){}
+      try{
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .maybeSingle();
+        if(!error && data && data.role) return data.role;
+      }catch(_){}
+      return 'none';
     }
 
-    async function refreshSessionUI() {
+    async function refreshAuth(){
       const { data } = await supabase.auth.getSession();
-      session = data?.session || null;
-
-      if (!session) {
-        who.innerHTML = 'Signed out';
-        authState.textContent = 'none';
-        roleBadge.textContent = 'No Role';
-        roleBadge.className = 'badge badge-neutral';
-        roleSource.textContent = '—';
-        btnSignIn.classList.remove('hidden');
-        btnSignOut.classList.add('hidden');
-        btnRoles.classList.add('hidden');
-        userRole = null;
-        setStatus('Awaiting authentication...');
+      const session = data?.session || null;
+      if(!session){
+        setAuthPill('none', null);
+        setRole('none');
+        $('btnSignIn').style.display = '';
+        $('btnSignOut').style.display = 'none';
         return;
       }
+      const email = session.user?.email || '';
+      setAuthPill('authenticated', email);
+      $('btnSignIn').style.display = 'none';
+      $('btnSignOut').style.display = '';
+      const role = await fetchRole(session.user.id);
+      setRole(role);
+    }
 
-      const email = session.user?.email || 'unknown';
-      who.innerHTML = `<span style="color: var(--success);">●</span> ${email}`;
-      authState.textContent = 'authenticated';
-      btnSignIn.classList.add('hidden');
-      btnSignOut.classList.remove('hidden');
-
-      const roles = await listMyRoles();
-      if (roles && roles.length > 0) {
-        userRole = roles[0].role_name;
-        roleBadge.textContent = userRole;
-        roleBadge.className = 'badge badge-success';
-        roleSource.textContent = 'user_roles';
-        
-        if (userRole === 'super_admin') {
-          btnRoles.classList.remove('hidden');
-        }
-        
-        setStatus(`✓ Authenticated as ${userRole}`);
-      } else {
-        roleBadge.textContent = 'No Role';
-        roleBadge.className = 'badge badge-warning';
-        roleSource.textContent = 'none';
-        setStatus('Authenticated but no admin role assigned');
+    async function doLogin(){
+      const email = $('loginEmail').value.trim();
+      const pass = $('loginPass').value;
+      $('loginOut').style.display = 'none';
+      const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+      if(error){
+        $('loginOut').style.display = 'block';
+        $('loginOut').textContent = 'Login failed: ' + error.message;
+        return;
       }
+      $('dlgLogin').close();
+      await refreshAuth();
     }
 
-    async function listMyRoles() {
-      if (!session || !session.user) return [];
-      try {
-        const { data, error } = await supabase.rpc('list_my_roles');
-        if (error) throw error;
-        return data || [];
-      } catch (err) {
-        console.error('listMyRoles error:', err);
-        return [];
-      }
-    }
-
-    async function lookupRoleByEmail(email) {
-      try {
-        const { data, error } = await supabase.rpc('lookup_role_by_email', { user_email: email });
-        if (error) throw error;
-        return data;
-      } catch (err) {
-        return { error: err.message };
-      }
-    }
-
-    function canAccess(mode) {
-      if (!userRole) return false;
-      if (userRole === 'super_admin') return true;
-      if (mode === 'regular' && userRole === 'admin_regular') return true;
-      if (mode === 'olympiad' && userRole === 'admin_olympiad') return true;
-      return false;
-    }
-
-    function renderNav() {
-      const items = [
-        { id: 'dashboard', label: 'Dashboard' },
-        { id: 'regular', label: 'Regular Review' },
-        { id: 'olympiad', label: 'Olympiad Review' },
-        { id: 'users', label: 'User Roles' },
-        { id: 'payments', label: 'Payments' },
-        { id: 'subs', label: 'Subscriptions' }
-      ];
-
-      nav.innerHTML = items.map(item => 
-        `<button class="nav-item" data-view="${item.id}">${item.label}</button>`
-      ).join('');
-
-      nav.querySelectorAll('.nav-item').forEach(btn => {
-        btn.addEventListener('click', () => setView(btn.dataset.view));
-      });
-    }
-
-    async function setView(view) {
-      currentView = view;
-
-      // Hide all views
-      viewDashboard.classList.add('hidden');
-      viewQueue.classList.add('hidden');
-      viewUsers.classList.add('hidden');
-      viewPayments.classList.add('hidden');
-      viewSubs.classList.add('hidden');
-
-      // Update nav active state
-      nav.querySelectorAll('.nav-item').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.view === view);
-      });
-
-      // Show appropriate view
-      if (view === 'dashboard') {
-        viewTitle.textContent = 'Dashboard';
-        accessPill.textContent = 'Ready';
-        accessPill.className = 'badge badge-success';
-        viewDashboard.classList.remove('hidden');
-      } else if (view === 'regular') {
-        currentMode = 'regular';
-        viewTitle.textContent = 'Regular Problem Review';
-        if (!canAccess('regular')) {
-          accessPill.textContent = 'Access Denied';
-          accessPill.className = 'badge badge-danger';
-          viewQueue.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔒</div><p>Access denied. Requires admin_regular or super_admin role.</p></div>';
-          viewQueue.classList.remove('hidden');
-        } else {
-          accessPill.textContent = 'Access Granted';
-          accessPill.className = 'badge badge-success';
-          viewQueue.classList.remove('hidden');
-          await loadQueue();
-        }
-      } else if (view === 'olympiad') {
-        currentMode = 'olympiad';
-        viewTitle.textContent = 'Olympiad Problem Review';
-        if (!canAccess('olympiad')) {
-          accessPill.textContent = 'Access Denied';
-          accessPill.className = 'badge badge-danger';
-          viewQueue.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔒</div><p>Access denied. Requires admin_olympiad or super_admin role.</p></div>';
-          viewQueue.classList.remove('hidden');
-        } else {
-          accessPill.textContent = 'Access Granted';
-          accessPill.className = 'badge badge-success';
-          viewQueue.classList.remove('hidden');
-          await loadQueue();
-        }
-      } else if (view === 'users') {
-        viewTitle.textContent = 'User Role Lookup';
-        accessPill.textContent = 'Ready';
-        accessPill.className = 'badge badge-success';
-        viewUsers.classList.remove('hidden');
-      } else if (view === 'payments') {
-        viewTitle.textContent = 'Payments Dashboard';
-        accessPill.textContent = 'External';
-        accessPill.className = 'badge badge-primary';
-        viewPayments.classList.remove('hidden');
-      } else if (view === 'subs') {
-        viewTitle.textContent = 'Subscriptions Dashboard';
-        accessPill.textContent = 'External';
-        accessPill.className = 'badge badge-primary';
-        viewSubs.classList.remove('hidden');
-      }
-    }
-
-    async function loadQueue() {
-      if (!canAccess(currentMode)) return;
-
-      setStatus('Loading problems...');
-      queueEmpty.classList.add('hidden');
-      queueTableWrap.innerHTML = '';
-
-      try {
-        let query = supabase.from('problems').select('*');
-        
-        const search = qSearch.value.trim();
-        if (search) {
-          query = query.or(`title.ilike.%${search}%,category.ilike.%${search}%,curriculum_tags.cs.{${search}}`);
-        }
-
-        const diff = qDifficulty.value;
-        if (diff) query = query.eq('difficulty', diff);
-
-        const age = qAge.value;
-        if (age) query = query.eq('age_category', age);
-
-        const active = qActive.value;
-        if (active) query = query.eq('is_active', active === 'true');
-
-        query = query.eq('is_exam_style', currentMode === 'olympiad');
-
-        const sort = qSort.value === 'new' ? { column: 'created_at', ascending: false } : { column: 'created_at', ascending: true };
-        query = query.order(sort.column, { ascending: sort.ascending });
-
-        const { data, error } = await query;
-        if (error) throw error;
-
-        if (!data || data.length === 0) {
-          queueEmpty.classList.remove('hidden');
-          rowsBadge.textContent = '0 Problems';
-          setStatus('No problems found');
-          return;
-        }
-
-        rowsBadge.textContent = `${data.length} Problem${data.length !== 1 ? 's' : ''}`;
-
-        const table = document.createElement('div');
-        table.className = 'table-wrapper';
-        table.innerHTML = `
-          <table>
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Age</th>
-                <th>Difficulty</th>
-                <th>Active</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.map(p => `
-                <tr>
-                  <td><strong>${p.title || 'Untitled'}</strong></td>
-                  <td>${p.category || '—'}</td>
-                  <td><span class="badge badge-neutral">${p.age_category || '—'}</span></td>
-                  <td><span class="badge badge-${p.difficulty === 'easy' ? 'success' : p.difficulty === 'hard' ? 'danger' : 'warning'}">${p.difficulty || '—'}</span></td>
-                  <td><span class="badge badge-${p.is_active ? 'success' : 'neutral'}">${p.is_active ? 'Active' : 'Inactive'}</span></td>
-                  <td><button class="btn btn-secondary btn-sm" onclick="window.editProblem(${p.id})">Edit</button></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        `;
-        queueTableWrap.appendChild(table);
-        setStatus(`Loaded ${data.length} problems`);
-      } catch (err) {
-        toast('Load Error', err.message);
-        setStatus('Error loading problems');
-      }
-    }
-
-    window.editProblem = async (id) => {
-      editingProblemId = id;
-      const { data, error } = await supabase.from('problems').select('*').eq('id', id).single();
-      if (error) return toast('Error', error.message);
-
-      pmTitle.textContent = 'Edit Problem';
-      pmSub.textContent = `Editing problem ID ${id}`;
-      pm_problem_title.value = data.title || '';
-      pm_problem_category.value = data.category || '';
-      pm_problem_age.value = data.age_category || '';
-      pm_problem_difficulty.value = data.difficulty || 'medium';
-      pm_problem_track.value = data.is_exam_style ? 'olympiad' : 'regular';
-      pm_problem_active.value = data.is_active ? 'true' : 'false';
-      pm_problem_text.value = data.problem_text || '';
-      pm_problem_answer.value = data.answer_key || '';
-      pm_problem_tags.value = Array.isArray(data.curriculum_tags) ? data.curriculum_tags.join(', ') : '';
-      pm_problem_solution.value = data.solution_explanation || '';
-      pm_problem_hints.value = JSON.stringify(data.hints || []);
-      pm_problem_socratic.value = JSON.stringify(data.socratic_questions || []);
-      pmDelete.classList.remove('hidden');
-      showProblemOverlay(true);
-    };
-
-    // Event Listeners
-    btnSignIn.onclick = () => showLoginOverlay(true);
-    btnSignOut.onclick = async () => {
+    async function doLogout(){
       await supabase.auth.signOut();
-      await refreshSessionUI();
-      await setView('dashboard');
-    };
-    btnVisit.onclick = () => window.open('https://logicpals.com', '_blank');
-    btnStudent.onclick = () => window.open('/dashboard.html', '_blank');
-    btnRoles.onclick = () => showRolesModal(true);
-
-    loginClose.onclick = () => showLoginOverlay(false);
-    rolesClose.onclick = () => showRolesModal(false);
-    pmClose.onclick = () => showProblemOverlay(false);
-    pmClose2.onclick = () => showProblemOverlay(false);
-
-    loginBtn.onclick = async () => {
-      const email = loginEmail.value.trim();
-      const password = loginPassword.value.trim();
-      if (!email || !password) return toast('Error', 'Enter email and password');
-
-      loginOut.textContent = 'Signing in...';
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        loginOut.textContent = 'Success! Redirecting...';
-        showLoginOverlay(false);
-        await refreshSessionUI();
-        await setView('dashboard');
-      } catch (err) {
-        loginOut.textContent = `Error: ${err.message}`;
-      }
-    };
-
-    btnGrant.onclick = async () => {
-      const email = rEmail.value.trim();
-      const role = rRole.value;
-      if (!email || !role) return toast('Error', 'Select email and role');
-
-      rolesOut.textContent = 'Granting role...';
-      try {
-        const { data, error } = await supabase.rpc('grant_admin_role', { user_email: email, role_name: role });
-        if (error) throw error;
-        rolesOut.textContent = JSON.stringify(data, null, 2);
-        toast('Success', `Granted ${role} to ${email}`);
-      } catch (err) {
-        rolesOut.textContent = `Error: ${err.message}`;
-      }
-    };
-
-    btnRevoke.onclick = async () => {
-      const email = rEmail.value.trim();
-      const role = rRole.value;
-      if (!email || !role) return toast('Error', 'Select email and role');
-
-      rolesOut.textContent = 'Revoking role...';
-      try {
-        const { data, error } = await supabase.rpc('revoke_admin_role', { user_email: email, role_name: role });
-        if (error) throw error;
-        rolesOut.textContent = JSON.stringify(data, null, 2);
-        toast('Success', `Revoked ${role} from ${email}`);
-      } catch (err) {
-        rolesOut.textContent = `Error: ${err.message}`;
-      }
-    };
-
-    btnApply.onclick = loadQueue;
-    btnRefresh.onclick = loadQueue;
-    btnAdd.onclick = () => {
-      editingProblemId = null;
-      pmTitle.textContent = 'Add New Problem';
-      pmSub.textContent = 'Create a new problem entry';
-      pm_problem_title.value = '';
-      pm_problem_category.value = currentMode === 'olympiad' ? 'olympiad' : 'logic';
-      pm_problem_age.value = '9-10';
-      pm_problem_difficulty.value = 'medium';
-      pm_problem_track.value = currentMode;
-      pm_problem_active.value = 'true';
-      pm_problem_text.value = '';
-      pm_problem_answer.value = '';
-      pm_problem_tags.value = '';
-      pm_problem_solution.value = '';
-      pm_problem_hints.value = '["Hint 1", "Hint 2", "Hint 3"]';
-      pm_problem_socratic.value = '["What do you notice?", "What patterns emerge?"]';
-      pmDelete.classList.add('hidden');
-      showProblemOverlay(true);
-    };
-
-    pmSave.onclick = async () => {
-      if (!session) return toast('Error', 'Not signed in');
-      if (!canAccess(currentMode)) return toast('Error', 'No permission');
-
-      const payload = {
-        title: pm_problem_title.value.trim(),
-        problem_text: pm_problem_text.value.trim(),
-        answer_key: pm_problem_answer.value.trim(),
-        solution_explanation: pm_problem_solution.value.trim(),
-        age_category: pm_problem_age.value.trim(),
-        difficulty: pm_problem_difficulty.value,
-        category: pm_problem_category.value.trim(),
-        curriculum_tags: pm_problem_tags.value.split(',').map(t => t.trim()).filter(Boolean),
-        hints: JSON.parse(pm_problem_hints.value || '[]'),
-        socratic_questions: JSON.parse(pm_problem_socratic.value || '[]'),
-        is_exam_style: pm_problem_track.value === 'olympiad',
-        is_active: pm_problem_active.value === 'true'
-      };
-
-      pmOut.textContent = 'Saving...';
-      try {
-        if (editingProblemId) {
-          const { error } = await supabase.from('problems').update(payload).eq('id', editingProblemId);
-          if (error) throw error;
-          pmOut.textContent = 'Updated successfully!';
-        } else {
-          const { error } = await supabase.from('problems').insert(payload);
-          if (error) throw error;
-          pmOut.textContent = 'Created successfully!';
-        }
-        setTimeout(() => {
-          showProblemOverlay(false);
-          loadQueue();
-        }, 1000);
-      } catch (err) {
-        pmOut.textContent = `Error: ${err.message}`;
-      }
-    };
-
-    pmDelete.onclick = async () => {
-      if (!editingProblemId) return;
-      if (!confirm('Delete this problem permanently?')) return;
-
-      pmOut.textContent = 'Deleting...';
-      try {
-        const { error } = await supabase.from('problems').delete().eq('id', editingProblemId);
-        if (error) throw error;
-        pmOut.textContent = 'Deleted successfully!';
-        setTimeout(() => {
-          showProblemOverlay(false);
-          loadQueue();
-        }, 1000);
-      } catch (err) {
-        pmOut.textContent = `Error: ${err.message}`;
-      }
-    };
-
-    btnLookup.onclick = async () => {
-      usersOut.textContent = 'Looking up...';
-      const res = await lookupRoleByEmail(uEmail.value.trim());
-      usersOut.textContent = JSON.stringify(res, null, 2);
-    };
-
-    btnListMe.onclick = async () => {
-      usersOut.textContent = 'Loading...';
-      const res = await listMyRoles();
-      usersOut.textContent = JSON.stringify(res, null, 2);
-    };
-
-    btnOpenPayments.onclick = () => window.open('/admin-payments.html', '_blank');
-    btnOpenSubs.onclick = () => window.open('/admin-subscriptions.html', '_blank');
-
-    // Auth state listener
-    supabase.auth.onAuthStateChange(async () => {
-      await refreshSessionUI();
-      await setView(currentView);
-    });
-
-    // Initialize
-    renderNav();
-    await refreshSessionUI();
-    
-    const { data } = await supabase.auth.getSession();
-    if (!data?.session) {
-      showLoginOverlay(true);
+      await refreshAuth();
     }
-    
-    await setView('dashboard');
+
+    safe(async ()=>{
+      initTabs();
+
+      // Always keep “Payments/Subscriptions/Visit/Dashboard” as real links even if JS fails.
+      // (They are anchors already.)
+
+      // Build supabase client using env
+      const env = getEnv();
+      if(!window.supabase || !window.supabase.createClient){
+        throw new Error('Supabase UMD did not load. Check network for https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+      }
+      supabase = window.supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+
+      // wire buttons
+      $('btnSignIn').addEventListener('click', ()=> $('dlgLogin').showModal());
+      $('btnCancelLogin').addEventListener('click', ()=> $('dlgLogin').close());
+      $('btnDoLogin').addEventListener('click', doLogin);
+      $('btnSignOut').addEventListener('click', doLogout);
+
+      // placeholder actions
+      $('btnRegularUpload').addEventListener('click', ()=>alert('Regular upload/manage: wire to your content admin page (RPC-only).'));
+      $('btnOlympiadUpload').addEventListener('click', ()=>alert('Olympiad upload: wire to your Olympiad content pipeline (QC gating).'));
+      $('btnOlympiadReview').addEventListener('click', ()=>alert('Olympiad QC review queue: wire to Step 7 review RPC + fail reasons.'));
+      $('btnRoleManager').addEventListener('click', ()=>alert('Role manager: super_admin-only RPC.'));
+      $('btnAudit').addEventListener('click', ()=>alert('Audit viewer: read-only safe view.'));
+
+      supabase.auth.onAuthStateChange(()=>{ refreshAuth(); });
+
+      await refreshAuth();
+    });
   </script>
 </body>
 </html>
