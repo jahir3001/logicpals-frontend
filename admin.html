@@ -455,20 +455,37 @@
     }
 
     async function hardLogout() {
-      $('authOut').textContent = 'Signing out…';
-      console.log('[LP] logout clicked');
+      // Immediately lock the UI (enterprise-safe). Even if network signOut is slow/fails, UI becomes read-only.
+      gateWorkspace(true);
+      setStatus('Signing out…');
+
       try {
-        const { error } = await supabase.auth.signOut({ scope: 'global' });
-        if (error) throw error;
+        // Local sign-out is enough for this admin SPA and is faster/more reliable than global.
+        await supabase.auth.signOut({ scope: 'local' });
       } catch (e) {
-        console.error('[LP] signOut error:', e);
-        $('authOut').textContent = 'Sign-out failed: ' + (e?.message || String(e));
-      } finally {
-        hardClearAuthStorage();
-        gateWorkspace(true);
-        // Replace prevents Back from showing stale signed-in UI
-        location.replace('/admin.html?logged_out=1');
+        console.warn('signOut failed (continuing with local cleanup):', e);
       }
+
+      // Hard cleanup: remove cached auth tokens to prevent back-button rehydration.
+      try {
+        const keys = [];
+        for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
+        keys
+          .filter(k => k && (k.startsWith('sb-') || k.includes('supabase')))
+          .forEach(k => localStorage.removeItem(k));
+      } catch (_) {}
+      try {
+        sessionStorage.clear();
+      } catch (_) {}
+
+      // Prevent BFCache/back restoring a \"signed-in looking\" page.
+      const bust = Date.now();
+      try {
+        history.replaceState(null, '', '/admin.html?logged_out=1&t=' + bust);
+      } catch (_) {}
+
+      // Full redirect to a clean state.
+      window.location.replace('/admin.html?logged_out=1&t=' + bust);
     }
 
     $('btnDoLogout').addEventListener('click', hardLogout);
