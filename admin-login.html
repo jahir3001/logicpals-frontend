@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login — LogicPals</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary:#2563EB; --bg:#EEF2FF; --card:#fff; --text:#111827; --muted:#6B7280; --line:#E5E7EB; }
+    *{ box-sizing:border-box; }
+    body{
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background: radial-gradient(1200px 600px at 15% 10%, #EDE9FE 0%, rgba(237,233,254,0) 55%),
+                  radial-gradient(900px 500px at 85% 20%, #DBEAFE 0%, rgba(219,234,254,0) 60%),
+                  linear-gradient(180deg, #F8FAFF 0%, #EEF2FF 100%);
+      min-height:100vh; margin:0; padding:32px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .wrap{ width:100%; max-width:440px; }
+    .brand{
+      display:flex; align-items:center; gap:12px; margin-bottom:18px;
+      justify-content:center;
+    }
+    .logo{
+      width:44px; height:44px; border-radius:14px;
+      background: linear-gradient(135deg, #7C3AED 0%, #2563EB 55%, #06B6D4 100%);
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:800; letter-spacing:.5px;
+      box-shadow:0 10px 30px rgba(37,99,235,.22);
+    }
+    .brand h1{ font-size:18px; margin:0; color:var(--text); }
+    .brand p{ margin:0; color:var(--muted); font-size:12px; }
+
+    .card{
+      background:rgba(255,255,255,.92);
+      border:1px solid rgba(229,231,235,.85);
+      border-radius:20px;
+      box-shadow:0 16px 60px rgba(17,24,39,.12);
+      backdrop-filter: blur(8px);
+      padding:26px;
+    }
+    .title{ margin:0 0 6px 0; color:var(--text); font-size:20px; text-align:center; }
+    .subtitle{ margin:0 0 18px 0; color:var(--muted); font-size:13px; text-align:center; }
+
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      border:1px solid rgba(229,231,235,.9);
+      background:#fff;
+      padding:8px 12px; border-radius:999px;
+      font-size:12px; color:#374151;
+      margin:0 auto 16px auto;
+      width:fit-content;
+    }
+    .dot{ width:8px; height:8px; border-radius:999px; background:#10B981; box-shadow:0 0 0 4px rgba(16,185,129,.15); }
+    .grid{ display:grid; grid-template-columns:1fr; gap:12px; }
+    label{ display:block; font-weight:700; font-size:12px; color:#374151; margin:6px 0; }
+    input{
+      width:100%;
+      border:1px solid var(--line);
+      padding:12px 12px;
+      border-radius:12px;
+      font-size:14px;
+      outline:none;
+      background:#fff;
+    }
+    input:focus{ border-color:#93C5FD; box-shadow:0 0 0 4px rgba(147,197,253,.35); }
+
+    .row{ display:flex; gap:10px; margin-top:14px; }
+    .btn{
+      flex:1;
+      border:1px solid var(--line);
+      background:#fff;
+      color:#111827;
+      padding:12px 14px;
+      border-radius:12px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .btn.primary{
+      border:none;
+      background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+      color:#fff;
+      box-shadow:0 10px 28px rgba(37,99,235,.28);
+    }
+    .btn:disabled{ opacity:.65; cursor:not-allowed; }
+
+    .msg{
+      margin-top:12px;
+      display:none;
+      padding:10px 12px;
+      border-radius:12px;
+      font-size:13px;
+      line-height:1.35;
+      border:1px solid;
+      white-space:pre-wrap;
+    }
+    .msg.ok{ display:block; background:#ECFDF5; border-color:#A7F3D0; color:#065F46; }
+    .msg.err{ display:block; background:#FEF2F2; border-color:#FECACA; color:#7F1D1D; }
+
+    .footer{
+      margin-top:14px;
+      display:flex; justify-content:space-between; gap:12px;
+      font-size:12px; color:var(--muted);
+    }
+    .footer a{ color:#2563EB; text-decoration:none; font-weight:700; }
+    .tiny{ font-size:11px; color:#9CA3AF; margin-top:10px; text-align:center; }
+  </style>
+
+  <!-- Runtime config injected by Vercel /api/env (same pattern as admin.html) -->
+  <script src="/api/env"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <div class="logo">LP</div>
+      <div>
+        <h1>LogicPals Admin</h1>
+        <p>Enterprise Admin System</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="title">Sign in</h2>
+      <p class="subtitle">Admin access is enforced by DB roles + RPC gates.</p>
+
+      <div class="pill" id="pill">
+        <span class="dot"></span>
+        <span id="pillText">Ready</span>
+      </div>
+
+      <form id="form" class="grid" autocomplete="on">
+        <div>
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="admin@logicpals.com" autocomplete="username" required />
+        </div>
+        <div>
+          <label for="password">Password</label>
+          <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+
+        <div class="row">
+          <button class="btn primary" id="btnLogin" type="submit">Sign in</button>
+          <button class="btn" id="btnClear" type="button">Clear</button>
+        </div>
+
+        <div class="msg err" id="err"></div>
+        <div class="msg ok" id="ok"></div>
+
+        <div class="footer">
+          <a href="index.html">← Back to Home</a>
+          <a href="admin.html">Go to Admin Console →</a>
+        </div>
+
+        <div class="tiny">
+          Tip: if you were signed out, use refresh (Ctrl+R). Back button is hardened in admin.html.
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    // --------- Enterprise constants ----------
+    const ALLOWED_ADMIN_ROLES = new Set([
+      "super_admin",
+      "admin_regular",
+      "admin_olympiad",
+      "support_readonly",
+      "admin",
+      "reviewer",
+    ]);
+
+    // --------- UI refs ----------
+    const pillText = document.getElementById("pillText");
+    const err = document.getElementById("err");
+    const ok = document.getElementById("ok");
+    const form = document.getElementById("form");
+    const btnLogin = document.getElementById("btnLogin");
+    const btnClear = document.getElementById("btnClear");
+    const emailEl = document.getElementById("email");
+    const passEl = document.getElementById("password");
+
+    function showError(message) {
+      err.textContent = message;
+      ok.style.display = "none";
+      err.style.display = "block";
+    }
+    function showOk(message) {
+      ok.textContent = message;
+      err.style.display = "none";
+      ok.style.display = "block";
+    }
+    function setPill(text) { pillText.textContent = text; }
+
+    // --------- Config ----------
+    // admin.html expects window.__LP_ENV from /api/env
+    const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.__LP_ENV || {};
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      setPill("Missing config");
+      showError("Missing Supabase config. Ensure /api/env is deployed and SUPABASE_URL + SUPABASE_ANON_KEY are set in Vercel.");
+    }
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false,
+        storage: window.localStorage,
+      }
+    });
+
+    // --------- Role gate ----------
+    async function fetchMyRole() {
+      const { data, error } = await supabase.rpc("rpc_lp_my_role");
+      if (error) throw error;
+      return data; // can be null
+    }
+
+    async function hardRedirectToAdmin() {
+      window.location.replace("admin.html");
+    }
+
+    async function enforceAdminGateOrSignOut(reasonPrefix = "") {
+      const { data: sess } = await supabase.auth.getSession();
+      const session = sess?.session;
+
+      if (!session) return { ok: false, reason: "No active session." };
+
+      let role = null;
+      try { role = await fetchMyRole(); } catch (e) {
+        await supabase.auth.signOut();
+        return { ok: false, reason: `${reasonPrefix}Role check failed: ${e?.message || e}` };
+      }
+
+      if (!role || !ALLOWED_ADMIN_ROLES.has(role)) {
+        await supabase.auth.signOut();
+        return { ok: false, reason: `${reasonPrefix}Not authorized for admin console. Your role is: ${role ?? "none"}` };
+      }
+
+      return { ok: true, role };
+    }
+
+    // Auto-redirect if already signed in and authorized
+    (async () => {
+      try {
+        setPill("Checking session…");
+        const gate = await enforceAdminGateOrSignOut("");
+        if (gate.ok) {
+          showOk(`Signed in as admin role: ${gate.role}. Redirecting…`);
+          await hardRedirectToAdmin();
+        } else {
+          setPill("Ready");
+          const params = new URLSearchParams(window.location.search);
+          if (params.get("logged_out") === "1") showOk("Signed out successfully.");
+        }
+      } catch (e) {
+        setPill("Error");
+        showError(e?.message || String(e));
+      }
+    })();
+
+    btnClear.addEventListener("click", () => {
+      emailEl.value = "";
+      passEl.value = "";
+      err.style.display = "none";
+      ok.style.display = "none";
+      emailEl.focus();
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      err.style.display = "none";
+      ok.style.display = "none";
+      btnLogin.disabled = true;
+      btnLogin.textContent = "Signing in…";
+      setPill("Authenticating…");
+
+      try {
+        const email = emailEl.value.trim();
+        const password = passEl.value;
+
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+
+        const gate = await enforceAdminGateOrSignOut("");
+        if (!gate.ok) {
+          setPill("Denied");
+          showError(gate.reason);
+          return;
+        }
+
+        showOk(`Welcome. Role: ${gate.role}. Redirecting…`);
+        setPill("Authorized");
+        await hardRedirectToAdmin();
+
+      } catch (e2) {
+        setPill("Ready");
+        showError(`Login failed: ${e2?.message || e2}`);
+      } finally {
+        btnLogin.disabled = false;
+        btnLogin.textContent = "Sign in";
+      }
+    });
+
+    supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") setPill("Signed out");
+    });
+  </script>
+</body>
+</html>
