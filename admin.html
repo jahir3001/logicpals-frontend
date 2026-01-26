@@ -5,37 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LogicPals Admin Console</title>
 
-  <!-- Load environment from Vercel API route (sets window.__LP_ENV) -->
+  <!-- Loads window.__LP_ENV via Vercel route -->
   <script src="/api/env"></script>
+
+  <!-- BFCache/Back button hardening: always revalidate -->
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
 
   <style>
     :root{
-      --bg:#f6f7fb;
-      --card:#ffffff;
-      --text:#0f172a;
-      --muted:#64748b;
-      --line:#e5e7eb;
-      --primary:#4f46e5;
-      --primary-weak:#eef2ff;
-      --success:#10b981;
-      --warn:#f59e0b;
-      --danger:#ef4444;
+      --bg:#f6f7fb; --card:#ffffff; --text:#0f172a; --muted:#64748b; --line:#e5e7eb;
+      --primary:#4f46e5; --primary-weak:#eef2ff;
+      --success:#10b981; --warn:#f59e0b; --danger:#ef4444;
       --shadow:0 18px 45px rgba(15,23,42,.08);
-      --radius:18px;
-      --radius-sm:12px;
+      --radius:18px; --radius-sm:12px;
       --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0;
-      font-family:var(--font);
-      color:var(--text);
+      margin:0; font-family:var(--font); color:var(--text);
       background:radial-gradient(900px 600px at 18% 12%, rgba(79,70,229,.10), transparent 60%),
                  radial-gradient(900px 600px at 82% 20%, rgba(16,185,129,.08), transparent 60%),
                  var(--bg);
     }
-
     .shell{max-width:1180px;margin:22px auto;padding:0 18px;}
     .topbar{
       display:flex;align-items:center;justify-content:space-between;gap:14px;
@@ -64,14 +58,14 @@
     .btn{
       border:1px solid var(--line);background:#fff;color:var(--text);
       padding:10px 14px;border-radius:999px;font-weight:700;font-size:13px;cursor:pointer;
-      transition:transform .06s ease, box-shadow .12s ease, background .12s ease;
+      transition:transform .06s ease, box-shadow .12s ease, background .12s ease, opacity .12s ease;
     }
     .btn:hover{box-shadow:0 10px 22px rgba(15,23,42,.08)}
     .btn:active{transform:translateY(1px)}
     .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
     .btn.primary:hover{box-shadow:0 14px 26px rgba(79,70,229,.22)}
     .btn.ghost{background:transparent}
-    .btn[disabled]{opacity:.55;cursor:not-allowed;box-shadow:none}
+    .btn[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none}
     .btn.danger{border-color:rgba(239,68,68,.30); color:#991b1b; background:rgba(239,68,68,.06)}
     .btn.danger:hover{box-shadow:0 10px 22px rgba(239,68,68,.12)}
 
@@ -98,6 +92,7 @@
       background:rgba(16,185,129,.08);color:#064e3b;font-size:13px;
     }
     .banner.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.12);color:#7c2d12}
+    .banner.danger{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#7f1d1d}
 
     .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px;}
     @media (max-width: 980px){.cards{grid-template-columns:1fr}}
@@ -124,6 +119,30 @@
     .input:focus{border-color:rgba(79,70,229,.55);box-shadow:0 0 0 4px rgba(79,70,229,.10)}
     .help{color:var(--muted);font-size:12px;line-height:1.35}
     .out{margin-top:12px;padding:12px;border-radius:12px;border:1px dashed var(--line);background:#fafafa;color:#0f172a;white-space:pre-wrap;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-size:12px;min-height:56px}
+
+    .gate-overlay{
+      display:none;
+      position:absolute; inset:0;
+      background:rgba(246,247,251,.78);
+      backdrop-filter: blur(6px);
+      border-radius: var(--radius);
+      border:1px dashed rgba(100,116,139,.35);
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+    .gate-overlay.active{display:flex}
+    .gate-box{
+      max-width:520px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:0 24px 60px rgba(2,6,23,.20);
+      padding:16px 16px 14px;
+    }
+    .gate-box h3{margin:0 0 6px;font-size:14px}
+    .gate-box p{margin:0;color:var(--muted);font-size:13px;line-height:1.35}
+    .gate-box .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
   </style>
 </head>
 
@@ -140,10 +159,10 @@
 
       <div class="actions">
         <div class="pill" id="statusPill"><span class="dot" id="statusDot"></span><span id="statusText">Loading…</span></div>
-        <button class="btn" id="btnVisit">Visit Site</button>
-        <button class="btn" id="btnDashboard">Dashboard</button>
-        <button class="btn danger" id="btnTopLogout" style="display:none">Sign out</button>
-        <button class="btn primary" id="btnAuth">Sign in</button>
+        <button class="btn" id="btnVisit" type="button">Visit Site</button>
+        <button class="btn" id="btnDashboard" type="button">Dashboard</button>
+        <button class="btn danger" id="btnTopLogout" type="button" style="display:none">Sign out</button>
+        <button class="btn primary" id="btnAuth" type="button">Sign in</button>
       </div>
     </header>
 
@@ -168,21 +187,26 @@
           <div class="banner" style="margin-top:12px">
             <div><b>Roadmap contract:</b> Admin UI never directly writes protected tables. All mutations go through <b>RPC</b> + <b>audit events</b>.</div>
           </div>
+
+          <div class="banner danger" style="margin-top:12px; display:none" id="logoutWarn">
+            <div><b>Security:</b> You are signed out. Admin workspace is locked until you sign in again.</div>
+          </div>
         </div>
       </aside>
 
-      <main class="card">
+      <main class="card" id="workspaceCard" style="position:relative">
         <div class="hd">
           <h2>Admin Workspace</h2>
           <small>Clean controls with hard boundaries for Regular vs Olympiad</small>
           <div class="tabs" style="margin-top:12px">
-            <button class="tab active" data-tab="overview">Overview</button>
-            <button class="tab" data-tab="content">Content</button>
-            <button class="tab" data-tab="monetization">Monetization</button>
-            <button class="tab" data-tab="access">Access</button>
+            <button class="tab active" data-tab="overview" type="button">Overview</button>
+            <button class="tab" data-tab="content" type="button">Content</button>
+            <button class="tab" data-tab="monetization" type="button">Monetization</button>
+            <button class="tab" data-tab="access" type="button">Access</button>
           </div>
         </div>
-        <div class="bd">
+
+        <div class="bd" id="workspaceBody">
           <section class="panel active" id="tab-overview">
             <div class="banner" style="margin-bottom:14px">
               <div><b>Step 7 readiness:</b> Explainability events + receipts are working. Next: surface trustworthy admin views + immutable audit.</div>
@@ -192,32 +216,32 @@
                 <h3>Regular Review</h3>
                 <p>Content management for standard curriculum (admin_regular, super_admin).</p>
                 <div class="row">
-                  <button class="btn" id="btnRegUpload">Upload / Seed</button>
-                  <button class="btn" id="btnRegQueue">Review Queue</button>
+                  <button class="btn gated" id="btnRegUpload" type="button">Upload / Seed</button>
+                  <button class="btn gated" id="btnRegQueue" type="button">Review Queue</button>
                 </div>
               </div>
               <div class="mini">
                 <h3>Olympiad Review</h3>
                 <p>Competition prep (admin_olympiad, super_admin). Strict separation + no hints in mock mode.</p>
                 <div class="row">
-                  <button class="btn" id="btnOlyUpload">Upload / Seed</button>
-                  <button class="btn" id="btnOlyQueue">Failed Criteria Queue</button>
+                  <button class="btn gated" id="btnOlyUpload" type="button">Upload / Seed</button>
+                  <button class="btn gated" id="btnOlyQueue" type="button">Failed Criteria Queue</button>
                 </div>
               </div>
               <div class="mini">
                 <h3>Role Management</h3>
                 <p>Assign admin roles (super_admin only). Uses RPC + RLS. Audit required.</p>
                 <div class="row">
-                  <button class="btn" id="btnRoles">Open Role Manager</button>
-                  <button class="btn" id="btnAudit">View Admin Audit</button>
+                  <button class="btn gated" id="btnRoles" type="button">Open Role Manager</button>
+                  <button class="btn gated" id="btnAudit" type="button">View Admin Audit</button>
                 </div>
               </div>
               <div class="mini">
                 <h3>Monetization</h3>
                 <p>Payments + subscriptions (manual activation / refunds). RPC-only with receipts.</p>
                 <div class="row">
-                  <button class="btn" id="btnPayments">Payments</button>
-                  <button class="btn" id="btnSubs">Subscriptions</button>
+                  <button class="btn gated" id="btnPayments" type="button">Payments</button>
+                  <button class="btn gated" id="btnSubs" type="button">Subscriptions</button>
                 </div>
               </div>
             </div>
@@ -225,28 +249,28 @@
 
           <section class="panel" id="tab-content">
             <div class="banner warn" style="margin-bottom:14px">
-              <div><b>Note:</b> The UI can show Content tools now, but we will only enable actions after we confirm your RPC names (Step 7).</div>
+              <div><b>Note:</b> UI is ready. We will enable actions after admin RPCs are confirmed (Step 7).</div>
             </div>
             <div class="cards">
               <div class="mini">
                 <h3>Regular Problem Upload</h3>
-                <p>Upload/seed problems via <b>admin_regular_upsert_problem</b> (RPC). No direct inserts.</p>
-                <div class="row"><button class="btn" id="goRegUpload">Open</button></div>
+                <p>Upload/seed problems via RPC. No direct inserts.</p>
+                <div class="row"><button class="btn gated" id="goRegUpload" type="button">Open</button></div>
               </div>
               <div class="mini">
                 <h3>Olympiad Problem Upload</h3>
-                <p>Upload/seed problems via <b>admin_olympiad_upsert_problem</b> (RPC). Strict criteria enforced.</p>
-                <div class="row"><button class="btn" id="goOlyUpload">Open</button></div>
+                <p>Upload/seed problems via RPC. Strict criteria enforced.</p>
+                <div class="row"><button class="btn gated" id="goOlyUpload" type="button">Open</button></div>
               </div>
               <div class="mini">
                 <h3>Olympiad Failed Criteria Review</h3>
-                <p>Review problems that failed gate scoring (Step 4.6) & explainability (Step 7).</p>
-                <div class="row"><button class="btn" id="goOlyReview">Open</button></div>
+                <p>Review problems that failed gate scoring + explainability.</p>
+                <div class="row"><button class="btn gated" id="goOlyReview" type="button">Open</button></div>
               </div>
               <div class="mini">
                 <h3>Audit Timeline</h3>
-                <p>Immutable admin actions: who changed what, when, and why. (RPC + append-only table.)</p>
-                <div class="row"><button class="btn" id="goAudit">Open</button></div>
+                <p>Immutable admin actions: who changed what, when, and why.</p>
+                <div class="row"><button class="btn gated" id="goAudit" type="button">Open</button></div>
               </div>
             </div>
           </section>
@@ -255,51 +279,61 @@
             <div class="cards">
               <div class="mini">
                 <h3>Payments</h3>
-                <p>Refund / charge / reconcile. Admin-only RPC endpoints.</p>
-                <div class="row"><button class="btn" id="goPayments">Open Payments</button></div>
+                <p>Refund / charge / reconcile. Admin-only endpoints.</p>
+                <div class="row"><button class="btn gated" id="goPayments" type="button">Open Payments</button></div>
               </div>
               <div class="mini">
                 <h3>Subscriptions</h3>
-                <p>List / extend / cancel. Admin-only RPC endpoints.</p>
-                <div class="row"><button class="btn" id="goSubs">Open Subscriptions</button></div>
+                <p>List / extend / cancel. Admin-only endpoints.</p>
+                <div class="row"><button class="btn gated" id="goSubs" type="button">Open Subscriptions</button></div>
               </div>
               <div class="mini">
                 <h3>Trust Summary</h3>
-                <p>For a given user: receipts, eligibility, explainability, and any policy warnings.</p>
-                <div class="row"><button class="btn" id="goTrust">Open Trust Summary</button></div>
+                <p>Receipts, eligibility, explainability, warnings.</p>
+                <div class="row"><button class="btn gated" id="goTrust" type="button">Open Trust Summary</button></div>
               </div>
               <div class="mini">
                 <h3>Pricing Config</h3>
-                <p>Future: tier catalog + promotions. Will be gated by Step 8 (A/B testing).</p>
-                <div class="row"><button class="btn" disabled>Coming soon</button></div>
+                <p>Future: tier catalog + promotions (gated by Step 8 A/B testing).</p>
+                <div class="row"><button class="btn" disabled type="button">Coming soon</button></div>
               </div>
             </div>
           </section>
 
           <section class="panel" id="tab-access">
             <div class="banner warn" style="margin-bottom:14px">
-              <div><b>Role assignment</b> should be <b>super_admin</b> only. If your current user is not super_admin, this section stays read-only.</div>
+              <div><b>Role assignment</b> must be <b>super_admin</b> only. If not super_admin, this section stays read-only.</div>
             </div>
             <div class="mini">
               <h3>Access & Roles</h3>
               <p>We will wire these to Step 7 RPCs once you confirm your function names.</p>
               <div class="row">
-                <button class="btn" id="openRoleManager">Open Role Manager</button>
-                <button class="btn" id="openAdminAudit">View Admin Audit</button>
+                <button class="btn gated" id="openRoleManager" type="button">Open Role Manager</button>
+                <button class="btn gated" id="openAdminAudit" type="button">View Admin Audit</button>
               </div>
               <div class="out" id="accessOut">Waiting…</div>
             </div>
           </section>
         </div>
+
+        <div class="gate-overlay" id="gateOverlay" aria-live="polite">
+          <div class="gate-box">
+            <h3>Admin workspace locked</h3>
+            <p>You are signed out. For security, all admin actions and navigation are disabled until you sign in again.</p>
+            <div class="row">
+              <button class="btn primary" id="btnGateSignIn" type="button">Sign in</button>
+              <button class="btn" id="btnGateReload" type="button">Reload</button>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   </div>
 
-  <!-- Sign-in modal -->
   <dialog id="dlgLogin">
     <div class="modal-hd">
       <strong>LogicPals Admin Account</strong>
-      <button class="btn ghost" id="btnCloseDlg">✕</button>
+      <button class="btn ghost" id="btnCloseDlg" type="button">✕</button>
     </div>
     <div class="modal-bd">
       <div class="field">
@@ -310,10 +344,10 @@
         <label for="password">Password</label>
         <input class="input" id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
       </div>
-      <div class="help">Admin console is email + password only. (Students can be phone-based later.)</div>
+      <div class="help">Admin console is email + password only.</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-        <button class="btn primary" id="btnDoLogin">Sign in</button>
-        <button class="btn danger" id="btnDoLogout" style="display:none">Sign out</button>
+        <button class="btn primary" id="btnDoLogin" type="button">Sign in</button>
+        <button class="btn danger" id="btnDoLogout" type="button" style="display:none">Sign out</button>
       </div>
       <div class="out" id="authOut">Waiting…</div>
     </div>
@@ -329,12 +363,16 @@
       $('statusText').textContent = 'Env missing';
       $('statusDot').className = 'dot warn';
       $('kvAuth').textContent = 'error';
-      $('accessOut').textContent = 'Missing env. Ensure /api/env is deployed and returns SUPABASE_URL + SUPABASE_ANON_KEY.';
+      $('accessOut').textContent = 'Missing env. Ensure /api/env returns SUPABASE_URL + SUPABASE_ANON_KEY.';
       throw new Error('LogicPals env missing (window.__LP_ENV).');
     }
 
-    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
-    // IMPORTANT: expose for DevTools snippets
+    // Single authoritative client (prevents split-session bugs)
+    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
+
+    // Expose for DevTools debugging
     window.supabase = supabase;
 
     const dlg = $('dlgLogin');
@@ -347,14 +385,34 @@
       $('statusDot').className = 'dot ' + (kind === 'ok' ? 'ok' : kind === 'warn' ? 'warn' : '');
     };
 
-    const go = (path) => () => location.href = path;
+    const setTab = (key) => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === key));
+      document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `tab-${key}`));
+    };
+    document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
+
+    const gateWorkspace = (locked) => {
+      $('gateOverlay').classList.toggle('active', locked);
+      $('logoutWarn').style.display = locked ? 'flex' : 'none';
+      document.querySelectorAll('.gated').forEach(btn => btn.disabled = locked);
+    };
+
+    $('btnGateSignIn').addEventListener('click', () => openDlg());
+    $('btnGateReload').addEventListener('click', () => location.reload());
+
     $('btnVisit').addEventListener('click', () => location.href = '/');
-    $('btnDashboard').addEventListener('click', go('/dashboard.html'));
-    $('btnPayments').addEventListener('click', go('/admin-payments.html'));
-    $('btnSubs').addEventListener('click', go('/admin-subscriptions.html'));
-    $('goPayments').addEventListener('click', go('/admin-payments.html'));
-    $('goSubs').addEventListener('click', go('/admin-subscriptions.html'));
-    $('goTrust').addEventListener('click', go('/admin-subscriptions.html#trust'));
+    $('btnDashboard').addEventListener('click', () => location.href = '/dashboard.html');
+
+    const guardedNav = (path) => async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { gateWorkspace(true); openDlg(); return; }
+      location.href = path;
+    };
+    $('btnPayments').addEventListener('click', guardedNav('/admin-payments.html'));
+    $('btnSubs').addEventListener('click', guardedNav('/admin-subscriptions.html'));
+    $('goPayments').addEventListener('click', guardedNav('/admin-payments.html'));
+    $('goSubs').addEventListener('click', guardedNav('/admin-subscriptions.html'));
+    $('goTrust').addEventListener('click', guardedNav('/admin-subscriptions.html#trust'));
 
     const notYet = (label) => () => alert(label + "\n\nNext step: confirm / implement the admin RPCs, then we wire these buttons.");
     [
@@ -362,27 +420,75 @@
       'goRegUpload','goOlyUpload','goOlyReview','goAudit','openRoleManager','openAdminAudit'
     ].forEach((id) => $(id).addEventListener('click', notYet('This module is UI-ready but RPC wiring is pending.')));
 
-    const setTab = (key) => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === key));
-      document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `tab-${key}`));
-    };
-    document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
-
     async function safeGetRole() {
       try {
         const { data, error } = await supabase.rpc('rpc_lp_my_role');
         if (error) throw error;
-        // data should be enum text like "super_admin", or "no_role"
         return data ?? 'unknown';
       } catch (e) {
         console.error('rpc_lp_my_role failed:', e);
         $('accessOut').textContent =
-          'Role RPC failed:\n' +
-          (e?.message || String(e)) +
-          '\n\nFix: run the DB steps to ensure rpc_lp_my_role returns app_role and supports no_role.';
+          'Role RPC failed:\n' + (e?.message || String(e)) +
+          '\n\nFix: ensure rpc_lp_my_role returns app_role and supports no_role.';
         return 'unknown';
       }
     }
+
+    function getProjectRefFromUrl(url) {
+      try { return new URL(url).hostname.split('.')[0]; } catch { return null; }
+    }
+
+    function hardClearAuthStorage() {
+      const ref = getProjectRefFromUrl(env.SUPABASE_URL);
+      const prefixes = ['supabase.auth.','sb-'];
+      const rm = (store) => {
+        const keys = [];
+        for (let i=0; i<store.length; i++) keys.push(store.key(i));
+        keys.forEach(k => {
+          if (!k) return;
+          const ok = prefixes.some(p => k.startsWith(p)) || (ref && k.startsWith(`sb-${ref}-`));
+          if (ok) { try { store.removeItem(k); } catch {} }
+        });
+      };
+      rm(localStorage);
+      rm(sessionStorage);
+    }
+
+    async function hardLogout() {
+      $('authOut').textContent = 'Signing out…';
+      console.log('[LP] logout clicked');
+      try {
+        const { error } = await supabase.auth.signOut({ scope: 'global' });
+        if (error) throw error;
+      } catch (e) {
+        console.error('[LP] signOut error:', e);
+        $('authOut').textContent = 'Sign-out failed: ' + (e?.message || String(e));
+      } finally {
+        hardClearAuthStorage();
+        gateWorkspace(true);
+        // Replace prevents Back from showing stale signed-in UI
+        location.replace('/admin.html?logged_out=1');
+      }
+    }
+
+    $('btnDoLogout').addEventListener('click', hardLogout);
+    $('btnTopLogout').addEventListener('click', hardLogout);
+
+    $('btnAuth').addEventListener('click', async () => {
+      await refreshUI();
+      openDlg();
+    });
+
+    $('btnDoLogin').addEventListener('click', async () => {
+      $('authOut').textContent = 'Signing in…';
+      const email = $('email').value.trim();
+      const password = $('password').value;
+      if (!email || !password) { $('authOut').textContent = 'Please enter email + password.'; return; }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) { $('authOut').textContent = 'Sign-in failed: ' + error.message; setStatus('warn','Auth error'); return; }
+      await refreshUI();
+      closeDlg();
+    });
 
     async function refreshUI() {
       const { data: { session } } = await supabase.auth.getSession();
@@ -394,66 +500,33 @@
       $('btnTopLogout').style.display = signedIn ? 'inline-flex' : 'none';
       $('btnDoLogout').style.display = signedIn ? 'inline-flex' : 'none';
       $('btnDoLogin').style.display = signedIn ? 'none' : 'inline-flex';
-
       $('btnAuth').textContent = signedIn ? 'Account' : 'Sign in';
+
+      gateWorkspace(!signedIn);
 
       const role = signedIn ? await safeGetRole() : 'unknown';
       $('kvRole').textContent = role || 'unknown';
 
-      // status
       setStatus('ok', 'Ready');
 
-      // helper copy
       if (!signedIn) {
         $('authOut').textContent = 'Signed out.';
+        $('accessOut').textContent = 'Signed out. Workspace locked.';
+        const qp = new URLSearchParams(location.search);
+        if (qp.get('logged_out') === '1') hardClearAuthStorage();
       } else {
         $('authOut').textContent = `Signed in as ${session.user.email || session.user.id}. Role: ${role}`;
+        $('accessOut').textContent = `Role: ${role}`;
       }
     }
 
-    // Top button behavior:
-    // - if signed out: opens sign-in modal
-    // - if signed in: opens account modal (with sign-out)
-    $('btnAuth').addEventListener('click', async () => {
-      await refreshUI();
-      openDlg();
-    });
+    // Back/Forward cache fix: revalidate on BFCache restore
+    window.addEventListener('pageshow', (event) => { if (event.persisted) refreshUI(); });
+    window.addEventListener('focus', () => refreshUI());
+    supabase.auth.onAuthStateChange(() => refreshUI());
 
-    $('btnDoLogin').addEventListener('click', async () => {
-      $('authOut').textContent = 'Signing in…';
-      const email = $('email').value.trim();
-      const password = $('password').value;
-      if (!email || !password) {
-        $('authOut').textContent = 'Please enter email + password.';
-        return;
-      }
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        $('authOut').textContent = 'Sign-in failed: ' + error.message;
-        setStatus('warn', 'Auth error');
-        return;
-      }
-      await refreshUI();
-      closeDlg();
-    });
-
-    async function hardLogout() {
-      $('authOut').textContent = 'Signing out…';
-      try {
-        await supabase.auth.signOut();
-      } finally {
-        // history-safe: replace prevents going "back" into an authenticated admin state
-        location.replace('/admin.html?logged_out=1');
-      }
-    }
-
-    $('btnDoLogout').addEventListener('click', hardLogout);
-    $('btnTopLogout').addEventListener('click', hardLogout);
-
-    // Boot
     setStatus('', 'Loading…');
     await refreshUI();
-    supabase.auth.onAuthStateChange(() => refreshUI());
   </script>
 </body>
 </html>
