@@ -392,10 +392,10 @@
       $('btnAuth').textContent = signedIn ? 'Account' : 'Sign in';
       $('btnDoLogout').style.display = signedIn ? 'inline-flex' : 'none';
 
-      // Role display: rely on your existing RPC/helper (recommended: public.lp_get_my_role())
+      // Role display: rely on your existing RPC/helper (recommended: public.rpc_lp_my_role())
       // If not present, we simply show unknown.
       let role = 'unknown';
-      const roleRes = await safe(() => supabase.rpc('lp_get_my_role'));
+      const roleRes = await safe(() => supabase.rpc('rpc_lp_my_role'));
       if (roleRes?.data) role = roleRes.data;
       $('kvRole').textContent = role || 'unknown';
 
