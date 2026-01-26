@@ -9,11 +9,6 @@
   <script src="/api/env"></script>
 
   <style>
-    /* ============================================================
-       LogicPals Admin — Clean white UI (from your redesigned pack)
-       + Roadmap-safe guardrails (RPC-only mutations)
-       ============================================================ */
-
     :root{
       --bg:#f6f7fb;
       --card:#ffffff;
@@ -77,6 +72,8 @@
     .btn.primary:hover{box-shadow:0 14px 26px rgba(79,70,229,.22)}
     .btn.ghost{background:transparent}
     .btn[disabled]{opacity:.55;cursor:not-allowed;box-shadow:none}
+    .btn.danger{border-color:rgba(239,68,68,.30); color:#991b1b; background:rgba(239,68,68,.06)}
+    .btn.danger:hover{box-shadow:0 10px 22px rgba(239,68,68,.12)}
 
     .grid{display:grid;grid-template-columns:360px 1fr;gap:16px;margin-top:16px;}
     @media (max-width: 980px){.grid{grid-template-columns:1fr}}
@@ -145,6 +142,7 @@
         <div class="pill" id="statusPill"><span class="dot" id="statusDot"></span><span id="statusText">Loading…</span></div>
         <button class="btn" id="btnVisit">Visit Site</button>
         <button class="btn" id="btnDashboard">Dashboard</button>
+        <button class="btn danger" id="btnTopLogout" style="display:none">Sign out</button>
         <button class="btn primary" id="btnAuth">Sign in</button>
       </div>
     </header>
@@ -297,10 +295,10 @@
     </div>
   </div>
 
-  <!-- Sign-in modal (simple + reliable) -->
+  <!-- Sign-in modal -->
   <dialog id="dlgLogin">
     <div class="modal-hd">
-      <strong>Sign in to LogicPals Admin</strong>
+      <strong>LogicPals Admin Account</strong>
       <button class="btn ghost" id="btnCloseDlg">✕</button>
     </div>
     <div class="modal-bd">
@@ -312,10 +310,10 @@
         <label for="password">Password</label>
         <input class="input" id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
       </div>
-      <div class="help">This admin console requires an email + password. (Students can use phone-based onboarding later, but admin stays email-only.)</div>
+      <div class="help">Admin console is email + password only. (Students can be phone-based later.)</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
         <button class="btn primary" id="btnDoLogin">Sign in</button>
-        <button class="btn" id="btnDoLogout" style="display:none">Sign out</button>
+        <button class="btn danger" id="btnDoLogout" style="display:none">Sign out</button>
       </div>
       <div class="out" id="authOut">Waiting…</div>
     </div>
@@ -324,15 +322,8 @@
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-    // -------------------------
-    // Safe DOM helpers
-    // -------------------------
     const $ = (id) => document.getElementById(id);
-    const safe = (fn) => { try { return fn(); } catch (e) { console.error(e); return null; } };
 
-    // -------------------------
-    // Init env + client
-    // -------------------------
     const env = window.__LP_ENV || window.LP_ENV || null;
     if (!env?.SUPABASE_URL || !env?.SUPABASE_ANON_KEY) {
       $('statusText').textContent = 'Env missing';
@@ -343,65 +334,90 @@
     }
 
     const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+    // IMPORTANT: expose for DevTools snippets
+    window.supabase = supabase;
 
-    // -------------------------
-    // Navigation bindings
-    // -------------------------
-    $('btnVisit').addEventListener('click', () => location.href = '/');
-    $('btnDashboard').addEventListener('click', () => location.href = '/dashboard.html');
-    const go = (path) => () => location.href = path;
-    $('btnPayments').addEventListener('click', go('/admin-payments.html'));
-    $('btnSubs').addEventListener('click', go('/admin-subscriptions.html'));
-    $('goPayments').addEventListener('click', go('/admin-payments.html'));
-    $('goSubs').addEventListener('click', go('/admin-subscriptions.html'));
-    $('goTrust').addEventListener('click', go('/admin-subscriptions.html#trust'));
-
-    // Content placeholders (pages can be added later)
-    const notYet = (label) => () => alert(label + "\n\nNext step: confirm / implement the admin RPCs, then we wire these buttons.");
-    ['btnRegUpload','btnRegQueue','btnOlyUpload','btnOlyQueue','btnRoles','btnAudit','goRegUpload','goOlyUpload','goOlyReview','goAudit','openRoleManager','openAdminAudit']
-      .forEach((id) => $(id).addEventListener('click', notYet('This module is UI-ready but RPC wiring is pending.')));
-
-    // -------------------------
-    // Tabs
-    // -------------------------
-    const setTab = (key) => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === key));
-      document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `tab-${key}`));
-    };
-    document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
-
-    // -------------------------
-    // Auth modal
-    // -------------------------
     const dlg = $('dlgLogin');
     const openDlg = () => dlg.showModal();
     const closeDlg = () => dlg.close();
     $('btnCloseDlg').addEventListener('click', closeDlg);
-    $('btnAuth').addEventListener('click', openDlg);
 
     const setStatus = (kind, text) => {
       $('statusText').textContent = text;
       $('statusDot').className = 'dot ' + (kind === 'ok' ? 'ok' : kind === 'warn' ? 'warn' : '');
     };
 
-    const setAuthUI = async () => {
+    const go = (path) => () => location.href = path;
+    $('btnVisit').addEventListener('click', () => location.href = '/');
+    $('btnDashboard').addEventListener('click', go('/dashboard.html'));
+    $('btnPayments').addEventListener('click', go('/admin-payments.html'));
+    $('btnSubs').addEventListener('click', go('/admin-subscriptions.html'));
+    $('goPayments').addEventListener('click', go('/admin-payments.html'));
+    $('goSubs').addEventListener('click', go('/admin-subscriptions.html'));
+    $('goTrust').addEventListener('click', go('/admin-subscriptions.html#trust'));
+
+    const notYet = (label) => () => alert(label + "\n\nNext step: confirm / implement the admin RPCs, then we wire these buttons.");
+    [
+      'btnRegUpload','btnRegQueue','btnOlyUpload','btnOlyQueue','btnRoles','btnAudit',
+      'goRegUpload','goOlyUpload','goOlyReview','goAudit','openRoleManager','openAdminAudit'
+    ].forEach((id) => $(id).addEventListener('click', notYet('This module is UI-ready but RPC wiring is pending.')));
+
+    const setTab = (key) => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === key));
+      document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `tab-${key}`));
+    };
+    document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
+
+    async function safeGetRole() {
+      try {
+        const { data, error } = await supabase.rpc('rpc_lp_my_role');
+        if (error) throw error;
+        // data should be enum text like "super_admin", or "no_role"
+        return data ?? 'unknown';
+      } catch (e) {
+        console.error('rpc_lp_my_role failed:', e);
+        $('accessOut').textContent =
+          'Role RPC failed:\n' +
+          (e?.message || String(e)) +
+          '\n\nFix: run the DB steps to ensure rpc_lp_my_role returns app_role and supports no_role.';
+        return 'unknown';
+      }
+    }
+
+    async function refreshUI() {
       const { data: { session } } = await supabase.auth.getSession();
       const signedIn = !!session?.user;
+
       $('kvAuth').textContent = signedIn ? 'authenticated' : 'signed out';
       $('kvUser').textContent = signedIn ? (session.user.email || session.user.id) : '—';
-      $('btnAuth').textContent = signedIn ? 'Account' : 'Sign in';
-      $('btnDoLogout').style.display = signedIn ? 'inline-flex' : 'none';
 
-      // Role display: rely on your existing RPC/helper (recommended: public.rpc_lp_my_role())
-      // If not present, we simply show unknown.
-      let role = 'unknown';
-      const roleRes = await safe(() => supabase.rpc('rpc_lp_my_role'));
-      if (roleRes?.data) role = roleRes.data;
+      $('btnTopLogout').style.display = signedIn ? 'inline-flex' : 'none';
+      $('btnDoLogout').style.display = signedIn ? 'inline-flex' : 'none';
+      $('btnDoLogin').style.display = signedIn ? 'none' : 'inline-flex';
+
+      $('btnAuth').textContent = signedIn ? 'Account' : 'Sign in';
+
+      const role = signedIn ? await safeGetRole() : 'unknown';
       $('kvRole').textContent = role || 'unknown';
 
-      setStatus('ok', signedIn ? 'Ready' : 'Ready');
-      $('authOut').textContent = signedIn ? 'Signed in.' : 'Signed out.';
-    };
+      // status
+      setStatus('ok', 'Ready');
+
+      // helper copy
+      if (!signedIn) {
+        $('authOut').textContent = 'Signed out.';
+      } else {
+        $('authOut').textContent = `Signed in as ${session.user.email || session.user.id}. Role: ${role}`;
+      }
+    }
+
+    // Top button behavior:
+    // - if signed out: opens sign-in modal
+    // - if signed in: opens account modal (with sign-out)
+    $('btnAuth').addEventListener('click', async () => {
+      await refreshUI();
+      openDlg();
+    });
 
     $('btnDoLogin').addEventListener('click', async () => {
       $('authOut').textContent = 'Signing in…';
@@ -417,23 +433,27 @@
         setStatus('warn', 'Auth error');
         return;
       }
-      await setAuthUI();
+      await refreshUI();
       closeDlg();
     });
 
-    $('btnDoLogout').addEventListener('click', async () => {
+    async function hardLogout() {
       $('authOut').textContent = 'Signing out…';
-      const { error } = await supabase.auth.signOut();
-      if (error) $('authOut').textContent = 'Sign-out error: ' + error.message;
-      await setAuthUI();
-    });
+      try {
+        await supabase.auth.signOut();
+      } finally {
+        // history-safe: replace prevents going "back" into an authenticated admin state
+        location.replace('/admin.html?logged_out=1');
+      }
+    }
 
-    // -------------------------
+    $('btnDoLogout').addEventListener('click', hardLogout);
+    $('btnTopLogout').addEventListener('click', hardLogout);
+
     // Boot
-    // -------------------------
     setStatus('', 'Loading…');
-    await setAuthUI();
-    supabase.auth.onAuthStateChange(() => setAuthUI());
+    await refreshUI();
+    supabase.auth.onAuthStateChange(() => refreshUI());
   </script>
 </body>
 </html>
