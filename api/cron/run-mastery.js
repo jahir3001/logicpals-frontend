@@ -1,7 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
-import { runMasteryWorkerOnce } from "../../worker/mastery/logic.js";
+const { createClient } = require("@supabase/supabase-js");
+const { runMasteryWorkerOnce } = require("../../worker/mastery/logic.js");
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
     if (!process.env.CRON_SECRET) return res.status(500).send("Missing CRON_SECRET");
     if (!process.env.SUPABASE_URL) return res.status(500).send("Missing SUPABASE_URL");
@@ -14,9 +14,9 @@ export default async function handler(req, res) {
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
     const result = await runMasteryWorkerOnce(supabase);
 
-    return res.status(200).json({ status: "ok", processed: result?.processed ?? 0 });
+    return res.status(200).json({ status: "ok", processed: (result && result.processed) || 0 });
   } catch (e) {
     console.error("run-mastery error:", e);
     return res.status(500).send("FUNCTION_INVOCATION_FAILED");
   }
-}
+};
