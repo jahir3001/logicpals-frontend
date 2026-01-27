@@ -1,0 +1,24 @@
+{
+  "name": "logicpals-frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "admin-guard.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jahir3001/logicpals-frontend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jahir3001/logicpals-frontend/issues"
+  },
+  "homepage": "https://github.com/jahir3001/logicpals-frontend#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.93.1"
+  }
+}
