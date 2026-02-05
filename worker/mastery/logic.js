@@ -1,188 +1,163 @@
 /**
- * LogicPals — Worker / Mastery — logic.js (Enterprise Safe)
+ * LogicPals — Mastery Worker + A/B Variant Resolver Helper (Enterprise-safe)
+ * Step 4B: production worker integration
  *
- * - Keeps your existing constants intact.
- * - Adds an "AB Variant Resolver Helper" that calls DB RPCs safely.
- * - Does NOT break your current cron handler (run-mastery.js) which calls runMasteryWorkerOnce(supabase) with no extra args.
+ * Guarantees:
+ * - Never breaks worker if AB system fails
+ * - Deterministic variant selection happens in DB (RPC)
+ * - Hard fallback to control
+ * - Optional exposure logging (best-effort)
  */
 
-const MIN_ATTEMPTS_LOCKED = 6;
+function isUuid(x) {
+  return typeof x === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(x);
+}
 
-const PROMOTION_RULES = {
-  warmup_to_standard: { from: "warmup", to: "standard", accuracyMin: 0.70, hintRateMax: 0.40 },
-  standard_to_challenge: { from: "standard", to: "challenge", accuracyMin: 0.65, avgTimeRatioMax: 1.2, bruteForceRateMax: 0.20 },
-  challenge_to_contest: { from: "challenge", to: "contest", accuracyMin: 0.60, hintRateMax: 0.15, avgTimeRatioMax: 1.1 },
-  contest_to_elite: { from: "contest", to: "elite", accuracyMin: 0.50, hintRateMax: 0.0, avgTimeRatioMax: 1.0, contestArchetypesRequired: 2 },
-};
-
-const BREADTH_REQUIREMENTS = {
-  standard: 3,
-  challenge: 5,
-  contest: 7,
-  elite: 10,
-};
-
-/**
- * Small utility: normalize any "truthy" config values.
- */
-function toBool(v) {
-  if (v === true) return true;
-  if (v === false) return false;
-  if (v == null) return false;
-  const s = String(v).trim().toLowerCase();
-  return s === "true" || s === "1" || s === "yes" || s === "y";
+function safeJsonObject(x) {
+  if (!x || typeof x !== "object" || Array.isArray(x)) return {};
+  return x;
 }
 
 /**
- * Enterprise-safe AB Variant Resolver Helper
+ * Enterprise-safe AB variant resolver.
  *
- * Preferred (authoritative): ab_get_or_assign_variant(p_experiment_key, p_track, p_session_id)
- * Fallback: ab_choose_variant(p_experiment_key, p_user_id)
+ * Expected DB RPC (recommended): public.ab_get_or_assign_variant(p_experiment_key text, p_track lp_track, p_session_id uuid)
+ * If your RPC signature differs, adjust the `rpcName` + params below.
  *
- * This helper never throws; it returns a structured object with reason + safe defaults.
+ * Returns:
+ * {
+ *   experiment_key, variant_key, config, reason, bucket, exposure_id
+ * }
  */
 async function resolveAbVariant(supabase, {
-  experimentKey,
-  track = "regular",
-  sessionId = null,
-  userId = null,
-} = {}) {
-  const safe = {
-    experiment_key: experimentKey || null,
-    variant_key: "control",
-    config: {},
-    bucket: null,
-    reason: "default_control",
-    exposure_id: null,
-  };
-
-  if (!supabase) return { ...safe, reason: "missing_supabase_client" };
-  if (!experimentKey) return { ...safe, reason: "missing_experiment_key" };
-
-  // 1) Try the session-based authoritative RPC (best for “freeze per session” systems)
-  if (sessionId) {
-    try {
-      const { data, error } = await supabase.rpc("ab_get_or_assign_variant", {
-        p_experiment_key: experimentKey,
-        p_track: track,
-        p_session_id: sessionId,
-      });
-
-      if (!error && data) {
-        const row = Array.isArray(data) ? data[0] : data;
-        return {
-          experiment_key: row.experiment_key || experimentKey,
-          variant_key: row.variant_key || "control",
-          config: row.config || {},
-          bucket: row.bucket ?? null,
-          reason: row.reason || "ok",
-          exposure_id: row.exposure_id ?? null,
-        };
-      }
-    } catch (e) {
-      // swallow and fallback
-    }
-  }
-
-  // 2) Fallback to user-based deterministic chooser
-  if (userId) {
-    try {
-      const { data, error } = await supabase.rpc("ab_choose_variant", {
-        p_experiment_key: experimentKey,
-        p_user_id: userId,
-      });
-
-      if (!error && data) {
-        const row = Array.isArray(data) ? data[0] : data;
-        return {
-          experiment_key: row.experiment_key || experimentKey,
-          variant_key: row.variant_key || "control",
-          config: row.config || {},
-          bucket: row.bucket ?? null,
-          reason: row.reason || "ok",
-          exposure_id: row.exposure_id ?? null,
-        };
-      }
-    } catch (e) {
-      // swallow and return safe default
-    }
-  }
-
-  // 3) No sessionId and no userId => cannot resolve deterministically
-  return { ...safe, reason: sessionId ? "rpc_failed_fallback_no_user" : "missing_session_and_user" };
-}
-
-/**
- * OPTIONAL: record a metric (safe wrapper). Never throws.
- * Uses ab_record_metric(experiment_key, track, session_id, value_numeric, meta_jsonb)
- */
-async function recordAbMetric(supabase, { experimentKey, track = "regular", sessionId, value, meta = {} } = {}) {
-  if (!supabase || !experimentKey || !sessionId) return { ok: false, reason: "missing_inputs" };
+  experiment_key,
+  track,
+  session_id,     // preferred for freezing per session (deterministic)
+  user_id,        // optional, only if your RPC uses user_id
+  rpcName = "ab_get_or_assign_variant",
+  defaultVariant = "control",
+  defaultConfig = {},
+}) {
   try {
-    const { data, error } = await supabase.rpc("ab_record_metric", {
-      p_experiment_key: experimentKey,
+    if (!experiment_key || typeof experiment_key !== "string") {
+      return { experiment_key, variant_key: defaultVariant, config: defaultConfig, reason: "invalid_experiment_key" };
+    }
+    if (!track || (track !== "regular" && track !== "olympiad")) {
+      return { experiment_key, variant_key: defaultVariant, config: defaultConfig, reason: "invalid_track" };
+    }
+
+    // Most enterprise-safe: freeze by session_id (NOT by user_id alone)
+    if (session_id && !isUuid(session_id)) {
+      return { experiment_key, variant_key: defaultVariant, config: defaultConfig, reason: "invalid_session_id" };
+    }
+    if (user_id && !isUuid(user_id)) {
+      return { experiment_key, variant_key: defaultVariant, config: defaultConfig, reason: "invalid_user_id" };
+    }
+
+    // ---- Call RPC
+    // Your project screenshots show: ab_get_or_assign_variant(text, lp_track, uuid)
+    // => (experiment_key, track, session_id)
+    const params = {
+      p_experiment_key: experiment_key,
       p_track: track,
-      p_session_id: sessionId,
-      p_value_num: value,
-      p_meta: meta,
-    });
-    if (error) return { ok: false, reason: "rpc_error", error };
-    return { ok: true, data };
+      p_session_id: session_id || null,
+      // If your RPC uses user_id instead of session_id, swap accordingly.
+      // p_user_id: user_id || null,
+    };
+
+    const { data, error } = await supabase.rpc(rpcName, params);
+
+    if (error) {
+      // Hard fallback
+      return {
+        experiment_key,
+        variant_key: defaultVariant,
+        config: defaultConfig,
+        reason: `rpc_error:${error.code || "unknown"}`,
+      };
+    }
+
+    // Supabase RPC sometimes returns array rows for table-returning functions
+    const row = Array.isArray(data) ? data[0] : data;
+
+    const variant_key = row?.variant_key || defaultVariant;
+    const config = safeJsonObject(row?.config) || defaultConfig;
+    const reason = row?.reason || "ok";
+    const bucket = typeof row?.bucket === "number" ? row.bucket : null;
+    const exposure_id = row?.exposure_id || null;
+
+    return { experiment_key, variant_key, config, reason, bucket, exposure_id };
   } catch (e) {
-    return { ok: false, reason: "exception", error: e };
-  }
-}
-
-/**
- * Mastery worker entry point
- *
- * IMPORTANT:
- * Your cron handler currently calls: runMasteryWorkerOnce(supabase) :contentReference[oaicite:2]{index=2}
- * So this function must work even with no extra args.
- *
- * For Step 4A ("Edge Worker Must Call Variant RPC"), you can pass { userId, sessionId } when you are ready,
- * but cron will still work without it.
- */
-async function runMasteryWorkerOnce(supabase, opts = {}) {
-  // Keep cron safe: do nothing destructive by default.
-  // If you pass in A/B context, we will resolve it and return it for verification.
-
-  const result = {
-    processed: 0,
-    ab: null,
-  };
-
-  // Optional A/B resolution check (only if caller provides context)
-  if (opts && opts.experimentKey && (opts.sessionId || opts.userId)) {
-    const ab = await resolveAbVariant(supabase, {
-      experimentKey: opts.experimentKey,
-      track: opts.track || "regular",
-      sessionId: opts.sessionId || null,
-      userId: opts.userId || null,
-    });
-
-    // Example: compute a convenience boolean flag for this experiment
-    // (for reg_home_tutor_hint_v1, treatment config uses { "hint_card": true })
-    const showHintCard = toBool(ab.config && ab.config.hint_card);
-
-    result.ab = {
-      ...ab,
-      show_hint_card: showHintCard,
+    return {
+      experiment_key,
+      variant_key: defaultVariant,
+      config: defaultConfig,
+      reason: "resolver_exception",
     };
   }
+}
 
-  return result;
+/**
+ * OPTIONAL: Best-effort exposure log (don’t fail worker if this fails)
+ * If your DB already logs exposure inside ab_get_or_assign_variant, you can skip this entirely.
+ */
+async function recordExposureBestEffort(supabase, {
+  experiment_key,
+  track,
+  session_id,
+  variant_key,
+  meta = {},
+  rpcName = "ab_record_exposure",
+}) {
+  try {
+    // If your ab_get_or_assign_variant already returns exposure_id, you may not need this.
+    if (!experiment_key || !variant_key) return null;
+
+    // Your earlier screenshots showed signature confusion — so keep this best-effort.
+    // Adjust params to match your real RPC signature if needed.
+    const params = {
+      p_experiment_key: experiment_key,
+      p_track: track,
+      p_session_id: session_id || null,
+      p_variant_key: variant_key,
+      p_meta: meta,
+    };
+
+    const { data, error } = await supabase.rpc(rpcName, params);
+    if (error) return null;
+
+    const row = Array.isArray(data) ? data[0] : data;
+    return row?.exposure_id || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Your mastery worker entrypoint called by /api/cron/run-mastery.js
+ * Keep it stable. It can run mastery jobs + also do AB sanity checks if you want.
+ */
+async function runMasteryWorkerOnce(supabase) {
+  // ✅ Replace this body with your real mastery processing pipeline.
+  // For Step 4B we keep it safe + testable.
+
+  // Example: AB sanity call (does NOT affect mastery)
+  // You can remove this once verified in prod.
+  const ab = await resolveAbVariant(supabase, {
+    experiment_key: "reg_home_tutor_hint_v1",
+    track: "regular",
+    session_id: null, // if you have a session_id, pass it
+  });
+
+  // Return a stable shape for your cron route
+  return {
+    processed: 0,
+    ab_check: ab,
+  };
 }
 
 module.exports = {
-  MIN_ATTEMPTS_LOCKED,
-  PROMOTION_RULES,
-  BREADTH_REQUIREMENTS,
-
-  // new helpers
-  resolveAbVariant,
-  recordAbMetric,
-
-  // entrypoint
   runMasteryWorkerOnce,
+  resolveAbVariant,
+  recordExposureBestEffort,
 };
