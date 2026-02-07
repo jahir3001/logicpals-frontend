@@ -28,16 +28,16 @@ module.exports = async function handler(req, res) {
     const auth = req.headers["authorization"];
     if (!auth || !auth.startsWith("Bearer ")) return res.status(401).send("Unauthorized");
 
-    const { experiment_key, track, session_id } = req.body || {};
+    const { experiment_key, track, session_id, debug } = req.body || {};
     if (!experiment_key) return res.status(400).send("Missing experiment_key");
     if (!track) return res.status(400).send("Missing track");
 
-    // IMPORTANT: use ANON key + forward the user's JWT so RLS/auth.uid() applies
+    // IMPORTANT: use ANON key + forward the user's JWT so auth.uid()/RLS applies
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: auth } },
     });
 
-    // 1) Assign or fetch variant (deterministic) via your RPC
+    // 1) Assign or fetch variant (deterministic)
     const { data, error } = await supabase.rpc("ab_get_or_assign_variant", {
       p_experiment_key: experiment_key,
       p_track: track,
@@ -52,10 +52,12 @@ module.exports = async function handler(req, res) {
     const row = Array.isArray(data) ? data[0] : data;
 
     // 2) Exposure logging (best-effort; MUST NOT block variant assignment)
-    // Uses your ab_log_exposure signature:
-    //   (p_experiment_id uuid, p_variant_id uuid, p_track lp_track, p_session_id uuid,
-    //    p_bucket int, p_reason text, p_source text)
+    // Your DB function signature:
+    // ab_log_exposure(uuid, uuid, lp_track, uuid, int, text, text)
+    let exposure_log = { attempted: false, ok: false };
+
     if (row && row.experiment_id && row.variant_id) {
+      exposure_log.attempted = true;
       try {
         const { error: logErr } = await supabase.rpc("ab_log_exposure", {
           p_experiment_id: row.experiment_id,
@@ -68,18 +70,24 @@ module.exports = async function handler(req, res) {
         });
 
         if (logErr) {
-          // do not fail the request; just log
           console.error("ab_log_exposure error (non-blocking):", logErr);
+          exposure_log.ok = false;
+          exposure_log.detail = logErr.message;
+        } else {
+          exposure_log.ok = true;
         }
       } catch (e) {
         console.error("ab_log_exposure exception (non-blocking):", e);
+        exposure_log.ok = false;
+        exposure_log.detail = String(e?.message || e);
       }
     }
 
-    return res.status(200).json({
-      status: "ok",
-      result: row || null,
-    });
+    // Default response stays clean; debug can show exposure_log
+    const resp = { status: "ok", result: row || null };
+    if (debug) resp.exposure_log = exposure_log;
+
+    return res.status(200).json(resp);
   } catch (e) {
     console.error("get-variant error:", e);
     return res.status(500).send("FUNCTION_INVOCATION_FAILED");
