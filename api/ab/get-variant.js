@@ -1,64 +1,90 @@
-const { createClient } = require("@supabase/supabase-js");
+import { createClient } from "@supabase/supabase-js";
 
-/**
- * Vercel API Route
- * POST /api/ab/get-variant
- *
- * Headers:
- *  - Authorization: Bearer <user_access_token>   (required)
- *
- * Body JSON:
- *  {
- *    "experiment_key": "reg_home_tutor_hint_v1",
- *    "track": "regular",
- *    "session_id": "<uuid>"   // optional but recommended
- *  }
- *
- * Env required:
- *  - SUPABASE_URL
- *  - SUPABASE_ANON_KEY
- */
-module.exports = async function handler(req, res) {
+function json(res, status, payload) {
+  res.status(status).setHeader("Content-Type", "application/json");
+  res.end(JSON.stringify(payload));
+}
+
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return json(res, 405, { status: "error", error: "Method not allowed" });
+  }
+
   try {
-    if (req.method !== "POST") return res.status(405).send("METHOD_NOT_ALLOWED");
+    const authHeader = req.headers.authorization || "";
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
 
-    if (!process.env.SUPABASE_URL) return res.status(500).send("Missing SUPABASE_URL");
-    if (!process.env.SUPABASE_ANON_KEY) return res.status(500).send("Missing SUPABASE_ANON_KEY");
-
-    const auth = req.headers["authorization"];
-    if (!auth || !auth.startsWith("Bearer ")) return res.status(401).send("Unauthorized");
-
-    const { experiment_key, track, session_id } = req.body || {};
-    if (!experiment_key) return res.status(400).send("Missing experiment_key");
-    if (!track) return res.status(400).send("Missing track");
-
-    // IMPORTANT: use ANON key + forward the user's JWT so RLS/auth.uid() applies
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: auth } },
-    });
-
-    // 1) Assign or fetch variant (deterministic) via your RPC
-    // Signature you showed: ab_get_or_assign_variant(text, lp_track, uuid)
-    const { data, error } = await supabase.rpc("ab_get_or_assign_variant", {
-      p_experiment_key: experiment_key,
-      p_track: track,
-      p_session_id: session_id || null,
-    });
-
-    if (error) {
-      console.error("ab_get_or_assign_variant error:", error);
-      return res.status(500).json({ error: "RPC_FAILED", detail: error.message });
+    if (!token) {
+      return json(res, 401, { status: "error", error: "Missing Bearer token" });
     }
 
-    // RPC usually returns a row/object; normalize
-    const row = Array.isArray(data) ? data[0] : data;
+    const { experiment_key, track, session_id } = req.body || {};
 
-    return res.status(200).json({
+    if (!experiment_key || !track) {
+      return json(res, 400, {
+        status: "error",
+        error: "Missing required fields: experiment_key, track",
+      });
+    }
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_ANON_KEY,
+      {
+        global: { headers: { Authorization: `Bearer ${token}` } },
+      }
+    );
+
+    // 1) Get / assign variant (your existing working RPC)
+    const { data: variantRows, error: variantErr } = await supabase.rpc(
+      "ab_get_or_assign_variant",
+      {
+        p_experiment_key: experiment_key,
+        p_track: track,
+        p_session_id: session_id || null,
+      }
+    );
+
+    if (variantErr) {
+      return json(res, 500, { status: "error", error: variantErr.message });
+    }
+
+    const result = Array.isArray(variantRows) ? variantRows[0] : variantRows;
+
+    if (!result) {
+      return json(res, 500, { status: "error", error: "No result from RPC" });
+    }
+
+    // 2) Best-effort exposure logging (DO NOT break main request if it fails)
+    let exposure_logged = false;
+    let exposure_error = null;
+
+    // Only log if we actually have an experiment_id (no_experiment returns null)
+    if (result.experiment_id) {
+      const { error: expErr } = await supabase.rpc("ab_log_exposure", {
+        p_experiment_id: result.experiment_id,
+        p_variant_id: result.variant_id || null,
+        p_track: track,
+        p_session_id: session_id || null,
+        p_bucket: Number.isFinite(result.bucket) ? result.bucket : 0,
+        p_reason: result.reason || "ok",
+        p_source: "api:get-variant",
+      });
+
+      if (expErr) {
+        exposure_error = expErr.message;
+      } else {
+        exposure_logged = true;
+      }
+    }
+
+    return json(res, 200, {
       status: "ok",
-      result: row || null,
+      result,
+      exposure_logged,
+      exposure_error,
     });
   } catch (e) {
-    console.error("get-variant error:", e);
-    return res.status(500).send("FUNCTION_INVOCATION_FAILED");
+    return json(res, 500, { status: "error", error: e?.message || String(e) });
   }
-};
+}
