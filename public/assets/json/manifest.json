@@ -1,0 +1,21 @@
+{
+  "name": "LogicPals AI Tutor",
+  "short_name": "LogicPals",
+  "start_url": "/dashboard.html",
+  "display": "standalone",
+  "background_color": "#EFF6FF",
+  "theme_color": "#2563EB",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/color/192/brain--v1.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://img.icons8.com/color/512/brain--v1.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
