@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogicPals - AI Critical Thinking for Kids 8-12</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563EB">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/brain--v1.png">
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js').catch(err => {
+                    console.log('Service worker registration failed:', err);
+                });
+            });
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- VARIABLES & RESET --- */
+        :root {
+            --primary-blue: #2563EB;
+            --primary-dark: #1E40AF;
+            --secondary-orange: #F59E0B;
+            --success-green: #10B981;
+            --bg-white: #FFFFFF;
+            --bg-light: #F9FAFB;
+            --bg-blue-light: #EFF6FF;
+            --text-dark: #111827;
+            --text-gray: #6B7280;
+            --text-light-gray: #9CA3AF;
+            --bg-dark: #111827;
+            --shadow-card: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-hover: 0 10px 25px rgba(0,0,0,0.15);
+            --container-width: 1200px;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, h4 {
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+        p {
+            margin-bottom: 16px;
+            color: var(--text-gray);
+        }
+        a {
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        ul {
+            list-style: none;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+        /* --- UTILITIES --- */
+        .container {
+            max-width: var(--container-width);
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .text-center { text-align: center; }
+        .text-blue { color: var(--primary-blue); }
+        .text-green { color: var(--success-green); }
+        .font-bold { font-weight: 700; }
+        .mb-1 { margin-bottom: 8px; }
+        .mb-2 { margin-bottom: 16px; }
+        .mb-4 { margin-bottom: 32px; }
+        .section-padding {
+            padding: 80px 0;
+        }
+        /* --- BUTTONS --- */
+        .btn {
+            display: inline-block;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+        }
+        .btn-primary {
+            background-color: var(--primary-blue);
+            color: white;
+            border: 2px solid var(--primary-blue);
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary-blue);
+            border: 2px solid var(--primary-blue);
+        }
+        .btn-outline:hover {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+        .btn-large {
+            padding: 18px 32px;
+            font-size: 18px;
+        }
+        .btn-full {
+            width: 100%;
+        }
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 8px;
+        }
+        /* --- SECTION 1: HEADER & HERO --- */
+        header {
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 16px 0;
+        }
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 32px;
+        }
+        .nav-links a {
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+        .nav-links a:hover { color: var(--primary-blue); }
+        .nav-buttons {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .nav-buttons a {
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+        .nav-buttons a:hover {
+            color: var(--primary-blue);
+        }
+        /* HERO UPDATES */
+        .hero {
+            background: linear-gradient(to bottom, var(--bg-blue-light), #ffffff);
+            padding: 80px 0 100px;
+        }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 6fr 4fr;
+            gap: 60px;
+            align-items: center;
+        }
+        .hero-headline {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 24px;
+            line-height: 1.1;
+        }
+        .hero-subhead {
+            font-size: 20px;
+            color: var(--text-gray);
+            margin-bottom: 40px;
+        }
+        .hero-cta-group {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+        .trust-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            font-size: 14px;
+            color: var(--text-gray);
+        }
+        .trust-item span {
+            color: var(--success-green);
+            font-weight: bold;
+            margin-right: 4px;
+        }
+        /* --- SECTION 2: PROBLEM --- */
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            margin-top: 60px;
+        }
+        .problem-card {
+            text-align: left;
+        }
+        .emoji-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            display: inline-block;
+            background: var(--bg-light);
+            width: 80px;
+            height: 80px;
+            line-height: 80px;
+            text-align: center;
+            border-radius: 50%;
+        }
+        /* --- SECTION 3: SOLUTION --- */
+        .solution-section {
+            background-color: var(--bg-light);
+        }
+        .process-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            margin: 60px 0;
+        }
+        .process-card {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-card);
+            position: relative;
+        }
+        .step-badge {
+            width: 50px;
+            height: 50px;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+        .video-placeholder {
+            background: #111;
+            height: 450px;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            position: relative;
+        }
+        .play-btn {
+            font-size: 60px;
+            margin-bottom: 16px;
+            opacity: 0.8;
+            transition: 0.3s;
+        }
+        .video-placeholder:hover .play-btn { opacity: 1; transform: scale(1.1); }
+        /* --- SECTION 4: BENEFITS --- */
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            margin-top: 60px;
+        }
+        .benefit-header {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .benefit-list-item {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .check-icon {
+            color: var(--success-green);
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+        /* --- SECTION 5: TESTIMONIALS --- */
+        .testimonials-section {
+            background-color: var(--bg-blue-light);
+        }
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            margin-top: 60px;
+        }
+        .testimonial-card {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-card);
+        }
+        .stars { color: var(--secondary-orange); letter-spacing: 2px; margin-bottom: 16px; }
+        .quote { font-style: italic; margin-bottom: 24px; font-size: 16px; }
+        .author-name { font-weight: 700; color: var(--text-dark); }
+        .author-detail { font-size: 13px; color: var(--text-gray); }
+        /* --- SECTION 6: PRICING (2-COLUMN LAYOUT) --- */
+        .pricing-2-col-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.1fr;
+            gap: 32px;
+            max-width: 1000px;
+            margin: 60px auto 0;
+            align-items: start;
+        }
+        .pricing-card {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 32px;
+            position: relative;
+            transition: transform 0.3s;
+        }
+        .pricing-card.popular {
+            border: 3px solid var(--primary-blue);
+            box-shadow: var(--shadow-hover);
+            transform: scale(1.02);
+            z-index: 2;
+        }
+        .badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--secondary-orange);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .badge-blue { background: var(--primary-blue); }
+        .price-tag {
+            font-size: 40px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 16px 0 8px;
+        }
+        .price-features {
+            margin: 24px 0;
+            text-align: left;
+        }
+        .price-features li {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: start;
+            gap: 10px;
+            font-size: 15px;
+        }
+        /* New Specific Pricing Elements */
+        .pricing-option-row {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .pricing-sub-option {
+            flex: 1;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .pricing-sub-option.highlight {
+            border: 2px solid var(--success-green);
+            background-color: #F0FDF4;
+            position: relative;
+        }
+        .save-badge-small {
+            background: var(--success-green);
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 12px;
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+        .sub-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 8px 0;
+        }
+        .daily-breakdown {
+            font-size: 13px;
+            color: var(--text-gray);
+            text-align: center;
+            margin-top: 12px;
+            font-style: italic;
+        }
+        .comparison-text {
+            font-size: 14px;
+            text-align: center;
+            color: var(--text-gray);
+            margin-bottom: 16px;
+        }
+        .trust-badges-row {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-top: 48px;
+            font-size: 14px;
+            color: var(--text-gray);
+        }
+        /* --- SECTION 7: FAQ --- */
+        .faq-section {
+            background-color: var(--bg-light);
+        }
+        .faq-container {
+            max-width: 800px;
+            margin: 60px auto 0;
+        }
+        .faq-item {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .faq-question {
+            padding: 24px;
+            font-weight: 700;
+            color: var(--text-dark);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+        .faq-question:hover { background-color: #fdfdfd; }
+        .faq-answer {
+            padding: 0 24px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            color: var(--text-gray);
+        }
+        .faq-item.active .faq-answer {
+            padding: 0 24px 24px;
+            max-height: 500px;
+        }
+        .faq-icon {
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+        .faq-item.active .faq-icon { transform: rotate(45deg); }
+        /* --- SECTION 8: RISK REVERSAL --- */
+        .risk-box {
+            background: var(--bg-blue-light);
+            border: 1px solid #bfdbfe;
+            border-radius: 16px;
+            padding: 48px;
+            max-width: 900px;
+            margin: 40px auto 0;
+            text-align: center;
+        }
+        /* --- SECTION 9: FINAL CTA --- */
+        .cta-section {
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark));
+            color: white;
+            padding: 100px 0;
+        }
+        .cta-subhead {
+            color: rgba(255,255,255,0.9);
+            font-size: 20px;
+            max-width: 800px;
+            margin: 0 auto 40px;
+        }
+        .cta-btn-large {
+            background: white;
+            color: var(--primary-blue);
+            font-size: 20px;
+            padding: 20px 40px;
+            border-radius: 50px;
+            border: none;
+            font-weight: 700;
+            margin-bottom: 32px;
+            cursor: pointer;
+        }
+        .cta-btn-large:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .cta-trust {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 24px;
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+        /* --- SECTION 10: FOOTER --- */
+        footer {
+            background: var(--bg-dark);
+            color: var(--text-light-gray);
+            padding: 60px 0 20px;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid #374151;
+        }
+        .footer-col h4 { color: white; margin-bottom: 20px; font-size: 16px; }
+        .footer-col ul li { margin-bottom: 12px; }
+        .footer-col a { color: var(--text-light-gray); font-size: 14px; }
+        .footer-col a:hover { color: white; }
+        .footer-bottom {
+            padding-top: 40px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .social-icons {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .social-icons span { margin: 0 10px; cursor: pointer; }
+        .social-icons span:hover { color: white; }
+
+        /* Leaderboard Banner Styles */
+        .leaderboard-banner {
+            background: #F0F9FF;
+            border-bottom: 1px solid #E0F2FE;
+            padding: 20px 0;
+        }
+        .leaderboard-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .leaderboard-title {
+            font-weight: 700;
+            color: #0369A1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .leaderboard-schools {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        .school-pill {
+            background: white;
+            border: 1px solid #BAE6FD;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #0C4A6E;
+            white-space: nowrap;
+        }
+        .school-points {
+            color: #0EA5E9;
+            margin-left: 4px;
+        }
+        .join-link {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2563EB;
+            text-decoration: underline;
+        }
+        
+        /* --- RESPONSIVENESS --- */
+        @media (max-width: 1024px) {
+            .pricing-card.popular { transform: scale(1); }
+        }
+        @media (max-width: 768px) {
+            .section-padding { padding: 50px 0; }
+            h1.hero-headline { font-size: 32px; }
+            h2 { font-size: 28px; }
+            .nav-links { display: none; }
+            .hero-grid, .problem-grid, .process-grid, .benefits-grid, .testimonial-grid, .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            .pricing-2-col-grid {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+            }
+            .pricing-option-row {
+                flex-direction: column;
+            }
+            .pricing-card.popular {
+                transform: none;
+                order: -1;
+            }
+            .hero-grid { display: flex; flex-direction: column; }
+            .hero-illustration { order: -1; width: 100%; }
+            .risk-box { padding: 24px; }
+            .cta-btn-large { width: 100%; padding: 16px 20px; font-size: 18px; border-radius: 12px; }
+            .hero-cta-group { flex-direction: column; width: 100%; }
+            .hero-cta-group .btn { width: 100%; }
+            .process-grid { gap: 40px; }
+            .leaderboard-content {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+    </style>
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header>
+        <div class="container nav-container">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="32" height="32" rx="8" fill="#2563EB"/>
+                    <path d="M10 10H14V22H22V10H26" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+                LogicPals
+            </div>
+            <nav class="nav-links">
+                <a href="#how-it-works">How It Works</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#faq">FAQ</a>
+            </nav>
+            <div class="nav-buttons">
+                <a href="login.html">Login</a>
+                <a href="signup.html" class="btn btn-primary">Try Free for 7 Days</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container hero-grid">
+            <div class="hero-content">
+                <h1 class="hero-headline">Your Child Can Solve Problems They've Never Seen Before</h1>
+                <p class="hero-subhead">While other kids panic on unfamiliar questions, yours will confidently figure them out. Our AI teaches the thinking skills schools don't—in just 15 minutes a day.</p>
+                
+                <div style="background: white; padding: 24px; border-radius: 12px; border-left: 5px solid #F59E0B; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 32px; text-align: left;">
+                    <div style="font-size: 12px; font-weight: 800; color: #D97706; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">🔍 Try This Mystery</div>
+                    <p style="font-size: 18px; font-weight: 700; color: #1F2937; margin-bottom: 0; line-height: 1.4;">"I am an odd number. Take away a letter and I become even. What number am I?"</p>
+                </div>
+
+                <div class="hero-cta-group">
+                    <a href="signup.html" class="btn btn-primary btn-large">Try Free for 7 Days</a>
+                    <button class="btn btn-outline btn-large" onclick="document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})">Watch 2-Min Demo ↓</button>
+                </div>
+
+                <div class="trust-row">
+                    <div class="trust-item"><span>✓</span> Unlimited Practice Problems</div>
+                    <div class="trust-item"><span>✓</span> Used by 500+ Bangladesh Families</div>
+                    <div class="trust-item"><span>✓</span> No Credit Card • Cancel Anytime</div>
+                </div>
+            </div>
+            <div class="hero-illustration">
+                <img src="https://placehold.co/500x500/EFF6FF/2563EB?text=Child+Learning+Happily" alt="Child learning critical thinking with LogicPals">
+            </div>
+        </div>
+    </section>
+
+    <!-- FIXED: Live School Leaderboard Banner -->
+    <section class="leaderboard-banner">
+        <div class="container leaderboard-content">
+            <div class="leaderboard-title">
+                <span style="font-size: 20px;">🏆</span> TOP SCHOOLS LIVE:
+            </div>
+            
+            <div id="publicLeaderboard" class="leaderboard-schools">
+                <span style="color: #64748B;">Loading rankings...</span>
+            </div>
+            
+            <a href="signup.html" class="join-link">
+                Get your school on the list →
+            </a>
+        </div>
+    </section>
+
+    <section class="section-padding">
+        <div class="container">
+            <div class="text-center">
+                <h2>Your Child Gets A's on Practice Tests... <br>Then Fails When Questions Change</h2>
+                <p>Sound familiar? Here's why it happens:</p>
+            </div>
+            <div class="problem-grid">
+                <div class="problem-card text-center">
+                    <span class="emoji-icon">📚</span>
+                    <h3>Schools Teach Formulas, Not Thinking</h3>
+                    <p>Your child memorizes 'a² + b² = c²' but can't figure out if a ladder is safe. They know the formula but not when or why to use it.</p>
+                </div>
+                <div class="problem-card text-center">
+                    <span class="emoji-icon">😰</span>
+                    <h3>One Small Change = Complete Confusion</h3>
+                    <p>Exam question changes from apples to mangoes? Suddenly your child doesn't know what to do. They memorized the example, not the thinking process.</p>
+                </div>
+                <div class="problem-card text-center">
+                    <span class="emoji-icon">💸</span>
+                    <h3>৳10,000/Mo on Tutors Who Just Give Answers</h3>
+                    <p>Three tutors later and your child still asks 'Will this exact type be on the exam?' Because tutors solve FOR them instead of teaching them to solve THEMSELVES.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="section-padding solution-section">
+        <div class="container">
+            <div class="text-center mb-4">
+                <h2>What If Your Child Could Think Through ANY Problem?</h2>
+                <p style="max-width: 800px; margin: 0 auto;">LogicPals uses the 2,400-year-old Socratic method—asking smart questions that guide your child to discover solutions themselves.</p>
+            </div>
+            <div class="process-grid">
+                <div class="process-card">
+                    <div class="step-badge">1</div>
+                    <h3>Pick a Mystery to Solve</h3>
+                    <p>Adaptive curriculum that grows with your child. Fresh problems added weekly!</p>
+                </div>
+                <div class="process-card">
+                    <div class="step-badge">2</div>
+                    <h3>Think With an AI That Never Gets Impatient</h3>
+                    <p>Stuck? Our AI asks guiding questions like "What do you already know?" No pressure. No judgment. Just thinking.</p>
+                </div>
+                <div class="process-card">
+                    <div class="step-badge">3</div>
+                    <h3>Watch Confidence Build</h3>
+                    <p>Track exact thinking patterns. Watch them go from "I don't know" to "Let me figure it out." Parents say grades improve within 2-3 weeks.</p>
+                </div>
+            </div>
+            <div class="video-placeholder">
+                <div class="play-btn">▶</div>
+                <p>Watch How It Works (2 minutes)</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding">
+        <div class="container">
+            <div class="text-center">
+                <h2>Your Child Will Actually ASK to Practice Math</h2>
+                <p>Sounds impossible? Here's what makes LogicPals different:</p>
+            </div>
+            <div class="benefits-grid">
+                <div>
+                    <div class="benefit-header">
+                        <span>🎮</span> FOR KIDS
+                    </div>
+                    <div class="benefit-list-item">
+                        <div class="check-icon">✓</div>
+                        <div>
+                            <h4 class="mb-1">Feels Like Solving Mysteries, Not Doing Homework</h4>
+                            <p class="mb-0" style="font-size: 14px;">Finally, math that doesn't feel boring.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-list-item">
+                        <div class="check-icon">✓</div>
+                        <div>
+                            <h4 class="mb-1">The AI Never Gets Frustrated With Them</h4>
+                            <p class="mb-0" style="font-size: 14px;">Ask questions 100 times—it stays patient and kind.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-list-item">
+                        <div class="check-icon">✓</div>
+                        <div>
+                            <h4 class="mb-1">They Get to Figure Things Out Themselves</h4>
+                            <p class="mb-0" style="font-size: 14px;">That "Aha!" moment when they crack it? Pure confidence.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-list-item">
+                        <div class="check-icon">✓</div>
+                        <div>
+                            <h4 class="mb-1">Practice at Midnight If They Want</h4>
+                            <p class="mb-0" style="font-size: 14px;">Learning that fits their schedule, not the tutor's.</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="benefit-header">
+                        <span>📊</span> FOR PARENTS
+                    </div>
+                    <div class="benefit-list-item">
+                        <div class="check-icon">✓</div>
+                        <div>
+                            <h4 class="mb-1">See the Exact Moment They Make a Logical Leap</h4>
+                            <p class="mb-0" style="font-size: 14px;">Dashboard shows their thinking process, not just right/wrong.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-list-item">
+                        <div class="check-icon">✓</div>
+                        <div>
+                            <h4 class="mb-1">Stop Spending ৳10,000/Month on Tutors</h4>
+                            <p class="mb-0" style="font-size: 14px;">Get better results for ৳299/mo. Save ৳100,000+ yearly.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-list-item">
+                        <div class="check-icon">✓</div>
+                        <div>
+                            <h4 class="mb-1">Works With Whatever Your School Teaches</h4>
+                            <p class="mb-0" style="font-size: 14px;">NCTB, Cambridge, American—the thinking skills transfer.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-list-item">
+                        <div class="check-icon">✓</div>
+                        <div>
+                            <h4 class="mb-1">Your Child Learns Even When You're Working</h4>
+                            <p class="mb-0" style="font-size: 14px;">No scheduling. No driving. Just open and learn.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="section-padding testimonials-section">
+        <div class="container">
+            <div class="text-center">
+                <h2>What Parents Are Saying ❤️</h2>
+                <p>Real families. Real transformations. Real results.</p>
+            </div>
+            <div class="testimonial-grid">
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <p class="quote">"My son asked to do 'one more mystery' before bed. That's NEVER happened with math homework!"</p>
+                    <div class="author-name">Ayesha</div>
+                    <div class="author-detail">Mother of 9-year-old • Dhanmondi</div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <p class="quote">"The AI is more patient than me! 😅 It guides him without giving the answer. Amazing."</p>
+                    <div class="author-name">Karim</div>
+                    <div class="author-detail">Father of 11-year-old • Gulshan</div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <p class="quote">"My daughter said 'Let me try three different ways.' WHAT?! LogicPals taught her to be a problem-solver."</p>
+                    <div class="author-name">Nusrat Ahmed</div>
+                    <div class="author-detail">Mother of 10-year-old • Uttara</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricing" class="section-padding">
+        <div class="container">
+            <div class="text-center">
+                <h2>Get Started for Free. Pay Only If Your Child Loves It.</h2>
+                <p>7-day free trial. No credit card. No pressure.</p>
+            </div>
+            <div class="pricing-2-col-grid">
+                <div class="pricing-card" style="border-top: 4px solid #E5E7EB;">
+                    <h3 style="font-size: 24px; margin-bottom: 8px;">Free 7-Day Trial</h3>
+                    <div class="price-tag">৳0</div>
+                    <p style="font-size: 14px; color: var(--text-gray); margin-top: -8px;">No credit card required</p>
+                    <div style="margin: 32px 0;">
+                        <a href="signup.html" class="btn btn-primary btn-full">Try Free for 7 Days</a>
+                    </div>
+                    <ul class="price-features">
+                        <li><span class="text-green">✓</span> Full unlimited access for 7 days</li>
+                        <li><span class="text-green">✓</span> Try 30+ problems across all levels</li>
+                        <li><span class="text-green">✓</span> Complete AI Socratic tutor</li>
+                        <li><span class="text-green">✓</span> Parent dashboard with insights</li>
+                        <li><span class="text-green">✓</span> See results in 2-3 sessions</li>
+                        <li><span class="text-green">✓</span> Zero commitment. Cancel anytime.</li>
+                    </ul>
+                </div>
+                <div class="pricing-card popular" style="border-top: none;">
+                    <div class="badge badge-blue">Most Popular - Save ৳1,089 with Yearly!</div>
+                    <h3 style="text-align: center; font-size: 28px; color: var(--primary-blue);">Premium</h3>
+                    <div class="comparison-text">
+                        vs <span style="text-decoration: line-through;">৳10,000/mo</span> for tutors<br>
+                        <span class="text-green font-bold">Save ৳116,000/year!</span>
+                    </div>
+                    <div class="pricing-option-row">
+                        <div class="pricing-sub-option">
+                            <span style="font-size: 14px; font-weight: 600;">Monthly</span>
+                            <div class="sub-price">৳299<span style="font-size: 12px; font-weight: 400;">/mo</span></div>
+                            <div style="font-size: 12px; color: #9CA3AF; margin-bottom: 8px;">Billed monthly</div>
+                            <a href="signup.html" class="btn btn-outline btn-small">Start Monthly</a>
+                        </div>
+                        <div class="pricing-sub-option highlight">
+                            <div class="save-badge-small">SAVE 30%</div>
+                            <span style="font-size: 14px; font-weight: 600; color: var(--success-green);">Yearly</span>
+                            <div class="sub-price">৳2,499<span style="font-size: 12px; font-weight: 400;">/yr</span></div>
+                            <div style="font-size: 12px; color: var(--success-green); font-weight: 700; margin-bottom: 8px;">Just ৳208/mo</div>
+                            <a href="signup.html" class="btn btn-primary btn-small">Pay Yearly</a>
+                        </div>
+                    </div>
+                    <div class="daily-breakdown">That's only ৳10/day - less than a coffee!</div>
+                    <hr style="border: 0; border-top: 1px solid #E5E7EB; margin: 24px 0;">
+                    <ul class="price-features">
+                        <li><span class="text-green">✓</span> <strong>Never runs out of new challenges</strong></li>
+                        <li><span class="text-green">✓</span> Unlimited AI Socratic tutoring</li>
+                        <li><span class="text-green">✓</span> New problems added weekly</li>
+                        <li><span class="text-green">✓</span> Advanced thinking-pattern analytics</li>
+                        <li><span class="text-green">✓</span> Complete parent dashboard</li>
+                        <li><span class="text-green">✓</span> Progress tracking across all topics</li>
+                        <li><span class="text-green">✓</span> Priority email support (24-hr)</li>
+                        <li><span class="text-green">✓</span> Cancel anytime with one click</li>
+                        <li><span class="text-green">✓</span> 1 child account included</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="trust-badges-row">
+                <div>💳 Bank-Level Secure Payment (SSL)</div>
+                <div>✅ Cancel With One Click</div>
+                <div>🔒 30-Day Money-Back Guarantee</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="faq" class="section-padding faq-section">
+        <div class="container">
+            <div class="text-center">
+                <h2>Questions Parents Ask Before Starting</h2>
+                <p>We've answered everything. Still have questions? Email us!</p>
+            </div>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        Will this really work for MY child? They're struggling.
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Yes. Especially if they're struggling. LogicPals is designed for children who find traditional methods difficult. The AI adapts to their pace, never judges mistakes, and breaks problems into smaller steps. Parents of struggling students report the MOST dramatic improvements.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        My child is already good at math. Will they be bored?
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Quite the opposite! Being good at memorizing ≠ being good at thinking. LogicPals challenges even high-performing students with problems that require creative thinking, not just formula application.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        We already have a tutor. Why would we need this too?
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>LogicPals doesn't replace tutors—it makes them more effective. LogicPals is available 24/7, costs 90% less, and NEVER gives direct answers—forcing real thinking.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        How much time does my child need per day?
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Just 15-20 minutes daily! Consistent short practice is more effective than long, infrequent sessions. Think of it like exercise—20 minutes every day beats 2 hours once a week.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        Do you support Bengali language?
+                        <span class="faq-icon">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Yes! LogicPals works in both English and Bengali. Children can switch between languages as they prefer.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding">
+        <div class="container">
+            <div class="text-center">
+                <h2>Still Not Sure? Here's Our Promise.</h2>
+            </div>
+            <div class="risk-box">
+                <p style="font-size: 18px; line-height: 1.8; color: var(--text-dark);">
+                    Try LogicPals free for 7 days. No credit card needed.<br>
+                    If your child isn't excited after 3 sessions, don't continue.<br><br>
+                    If you subscribe and aren't 100% satisfied within 30 days, email us. We'll refund every taka, no questions asked.
+                    Why are we this confident? Because <span class="text-blue font-bold">91% of parents</span> who try the free trial become paying customers.
+                    And <span class="text-blue font-bold">94% stay for 6+ months</span>.<br><br>
+                    The worst that can happen? You get 7 days of free learning.<br>
+                    The best that can happen? Your child discovers they're capable of so much more.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-padding" style="background-color: #111827; color: white;">
+        <div class="container">
+            <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+                <h2 style="color: #F59E0B; margin-bottom: 30px;">Why I Built LogicPals 🧠</h2>
+                <div style="text-align: left; font-size: 18px; line-height: 1.8; color: #D1D5DB;">
+                    <p>"As a parent, I watched my child memorize formulas perfectly but panic when exam questions changed slightly.</p>
+                    <p>I realized: Schools teach <strong>WHAT</strong> to think, not <strong>HOW</strong> to think.</p>
+                    <p>So I built LogicPals - an AI tutor that never gives answers, only asks questions that guide children to discover solutions themselves.</p>
+                    <p>That's the Socratic Method. And it works."</p>
+                </div>
+                <div style="margin-top: 30px; font-weight: 700; font-size: 20px; text-align: right; color: white;">
+                    - Jahir, Founder
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="container text-center">
+            <h2 style="font-size: 40px; margin-bottom: 24px;">Your Child Deserves to Feel Smart</h2>
+            <p class="cta-subhead">500+ Bangladesh families have already seen the transformation. Try LogicPals free for 7 days.</p>
+            <a href="signup.html" class="btn btn-primary cta-btn-large">Try Free for 7 Days</a>
+            <div class="cta-trust">
+                <span>✓ Full access for 7 days</span>
+                <span>✓ No credit card needed</span>
+                <span>✓ Cancel in one click</span>
+            </div>
+            <div style="font-size: 14px; opacity: 0.8;">
+                Have questions? Email: hello@logicpals.com
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="logo" style="color: white; margin-bottom: 16px;">
+                        🧠 LogicPals
+                    </div>
+                    <p style="font-size: 14px;">Building critical thinkers, one problem at a time. Empowering children in Bangladesh to solve the unsolvable.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>About</h4>
+                    <ul>
+                        <li><a href="#">Our Story</a></li>
+                        <li><a href="#">Our Mission</a></li>
+                        <li><a href="#">Team</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li><a href="#faq">FAQs</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 LogicPals. All rights reserved.</p>
+                <p>Made with 💙 in Bangladesh for children worldwide.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // FAQ Accordion
+        const faqItems = document.querySelectorAll('.faq-item');
+        faqItems.forEach(item => {
+            const question = item.querySelector('.faq-question');
+            question.addEventListener('click', () => {
+                faqItems.forEach(otherItem => {
+                    if (otherItem !== item && otherItem.classList.contains('active')) {
+                        otherItem.classList.remove('active');
+                    }
+                });
+                item.classList.toggle('active');
+            });
+        });
+
+        // Smooth Scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if(targetId === '#') return;
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    const headerOffset = 80;
+                    const elementPosition = targetElement.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: "smooth"
+                    });
+                }
+            });
+        });
+
+        // FIXED: Live Leaderboard
+        const { createClient } = supabase;
+        const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
+        const sb = createClient(supabaseUrl, supabaseKey);
+
+        async function fetchLiveRankings() {
+            try {
+                const { data: schools, error } = await sb
+                    .from('school_leaderboard')
+                    .select('*')
+                    .order('total_points', { ascending: false })
+                    .limit(3);
+
+                const board = document.getElementById('publicLeaderboard');
+
+                if (error || !schools || schools.length === 0) {
+                    board.innerHTML = '<span style="color: #64748B;">Join now to rank your school!</span>';
+                    return;
+                }
+
+                let html = '';
+                const medals = ['🥇', '🥈', '🥉'];
+                
+                schools.forEach((school, index) => {
+                    const icon = medals[index] || '🏅';
+                    html += `
+                        <div class="school-pill">
+                            ${icon} ${school.school_name} 
+                            <span class="school-points">(${school.total_points} pts)</span>
+                        </div>
+                    `;
+                });
+                
+                board.innerHTML = html;
+            } catch (err) {
+                console.error('Leaderboard error:', err);
+                document.getElementById('publicLeaderboard').innerHTML = 
+                    '<span style="color: #64748B;">Join now to rank your school!</span>';
+            }
+        }
+
+        // Run on page load
+        fetchLiveRankings();
+    </script>
+</body>
+</html>
