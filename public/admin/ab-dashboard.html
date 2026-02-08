@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>LogicPals — A/B Dashboard</title>
+    <style>
+      body { font-family: system-ui; padding: 16px; }
+      .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+      input, select, button { padding: 8px; }
+      pre { background:#111; color:#0f0; padding:12px; overflow:auto; border-radius: 10px; }
+      .card { border:1px solid #ddd; border-radius:12px; padding:12px; min-width:160px; }
+      .muted { opacity:.7; font-size:12px; }
+      .err { color: crimson; }
+      a { color: #2563eb; font-weight: 700; text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <div style="margin-bottom:10px;">
+      <a href="admin.html">← Back to Admin</a>
+    </div>
+
+    <h1>A/B Dashboard</h1>
+
+    <div class="row">
+      <label>Experiment key
+        <input id="experimentKey" value="reg_home_tutor_hint_v1" style="min-width:280px; margin-left:8px;" />
+      </label>
+
+      <label>Track
+        <select id="track" style="margin-left:8px;">
+          <option value="regular" selected>regular</option>
+          <option value="olympiad">olympiad</option>
+        </select>
+      </label>
+
+      <label>Days
+        <input id="days" type="number" value="14" min="1" max="90" style="width:90px; margin-left:8px;" />
+      </label>
+
+      <button id="refreshBtn">Refresh</button>
+    </div>
+
+    <div id="msg" style="margin-top:12px;"></div>
+
+    <h2 style="margin-top:20px;">Latest</h2>
+    <div class="row" id="cards"></div>
+
+    <h2 style="margin-top:20px;">Variant summary (7d)</h2>
+    <pre id="summary7d">[]</pre>
+
+    <h2 style="margin-top:20px;">Lift (7d)</h2>
+    <pre id="lift7d">[]</pre>
+
+    <script>
+      function setMsg(html) { document.getElementById("msg").innerHTML = html || ""; }
+
+      async function getJwt() {
+        // Set by admin-login.html after successful admin sign-in
+        return localStorage.getItem("lp_access_token");
+      }
+
+      function renderCards(latestRow) {
+        const cards = document.getElementById("cards");
+        cards.innerHTML = "";
+        const items = [
+          ["Variant", latestRow?.variant_key ?? "unknown"],
+          ["Exposures", latestRow?.exposures ?? 0],
+          ["Unique users", latestRow?.unique_users ?? latestRow?.unique_users_7d ?? 0],
+          ["Updated", latestRow?.updated_at ?? "-"],
+        ];
+        for (const [t,v] of items) {
+          const div = document.createElement("div");
+          div.className = "card";
+          div.innerHTML = `<div class="muted">${t}</div><div style="font-size:18px;font-weight:600;margin-top:6px;">${String(v)}</div>`;
+          cards.appendChild(div);
+        }
+      }
+
+      async function load() {
+        setMsg("Loading…");
+
+        const jwt = await getJwt();
+        if (!jwt) {
+          setMsg(`<div class="err">Not logged in as admin. Please login via <a href="../admin-login.html">admin-login.html</a>.</div>`);
+          return;
+        }
+
+        const experiment_key = document.getElementById("experimentKey").value.trim();
+        const track = document.getElementById("track").value;
+        const days = Number(document.getElementById("days").value || 14);
+
+        const res = await fetch("/api/ab/admin-bundle", {
+          method: "POST",
+          headers: { "Content-Type":"application/json", "Authorization": "Bearer " + jwt },
+          body: JSON.stringify({ experiment_key, track, days })
+        });
+
+        const json = await res.json().catch(()=> ({}));
+        if (!res.ok) {
+          setMsg(`<div class="err">${json?.detail || json?.error || "Failed"}</div>`);
+          return;
+        }
+
+        const data = json.data || {};
+        const latestRow = (data.latest && data.latest[0]) ? data.latest[0] : null;
+
+        renderCards(latestRow);
+        document.getElementById("summary7d").textContent = JSON.stringify(data.variant_summary_7d || [], null, 2);
+        document.getElementById("lift7d").textContent = JSON.stringify(data.lift_7d || [], null, 2);
+
+        setMsg(`<div>OK ✅</div>`);
+      }
+
+      document.getElementById("refreshBtn").addEventListener("click", load);
+      load();
+    </script>
+  </body>
+</html>
