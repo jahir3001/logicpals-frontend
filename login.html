@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - LogicPals</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563EB">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/brain--v1.png">
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js');
+            });
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/api/env"></script>
+
+    <style>
+        :root { --primary: #2563EB; --bg: #EFF6FF; --text: #111827; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        
+        .card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+        h1 { color: var(--text); text-align: center; margin-bottom: 8px; }
+        .subtitle { text-align: center; color: #6B7280; margin-bottom: 30px; font-size: 14px; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: #374151; }
+        input { width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 16px; transition: 0.2s; }
+        input:focus { border-color: var(--primary); outline: none; ring: 2px solid #BFDBFE; }
+        
+        .btn { width: 100%; background: var(--primary); color: white; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .btn:hover { background: #1D4ED8; }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        .footer-link { text-align: center; margin-top: 20px; font-size: 14px; color: #6B7280; }
+        .footer-link a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        
+        .error { color: #EF4444; font-size: 14px; text-align: center; margin-top: 15px; display: none; background: #FEF2F2; padding: 10px; border-radius: 6px; }
+    </style></head>
+<body>
+
+    <div class="card">
+        <h1>Welcome Back 👋</h1>
+        <p class="subtitle">Log in to continue your learning journey.</p>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" required placeholder="parent@example.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" required placeholder="******">
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn">Log In</button>
+            <div class="error" id="errorMessage"></div>
+
+            <div class="footer-link">
+                Don't have an account? <a href="signup.html">Sign Up Free</a>
+            </div>
+            <div class="footer-link" style="margin-top: 10px;">
+                <a href="index.html">← Back to Home</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const { SUPABASE_URL: supabaseUrl, SUPABASE_ANON_KEY: supabaseAnonKey } = window.__LP_ENV || {};
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Missing Supabase config. Ensure /api/env is deployed and reachable.');
+    }
+        // PASTE YOUR KEY BELOW
+        
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const err = document.getElementById('errorMessage');
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            btn.innerText = "Logging in...";
+            btn.disabled = true;
+            err.style.display = 'none';
+
+            try {
+                // Supabase Login Logic
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                // Success! Go to Dashboard
+                window.location.href = "dashboard.html";
+
+            } catch (error) {
+                console.error(error);
+                err.innerText = "Login Failed: " + error.message;
+                err.style.display = 'block';
+                btn.innerText = "Log In";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
