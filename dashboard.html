@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LogicPals Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/api/env"></script>
+  <style>
+    :root{
+      --bg:#f3f4f6;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#e5e7eb;
+      --primary:#4f46e5;
+      --good:#16a34a;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --r:18px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:var(--bg); color:var(--text);}
+    header{
+      position:sticky; top:0; z-index:20;
+      background:rgba(255,255,255,.85);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--line);
+    }
+    .bar{max-width:1200px; margin:0 auto; padding:14px 16px; display:flex; gap:12px; align-items:center; justify-content:space-between}
+    .brand{display:flex; align-items:center; gap:10px}
+    .logo{width:40px; height:40px; border-radius:14px; display:grid; place-items:center; background:linear-gradient(135deg, #4f46e5, #22c55e); color:white; font-weight:900}
+    .brand h1{font-size:16px; margin:0}
+    .brand p{margin:0; color:var(--muted); font-size:12px}
+    .right{display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end}
+    .pill{padding:8px 12px; border-radius:999px; background:#fff; border:1px solid var(--line); color:var(--muted); font-size:12px}
+    .btn{
+      border:1px solid var(--line); background:#fff; color:var(--text);
+      padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:700;
+      transition:.12s ease;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn.primary{background:rgba(79,70,229,.10); border-color:rgba(79,70,229,.25); color:#312e81}
+    .btn.ghost{background:transparent}
+    .wrap{max-width:1200px; margin:0 auto; padding:18px 16px 60px}
+    .hero{display:grid; grid-template-columns: 1.4fr .6fr; gap:14px; margin-top:14px}
+    @media (max-width: 900px){ .hero{grid-template-columns:1fr} }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--r);
+      padding:16px;
+      box-shadow:0 10px 22px rgba(15,23,42,.05);
+    }
+    .card h2{margin:0 0 8px; font-size:14px}
+    .sub{margin:0; color:var(--muted); font-size:12px; line-height:1.5}
+    .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:12px}
+    @media (max-width: 900px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+    .kpi{border:1px solid var(--line); border-radius:16px; padding:12px}
+    .kpi .v{font-weight:900; font-size:18px}
+    .kpi .t{color:var(--muted); font-size:12px; margin-top:3px}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    @media (max-width: 900px){ .row{grid-template-columns:1fr} }
+    .select{
+      width:100%;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      font-weight:600;
+    }
+    .cta{
+      display:flex; gap:10px; flex-wrap:wrap; margin-top:12px
+    }
+    .tag{
+      display:inline-flex; gap:6px; align-items:center;
+      padding:6px 10px; border-radius:999px; font-size:12px; font-weight:700;
+      border:1px solid var(--line); background:#fff; color:var(--muted)
+    }
+    .tag.good{border-color:rgba(22,163,74,.25); color:var(--good); background:rgba(22,163,74,.06)}
+    .tag.warn{border-color:rgba(245,158,11,.25); color:var(--warn); background:rgba(245,158,11,.06)}
+    .tag.bad{border-color:rgba(239,68,68,.25); color:var(--bad); background:rgba(239,68,68,.06)}
+    .list{margin-top:10px; display:grid; gap:10px}
+    .item{border:1px solid var(--line); border-radius:16px; padding:12px}
+    .item .t{font-weight:800; margin:0 0 4px; font-size:13px}
+    .item .d{margin:0; color:var(--muted); font-size:12px; line-height:1.45}
+    .notice{
+      margin-top:12px; padding:12px; border-radius:16px;
+      border:1px dashed rgba(79,70,229,.35);
+      background:rgba(79,70,229,.06);
+      color:#1e1b4b;
+      font-size:12px;
+      line-height:1.5;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand">
+      <div class="logo">LP</div>
+      <div>
+        <h1>Dashboard</h1>
+        <p>Regular practice • Habits • Progress</p>
+      </div>
+    </div>
+    <div class="right">
+      <span class="pill" id="who">Checking session…</span>
+      <button class="btn ghost" id="btnSignOut">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="card">
+      <h2>Today’s Regular Plan</h2>
+      <p class="sub">A short, high-quality session designed to build daily thinking habits (Regular track). Olympiad remains separate.</p>
+
+      <div class="kpis" id="kpis">
+        <div class="kpi"><div class="v">—</div><div class="t">Sessions completed</div></div>
+        <div class="kpi"><div class="v">—</div><div class="t">Accuracy (7d)</div></div>
+        <div class="kpi"><div class="v">—</div><div class="t">Time spent (7d)</div></div>
+        <div class="kpi"><div class="v">—</div><div class="t">Current streak</div></div>
+      </div>
+
+      <div class="cta">
+        <button class="btn primary" id="btnStartRegular">Start regular practice</button>
+        <a class="btn" href="/learn.html" style="text-decoration:none">Open Learn</a>
+        <a class="btn" href="/olympiad.html" style="text-decoration:none">Go to Olympiad</a>
+      </div>
+
+      <div class="notice">
+        <b>Trust note:</b> This dashboard never reads Olympiad-only data. All summaries must come from Step 7 “safe views” / “safe RPC”.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Child Profile</h2>
+      <p class="sub">If a parent manages multiple children, choose who you’re viewing. (You can wire this to your Step 7 parent-child link.)</p>
+      <select class="select" id="childSelect">
+        <option value="">(Single student)</option>
+      </select>
+      <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap">
+        <span class="tag good" id="tagRole">role: —</span>
+        <span class="tag" id="tagTrack">track: regular</span>
+      </div>
+      <div class="list">
+        <div class="item">
+          <p class="t">Weekly insight</p>
+          <p class="d" id="aiInsight">Solve problems to generate a personalized insight (strengths + next focus).</p>
+        </div>
+        <div class="item">
+          <p class="t">Next milestone</p>
+          <p class="d" id="milestone">Complete 3 sessions this week to unlock your next badge.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:14px">
+    <div class="card">
+      <h2>Progress</h2>
+      <p class="sub">These tiles should be fed by Step 7 safe aggregates (never raw attempts table directly in the browser).</p>
+      <div class="list" id="progressList">
+        <div class="item"><p class="t">Mastery (Regular)</p><p class="d">Coming from safe view: top strengths + gaps.</p></div>
+        <div class="item"><p class="t">Recent sessions</p><p class="d">Coming from safe view: last 5 session receipts (hash-verified).</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Parent Mode</h2>
+      <p class="sub">Bangladesh-friendly: parents often support the journey even if students don’t have an email. This is where we surface evidence & trust.</p>
+      <div class="list">
+        <div class="item"><p class="t">Evidence summary</p><p class="d">“Your child solved 18 problems this week with 72% accuracy.”</p></div>
+        <div class="item"><p class="t">Explainability</p><p class="d">“We recommended pattern practice because the last 10 attempts show a gap.”</p></div>
+      </div>
+      <div class="cta">
+        <button class="btn" id="btnRefresh">Refresh</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============
+  // ENV + CLIENT
+  // ============
+  const { SUPABASE_URL, SUPABASE_ANON_KEY } = (window.__LP_ENV || {});
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    alert("Missing Supabase config from /api/env. Make sure your Vercel /api/env endpoint works.");
+  }
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const el = (id) => document.getElementById(id);
+
+  async function boot(){
+    const { data: s } = await sb.auth.getSession();
+    const user = s?.session?.user;
+    if (!user){
+      el('who').textContent = 'Not signed in';
+      // Optional: redirect to login page
+      return;
+    }
+    el('who').textContent = user.email ? user.email : user.id;
+
+    // Try to resolve role via RPC (optional)
+    let role = null;
+    for (const fn of ['my_role','get_my_role','auth_role','get_role']){
+      try{
+        const { data, error } = await sb.rpc(fn);
+        if(!error && data){
+          role = (typeof data === 'string') ? data : (data.role || data.app_role || null);
+          if(role) break;
+        }
+      }catch(e){}
+    }
+    el('tagRole').textContent = `role: ${role || 'student'}`;
+
+    // TODO (wire later): safe dashboard summary RPC
+    // Example stub:
+    // const { data } = await sb.rpc('student_dashboard_summary', { p_child_id: null });
+    // then fill KPIs + insight.
+  }
+
+  el('btnSignOut').addEventListener('click', async () => {
+    await sb.auth.signOut();
+    location.href = '/login.html';
+  });
+
+  el('btnStartRegular').addEventListener('click', () => {
+    // If your regular training entrypoint is learn.html, go there.
+    location.href = '/learn.html';
+  });
+
+  el('btnRefresh').addEventListener('click', boot);
+
+  boot();
+</script>
+</body>
+</html>
