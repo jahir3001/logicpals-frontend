@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LogicPals Admin — Subscriptions</title>
+  <script src="/api/env"></script>
+  <style>
+    :root{--bg:#f6f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e5e7eb;--accent:#4f46e5;--good:#16a34a;--warn:#b45309;--bad:#dc2626;--shadow:0 18px 45px rgba(2,6,23,.08);--r:18px}
+    *{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";color:var(--text);background:linear-gradient(180deg,#ffffff 0%, #f6f7fb 100%)}
+    a{color:inherit;text-decoration:none}
+    .shell{max-width:1200px;margin:28px auto;padding:0 18px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px 16px;box-shadow:var(--shadow)}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,#4f46e5,#06b6d4);color:#fff;font-weight:800;letter-spacing:.5px}
+    .btitle{font-weight:800}
+    .bsub{color:var(--muted);font-size:12px;margin-top:2px}
+    .actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:12px}
+    .dot{width:8px;height:8px;border-radius:999px;background:#94a3b8}
+    .btn{cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--text);padding:10px 12px;border-radius:12px;font-weight:700}
+    .btn:hover{border-color:#cbd5e1}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    .btn.primary:hover{filter:brightness(.96)}
+    .btn.ghost{background:transparent}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;margin-top:16px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+    .card .hd{padding:16px 16px 10px;border-bottom:1px solid var(--line)}
+    .card .hd h2{margin:0;font-size:16px}
+    .card .hd p{margin:6px 0 0;color:var(--muted);font-size:12px}
+    .card .bd{padding:16px}
+    label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
+    input,select{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:#fff;outline:none}
+    input:focus,select:focus{border-color:#b9c3ff;box-shadow:0 0 0 4px rgba(79,70,229,.12)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    .stack{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    pre{margin:0;padding:14px;border-radius:14px;background:#0b1220;color:#e5e7eb;min-height:220px;overflow:auto;font-size:12px}
+    .note{padding:10px 12px;border-radius:14px;border:1px dashed #dbeafe;background:#eff6ff;color:#1e3a8a;font-size:12px}
+    .warn{padding:10px 12px;border-radius:14px;border:1px dashed #fed7aa;background:#fff7ed;color:#7c2d12;font-size:12px}
+    @media (max-width: 980px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="top">
+      <div class="brand">
+        <div class="logo">LP</div>
+        <div>
+          <div class="btitle">Subscriptions</div>
+          <div class="bsub">Admin-only — list / extend / cancel (RPC-only)</div>
+        </div>
+      </div>
+      <div class="actions">
+        <span class="chip" id="chipStatus"><span class="dot" id="dot"></span><span id="statusText">Loading…</span></span>
+        <button class="btn ghost" id="btnBack">← Back to Admin</button>
+        <button class="btn" id="btnDashboard">Dashboard</button>
+        <button class="btn primary" id="btnSignIn">Sign in</button>
+        <button class="btn" id="btnSignOut" style="display:none">Log out</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <div class="hd">
+          <h2>Manage a customer</h2>
+          <p>All actions must route through RPCs so RLS + audit rules apply (Step 7).</p>
+        </div>
+        <div class="bd">
+          <div class="row">
+            <div>
+              <label>Customer email</label>
+              <input id="email" placeholder="student_or_parent@email.com" autocomplete="email" />
+            </div>
+            <div>
+              <label>Track</label>
+              <select id="track">
+                <option value="regular">Regular</option>
+                <option value="olympiad">Olympiad</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row3" style="margin-top:12px">
+            <div>
+              <label>Extend months</label>
+              <input id="months" type="number" min="1" value="1" />
+            </div>
+            <div>
+              <label>Plan</label>
+              <select id="plan">
+                <option value="monthly">Monthly</option>
+                <option value="annual">Annual</option>
+                <option value="manual">Manual</option>
+              </select>
+            </div>
+            <div>
+              <label>Reason / note</label>
+              <input id="note" placeholder="Support extension" />
+            </div>
+          </div>
+
+          <div class="stack">
+            <button class="btn" id="btnLoad">Load subscriptions</button>
+            <button class="btn" id="btnTrust">Load trust summary</button>
+            <button class="btn primary" id="btnExtend">Extend</button>
+            <button class="btn" id="btnCancel">Cancel</button>
+          </div>
+
+          <div class="warn" style="margin-top:12px">
+            Expected RPCs (you can rename — just update here):
+            <code>admin_list_subscriptions</code>, <code>admin_extend_subscription</code>, <code>admin_cancel_subscription</code>, <code>admin_trust_summary</code>.
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="hd">
+          <h2>Output</h2>
+          <p>Raw JSON from your RPC responses.</p>
+        </div>
+        <div class="bd">
+          <pre id="out">Waiting…</pre>
+          <div class="note" style="margin-top:12px">
+            If you see “permission denied”, that’s GOOD — it means RLS is enforcing. Then assign your admin role and retry.
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <dialog id="dlg" style="border:none;border-radius:16px;max-width:420px;width:calc(100% - 24px);padding:0;box-shadow:0 25px 90px rgba(2,6,23,.25)">
+    <form method="dialog" style="padding:16px 16px 14px;background:#fff;border-radius:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div style="font-weight:900">Admin sign-in</div>
+        <button class="btn" value="cancel" style="padding:8px 10px">✕</button>
+      </div>
+      <div style="margin-top:12px">
+        <label>Email</label>
+        <input id="inEmail" autocomplete="email" />
+      </div>
+      <div style="margin-top:10px">
+        <label>Password</label>
+        <input id="inPass" type="password" autocomplete="current-password" />
+      </div>
+      <div class="stack" style="margin-top:12px">
+        <button class="btn primary" id="btnDoLogin" value="default" type="button">Sign in</button>
+        <button class="btn" value="cancel">Cancel</button>
+      </div>
+      <div style="margin-top:10px;color:var(--muted);font-size:12px">Use email/password for staff accounts. (Student/parent login stays in the main app.)</div>
+    </form>
+  </dialog>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    const $ = (id) => document.getElementById(id);
+    const out = (v) => { $('out').textContent = typeof v === 'string' ? v : JSON.stringify(v, null, 2); };
+
+    const env = window.__LP_ENV || window.LP_ENV || null;
+    if (!env?.SUPABASE_URL || !env?.SUPABASE_ANON_KEY) {
+      $('statusText').textContent = 'Missing env';
+      out('Missing SUPABASE_URL / SUPABASE_ANON_KEY. Ensure /api/env is deployed and not cached.');
+      throw new Error('Missing env');
+    }
+
+    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+
+    const setStatus = (text, kind='idle') => {
+      $('statusText').textContent = text;
+      const dot = $('dot');
+      dot.style.background = kind === 'good' ? '#22c55e' : kind === 'bad' ? '#ef4444' : '#94a3b8';
+    };
+
+    const syncAuthUI = async () => {
+      const { data } = await supabase.auth.getSession();
+      const signedIn = !!data.session;
+      $('btnSignIn').style.display = signedIn ? 'none' : '';
+      $('btnSignOut').style.display = signedIn ? '' : 'none';
+      setStatus(signedIn ? 'Signed in' : 'Signed out', signedIn ? 'good' : 'idle');
+    };
+
+    // nav
+    $('btnBack').onclick = () => (window.location.href = '/admin.html');
+    $('btnDashboard').onclick = () => (window.location.href = '/dashboard.html');
+    $('btnSignIn').onclick = () => $('dlg').showModal();
+    $('btnSignOut').onclick = async () => { await supabase.auth.signOut(); await syncAuthUI(); };
+
+    $('btnDoLogin').onclick = async () => {
+      const email = $('inEmail').value.trim();
+      const password = $('inPass').value;
+      if (!email || !password) return;
+      out('Signing in…');
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) out({ error: error.message });
+      else out('Signed in.');
+      $('dlg').close();
+      await syncAuthUI();
+    };
+
+    // RPC helpers
+    const rpc = async (fn, args) => {
+      const { data, error } = await supabase.rpc(fn, args);
+      if (error) throw error;
+      return data;
+    };
+
+    const getInputs = () => ({
+      email: $('email').value.trim(),
+      track: $('track').value,
+      months: Math.max(1, parseInt($('months').value || '1', 10)),
+      plan: $('plan').value,
+      note: $('note').value.trim() || null,
+    });
+
+    $('btnLoad').onclick = async () => {
+      try {
+        const { email, track } = getInputs();
+        if (!email) return out('Enter a customer email first.');
+        out(await rpc('admin_list_subscriptions', { p_email: email, p_track: track }));
+      } catch (e) { out({ error: e.message }); }
+    };
+    $('btnTrust').onclick = async () => {
+      try {
+        const { email } = getInputs();
+        if (!email) return out('Enter a customer email first.');
+        out(await rpc('admin_trust_summary', { p_email: email }));
+      } catch (e) { out({ error: e.message }); }
+    };
+    $('btnExtend').onclick = async () => {
+      try {
+        const { email, track, months, plan, note } = getInputs();
+        if (!email) return out('Enter a customer email first.');
+        out(await rpc('admin_extend_subscription', { p_email: email, p_track: track, p_months: months, p_plan: plan, p_note: note }));
+      } catch (e) { out({ error: e.message }); }
+    };
+    $('btnCancel').onclick = async () => {
+      try {
+        const { email, track, note } = getInputs();
+        if (!email) return out('Enter a customer email first.');
+        out(await rpc('admin_cancel_subscription', { p_email: email, p_track: track, p_note: note }));
+      } catch (e) { out({ error: e.message }); }
+    };
+
+    // init
+    await syncAuthUI();
+    supabase.auth.onAuthStateChange(() => { syncAuthUI(); });
+  </script>
+</body>
+</html>
