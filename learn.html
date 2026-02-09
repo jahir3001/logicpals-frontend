@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LogicPals Tutor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/api/env"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="/subscription-guard.js" defer></script>
+    <style>
+        :root { --primary: #4F46E5; --success: #10B981; --warning: #F59E0B; --bg: #F3F4F6; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'Nunito', sans-serif; 
+            background: var(--bg); 
+            height: 100dvh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
+
+        /* SUBSCRIPTION BANNER */
+        .subscription-banner {
+            background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+            border-bottom: 3px solid #F59E0B;
+            padding: 12px 20px;
+            text-align: center;
+            font-weight: 700;
+            color: #92400E;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        .subscription-banner.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        .banner-link {
+            color: #D97706;
+            text-decoration: underline;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
+        /* HEADER */
+        header { 
+            background: white; 
+            padding: 10px 16px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            z-index: 20; 
+            flex-shrink: 0; 
+        }
+        .logo { font-weight: 800; color: var(--primary); font-size: 18px; }
+        .header-right { display: flex; align-items: center; gap: 8px; }
+        .timer-badge { background: #F3F4F6; color: #6B7280; font-weight: 700; padding: 6px 12px; border-radius: 15px; font-size: 13px; font-family: monospace; border: 1px solid #E5E7EB; }
+        .exit-btn { background: #E5E7EB; color: #374151; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; }
+        .olympiad-btn {
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+
+        /* STATUS BAR */
+        .status-bar {
+            background: white;
+            border-bottom: 1px solid #E5E7EB;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-shrink: 0;
+            z-index: 15;
+        }
+        .stat-pill {
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .stat-pill.hints { background: #FEF3C7; color: #D97706; border: 1px solid #FCD34D; }
+        .stat-pill.questions { background: #DBEAFE; color: #1E40AF; border: 1px solid #93C5FD; }
+
+        /* (Rest of the original learn.html CSS stays the same...) */
+        .main-content { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            position: relative; 
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .problem-container {
+            padding: 10px 16px;
+            background: var(--bg);
+            flex-shrink: 0;
+        }
+        .problem-card { 
+            background: white; 
+            border: 1px solid #E5E7EB; 
+            border-radius: 16px;
+            padding: 15px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
+            transition: all 0.3s ease; 
+        }
+        .problem-header { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center; }
+        .badge { padding: 4px 8px; border-radius: 8px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        .badge.difficulty { background: #FEF3C7; color: #D97706; }
+        .badge.category { background: #E0E7FF; color: #4F46E5; margin-left: 5px; }
+        
+        .problem-text { 
+            font-size: 16px; 
+            font-weight: 700; 
+            color: #1F2937; 
+            line-height: 1.5; 
+            background: #FEF9C3; 
+            padding: 12px; 
+            border-radius: 10px; 
+            border-left: 4px solid var(--warning); 
+        }
+        
+        .toggle-btn { 
+            display: none; 
+            width: 100%; 
+            background: white; 
+            border: none; 
+            border-bottom: 1px solid #E5E7EB;
+            color: #6B7280; 
+            font-size: 12px; 
+            padding: 6px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .problem-card.minimized .problem-text { display: none; }
+        .problem-card.minimized { padding: 10px; }
+
+        .chat-container { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            scroll-behavior: smooth; 
+            -webkit-overflow-scrolling: touch; 
+        }
+        .message { max-width: 85%; padding: 12px 16px; border-radius: 16px; font-size: 15px; line-height: 1.4; animation: popIn 0.3s; }
+        .message.ai { align-self: flex-start; background: white; color: #1F2937; border-bottom-left-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .message.user { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; box-shadow: 0 2px 5px rgba(79, 70, 229, 0.3); }
+        .message.hint { align-self: center; background: #FFFBEB; color: #B45309; border: 1px dashed #F59E0B; font-size: 13px; text-align: center; width: 90%; }
+        .message.system { align-self: center; background: #F3F4F6; color: #6B7280; font-size: 13px; text-align: center; width: 90%; }
+        @keyframes popIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .input-area { 
+            background: white; 
+            padding: 10px 16px; 
+            border-top: 1px solid #E5E7EB; 
+            flex-shrink: 0; 
+            width: 100%;
+            z-index: 20;
+            padding-bottom: env(safe-area-inset-bottom, 10px); 
+        }
+        .typing-indicator { font-size: 12px; color: #9CA3AF; margin-bottom: 5px; opacity: 0; transition: 0.2s; height: 15px; }
+        
+        .input-wrapper { display: flex; gap: 8px; align-items: center; max-width: 800px; margin: 0 auto; }
+        
+        .round-btn { 
+            width: 44px; height: 44px; border-radius: 50%; border: none; font-size: 20px; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; 
+            transition: 0.1s; flex-shrink: 0; 
+        }
+        .round-btn:active { transform: scale(0.95); }
+        
+        .hint-btn { background: #FBBF24; color: white; }
+        .mic-btn { background: #F3F4F6; color: #4B5563; }
+        .mic-btn.recording { background: #EF4444; color: white; animation: pulse 1.5s infinite; }
+        .send-btn { background: var(--primary); color: white; }
+        
+        input { 
+            flex: 1; 
+            padding: 0 20px; 
+            border: 2px solid #E5E7EB; 
+            border-radius: 25px; 
+            font-size: 16px; 
+            outline: none; 
+            height: 44px; 
+            background: #F9FAFB;
+        }
+        input:focus { border-color: var(--primary); background: white; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(2px); }
+        .modal-content { background: white; padding: 30px 20px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; animation: popUp 0.4s; }
+        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-title { font-size: 28px; font-weight: 900; color: var(--success); margin-bottom: 10px; }
+        .insight-box { background: #ECFDF5; border: 1px solid #10B981; padding: 15px; border-radius: 12px; margin: 15px 0; text-align: left; }
+        .next-btn { width: 100%; background: var(--success); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 16px; margin-top: 10px; cursor: pointer; }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+        @media (max-width: 600px) {
+            .toggle-btn { display: block; }
+            .problem-container { padding: 0 10px; }
+            .problem-card { border-radius: 0 0 16px 16px; border-top: none; }
+            .problem-card.minimized { display: none; }
+            .status-bar { padding: 5px; gap: 10px; }
+            .chat-container { padding: 10px; }
+            .input-area { padding: 8px 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SUBSCRIPTION BANNER -->
+    <div class="subscription-banner" id="subscriptionBanner">
+        <span id="bannerText"></span>
+        <span class="banner-link" onclick="handleBannerClick()">Take Action →</span>
+    </div>
+
+    <header>
+        <div class="logo">🧠 LogicPals</div>
+        <div class="header-right">
+            <a href="olympiad.html" class="olympiad-btn">🏆 Olympiad</a>
+            <div class="timer-badge">⏱️ <span id="timeDisplay">00:00</span></div>
+            <button onclick="clearStateAndExit()" class="exit-btn">Exit</button>
+        </div>
+    </header>
+
+    <div class="status-bar">
+        <div class="stat-pill hints">💡 Hints: <span id="hintCount">0/3</span></div>
+        <div class="stat-pill questions">❓ Asked: <span id="questionCount">0</span></div>
+    </div>
+
+    <button class="toggle-btn" id="toggleBtn" onclick="toggleProblem()">Show Mystery Question 🔽</button>
+
+    <div class="main-content">
+        <div class="problem-container">
+            <div class="problem-card" id="problemCard">
+                <div class="problem-header">
+                    <div>
+                        <span class="badge difficulty" id="diffBadge">MEDIUM</span>
+                        <span class="badge category" id="catBadge">LOGIC</span>
+                    </div>
+                    <div style="font-size:12px; font-weight:700; color:#6B7280">Problem <span id="probNum">1</span>/10</div>
+                </div>
+                <div class="problem-text" id="problemText">Loading mystery...</div>
+            </div>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message system">Hi! Ready to solve this mystery? Read the problem above! 👆</div>
+        </div>
+    </div>
+
+    <div class="input-area">
+        <div class="typing-indicator" id="typing">LogicPals is thinking...</div>
+        <div class="input-wrapper">
+            <button class="round-btn hint-btn" onclick="useHint()" title="Hint">💡</button>
+            <input type="text" id="textInput" placeholder="Type here..." autocomplete="off">
+            <button class="round-btn mic-btn" id="micBtn" onclick="toggleRecording()">🎤</button>
+            <button class="round-btn send-btn" id="sendBtn" onclick="sendText()">➤</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="successModal">
+        <div class="modal-content">
+            <div style="font-size:50px; margin-bottom:10px;">🎉</div>
+            <div class="modal-title">YOU DID IT!</div>
+            <div style="color:#4B5563; font-weight:600; margin-bottom:15px;">
+                Time: <span id="finalTime">0:00</span> • Hints: <span id="finalHints">0</span>
+            </div>
+            
+            <div class="insight-box">
+                <div style="color:#047857; font-weight:800; font-size:12px; text-transform:uppercase;">🧠 What you just learned</div>
+                <div style="color:#065F46; font-size:14px; line-height:1.4; margin-top:5px;" id="learningInsight">
+                    You practiced <b>Lateral Thinking</b>!
+                </div>
+            </div>
+            
+            <button class="next-btn" onclick="loadNextPuzzle(true)">Next Mystery 🚀</button>
+        </div>
+    </div>
+
+    <script>
+        // (All existing learn.html JavaScript code stays the same)
+        // Just adding subscription checking at the beginning
+        // Runtime config injected by Vercel (public values only)
+        const { SUPABASE_URL: SB_URL, SUPABASE_ANON_KEY: SB_KEY } = window.__LP_ENV || {};
+        if (!SB_URL || !SB_KEY) {
+            alert("Missing Supabase config. Set SUPABASE_URL and SUPABASE_ANON_KEY in Vercel Environment Variables.");
+        }
+
+
+        let sb, currentProblem, currentChildId;
+        let hintsUsed = 0, chatLog = [], startTime, timerInt;
+        let isProcessing = false;
+        let questionsAsked = 0;
+        let userSubscription = null;
+
+        const learningInsights = {
+            'logic': 'LATERAL THINKING - looking at problems in creative ways!',
+            'arithmetic': 'NUMBER SENSE - understanding how numbers work together!',
+            'word-problem': 'COMPREHENSION - understanding what the question really asks!',
+            'pattern': 'PATTERN RECOGNITION - spotting what comes next!',
+            'algebra': 'ABSTRACT THINKING - working with unknown values!'
+        };
+
+        const localPuzzles = [
+            { id: "999", problem_text: "A farmer has 17 sheep and all but 9 die. How many are left?", solution_explanation: "9", category: "logic", difficulty: "medium", hints: ["Read carefully!", "It says 'all but 9'"] }
+        ];
+
+        window.onload = async () => {
+            sb = supabase.createClient(SB_URL, SB_KEY);
+            
+            // CHECK SUBSCRIPTION FIRST
+            const loggedIn = await SubscriptionGuard.requireLogin();
+            if (!loggedIn) return;
+
+            userSubscription = await SubscriptionGuard.getUserSubscription();
+            
+            // Check if subscription is expired
+            if (userSubscription && userSubscription.expired) {
+                showSubscriptionBanner('expired');
+                // Still allow them to see the page but with limited functionality
+            } else if (userSubscription && userSubscription.tier === 'free_trial') {
+                // Show days remaining for free trial
+                const tierInfo = await SubscriptionGuard.getUserTierInfo();
+                if (tierInfo.daysRemaining <= 3) {
+                    showSubscriptionBanner('trial_ending', tierInfo.daysRemaining);
+                }
+            }
+
+            const { data: { session } } = await sb.auth.getSession();
+            if(session) {
+                const { data: child } = await sb.from('children').select('id').eq('parent_id', session.user.id).single();
+                if(child) currentChildId = child.id;
+            }
+            
+            const savedState = localStorage.getItem('lp_state');
+            if (savedState) {
+                restoreState(JSON.parse(savedState));
+            } else {
+                loadNextPuzzle(false);
+            }
+            
+            if(window.innerWidth > 600) {
+                document.getElementById('toggleBtn').style.display = 'none';
+            } else {
+                document.getElementById('problemCard').classList.add('minimized');
+            }
+        };
+
+        function showSubscriptionBanner(type, daysRemaining = 0) {
+            const banner = document.getElementById('subscriptionBanner');
+            const bannerText = document.getElementById('bannerText');
+            
+            if (type === 'expired') {
+                bannerText.textContent = '⚠️ Your free trial has ended!';
+                banner.dataset.action = 'upgrade';
+            } else if (type === 'trial_ending') {
+                bannerText.textContent = `⏰ Only ${daysRemaining} days left in your free trial!`;
+                banner.dataset.action = 'upgrade';
+            }
+            
+            banner.classList.add('show');
+        }
+
+        function handleBannerClick() {
+            const banner = document.getElementById('subscriptionBanner');
+            const action = banner.dataset.action;
+            
+            if (action === 'upgrade') {
+                window.location.href = 'upgrade.html';
+            }
+        }
+
+        // (Rest of the original learn.html JavaScript continues below...)
+        // Including all the existing functions: saveState, restoreState, loadNextPuzzle, etc.
+
+        function saveState() {
+            const state = {
+                problem: currentProblem,
+                hints: hintsUsed,
+                questions: questionsAsked,
+                chat: chatLog,
+                timeStart: startTime
+            };
+            localStorage.setItem('lp_state', JSON.stringify(state));
+        }
+
+        function restoreState(state) {
+            currentProblem = state.problem;
+            hintsUsed = state.hints;
+            questionsAsked = state.questions;
+            chatLog = state.chat;
+            startTime = state.timeStart || Date.now();
+            
+            renderProblem();
+            updateStats();
+            
+            document.getElementById('chatContainer').innerHTML = '<div class="message system">Welcome back! I remembered where we left off. 🧠</div>';
+            chatLog.forEach(msg => {
+                if(msg.role !== 'system') addMessage(msg.role === 'assistant' ? 'ai' : 'user', msg.content, false);
+            });
+            
+            startTimer();
+        }
+
+        function clearStateAndExit() {
+            localStorage.removeItem('lp_state');
+            location.href = 'dashboard.html';
+        }
+
+        async function loadNextPuzzle(clearMemory) {
+            // Check subscription before loading problems
+            if (userSubscription && userSubscription.expired) {
+                SubscriptionGuard.showUpgradeModal(
+                    'Your free trial has ended! Upgrade to continue solving unlimited problems.',
+                    'champion'
+                );
+                return;
+            }
+
+            if(clearMemory) localStorage.removeItem('lp_state');
+            
+            document.getElementById('successModal').style.display = 'none';
+            document.getElementById('chatContainer').innerHTML = '<div class="message system">Hi! Ready to solve this? Read the mystery above! 👆</div>';
+            document.getElementById('textInput').value = '';
+            hintsUsed = 0;
+            questionsAsked = 0;
+            chatLog = [];
+            updateStats();
+            
+            let puzzle = localPuzzles[0];
+            try {
+                const { data } = await sb.from('problems').select('*').eq('is_active', true).eq('olympiad_level', 'regular');
+                if(data && data.length > 0) puzzle = data[Math.floor(Math.random() * data.length)];
+            } catch(e) {}
+            
+            currentProblem = puzzle;
+            startTime = Date.now();
+            
+            saveState(); 
+            renderProblem();
+            startTimer();
+        }
+
+        function renderProblem() {
+            document.getElementById('problemText').innerText = currentProblem.problem_text;
+            document.getElementById('diffBadge').innerText = (currentProblem.difficulty || 'MEDIUM').toUpperCase();
+            document.getElementById('catBadge').innerText = (currentProblem.category || 'LOGIC').toUpperCase();
+            
+            if(window.innerWidth <= 600) {
+                document.getElementById('problemCard').classList.remove('minimized');
+                document.getElementById('toggleBtn').innerText = "Hide Mystery 🔼";
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('hintCount').innerText = `${hintsUsed}/3`;
+            document.getElementById('questionCount').innerText = questionsAsked;
+        }
+
+        function toggleProblem() {
+            const card = document.getElementById('problemCard');
+            const btn = document.getElementById('toggleBtn');
+            const isHidden = card.classList.contains('minimized');
+            
+            if(isHidden) {
+                card.classList.remove('minimized');
+                btn.innerText = "Hide Mystery 🔼";
+            } else {
+                card.classList.add('minimized');
+                btn.innerText = "Show Mystery 🔽";
+            }
+        }
+
+        async function sendText() {
+            const input = document.getElementById('textInput');
+            const text = input.value.trim();
+            if(!text || isProcessing) return;
+            
+            isProcessing = true;
+            questionsAsked++;
+            updateStats();
+            
+            document.getElementById('sendBtn').disabled = true;
+            document.getElementById('typing').style.opacity = 1;
+            addMessage('user', text);
+            input.value = '';
+            chatLog.push({ role: 'user', content: text });
+            
+            saveState(); 
+
+            const cleanInput = text.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const answers = (currentProblem.answer_key || currentProblem.solution_explanation || "").toLowerCase().split('|');
+            let isCorrect = false;
+            
+            if (cleanInput.length >= 2) {
+                answers.forEach(a => {
+                    const cleanAns = a.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    if(cleanAns.length > 0 && cleanInput.includes(cleanAns)) isCorrect = true;
+                });
+            }
+
+            if(isCorrect) {
+                finishPuzzle();
+                isProcessing = false;
+                document.getElementById('sendBtn').disabled = false;
+                document.getElementById('typing').style.opacity = 0;
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/tutor', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        problem_text: currentProblem.problem_text,
+                        solution_explanation: currentProblem.solution_explanation,
+                        chatLog
+                    })
+                });
+                const data = await res.json();
+                const reply = (data && data.reply) ? data.reply : 'Sorry, something went wrong.';
+                addMessage('ai', reply);
+                chatLog.push({ role: 'assistant', content: reply });
+                saveState();
+                
+                if((reply.toLowerCase().includes('correct') || reply.includes('🎉')) && cleanInput.length > 1) {
+                    finishPuzzle();
+                }
+
+            } catch(e) { console.error(e); }
+            
+            isProcessing = false;
+            document.getElementById('sendBtn').disabled = false;
+            document.getElementById('typing').style.opacity = 0;
+            input.focus();
+        }
+
+        function finishPuzzle() {
+            localStorage.removeItem('lp_state'); 
+            addMessage('ai', "Correct! 🎉 Amazing job!");
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            
+            document.getElementById('finalTime').innerText = document.getElementById('timeDisplay').innerText;
+            document.getElementById('finalHints').innerText = hintsUsed;
+            
+            const cat = (currentProblem.category || 'logic').toLowerCase();
+            document.getElementById('learningInsight').innerHTML = `You practiced <b>${learningInsights[cat] || 'Critical Thinking'}</b>`;
+
+            if(currentChildId) {
+                sb.from('attempts').insert([{ 
+                    child_id: currentChildId, 
+                    problem_id: currentProblem.id, 
+                    solved_correctly: true,
+                    hints_used: hintsUsed
+                }]).then();
+            }
+            
+            setTimeout(() => { document.getElementById('successModal').style.display = 'flex'; }, 1000);
+        }
+
+        function addMessage(role, text, animate = true) {
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            div.innerText = text;
+            if(!animate) div.style.animation = 'none';
+            const container = document.getElementById('chatContainer');
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function useHint() {
+            if(hintsUsed >= 3) return;
+            let hints = currentProblem.hints;
+            if(!hints || hints.length === 0) hints = ["Think carefully!", "Read the problem again."];
+            
+            const hint = hints[Math.min(hintsUsed, hints.length-1)];
+            addMessage('hint', `💡 HINT: ${hint}`);
+            hintsUsed++;
+            updateStats();
+            saveState();
+        }
+
+        function startTimer() {
+            if (timerInt) clearInterval(timerInt);
+            timerInt = setInterval(() => {
+                const diff = Math.floor((Date.now() - startTime) / 1000);
+                const m = Math.floor(diff / 60).toString().padStart(2,'0');
+                const s = (diff % 60).toString().padStart(2,'0');
+                document.getElementById('timeDisplay').innerText = `${m}:${s}`;
+            }, 1000);
+        }
+
+        function toggleRecording() {
+            if (!('webkitSpeechRecognition' in window)) return alert("Use Chrome");
+            const r = new webkitSpeechRecognition();
+            r.lang = 'en-US';
+            r.onstart = () => document.getElementById('micBtn').classList.add('recording');
+            r.onend = () => document.getElementById('micBtn').classList.remove('recording');
+            r.onresult = (e) => {
+                document.getElementById('textInput').value = e.results[0][0].transcript;
+                sendText();
+            };
+            r.start();
+        }
+
+        document.getElementById('textInput').addEventListener('keypress', (e) => { if(e.key==='Enter') sendText(); });
+    </script>
+</body>
+</html>
