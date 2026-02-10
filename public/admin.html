@@ -6,9 +6,7 @@
   <title>LogicPals Admin Console</title>
 
   <!-- Loads window.__LP_ENV via Vercel route -->
-  <script src="/api/env"></script>
-
-  <!-- BFCache/Back button hardening: always revalidate -->
+<!-- BFCache/Back button hardening: always revalidate -->
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -358,17 +356,22 @@
 
     const $ = (id) => document.getElementById(id);
 
-    const env = window.__LP_ENV || window.LP_ENV || null;
-    if (!env?.SUPABASE_URL || !env?.SUPABASE_ANON_KEY) {
-      $('statusText').textContent = 'Env missing';
-      $('statusDot').className = 'dot warn';
-      $('kvAuth').textContent = 'error';
-      $('accessOut').textContent = 'Missing env. Ensure /api/env returns SUPABASE_URL + SUPABASE_ANON_KEY.';
-      throw new Error('LogicPals env missing (window.__LP_ENV).');
+        async function fetchEnv() {
+      const r = await fetch('/api/env', { method: 'GET' });
+      if (!r.ok) throw new Error('env_fetch_failed');
+      const j = await r.json();
+
+      const supabaseUrl = j.supabaseUrl || j.SUPABASE_URL || j.url || j.SUPABASE_URL;
+      const supabaseAnonKey = j.supabaseAnonKey || j.SUPABASE_ANON_KEY || j.anonKey || j.SUPABASE_KEY;
+
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('missing_supabase_env');
+      }
+      return { supabaseUrl, supabaseAnonKey };
     }
 
-    // Single authoritative client (prevents split-session bugs)
-    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
+    const env = await fetchEnv();
+    const supabase = createClient(env.supabaseUrl, env.supabaseAnonKey, {
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
     });
 
