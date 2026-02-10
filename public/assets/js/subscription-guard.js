@@ -6,7 +6,6 @@
  */
 
 (function () {
-  // Tier access configuration (keep as-is; adjust tiers if your DB uses different names)
   const TIER_ACCESS = {
     free_trial: { regular: true, olympiad_preview: 3, levels: [] },
     thinker: { regular: true, olympiad_preview: 0, levels: [] },
@@ -57,12 +56,10 @@
 
     try {
       const { data: { session }, error: sessionError } = await sb.auth.getSession();
-
       if (sessionError || !session) return null;
 
       const userId = session.user.id;
 
-      // Active subscription (make sure RLS allows the user to read their own subscription)
       const { data: subscription, error: subError } = await sb
         .from("subscriptions")
         .select("*")
@@ -76,10 +73,8 @@
 
       const now = new Date();
       const endDate = subscription.end_date ? new Date(subscription.end_date) : null;
-
       const expired = endDate ? endDate < now : false;
 
-      // Optional child data (age filter)
       const { data: child } = await sb
         .from("children")
         .select("age, age_category, subscription_tier")
@@ -99,7 +94,7 @@
 
   async function getOlympiadAttemptCount(userId) {
     const sb = await getSupabaseClient();
-    if (!sb) return 999; // safest: block preview if we cannot verify
+    if (!sb) return 999;
 
     try {
       const { data: child } = await sb
@@ -110,7 +105,6 @@
 
       if (!child) return 0;
 
-      // Count unique Olympiad problems attempted (assumes problems.olympiad_level exists)
       const { data: attempts, error } = await sb
         .from("attempts")
         .select("problem_id, problems!inner(olympiad_level)")
@@ -165,12 +159,10 @@
       return { allowed: !!tierConfig.regular, tier };
     }
 
-    // Olympiad levels
     if (tierConfig.levels.includes(problemLevel)) {
       return { allowed: true, tier };
     }
 
-    // Free preview logic
     if (tier === "free_trial" && tierConfig.olympiad_preview > 0) {
       const count = await getOlympiadAttemptCount(subscription.user_id);
       if (count < tierConfig.olympiad_preview) {
