@@ -106,6 +106,7 @@
 
   <!-- Runtime config injected by Vercel /api/env -->
   
+  <script src="/assets/js/env-loader.js"></script>
 </head>
 <body>
   <div class="wrap">
@@ -189,7 +190,10 @@
     }
     function setPill(text) { pillText.textContent = text; }
 
-    const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.__LP_ENV || {};
+    const env = await window.loadEnv();
+  if (!env) { alert("Config load failed. Please refresh."); return; }
+  const SUPABASE_URL = env.SUPABASE_URL;
+  const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY;
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
       setPill("Missing config");
       showError("Missing Supabase config. Ensure /api/env is deployed and SUPABASE_URL + SUPABASE_ANON_KEY are set in Vercel.");
