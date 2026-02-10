@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <title>LogicPals — A/B Dashboard</title>
+    <script src="/api/env"></script>
     <style>
       body { font-family: system-ui; padding: 16px; }
       .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
@@ -42,14 +43,14 @@
 
     <div id="msg" style="margin-top:12px;"></div>
 
-    <h2 style="margin-top:20px;">Latest</h2>
+    <h2 style="margin-top:20px;">Snapshot</h2>
     <div class="row" id="cards"></div>
 
-    <h2 style="margin-top:20px;">Variant summary (7d)</h2>
-    <pre id="summary7d">[]</pre>
+    <h2 style="margin-top:20px;">Variant summary</h2>
+    <pre id="summary">[]</pre>
 
-    <h2 style="margin-top:20px;">Lift (7d)</h2>
-    <pre id="lift7d">[]</pre>
+    <h2 style="margin-top:20px;">Lift</h2>
+    <pre id="lift">[]</pre>
 
     <script>
       function setMsg(html) { document.getElementById("msg").innerHTML = html || ""; }
@@ -59,15 +60,19 @@
         return localStorage.getItem("lp_access_token");
       }
 
-      function renderCards(latestRow) {
+      function renderCards(summary) {
         const cards = document.getElementById("cards");
         cards.innerHTML = "";
+
+        // Best-effort: take first row of summary if present (structure depends on your RPC).
+        const r0 = Array.isArray(summary) && summary.length ? summary[0] : {};
         const items = [
-          ["Variant", latestRow?.variant_key ?? "unknown"],
-          ["Exposures", latestRow?.exposures ?? 0],
-          ["Unique users", latestRow?.unique_users ?? latestRow?.unique_users_7d ?? 0],
-          ["Updated", latestRow?.updated_at ?? "-"],
+          ["Top Variant", r0?.variant_key ?? r0?.variant ?? "—"],
+          ["Exposures", r0?.exposures ?? r0?.events_exposure ?? 0],
+          ["Conversions", r0?.conversions ?? r0?.events_conversion ?? 0],
+          ["Users", r0?.unique_users ?? r0?.assigned_users ?? 0],
         ];
+
         for (const [t,v] of items) {
           const div = document.createElement("div");
           div.className = "card";
@@ -81,7 +86,7 @@
 
         const jwt = await getJwt();
         if (!jwt) {
-          setMsg(`<div class="err">Not logged in as admin. Please login via <a href="../admin-login.html">admin-login.html</a>.</div>`);
+          setMsg(`<div class="err">Not logged in as admin. Please login via <a href="/admin-login.html">admin-login.html</a>.</div>`);
           return;
         }
 
@@ -97,16 +102,16 @@
 
         const json = await res.json().catch(()=> ({}));
         if (!res.ok) {
-          setMsg(`<div class="err">${json?.detail || json?.error || "Failed"}</div>`);
+          setMsg(`<div class="err">${json?.details || json?.detail || json?.error || "Failed"}</div>`);
           return;
         }
 
-        const data = json.data || {};
-        const latestRow = (data.latest && data.latest[0]) ? data.latest[0] : null;
+        // Matches our enterprise admin-bundle.js response:
+        // { ok, experiment_key, track, days, summary, lift }
+        renderCards(json.summary);
 
-        renderCards(latestRow);
-        document.getElementById("summary7d").textContent = JSON.stringify(data.variant_summary_7d || [], null, 2);
-        document.getElementById("lift7d").textContent = JSON.stringify(data.lift_7d || [], null, 2);
+        document.getElementById("summary").textContent = JSON.stringify(json.summary || [], null, 2);
+        document.getElementById("lift").textContent = JSON.stringify(json.lift || [], null, 2);
 
         setMsg(`<div>OK ✅</div>`);
       }
