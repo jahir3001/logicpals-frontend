@@ -6,6 +6,7 @@
     <title>Olympiad Training - LogicPals</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Literata:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/api/env"></script>
     <script src="/app/guards/subscription-guard.js"></script>
     <style>
         * {
@@ -1131,10 +1132,18 @@
         };
 
         // Supabase client
-        const sb = supabase.createClient(
-            'https://ovszuxerimbmzfblzkgd.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUyOTQxOTgsImV4cCI6MjA1MDg3MDE5OH0.sD_ymMEm0Vu7GFLaIOmKBVMIgPmgH2EzHF3kVFHXcwg'
-        );
+        // Enterprise: Supabase from /api/env (no hardcoded URL/keys)
+	function getSupabaseClient() {
+  	if (!window.__LP_ENV || !window.__LP_ENV.SUPABASE_URL || !window.__LP_ENV.SUPABASE_ANON_KEY) {
+   	 throw new Error("Missing env config. Ensure /api/env is deployed.");
+ 	 }
+ 	 return supabase.createClient(
+    	window.__LP_ENV.SUPABASE_URL,
+   	 window.__LP_ENV.SUPABASE_ANON_KEY
+  	);
+	}
+
+const sb = getSupabaseClient();
 
         let currentLevel = null;
         let currentMode = 'mixed';

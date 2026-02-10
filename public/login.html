@@ -19,6 +19,7 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/api/env"></script>
 
     <style>
         :root { --primary: #2563EB; --bg: #EFF6FF; --text: #111827; }
@@ -41,8 +42,7 @@
         .footer-link a { color: var(--primary); text-decoration: none; font-weight: 600; }
         
         .error { color: #EF4444; font-size: 14px; text-align: center; margin-top: 15px; display: none; background: #FEF2F2; padding: 10px; border-radius: 6px; }
-    </style>
-</head>
+    </style></head>
 <body>
 
     <div class="card">
@@ -73,10 +73,13 @@
     </div>
 
     <script>
-        const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
+        const { SUPABASE_URL: supabaseUrl, SUPABASE_ANON_KEY: supabaseAnonKey } = window.__LP_ENV || {};
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Missing Supabase config. Ensure /api/env is deployed and reachable.');
+    }
         // PASTE YOUR KEY BELOW
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
 
         async function handleLogin(e) {
             e.preventDefault();

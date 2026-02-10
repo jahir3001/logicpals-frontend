@@ -20,6 +20,7 @@
     <meta name="theme-color" content="#2563EB">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/api/env"></script>
 
     <style>
         :root { 
@@ -210,8 +211,7 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-    </style>
-</head>
+    </style></head>
 <body>
 
     <div class="card">
@@ -355,9 +355,12 @@
     <script>
         // FIXED: Correct Supabase initialization
         const { createClient } = supabase;
-        const supabaseUrl = 'https://ovszuxerimbmzfblzkgd.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92c3p1eGVyaW1ibXpmYmx6a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MDA4MzgsImV4cCI6MjA4MDA3NjgzOH0.cmMF8OsC8J_B-t0aBldiMqv4XiNZtJWSGMqg8At9V14';
-        const sb = createClient(supabaseUrl, supabaseKey);
+        const { SUPABASE_URL: supabaseUrl, SUPABASE_ANON_KEY: supabaseAnonKey } = window.__LP_ENV || {};
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Missing Supabase config. Ensure /api/env is deployed and reachable.');
+    }
+        
+        const sb = createClient(supabaseUrl, supabaseAnonKey);
 
         async function handleSignup(e) {
             e.preventDefault();
