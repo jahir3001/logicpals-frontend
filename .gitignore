@@ -10,3 +10,5 @@ node_modules/
 node_modules/
 .vercel/
 .env.local
+MERGE_MSG.txt
+backup_step8_html/
