@@ -13,8 +13,6 @@
   }
 
   async function fetchEnv() {
-    // Expected to exist: /api/env returning { supabaseUrl, supabaseAnonKey }
-    // If your /api/env returns different keys, adjust here.
     const r = await fetch("/api/env", { method: "GET" });
     if (!r.ok) throw new Error("env_fetch_failed");
     const j = await r.json();
@@ -82,8 +80,6 @@
     const ok = await isAdmin();
     if (ok) return true;
 
-    // If you prefer redirect instead of blocking UI, use redirect.
-    // For now we show a clear Access Denied page.
     document.body.innerHTML = `
       <div style="
         display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -141,13 +137,9 @@
     };
 
     console.log("📝 Admin Action:", logEntry);
-
-    // Optional: If you have an audit RPC, call it here.
-    // await sb.rpc("admin_log_action", { ... })
     return logEntry;
   }
 
-  // Export
   window.AdminGuard = {
     isAdmin,
     requireAdmin,
