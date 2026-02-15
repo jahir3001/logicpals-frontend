@@ -1,9 +1,9 @@
 // api/ab/admin-bundle.js
-// Enterprise Admin A/B Bundle
+// Enterprise Admin A/B Dashboard Bundle (tracks: regular + olympiad)
 // - POST only
-// - Requires Bearer JWT
-// - Enforces admin via ab_require_admin()
-// - Reads experiment from DB under RLS
+// - Requires Bearer JWT (admin user session)
+// - Enforces admin via require_admin()
+// - Returns { ok: true, result: ... } (no .single() assumptions)
 
 const { createClient } = require("@supabase/supabase-js");
 
@@ -19,76 +19,99 @@ function safeJson(body) {
   if (typeof body !== "string") return null;
   const s = body.trim();
   if (!s) return {};
-  try { return JSON.parse(s); } catch { return null; }
+  try {
+    return JSON.parse(s);
+  } catch {
+    return null;
+  }
 }
 
 module.exports = async (req, res) => {
-  if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
+  try {
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "method_not_allowed" });
+    }
 
-  const jwt = getBearer(req);
-  if (!jwt) return res.status(401).json({ error: "missing_bearer_token" });
+    const jwt = getBearer(req);
+    if (!jwt) return res.status(401).json({ error: "missing_bearer_token" });
 
-  const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const SUPABASE_URL =
+      process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const SUPABASE_ANON_KEY =
+      process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!SUPABASE_URL) return res.status(500).json({ error: "missing_SUPABASE_URL" });
-  if (!SUPABASE_ANON_KEY) return res.status(500).json({ error: "missing_SUPABASE_ANON_KEY" });
+    if (!SUPABASE_URL) return res.status(500).json({ error: "missing_SUPABASE_URL" });
+    if (!SUPABASE_ANON_KEY) return res.status(500).json({ error: "missing_SUPABASE_ANON_KEY" });
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    global: { headers: { Authorization: `Bearer ${jwt}` } },
-    auth: { persistSession: false },
-  });
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: `Bearer ${jwt}` } },
+      auth: { persistSession: false },
+    });
 
-  // 1) hard gate
-  const gate = await supabase.rpc("ab_require_admin", {});
-  if (gate.error) return res.status(403).json({ error: "admin_required", details: gate.error.message });
+    // 1) Hard gate (your DB has require_admin(), not ab_require_admin())
+    const gate = await supabase.rpc("require_admin");
+    if (gate.error) {
+      return res.status(403).json({ error: "admin_required", details: gate.error.message });
+    }
 
-  // 2) parse body
-  const body = safeJson(req.body);
-  if (body === null) return res.status(400).json({ error: "invalid_json" });
+    // 2) Parse body
+    const body = safeJson(req.body);
+    if (body === null) return res.status(400).json({ error: "invalid_json" });
 
-  const { experiment_key, days = 14, track = null } = body;
-  if (!experiment_key) return res.status(400).json({ error: "missing_experiment_key" });
+    const { experiment_key, days = 14, track = null } = body;
+    if (!experiment_key) return res.status(400).json({ error: "missing_experiment_key" });
 
-  // 3) read experiment definition
-  const { data: experiment, error: expErr } = await supabase
-    .from("ab_experiments")
-    .select("*")
-    .eq("experiment_key", experiment_key)
-    .limit(1)
-    .single();
+    const p_days = Math.max(1, Number(days) || 14);
 
-  if (expErr) return res.status(500).json({ error: "experiment_query_failed", details: expErr.message });
-  if (!experiment) return res.status(404).json({ error: "experiment_not_found" });
+    // 3) If track is provided => return one track
+    //    If track is null/undefined => return BOTH tracks (enterprise default)
+    const callBundle = async (t) => {
+      // ab_dash_admin_bundle(p_experiment_key text, p_track lp_track, p_days integer) -> jsonb
+      const r = await supabase.rpc("ab_dash_admin_bundle", {
+        p_experiment_key: String(experiment_key),
+        p_track: t, // "regular" | "olympiad"
+        p_days,
+      });
+      if (r.error) {
+        return { ok: false, error: r.error.message };
+      }
+      return { ok: true, data: r.data };
+    };
 
-  // 4) optional: show recent event counts
-  const since = new Date(Date.now() - Math.max(1, Number(days)) * 86400000).toISOString();
+    let result;
 
-  let q = supabase
-    .from("ab_events")
-    .select("variant, event_type, created_at")
-    .eq("experiment_key", experiment_key)
-    .gte("created_at", since);
+    if (track === "regular" || track === "olympiad") {
+      const one = await callBundle(track);
+      if (!one.ok) {
+        return res.status(500).json({ error: "bundle_failed", details: one.error });
+      }
+      result = { track, bundle: one.data };
+    } else {
+      // Both tracks
+      const [reg, oly] = await Promise.all([callBundle("regular"), callBundle("olympiad")]);
 
-  if (track === "regular" || track === "olympiad") q = q.eq("track", track);
+      if (!reg.ok || !oly.ok) {
+        return res.status(500).json({
+          error: "bundle_failed",
+          details: {
+            regular: reg.ok ? null : reg.error,
+            olympiad: oly.ok ? null : oly.error,
+          },
+        });
+      }
 
-  const { data: events, error: evErr } = await q;
-  if (evErr) return res.status(500).json({ error: "events_query_failed", details: evErr.message });
+      result = {
+        experiment_key,
+        days: p_days,
+        tracks: {
+          regular: reg.data,
+          olympiad: oly.data,
+        },
+      };
+    }
 
-  const totals = {};
-  for (const e of events || []) {
-    const v = e.variant || "unknown";
-    totals[v] = totals[v] || { events: 0 };
-    totals[v].events += 1;
+    return res.status(200).json({ ok: true, result });
+  } catch (e) {
+    return res.status(500).json({ error: "unexpected_error", details: String(e?.message || e) });
   }
-
-  return res.status(200).json({
-    ok: true,
-    experiment_key,
-    track,
-    days,
-    experiment,
-    totals,
-    generated_at: new Date().toISOString(),
-  });
 };
