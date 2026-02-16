@@ -45,10 +45,23 @@ export default async function handler(req, res) {
     });
 
     // Verify JWT with Supabase (enterprise-grade)
-    const { data: userData, error: userErr } = await supabaseAuth.auth.getUser();
-    if (userErr || !userData?.user?.id) {
-      return json(res, 401, { error: "invalid_auth", detail: userErr?.message || "no_user" });
-    }
+    const { error: insErr } = await supabaseAdmin.from("ab_metric_events").insert(row);
+
+	if (insErr) {
+  	const msg = String(insErr.message || "");
+
+ 	 // Enterprise idempotency: treat duplicates as success
+  		if (msg.toLowerCase().includes("duplicate key") || msg.toLowerCase().includes("unique constraint")) {
+    return json(res, 200, {
+      ok: true,
+      deduped: true,
+      result: { experiment_id, variant_id, track, event_name, user_id, idempotency_key: idem },
+    });
+  }
+
+  // Otherwise: real insert failure (no raw internals)
+  	return json(res, 500, { ok: false, error: "insert_failed" });
+	}
     const user_id = userData.user.id;
 
     const body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body || {});
