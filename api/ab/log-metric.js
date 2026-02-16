@@ -1,124 +1,120 @@
 import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false },
-});
+function json(res, status, body) {
+  res.statusCode = status;
+  res.setHeader("Content-Type", "application/json");
+  res.end(JSON.stringify(body));
+}
 
-function bad(msg, code = 400) {
-  return new Response(JSON.stringify({ ok: false, error: msg }), {
-    status: code,
-    headers: { "content-type": "application/json" },
-  });
+function getBearer(req) {
+  const h = req.headers["authorization"] || req.headers["Authorization"];
+  if (!h) return null;
+  const m = String(h).match(/^Bearer\s+(.+)$/i);
+  return m ? m[1] : null;
+}
+
+function stableHash(s) {
+  return crypto.createHash("sha256").update(String(s)).digest("hex");
 }
 
 export default async function handler(req, res) {
+  if (req.method !== "POST") return json(res, 405, { error: "method_not_allowed" });
+
   try {
-    if (req.method !== "POST") {
-      res.status(405).json({ ok: false, error: "method_not_allowed" });
-      return;
+    const url = process.env.SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const anonKey = process.env.SUPABASE_ANON_KEY;
+
+    if (!url || !serviceKey || !anonKey) {
+      return json(res, 500, { error: "missing_env", detail: "Need SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY" });
     }
 
-    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    const token = getBearer(req);
+    if (!token) return json(res, 401, { error: "missing_auth" });
 
-    // Accept either:
-    // A) experiment_key + track
-    // B) experiment_id directly
-    const experiment_key = body.experiment_key || null;
-    const experiment_id_input = body.experiment_id || null;
-    const track = body.track || null;
+    const supabaseAdmin = createClient(url, serviceKey, { auth: { persistSession: false } });
+    const supabaseAuth = createClient(url, anonKey, {
+      auth: { persistSession: false },
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
 
-    // Metric/event name
-    const event_name = body.event_name || body.metric_key || null;
-
-    // Variant: allow variant_id, otherwise allow variant_key
-    const variant_id_input = body.variant_id || null;
-    const variant_key = body.variant_key || null;
-
-    // Value stored in properties
-    const value = body.value ?? 1;
-
-    // Optional extra dimensions
-    const user_id = body.user_id || null;
-    const session_id = body.session_id || null;
-    const occurred_at = body.occurred_at || new Date().toISOString();
-
-    if (!event_name) return res.status(400).json({ ok: false, error: "missing_event_name" });
-
-    // Resolve experiment_id
-    let experiment_id = experiment_id_input;
-
-    if (!experiment_id) {
-      if (!experiment_key) return res.status(400).json({ ok: false, error: "missing_experiment_key" });
-      if (!track) return res.status(400).json({ ok: false, error: "missing_track" });
-
-      const { data: exp, error: expErr } = await supabase
-        .from("ab_experiments")
-        .select("id")
-        .eq("experiment_key", experiment_key)
-        .eq("track", track)
-        .maybeSingle();
-
-      if (expErr) return res.status(500).json({ ok: false, error: "experiment_lookup_failed", detail: expErr.message });
-      if (!exp?.id) return res.status(404).json({ ok: false, error: "experiment_not_found" });
-
-      experiment_id = exp.id;
+    // Verify JWT with Supabase (enterprise-grade)
+    const { data: userData, error: userErr } = await supabaseAuth.auth.getUser();
+    if (userErr || !userData?.user?.id) {
+      return json(res, 401, { error: "invalid_auth", detail: userErr?.message || "no_user" });
     }
+    const user_id = userData.user.id;
 
-    // Resolve variant_id (optional but recommended)
-    let variant_id = variant_id_input;
+    const body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body || {});
 
-    if (!variant_id && variant_key) {
-      const { data: v, error: vErr } = await supabase
-        .from("ab_variants")
-        .select("id")
-        .eq("experiment_id", experiment_id)
-        .eq("variant_key", variant_key)
-        .maybeSingle();
+    // Accept both formats:
+    // NEW: { experiment_key, track, variant_id, event_name, properties, session_id, idempotency_key }
+    // OLD: { experiment_key, track, variant_id, metric_key, value }
+    const experiment_key = body.experiment_key;
+    const track = body.track;
+    const variant_id = body.variant_id;
 
-      if (vErr) return res.status(500).json({ ok: false, error: "variant_lookup_failed", detail: vErr.message });
-      if (!v?.id) return res.status(404).json({ ok: false, error: "variant_not_found" });
+    const event_name = body.event_name || body.metric_key;
+    const properties =
+      body.properties ||
+      (body.metric_key ? { value: body.value } : {}) ||
+      {};
 
-      variant_id = v.id;
-    }
+    if (!experiment_key) return json(res, 400, { error: "missing_experiment_key" });
+    if (!track) return json(res, 400, { error: "missing_track" });
+    if (!variant_id) return json(res, 400, { error: "missing_variant_id" });
+    if (!event_name) return json(res, 400, { error: "missing_event_name" });
 
-    // If caller sent neither variant_id nor variant_key, we allow logging at experiment level
-    // But if they sent variant_id/variant_key and it couldn't be resolved, we already returned error above.
-
-    // Idempotency key (stable per event instance)
-    const idempotency_key =
-      body.idempotency_key ||
-      `${experiment_id}:${track || "na"}:${variant_id || "na"}:${event_name}:${session_id || "na"}:${user_id || "na"}:${occurred_at}`;
-
-    const properties = {
-      value,
-      ...(body.properties || {}),
-    };
-
-    const insertRow = {
-      experiment_id,
-      variant_id: variant_id || null,
-      user_id,
-      track: track || body.track || null,
-      session_id,
-      event_name,
-      occurred_at,
-      idempotency_key,
-      properties,
-    };
-
-    const { data: ins, error: insErr } = await supabase
-      .from("ab_metric_events")
-      .insert(insertRow)
+    // Resolve experiment_id by (experiment_key, track)
+    const { data: exp, error: expErr } = await supabaseAdmin
+      .from("ab_experiments")
       .select("id")
+      .eq("experiment_key", experiment_key)
+      .eq("track", track)
       .maybeSingle();
 
-    if (insErr) {
-      // If you later add a unique constraint on idempotency_key, you can treat conflicts as ok.
-      return res.status(500).json({ ok: false, error: "insert_failed", detail: insErr.message });
-    }
+    if (expErr) return json(res, 500, { error: "experiment_lookup_failed", detail: expErr.message });
+    if (!exp?.id) return json(res, 404, { error: "experiment_not_found" });
 
-    res.status(200).json({ ok: true, result: { id: ins?.id, experiment_id, variant_id, event_name } });
+    const experiment_id = exp.id;
+
+    // Validate variant belongs to this experiment
+    const { data: vrow, error: vErr } = await supabaseAdmin
+      .from("ab_variants")
+      .select("id")
+      .eq("id", variant_id)
+      .eq("experiment_id", experiment_id)
+      .maybeSingle();
+
+    if (vErr) return json(res, 500, { error: "variant_lookup_failed", detail: vErr.message });
+    if (!vrow?.id) return json(res, 400, { error: "missing_variant", detail: "variant_id does not belong to (experiment_key, track)" });
+
+    // session_id: if not provided, create a deterministic-ish fallback per request
+    const session_id = body.session_id || null;
+
+    // Idempotency key (recommended)
+    const idem =
+      body.idempotency_key ||
+      stableHash([experiment_id, variant_id, user_id, track, event_name, JSON.stringify(properties), session_id || "", new Date().toISOString().slice(0, 16)].join("|"));
+
+    const row = {
+      experiment_id,
+      variant_id,
+      user_id,
+      track,
+      session_id,
+      event_name,
+      properties,
+      idempotency_key: idem,
+      occurred_at: new Date().toISOString(),
+    };
+
+    const { error: insErr } = await supabaseAdmin.from("ab_metric_events").insert(row);
+    if (insErr) return json(res, 500, { ok: false, error: "insert_failed", detail: insErr.message });
+
+    return json(res, 200, { ok: true, result: { experiment_id, variant_id, track, event_name, user_id, idempotency_key: idem } });
   } catch (e) {
-    res.status(500).json({ ok: false, error: "server_error", detail: String(e?.message || e) });
+    return json(res, 500, { error: "server_error", detail: String(e?.message || e) });
   }
 }
