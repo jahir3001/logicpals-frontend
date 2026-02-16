@@ -80,11 +80,18 @@ export default async function handler(req, res) {
 
     // Resolve experiment_id by (experiment_key, track) — and enforce status/killswitch later in Step 8
     const { data: exp, error: expErr } = await supabaseAdmin
-      .from("ab_experiments")
-      .select("id")
-      .eq("experiment_key", experiment_key)
-      .eq("track", track)
-      .maybeSingle();
+ 	 .from("ab_experiments")
+ 	 .select("id, status, is_killswitched")
+  	.eq("experiment_key", experiment_key)
+  	.eq("track", track)
+ 	 .maybeSingle();
+
+	if (expErr) return json(res, 500, { error: "experiment_lookup_failed" });
+	if (!exp?.id) return json(res, 404, { error: "experiment_not_found" });
+
+	// ✅ Enterprise gate (must match get-variant behavior)
+	if (exp.is_killswitched) return json(res, 403, { error: "experiment_killswitched" });
+	if (exp.status !== "running") return json(res, 403, { error: "experiment_not_running", status: exp.status });
 
     if (expErr) return json(res, 500, { error: "experiment_lookup_failed" });
     if (!exp?.id) return json(res, 404, { error: "experiment_not_found" });
@@ -104,7 +111,8 @@ export default async function handler(req, res) {
       return json(res, 400, { error: "missing_variant", detail: "variant_id does not belong to (experiment_key, track)" });
     }
 
-    const session_id = body.session_id || null;
+        const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+	const session_id = body.session_id && uuidRe.test(body.session_id) ? body.session_id : null;
 
     // Idempotency key
     const idem =
