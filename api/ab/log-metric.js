@@ -8,7 +8,12 @@ function json(res, status, body) {
 }
 
 function getBearer(req) {
-  const h = req.headers["authorization"] || req.headers["Authorization"];
+  const h =
+    req.headers?.authorization ||
+    req.headers?.Authorization ||
+    (req.headers?.get ? req.headers.get("authorization") : null) ||
+    (req.headers?.get ? req.headers.get("Authorization") : null);
+
   if (!h) return null;
   const m = String(h).match(/^Bearer\s+(.+)$/i);
   return m ? m[1] : null;
@@ -56,10 +61,15 @@ export default async function handler(req, res) {
     const variant_id = body.variant_id;
 
     const event_name = body.event_name || body.metric_key;
-    const properties =
-      body.properties ||
-      (body.metric_key ? { value: body.value } : {}) ||
-      {};
+
+	// Enterprise fix: always preserve numeric value if provided
+	let properties = body.properties || {};
+
+	if (properties && typeof properties === "object") {
+ 	if (body.value !== undefined && properties.value === undefined) {
+ 	properties.value = body.value;
+  	}
+       }
 
     if (!experiment_key) return json(res, 400, { error: "missing_experiment_key" });
     if (!track) return json(res, 400, { error: "missing_track" });
