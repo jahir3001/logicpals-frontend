@@ -315,23 +315,36 @@
         }
       } catch(e){ console.warn('SubscriptionGuard not available:', e); }
 
-      const { data:{ session: s } } = await sb.auth.getSession();
-      if(!s){
+      // Try getSession first, then getUser as fallback
+      let user = null;
+      try {
+        const { data:{ session: s } } = await sb.auth.getSession();
+        if(s) { session = s; user = s.user; }
+      } catch(e){ console.warn('getSession failed:', e); }
+
+      // Fallback: if getSession returned null, try getUser (works when session storage differs)
+      if(!user){
+        try {
+          const { data:{ user: u } } = await sb.auth.getUser();
+          if(u) user = u;
+        } catch(e){ console.warn('getUser failed:', e); }
+      }
+
+      if(!user){
         $('authNotice').style.display='block';
         $('content').style.display='none';
         return;
       }
-      session = s;
       $('authNotice').style.display='none';
       $('content').style.display='block';
 
       // Get user name
-      const userName = s.user?.user_metadata?.full_name || s.user?.user_metadata?.name || s.user?.email?.split('@')[0] || 'there';
+      const userName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'there';
       safe($('helloText'), `Hi ${userName} 👋`);
 
       // Get child id (same as learn.html)
       try {
-        const { data: child } = await sb.from('children').select('id').eq('parent_id', s.user.id).single();
+        const { data: child } = await sb.from('children').select('id').eq('parent_id', user.id).single();
         if(child) childId = child.id;
       } catch(e){}
 
