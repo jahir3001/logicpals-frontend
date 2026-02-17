@@ -1,171 +1,137 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - LogicPals</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2563EB">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/brain--v1.png">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LogicPals — Login</title>
+  <style>
+    :root{
+      --bg:#EEF4FF; --card:#ffffff; --text:#111827; --muted:#6B7280;
+      --primary:#2563EB; --danger:#EF4444; --border:#E5E7EB;
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text);}
+    .wrap{min-height:100vh;display:grid;place-items:center;padding:24px;}
+    .card{width:min(520px,92vw);background:var(--card);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.12);padding:34px;}
+    h1{margin:0 0 8px;font-size:34px;letter-spacing:-.02em;}
+    p{margin:0 0 22px;color:var(--muted);}
+    label{display:block;font-weight:600;margin:14px 0 6px;}
+    input{width:100%;padding:12px 12px;border:1px solid var(--border);border-radius:10px;font-size:16px;}
+    button{width:100%;margin-top:18px;padding:12px 14px;border-radius:10px;border:0;background:var(--primary);color:#fff;font-weight:700;font-size:16px;cursor:pointer;}
+    button:disabled{opacity:.6;cursor:not-allowed;}
+    .msg{margin-top:14px;padding:12px;border-radius:10px;border:1px solid var(--border);background:#F9FAFB;color:var(--muted);font-size:14px;}
+    .msg.err{border-color:#FECACA;background:#FEF2F2;color:var(--danger);}
+    .row{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:14px;}
+    .link{color:var(--primary);text-decoration:none;font-weight:600;}
+    .tiny{font-size:12px;color:var(--muted);}
+  </style>
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js');
-            });
-        }
-    </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-
-    <style>
-        :root { --primary: #2563EB; --bg: #EFF6FF; --text: #111827; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        
-        .card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
-        h1 { color: var(--text); text-align: center; margin-bottom: 8px; }
-        .subtitle { text-align: center; color: #6B7280; margin-bottom: 30px; font-size: 14px; }
-        
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: #374151; }
-        input { width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 16px; transition: 0.2s; }
-        input:focus { border-color: var(--primary); outline: none; ring: 2px solid #BFDBFE; }
-        
-        .btn { width: 100%; background: var(--primary); color: white; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
-        .btn:hover { background: #1D4ED8; }
-        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
-        
-        .footer-link { text-align: center; margin-top: 20px; font-size: 14px; color: #6B7280; }
-        .footer-link a { color: var(--primary); text-decoration: none; font-weight: 600; }
-        
-        .error { color: #EF4444; font-size: 14px; text-align: center; margin-top: 15px; display: none; background: #FEF2F2; padding: 10px; border-radius: 6px; }
-    </style>  <script src="/assets/js/env-loader.js"></script>
+  <!-- Supabase JS (v2) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
+  <div class="wrap">
     <div class="card">
-        <h1>Welcome Back 👋</h1>
-        <p class="subtitle">Log in to continue your learning journey.</p>
+      <h1>Welcome Back 👋</h1>
+      <p>Log in to continue your learning journey.</p>
 
-        <form id="loginForm" onsubmit="handleLogin(event)">
-            
-            <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" id="email" required placeholder="parent@example.com">
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="password" required placeholder="******">
-            </div>
+      <form id="loginForm">
+        <label>Email Address</label>
+        <input id="email" type="email" autocomplete="email" required />
 
-            <button type="submit" id="submitBtn" class="btn">Log In</button>
-            <div class="error" id="errorMessage"></div>
+        <label>Password</label>
+        <input id="password" type="password" autocomplete="current-password" required />
 
-            <div class="footer-link">
-                Don't have an account? <a href="signup.html">Sign Up Free</a>
-            </div>
-            <div class="footer-link" style="margin-top: 10px;">
-                <a href="index.html">← Back to Home</a>
-            </div>
-        </form>
+        <button id="btnLogin" type="submit" disabled>Loading…</button>
+      </form>
+
+      <div id="out" class="msg">Initializing…</div>
+
+      <div class="row">
+        <div class="tiny">Don't have an account? <a class="link" href="/signup.html">Sign Up Free</a></div>
+      </div>
+      <div class="row">
+        <a class="link" href="/index.html">← Back to Home</a>
+      </div>
     </div>
+  </div>
 
-    <script>
-  // ===== LogicPals Login (enterprise-safe init) =====
-  const $ = (id) => document.getElementById(id);
+  <script>
+    const $ = (id) => document.getElementById(id);
 
-  let supabaseClient = null;
-  let initDone = false;
+    let supabaseClient = null;
 
-  function setError(msg) {
-    const err = $("errorMessage");
-    err.style.display = msg ? "block" : "none";
-    err.innerText = msg || "";
-  }
+    function setMsg(text, isErr=false){
+      const el = $('out');
+      el.textContent = text;
+      el.className = 'msg' + (isErr ? ' err' : '');
+    }
 
-  function setLoading(isLoading, label) {
-    const btn = $("submitBtn");
-    btn.disabled = isLoading;
-    btn.innerText = label || (isLoading ? "Loading..." : "Log In");
-    $("email").disabled = isLoading;
-    $("password").disabled = isLoading;
-  }
-
-  async function initSupabaseAndWireLogin() {
-    try {
-      setError("");
-      setLoading(true, "Initializing...");
-
-      // Fetch env from your Vercel route (no keys in HTML)
-      const res = await fetch("/api/env", { cache: "no-store" });
-      if (!res.ok) throw new Error("Cannot reach /api/env. Ensure it is deployed on Vercel.");
+    async function loadEnv() {
+      // Single source of truth for URL/key: your existing Vercel route
+      const res = await fetch('/api/env', { cache: 'no-store' });
+      if (!res.ok) throw new Error('Failed to load /api/env (' + res.status + ')');
       const env = await res.json();
 
-      const supabaseUrl =
-        env.supabaseUrl || env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || env.url;
-      const supabaseAnonKey =
-        env.supabaseAnonKey || env.SUPABASE_ANON_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY || env.anonKey;
+      // Expect these keys from your /api/env implementation
+      const url = env.SUPABASE_URL || env.supabaseUrl || env.url;
+      const anon = env.SUPABASE_ANON_KEY || env.supabaseAnonKey || env.anonKey;
 
-      if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error("Missing Supabase config from /api/env.");
-      }
-
-      // Create client BEFORE wiring any submit handlers
-      supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
-
-      // Now wire the submit handler (safe)
-      $("loginForm").addEventListener("submit", handleLogin);
-
-      initDone = true;
-      setLoading(false, "Log In");
-    } catch (e) {
-      console.error(e);
-      setError("Login init failed: " + (e?.message || String(e)));
-      setLoading(true, "Init failed");
+      if (!url || !anon) throw new Error('Missing SUPABASE_URL / SUPABASE_ANON_KEY from /api/env');
+      return { url, anon };
     }
-  }
 
-  async function handleLogin(e) {
-    e.preventDefault();
-    try {
-      setError("");
+    async function initSupabase() {
+      try {
+        const { url, anon } = await loadEnv();
 
-      if (!initDone || !supabaseClient) {
-        setError("Still initializing. Please wait 2 seconds and try again.");
+        supabaseClient = window.supabase.createClient(url, anon, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+          }
+        });
+
+        $('btnLogin').disabled = false;
+        $('btnLogin').textContent = 'Log In';
+        setMsg('Ready.');
+      } catch (e) {
+        $('btnLogin').disabled = true;
+        $('btnLogin').textContent = 'Log In';
+        setMsg('Login init failed: ' + (e?.message || String(e)), true);
+      }
+    }
+
+    $('loginForm').addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+
+      if (!supabaseClient) {
+        setMsg('Supabase not initialized yet. Refresh the page.', true);
         return;
       }
 
-      setLoading(true, "Logging in...");
+      const email = $('email').value.trim();
+      const password = $('password').value;
 
-      const email = $("email").value.trim();
-      const password = $("password").value;
+      try {
+        $('btnLogin').disabled = true;
+        $('btnLogin').textContent = 'Signing in…';
 
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) throw error;
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) throw error;
 
-      // Success => go to dashboard
-      window.location.href = "/dashboard.html";
-    } catch (err) {
-      console.error(err);
-      setError("Login Failed: " + (err?.message || String(err)));
-      setLoading(false, "Log In");
-    }
-  }
+        setMsg('Signed in. Redirecting…');
+        // Student dashboard (regular)
+        window.location.href = '/dashboard.html';
+      } catch (e) {
+        setMsg('Login Failed: ' + (e?.message || String(e)), true);
+      } finally {
+        $('btnLogin').disabled = false;
+        $('btnLogin').textContent = 'Log In';
+      }
+    });
 
-  // BFCache hardening (Back button issues)
-  window.addEventListener("pageshow", (e) => {
-    if (e.persisted) window.location.reload();
-  });
-
-  // Kickoff
-  setLoading(true, "Initializing...");
-  initSupabaseAndWireLogin();
-</script>
+    initSupabase();
+  </script>
 </body>
 </html>
