@@ -712,13 +712,12 @@
     }
 
   
-    // === BFCache hardening (Back button fix) ===
-   window.addEventListener("pageshow", (e) => {
-   if (e.persisted) {
-    // admin console: safest behavior
-    window.location.reload();
-    }
-  });
-<script>
+       // === BFCache hardening (Back button fix) ===
+    window.addEventListener("pageshow", (e) => {
+      if (e.persisted) {
+        window.location.reload();
+      }
+    });
+  </script>
 </body>
 </html>
