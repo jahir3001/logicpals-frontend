@@ -74,46 +74,98 @@
     </div>
 
     <script>
-        const { SUPABASE_URL: supabaseUrl, SUPABASE_ANON_KEY: supabaseAnonKey } = window.__LP_ENV || {};
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase config. Ensure /api/env is deployed and reachable.');
+  // ===== LogicPals Login (enterprise-safe init) =====
+  const $ = (id) => document.getElementById(id);
+
+  let supabaseClient = null;
+  let initDone = false;
+
+  function setError(msg) {
+    const err = $("errorMessage");
+    err.style.display = msg ? "block" : "none";
+    err.innerText = msg || "";
+  }
+
+  function setLoading(isLoading, label) {
+    const btn = $("submitBtn");
+    btn.disabled = isLoading;
+    btn.innerText = label || (isLoading ? "Loading..." : "Log In");
+    $("email").disabled = isLoading;
+    $("password").disabled = isLoading;
+  }
+
+  async function initSupabaseAndWireLogin() {
+    try {
+      setError("");
+      setLoading(true, "Initializing...");
+
+      // Fetch env from your Vercel route (no keys in HTML)
+      const res = await fetch("/api/env", { cache: "no-store" });
+      if (!res.ok) throw new Error("Cannot reach /api/env. Ensure it is deployed on Vercel.");
+      const env = await res.json();
+
+      const supabaseUrl =
+        env.supabaseUrl || env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || env.url;
+      const supabaseAnonKey =
+        env.supabaseAnonKey || env.SUPABASE_ANON_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY || env.anonKey;
+
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error("Missing Supabase config from /api/env.");
+      }
+
+      // Create client BEFORE wiring any submit handlers
+      supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+      // Now wire the submit handler (safe)
+      $("loginForm").addEventListener("submit", handleLogin);
+
+      initDone = true;
+      setLoading(false, "Log In");
+    } catch (e) {
+      console.error(e);
+      setError("Login init failed: " + (e?.message || String(e)));
+      setLoading(true, "Init failed");
     }
-        // PASTE YOUR KEY BELOW
-        
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+  }
 
-        async function handleLogin(e) {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            const err = document.getElementById('errorMessage');
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+  async function handleLogin(e) {
+    e.preventDefault();
+    try {
+      setError("");
 
-            btn.innerText = "Logging in...";
-            btn.disabled = true;
-            err.style.display = 'none';
+      if (!initDone || !supabaseClient) {
+        setError("Still initializing. Please wait 2 seconds and try again.");
+        return;
+      }
 
-            try {
-                // Supabase Login Logic
-                const { data, error } = await supabaseClient.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
+      setLoading(true, "Logging in...");
 
-                if (error) throw error;
+      const email = $("email").value.trim();
+      const password = $("password").value;
 
-                // Success! Go to Dashboard
-                window.location.href = "dashboard.html";
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
 
-            } catch (error) {
-                console.error(error);
-                err.innerText = "Login Failed: " + error.message;
-                err.style.display = 'block';
-                btn.innerText = "Log In";
-                btn.disabled = false;
-            }
-        }
-    </script>
+      // Success => go to dashboard
+      window.location.href = "/dashboard.html";
+    } catch (err) {
+      console.error(err);
+      setError("Login Failed: " + (err?.message || String(err)));
+      setLoading(false, "Log In");
+    }
+  }
+
+  // BFCache hardening (Back button issues)
+  window.addEventListener("pageshow", (e) => {
+    if (e.persisted) window.location.reload();
+  });
+
+  // Kickoff
+  setLoading(true, "Initializing...");
+  initSupabaseAndWireLogin();
+</script>
 </body>
 </html>
