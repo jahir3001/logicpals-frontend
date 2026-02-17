@@ -303,6 +303,18 @@
       if(!SB_URL||!SB_KEY){ $('authNotice').style.display='block'; return; }
       sb = supabase.createClient(SB_URL, SB_KEY);
 
+      // Use SubscriptionGuard for auth — same as learn.html
+      try {
+        if(typeof SubscriptionGuard !== 'undefined'){
+          const loggedIn = await SubscriptionGuard.requireLogin();
+          if(!loggedIn){
+            $('authNotice').style.display='block';
+            $('content').style.display='none';
+            return;
+          }
+        }
+      } catch(e){ console.warn('SubscriptionGuard not available:', e); }
+
       const { data:{ session: s } } = await sb.auth.getSession();
       if(!s){
         $('authNotice').style.display='block';
@@ -514,8 +526,8 @@
     });
     $('btnGoLogin').addEventListener('click', ()=> location.href='index.html');
 
-    // ——— Boot ———
-    boot();
+    // ——— Boot (wait for deferred scripts like learn.html) ———
+    window.onload = () => boot();
   </script>
 </body>
 </html>
