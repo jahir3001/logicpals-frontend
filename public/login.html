@@ -1,159 +1,111 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LogicPals — Login</title>
+  <title>LogicPals — Sign in</title>
   <style>
-    :root{
-      --bg:#EEF4FF; --card:#ffffff; --text:#111827; --muted:#6B7280;
-      --primary:#2563EB; --danger:#EF4444; --border:#E5E7EB;
-    }
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text);}
-    .wrap{min-height:100vh;display:grid;place-items:center;padding:24px;}
-    .card{width:min(520px,92vw);background:var(--card);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.12);padding:34px;}
-    h1{margin:0 0 8px;font-size:34px;letter-spacing:-.02em;}
-    p{margin:0 0 22px;color:var(--muted);}
-    label{display:block;font-weight:600;margin:14px 0 6px;}
-    input{width:100%;padding:12px 12px;border:1px solid var(--border);border-radius:10px;font-size:16px;}
-    button{width:100%;margin-top:18px;padding:12px 14px;border-radius:10px;border:0;background:var(--primary);color:#fff;font-weight:700;font-size:16px;cursor:pointer;}
-    button:disabled{opacity:.6;cursor:not-allowed;}
-    .msg{margin-top:14px;padding:12px;border-radius:10px;border:1px solid var(--border);background:#F9FAFB;color:var(--muted);font-size:14px;}
-    .msg.err{border-color:#FECACA;background:#FEF2F2;color:var(--danger);}
-    .row{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:14px;}
-    .link{color:var(--primary);text-decoration:none;font-weight:600;}
-    .tiny{font-size:12px;color:var(--muted);}
+    :root{--primary:#2563EB;--bg:#EEF2FF;--card:#fff;--text:#111827;--muted:#6B7280;--danger:#DC2626;--border:#E5E7EB;}
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(1200px 600px at 20% 20%, #e0e7ff 0%, #f8fafc 50%, #fff 100%)}
+    .card{width:min(520px,92vw);background:var(--card);border:1px solid var(--border);border-radius:18px;box-shadow:0 25px 60px rgba(15,23,42,.12);padding:32px}
+    h1{margin:0 0 6px;font-size:34px;letter-spacing:-.02em;color:var(--text);display:flex;gap:10px;align-items:center;justify-content:center}
+    .sub{margin:0 0 22px;text-align:center;color:var(--muted)}
+    label{display:block;margin:14px 0 6px;color:var(--text);font-weight:600;font-size:14px}
+    input{width:100%;padding:13px 14px;border:1px solid #CBD5E1;border-radius:10px;font-size:16px;outline:none}
+    input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+    button{width:100%;margin-top:18px;padding:13px 14px;border:0;border-radius:10px;background:var(--primary);color:#fff;font-weight:700;font-size:16px;cursor:pointer}
+    button:disabled{opacity:.65;cursor:not-allowed}
+    .status{margin-top:12px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);color:var(--muted);background:#F9FAFB}
+    .err{border-color:#FECACA;background:#FEF2F2;color:var(--danger)}
+    .links{margin-top:16px;text-align:center;color:var(--muted);font-size:14px}
+    .links a{color:var(--primary);text-decoration:none;font-weight:700}
+    .links a:hover{text-decoration:underline}
+    .back{display:block;margin-top:10px}
   </style>
-
-  <!-- Supabase JS (v2) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-    document.addEventListener('DOMContentLoaded', async () => {
-      // Warm up env + client so login is stable
-      const btn = document.getElementById('btnLogin');
-      if (btn) btn.disabled = true;
-      try {
-        await getClient();
-        if (btn) btn.disabled = false;
-      } catch (e) {
-        showStatus('Login setup failed: ' + (e?.message || e), true);
-      }
-    });
-
-</script>
-
-  <script>
-    // BFCache hardening: when navigating back, force a clean reload so auth + listeners restore.
-    window.addEventListener('pageshow', function (e) {
-      if (e && e.persisted) window.location.reload();
-    });
-  </script>
-
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Welcome Back 👋</h1>
-      <p>Log in to continue your learning journey.</p>
+  <div class="card">
+    <h1>Welcome Back <span aria-hidden="true">👋</span></h1>
+    <p class="sub">Log in to continue your learning journey.</p>
 
-      <form id="loginForm">
-        <label>Email Address</label>
-        <input id="email" type="email" autocomplete="email" required />
+    <form id="form">
+      <label for="email">Email Address</label>
+      <input id="email" type="email" autocomplete="email" required />
 
-        <label>Password</label>
-        <input id="password" type="password" autocomplete="current-password" required />
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" required />
 
-        <button id="btnLogin" type="submit" disabled>Loading…</button>
-      </form>
+      <button id="btn" type="submit" disabled>Loading…</button>
+      <div id="out" class="status">Initializing…</div>
+    </form>
 
-      <div id="out" class="msg">Initializing…</div>
-
-      <div class="row">
-        <div class="tiny">Don't have an account? <a class="link" href="/signup.html">Sign Up Free</a></div>
-      </div>
-      <div class="row">
-        <a class="link" href="/index.html">← Back to Home</a>
-      </div>
+    <div class="links">
+      Don't have an account? <a href="/signup.html">Sign Up Free</a>
+      <a class="back" href="/index.html">← Back to Home</a>
     </div>
   </div>
 
-  <script>
+  <script type="module" src="/assets/js/env-loader.js"></script>
+  <script type="module">
     const $ = (id) => document.getElementById(id);
+    const out = $('out');
+    const btn = $('btn');
 
-    let supabaseClient = null;
-
-    function setMsg(text, isErr=false){
-      const el = $('out');
-      el.textContent = text;
-      el.className = 'msg' + (isErr ? ' err' : '');
+    function setOut(msg, isErr=false){
+      out.textContent = msg;
+      out.className = 'status' + (isErr ? ' err' : '');
     }
 
-    async function loadEnv() {
-      // Single source of truth for URL/key: your existing Vercel route
-      const res = await fetch('/api/env', { cache: 'no-store' });
-      if (!res.ok) throw new Error('Failed to load /api/env (' + res.status + ')');
-      const env = await res.json();
+    async function boot(){
+      try{
+        await window.lpGetClient();
+        btn.disabled = false;
+        btn.textContent = 'Log In';
+        setOut('Ready.');
 
-      // Expect these keys from your /api/env implementation
-      const url = env.SUPABASE_URL || env.supabaseUrl || env.url;
-      const anon = env.SUPABASE_ANON_KEY || env.supabaseAnonKey || env.anonKey;
-
-      if (!url || !anon) throw new Error('Missing SUPABASE_URL / SUPABASE_ANON_KEY from /api/env');
-      return { url, anon };
-    }
-
-    async function initSupabase() {
-      try {
-        const { url, anon } = await loadEnv();
-
-        supabaseClient = window.supabase.createClient(url, anon, {
-          auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true,
-            storageKey: 'logicpals.auth',
-          }
-        });
-
-        $('btnLogin').disabled = false;
-        $('btnLogin').textContent = 'Log In';
-        setMsg('Ready.');
-      } catch (e) {
-        $('btnLogin').disabled = true;
-        $('btnLogin').textContent = 'Log In';
-        setMsg('Login init failed: ' + (e?.message || String(e)), true);
+        // If already signed in, go straight to dashboard.
+        const client = await window.lpGetClient();
+        const { data } = await client.auth.getSession();
+        if (data?.session?.user) {
+          const qp = new URLSearchParams(location.search);
+          const next = qp.get('next') || '/dashboard.html';
+          location.replace(next);
+        }
+      } catch(e){
+        btn.disabled = true;
+        btn.textContent = 'Log In';
+        setOut('Init failed: ' + (e?.message || e), true);
       }
     }
 
-    $('loginForm').addEventListener('submit', async (ev) => {
+    $('form').addEventListener('submit', async (ev) => {
       ev.preventDefault();
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+      setOut('Signing in…');
 
-      if (!supabaseClient) {
-        setMsg('Supabase not initialized yet. Refresh the page.', true);
-        return;
-      }
+      try{
+        const client = await window.lpGetClient();
+        const email = $('email').value.trim();
+        const password = $('password').value;
 
-      const email = $('email').value.trim();
-      const password = $('password').value;
-
-      try {
-        $('btnLogin').disabled = true;
-        $('btnLogin').textContent = 'Signing in…';
-
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        const { data, error } = await client.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        if (!data?.session?.user) throw new Error('No session returned');
 
-        setMsg('Signed in. Redirecting…');
-        // Student dashboard (regular)
-        window.location.href = '/dashboard.html';
-      } catch (e) {
-        setMsg('Login Failed: ' + (e?.message || String(e)), true);
-      } finally {
-        $('btnLogin').disabled = false;
-        $('btnLogin').textContent = 'Log In';
+        const qp = new URLSearchParams(location.search);
+        const next = qp.get('next') || '/dashboard.html';
+        setOut('Signed in. Redirecting…');
+        location.replace(next);
+      } catch(e){
+        setOut('Login failed: ' + (e?.message || e), true);
+        btn.disabled = false;
+        btn.textContent = 'Log In';
       }
     });
 
-    initSupabase();
+    boot();
   </script>
 </body>
 </html>

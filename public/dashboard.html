@@ -1,565 +1,240 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LogicPals — Regular Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/subscription-guard.js" defer></script>
   <style>
     :root{
-      --primary:#6c5ce7; --accent:#feca57;
-      --text:#f0f0f5; --muted:#5d5f7e; --text2:#9899b3;
-      --bg:#0c0e1a; --card:rgba(20,24,52,.55); --border:rgba(255,255,255,.06);
-      --good:#00d2a0; --bad:#ff6b6b;
-      --shadow: 0 8px 40px rgba(0,0,0,.2); --shadow2: 0 4px 16px rgba(0,0,0,.15);
-      --radius:20px; --radius2:14px; --max:1100px; --tap:44px;
-      --font:'Plus Jakarta Sans',-apple-system,sans-serif;
-      --font-d:'Outfit',-apple-system,sans-serif;
-      --glow:rgba(108,92,231,.35); --glow2:rgba(0,210,160,.25);
-      --as:rgba(108,92,231,.12); --gs:rgba(0,210,160,.10); --ys:rgba(254,202,87,.10);
+      --primary:#2563EB; --accent:#F59E0B; --text:#1F2937;
+      --muted:#6B7280; --bg:#F8FAFC; --card:#FFFFFF; --border:#E5E7EB;
+      --ok:#10B981; --warn:#F59E0B; --bad:#EF4444;
     }
-    *{box-sizing:border-box;}html,body{height:100%;}
-    body{margin:0;font-family:var(--font);color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;}
-    body::before{content:'';position:fixed;top:-200px;left:-100px;width:600px;height:600px;background:radial-gradient(circle,var(--glow) 0%,transparent 70%);pointer-events:none;z-index:0;animation:drift 20s ease-in-out infinite alternate;}
-    body::after{content:'';position:fixed;bottom:-200px;right:-100px;width:500px;height:500px;background:radial-gradient(circle,var(--glow2) 0%,transparent 70%);pointer-events:none;z-index:0;animation:drift 25s ease-in-out infinite alternate-reverse;}
-    @keyframes drift{0%{transform:translate(0,0);}100%{transform:translate(60px,40px);}}
-    a{color:inherit;text-decoration:none;}button{font:inherit;}
-    .wrap{max-width:var(--max);margin:0 auto;padding:88px 16px 40px;position:relative;z-index:1;}
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    body{margin:0;background:radial-gradient(1200px 600px at 20% 10%, #DBEAFE 0%, var(--bg) 55%, #fff 100%);color:var(--text)}
+    a{color:inherit}
 
-    .topbar{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(12,14,26,.75);backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6);border-bottom:1px solid var(--border);}
-    .topbar-inner{max-width:var(--max);margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px;}
-    .brand{display:flex;align-items:center;gap:10px;min-width:140px;}
-    .logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#a29bfe);box-shadow:0 4px 20px var(--glow);display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;}
-    .brand-title{line-height:1.1;}.brand-title b{display:block;font-size:15px;font-weight:800;}.brand-title span{display:block;font-size:11px;color:var(--muted);font-weight:500;margin-top:1px;}
-    .center-pill{flex:1;display:flex;justify-content:center;}
-    .track-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:100px;background:var(--as);border:1px solid rgba(108,92,231,.2);color:#b8b0f0;font-weight:700;font-size:12px;}
-    .track-dot{width:8px;height:8px;border-radius:50%;background:var(--primary);box-shadow:0 0 8px var(--glow);animation:pdot 2s ease-in-out infinite;}
-    @keyframes pdot{0%,100%{box-shadow:0 0 4px var(--glow);}50%{box-shadow:0 0 14px var(--glow);}}
-    .actions{display:flex;gap:8px;align-items:center;min-width:140px;justify-content:flex-end;}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px 14px 44px}
+    .top{
+      display:flex;gap:12px;align-items:center;justify-content:space-between;
+      padding:12px 14px;background:rgba(255,255,255,.75);border:1px solid var(--border);
+      border-radius:18px;backdrop-filter: blur(10px);
+      position:sticky;top:10px;z-index:10;
+    }
+    .brand{display:flex;gap:10px;align-items:center}
+    .logo{width:40px;height:40px;border-radius:14px;background:linear-gradient(135deg, var(--primary), #22C55E);display:grid;place-items:center;color:#fff;font-weight:900}
+    .brand h1{margin:0;font-size:16px;line-height:1.1}
+    .brand p{margin:0;color:var(--muted);font-size:12px}
 
-    .btn{height:var(--tap);border-radius:10px;border:1px solid var(--border);background:var(--card);backdrop-filter:blur(8px);padding:0 14px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;color:var(--text2);font-weight:600;font-size:13px;transition:all .15s ease;}
-    .btn:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);color:var(--text);}
-    .btn:active{transform:scale(.97);}
-    .btn-primary{background:linear-gradient(135deg,var(--primary),#8b7cf6);border:none;color:#fff;font-weight:700;box-shadow:0 4px 20px var(--glow),inset 0 1px 0 rgba(255,255,255,.15);}
-    .btn-primary:hover{box-shadow:0 6px 28px var(--glow);transform:translateY(-1px);}
-    .btn-accent{background:var(--ys);border:1px solid rgba(254,202,87,.2);color:var(--accent);font-weight:700;}
-    .btn-accent:hover{background:rgba(254,202,87,.16);}
-    .btn-ghost{background:transparent;border:1px solid transparent;color:var(--muted);}
-    .btn-ghost:hover{color:var(--text2);background:rgba(255,255,255,.04);}
-    .btn-secondary{background:var(--as);border:1px solid rgba(108,92,231,.2);color:#b8b0f0;font-weight:700;}
-    .btn-secondary:hover{background:rgba(108,92,231,.18);}
-    .btn-wide{padding:0 20px;height:48px;border-radius:var(--radius2);font-size:14px;}
+    .pill{padding:8px 10px;border:1px solid var(--border);border-radius:999px;background:#fff;color:var(--muted);font-size:12px;display:inline-flex;gap:8px;align-items:center}
+    .dot{width:8px;height:8px;border-radius:99px;background:var(--warn)}
+    .dot.ok{background:var(--ok)}
 
-    .status-strip{max-width:var(--max);margin:0 auto;padding:0 16px 8px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:12px;color:var(--text2);}
-    .status-left,.status-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-    .badge{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:100px;background:var(--card);border:1px solid var(--border);color:var(--text2);font-size:11px;font-weight:600;}
-    .badge b{color:var(--muted);font-weight:600;font-size:11px;}
-    .chip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-    .dot-good{background:var(--good);box-shadow:0 0 8px var(--glow2);}
-    .dot-warn{background:var(--accent);box-shadow:0 0 8px rgba(254,202,87,.25);}
+    .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    .btn{border:1px solid var(--border);background:#fff;border-radius:999px;padding:10px 12px;font-weight:800;font-size:13px;cursor:pointer}
+    .btn.primary{border-color:transparent;background:var(--primary);color:#fff}
+    .btn.accent{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.12);color:#7C4A00}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
 
-    .grid{display:grid;grid-template-columns:1fr;gap:16px;}
-    @media(min-width:860px){.grid{grid-template-columns:1.3fr .7fr;align-items:start;}}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin-top:14px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:18px;box-shadow:0 20px 50px rgba(15,23,42,.08)}
+    .card .hd{padding:14px 14px 0}
+    .card h2{margin:0;font-size:14px}
+    .card p{margin:6px 0 0;color:var(--muted);font-size:12px}
+    .card .bd{padding:14px}
 
-    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);overflow:hidden;transition:border-color .2s,box-shadow .2s;}
-    .card:hover{border-color:rgba(255,255,255,.09);box-shadow:var(--shadow);}
-    .card-h{padding:20px 22px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
-    .card-title{font-family:var(--font-d);font-size:16px;font-weight:700;letter-spacing:-.2px;display:flex;align-items:center;gap:8px;}
-    .sub{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.4;font-weight:500;}
-    .card-b{padding:16px 22px 22px;}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .stat{border:1px solid var(--border);border-radius:14px;padding:12px;background:linear-gradient(180deg,#fff, #F9FAFB)}
+    .stat .k{font-size:12px;color:var(--muted)}
+    .stat .v{margin-top:6px;font-size:18px;font-weight:900;color:var(--text)}
 
-    .hero{padding:28px 24px 24px;position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(108,92,231,.08),rgba(0,210,160,.04));}
-    .hero::before{content:"";position:absolute;top:-80px;right:-40px;width:280px;height:280px;background:radial-gradient(circle,rgba(108,92,231,.15),transparent 70%);pointer-events:none;}
-    .hero::after{content:"";position:absolute;bottom:-60px;left:-20px;width:200px;height:200px;background:radial-gradient(circle,rgba(0,210,160,.08),transparent 70%);pointer-events:none;}
-    .hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;position:relative;z-index:1;}
-    .hello{font-size:14px;color:var(--muted);font-weight:600;}
-    .hero-head{margin-top:6px;font-family:var(--font-d);font-size:24px;font-weight:800;letter-spacing:-.5px;line-height:1.2;background:linear-gradient(135deg,var(--text) 40%,#b8b0f0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-    .hero-focus{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;position:relative;z-index:1;}
-    .pill{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:100px;background:var(--card);border:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text2);}
-    .pill strong{color:var(--primary);font-weight:700;}
-    .ring{width:68px;height:68px;border-radius:999px;display:grid;place-items:center;background:conic-gradient(var(--primary) var(--p,40%),rgba(255,255,255,.06) 0);box-shadow:0 0 20px var(--glow);position:relative;z-index:1;}
-    .ring > div{width:54px;height:54px;border-radius:999px;background:rgba(12,14,26,.9);display:grid;place-items:center;font-family:var(--font-d);font-weight:800;font-size:14px;color:#b8b0f0;border:1px solid var(--border);}
-    .hero-actions{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;position:relative;z-index:1;}
+    .note{border:1px dashed rgba(37,99,235,.35);background:rgba(37,99,235,.05);border-radius:14px;padding:12px;color:#1E3A8A;font-size:12px}
 
-    .tiles{padding:16px 22px 22px;}
-    .tile-row{display:flex;gap:10px;overflow:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:4px;}
-    .tile-row::-webkit-scrollbar{display:none;}
-    @media(min-width:860px){.tile-row{display:grid;grid-template-columns:repeat(3,1fr);overflow:visible;}.tile{min-width:auto;}}
-    .tile{min-width:150px;flex:0 0 auto;scroll-snap-align:start;padding:16px;border-radius:var(--radius2);background:rgba(255,255,255,.03);border:1px solid var(--border);transition:all .15s ease;}
-    .tile:hover{background:rgba(255,255,255,.05);transform:translateY(-2px);}
-    .tile .k{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
-    .tile .v{margin-top:8px;font-family:var(--font-d);font-size:28px;font-weight:800;letter-spacing:-.5px;}
-    .tile .d{margin-top:8px;font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;}
-    .mini{width:20px;height:20px;border-radius:7px;display:grid;place-items:center;font-size:11px;background:var(--ys);border:1px solid rgba(254,202,87,.15);}
+    .list{display:grid;gap:10px}
+    .row{display:flex;gap:10px;justify-content:space-between;align-items:center;border:1px solid var(--border);border-radius:14px;padding:12px}
+    .row b{font-size:13px}
+    .tag{font-size:12px;border-radius:999px;padding:6px 10px;border:1px solid var(--border);background:#fff;color:var(--muted)}
 
-    .chart-wrap{padding:16px 22px 22px;}
-    .seg{display:inline-flex;gap:3px;padding:3px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);}
-    .seg button{height:32px;border-radius:8px;border:none;background:transparent;padding:0 14px;font:600 12px var(--font);color:var(--muted);cursor:pointer;transition:all .15s;}
-    .seg button:hover{color:var(--text2);}
-    .seg button.active{background:var(--as);color:#b8b0f0;}
-    .chart{margin-top:16px;width:100%;height:190px;border-radius:var(--radius2);background:linear-gradient(180deg,rgba(108,92,231,.06),transparent);border:1px solid var(--border);overflow:hidden;position:relative;}
-    .chart svg{width:100%;height:100%;display:block;}
-    .insight{margin-top:14px;padding:14px 16px;border-radius:10px;background:var(--ys);border:1px solid rgba(254,202,87,.12);display:flex;gap:10px;align-items:flex-start;font-size:13px;font-weight:600;color:var(--accent);line-height:1.45;}
-    .insight b{color:var(--accent);}
-    .spark{width:24px;height:24px;border-radius:8px;background:rgba(254,202,87,.12);display:grid;place-items:center;flex-shrink:0;font-weight:900;}
+    .parentGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
-    .mastery{padding:16px 22px 22px;}
-    .skill-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-    @media(min-width:860px){.skill-grid{grid-template-columns:repeat(3,1fr);}}
-    .skill{padding:16px;border-radius:var(--radius2);background:rgba(255,255,255,.03);border:1px solid var(--border);display:flex;flex-direction:column;gap:10px;min-height:100px;transition:all .15s;}
-    .skill:hover{background:rgba(255,255,255,.05);transform:translateY(-2px);}
-    .skill .top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
-    .skill .name{font-weight:700;font-size:14px;line-height:1.15;}
-    .state{font-size:10px;font-weight:700;padding:4px 10px;border-radius:100px;white-space:nowrap;text-transform:uppercase;letter-spacing:.4px;}
-    .state.practicing{background:var(--ys);border:1px solid rgba(254,202,87,.15);color:var(--accent);}
-    .state.solid{background:var(--gs);border:1px solid rgba(0,210,160,.12);color:var(--good);}
-    .skill .go{height:32px;border-radius:8px;border:1px solid rgba(108,92,231,.2);background:var(--as);color:#b8b0f0;font:700 12px var(--font);padding:0 12px;cursor:pointer;transition:all .12s;}
-    .skill .go:hover{background:rgba(108,92,231,.2);}
-
-    .activity{padding:16px 22px 22px;}
-    .timeline{display:flex;flex-direction:column;gap:8px;}
-    .evt{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.03);transition:background .12s;}
-    .evt:hover{background:rgba(255,255,255,.05);}
-    .evt .ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--as);border:1px solid rgba(108,92,231,.15);color:#b8b0f0;font-weight:800;font-size:13px;flex:0 0 auto;}
-    .evt b{display:block;font-size:13px;font-weight:600;}
-    .evt span{display:block;color:var(--muted);font-size:12px;margin-top:2px;}
-
-    .parent{padding:16px 22px 22px;}
-    .parent-grid{margin-top:10px;display:grid;grid-template-columns:1fr;gap:10px;}
-    @media(min-width:600px){.parent-grid{grid-template-columns:1fr 1fr;}}
-    .pbox{border-radius:var(--radius2);border:1px solid var(--border);background:rgba(255,255,255,.03);padding:16px;}
-    .pbox h4{margin:0;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;}
-    .pbox p{margin:8px 0 0;font-size:13px;color:var(--muted);line-height:1.45;}
-    .p-actions{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;}
-    .foot{margin-top:24px;color:var(--muted);font-size:11px;text-align:center;padding:12px;}
-
-    .modal-backdrop{position:fixed;inset:0;background:rgba(8,10,22,.7);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;z-index:100;}
-    .modal{width:min(500px,96vw);border-radius:var(--radius);background:rgba(20,24,52,.85);backdrop-filter:blur(24px);border:1px solid var(--border);box-shadow:0 24px 64px rgba(0,0,0,.4);overflow:hidden;animation:mslide .25s ease;}
-    @keyframes mslide{from{opacity:0;transform:translateY(16px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
-    .modal-h{padding:22px 22px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
-    .modal-h b{font-family:var(--font-d);font-size:17px;font-weight:700;}
-    .modal-h button{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer;font-weight:700;display:grid;place-items:center;}
-    .modal-b{padding:14px 22px 22px;color:var(--muted);font-size:14px;line-height:1.5;}
-    .modal-actions{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;}
-
-    .notice{padding:20px 22px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);font-size:14px;color:var(--muted);line-height:1.5;}
-    .notice b{color:var(--text);display:block;margin-bottom:6px;}
-    .skeleton{height:12px;border-radius:100px;background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 75%);background-size:200% 100%;animation:shimmer 1.2s ease-in-out infinite;}
-    @keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
-    .reveal{animation:fadeUp .5s cubic-bezier(.25,.46,.45,.94) both;}
-    .r1{animation-delay:0s;}.r2{animation-delay:.07s;}.r3{animation-delay:.14s;}.r4{animation-delay:.21s;}.r5{animation-delay:.28s;}.r6{animation-delay:.35s;}
-
-    @media(max-width:600px){.wrap{padding:82px 12px 28px;}.topbar-inner{padding:10px 12px;}.brand-title span{display:none;}.hero{padding:22px 18px 20px;}.hero-head{font-size:20px;}.card-h{padding:16px 18px 0;}.card-b,.tiles,.chart-wrap,.mastery,.activity,.parent{padding:14px 18px 18px;}.tile .v{font-size:24px;}.status-strip{padding:0 12px 6px;}}
-    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+    @media (max-width: 900px){
+      .grid{grid-template-columns:1fr}
+      .stats{grid-template-columns:repeat(2,1fr)}
+      .parentGrid{grid-template-columns:1fr}
+      .top{top:0;border-radius:0}
+      .wrap{padding:10px 10px 40px}
+    }
   </style>
-  <script src="/assets/js/env-loader.js"></script>
-
-  <script>
-    // BFCache hardening: when navigating back, force a clean reload so auth + listeners restore.
-    window.addEventListener('pageshow', function (e) {
-      if (e && e.persisted) window.location.reload();
-    });
-  </script>
-
 </head>
 <body>
-  <div class="topbar">
-    <div class="topbar-inner">
-      <div class="brand"><div class="logo">LP</div><div class="brand-title"><b>LogicPals</b><span>Student Dashboard</span></div></div>
-      <div class="center-pill"><div class="track-pill"><span class="track-dot"></span>Regular Practice</div></div>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <div class="logo">LP</div>
+        <div>
+          <h1>Dashboard</h1>
+          <p>Regular practice • habits • progress</p>
+        </div>
+      </div>
+
       <div class="actions">
-        <button id="btnOlympiad" class="btn btn-accent" type="button"><span>Olympiad</span><span id="olympiadState">🔒</span></button>
-        <button id="btnSignOut" class="btn btn-ghost" type="button">Sign out</button>
+        <span id="sessPill" class="pill"><span id="sessDot" class="dot"></span><span id="sessText">Checking session…</span></span>
+        <button id="btnGoOlympiad" class="btn accent" type="button">Go to Olympiad</button>
+        <button id="btnSignOut" class="btn" type="button" disabled>Sign out</button>
       </div>
-    </div>
-    <div class="status-strip">
-      <div class="status-left">
-        <span class="badge" id="planBadge"><span class="chip-dot dot-good"></span><b>Plan:</b> <span id="planText">Loading…</span></span>
-        <span class="badge" id="streakBadge" style="display:none;"><span class="chip-dot dot-good"></span><b>Streak:</b> <span id="streakText">—</span></span>
-      </div>
-      <div class="status-right"><span class="badge"><b>Updated:</b> <span id="updatedText">—</span></span></div>
-    </div>
-  </div>
+    </header>
 
-  <main class="wrap">
-    <div id="authNotice" class="notice" style="display:none;">
-      <b>Sign-in required.</b> We couldn't find your session.
-      <div style="margin-top:12px;"><button class="btn btn-primary btn-wide" id="btnGoLogin" type="button">Go to Login</button></div>
-    </div>
-    <div id="content" style="display:none;">
-      <div class="grid">
-        <section class="card reveal r1">
-          <div class="hero">
-            <div class="hero-top">
-              <div>
-                <div class="hello" id="helloText">Hi 👋</div>
-                <div class="hero-head">Continue your Regular Practice</div>
-                <div class="sub" id="heroReason"><span class="skeleton" style="width:220px;display:inline-block;"></span></div>
-              </div>
-              <div class="ring" id="goalRing" style="--p:0%;"><div><span id="goalPct">0%</span></div></div>
-            </div>
-            <div class="hero-focus">
-              <span class="pill"><strong>Next:</strong> <span id="heroMinutes">10</span> min</span>
-              <span class="pill">Focus: <span id="heroFocusLabel">—</span></span>
-            </div>
-            <div class="hero-actions">
-              <button id="btnStart" class="btn btn-primary btn-wide" type="button">Start now</button>
-              <button id="btnPickTopic" class="btn btn-secondary btn-wide" type="button">Choose topic</button>
-            </div>
-          </div>
-        </section>
-        <section class="card reveal r2">
-          <div class="card-h"><div><div class="card-title">Today at a glance ✨</div><div class="sub">Your key metrics this week</div></div></div>
-          <div class="tiles">
-            <div class="tile-row">
-              <div class="tile"><div class="k">Problems solved</div><div class="v" id="kpiSolved">—</div><div class="d"><span class="mini">🔥</span> Total</div></div>
-              <div class="tile"><div class="k">Accuracy</div><div class="v" id="kpiAccuracy">—</div><div class="d"><span class="mini">✓</span> Last 7 days</div></div>
-              <div class="tile"><div class="k">Hints used</div><div class="v" id="kpiHints">—</div><div class="d"><span class="mini">💡</span> Average per problem</div></div>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <section class="card reveal r3" style="margin-top:16px;">
-        <div class="card-h">
-          <div><div class="card-title">Your progress story 📈</div><div class="sub">Accuracy over your recent sessions</div></div>
-          <div class="seg">
-            <button class="active" data-window="7d" type="button">7d</button>
-            <button data-window="30d" type="button">30d</button>
-            <button data-window="all" type="button">All</button>
-          </div>
+    <main class="grid">
+      <section class="card">
+        <div class="hd">
+          <h2>Today’s Regular Plan</h2>
+          <p>A short, high-quality session designed to build daily thinking habits (Regular track). Olympiad remains separate.</p>
         </div>
-        <div class="chart-wrap">
-          <div class="chart"><svg id="trendSvg" viewBox="0 0 1000 190" preserveAspectRatio="none"></svg></div>
-          <div class="insight"><div class="spark">💡</div><div><b>Insight</b><div id="insightText">Loading…</div></div></div>
+        <div class="bd">
+          <div class="stats">
+            <div class="stat"><div class="k">Sessions completed</div><div class="v" id="sSessions">—</div></div>
+            <div class="stat"><div class="k">Accuracy (7d)</div><div class="v" id="sAcc">—</div></div>
+            <div class="stat"><div class="k">Time spent (7d)</div><div class="v" id="sTime">—</div></div>
+            <div class="stat"><div class="k">Current streak</div><div class="v" id="sStreak">—</div></div>
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+            <button id="btnStart" class="btn primary" type="button" disabled>Start regular practice</button>
+            <a class="btn" href="/learn.html">Open Learn</a>
+          </div>
+
+          <div style="margin-top:12px" class="note">
+            <b>Trust note:</b> This dashboard never reads Olympiad-only data. All summaries must come from Step 7 “safe views” / “safe RPC”.
+          </div>
         </div>
       </section>
 
-      <section class="card reveal r4" style="margin-top:16px;">
-        <div class="card-h"><div><div class="card-title">Categories practiced 🧠</div><div class="sub">Your skill breakdown</div></div></div>
-        <div class="mastery"><div class="skill-grid" id="skillGrid"></div></div>
-      </section>
-
-      <section class="card reveal r5" style="margin-top:16px;">
-        <div class="card-h"><div><div class="card-title">Recent activity 🧾</div><div class="sub">Your last sessions</div></div></div>
-        <div class="activity"><div class="timeline" id="timeline"></div></div>
-      </section>
-
-      <div class="foot">Regular dashboard · Track boundary enforced · No Olympiad data loaded</div>
-    </div>
-  </main>
-
-  <div class="modal-backdrop" id="olymModal">
-    <div class="modal"><div class="modal-h"><div><b>Olympiad Track</b><div class="sub">A separate advanced track.</div></div><button type="button" id="closeOlymp">✕</button></div>
-    <div class="modal-b"><p id="olymModalBody">Olympiad is a separate advanced track. Upgrade to unlock it.</p><div class="modal-actions"><a class="btn btn-primary btn-wide" href="subscriptions.html">View plans</a><button class="btn btn-ghost btn-wide" id="olymCancelBtn" type="button">Not now</button></div></div></div>
-  </div>
-  <div class="modal-backdrop" id="topicModal">
-    <div class="modal"><div class="modal-h"><div><b>Choose a topic</b><div class="sub">Pick a focus for your session.</div></div><button type="button" id="closeTopic">✕</button></div>
-    <div class="modal-b"><div style="display:grid;gap:8px;">
-      <button class="btn btn-secondary btn-wide" data-topic="numbers" type="button" style="width:100%;justify-content:center;">Numbers & Arithmetic</button>
-      <button class="btn btn-secondary btn-wide" data-topic="fractions" type="button" style="width:100%;justify-content:center;">Fractions & Ratio</button>
-      <button class="btn btn-secondary btn-wide" data-topic="geometry" type="button" style="width:100%;justify-content:center;">Geometry Basics</button>
-      <button class="btn btn-secondary btn-wide" data-topic="logic" type="button" style="width:100%;justify-content:center;">Logic & Patterns</button>
-    </div></div></div>
-  </div>
-
-  <script>
-    /* ============================================
-       DASHBOARD — queries Supabase directly
-       Same pattern as learn.html (no /api/dashboard needed)
-       ============================================ */
-
-    const { SUPABASE_URL: SB_URL, SUPABASE_ANON_KEY: SB_KEY } = window.__LP_ENV || {};
-    let sb, session, childId;
-
-    function $(id){ return document.getElementById(id); }
-    function safe(el,t){ if(el) el.textContent = (t==null||t==='')?'—':String(t); }
-    function fmtAgo(iso){
-      if(!iso) return '—';
-      const d=Date.now()-new Date(iso).getTime(), m=Math.floor(d/60000);
-      if(m<1) return 'just now'; if(m<60) return m+' min ago';
-      const h=Math.floor(m/60); if(h<24) return h+' hr ago';
-      return Math.floor(h/24)+' days ago';
-    }
-    function openModal(id){ $(id).style.display='flex'; document.body.style.overflow='hidden'; }
-    function closeModalFn(id){ $(id).style.display='none'; document.body.style.overflow=''; }
-
-    // ——— SVG chart ———
-    function renderChart(svgEl, points){
-      const W=1000,H=190,pX=28,pY=24; svgEl.innerHTML='';
-      const g=document.createElementNS('http://www.w3.org/2000/svg','g');
-      for(let i=0;i<4;i++){const y=pY+(H-pY*2)*(i/3);const l=document.createElementNS('http://www.w3.org/2000/svg','line');l.setAttribute('x1','0');l.setAttribute('x2',W);l.setAttribute('y1',y);l.setAttribute('y2',y);l.setAttribute('stroke','rgba(255,255,255,.04)');g.appendChild(l);}
-      svgEl.appendChild(g);
-      if(!points||points.length<2){const t=document.createElementNS('http://www.w3.org/2000/svg','text');t.setAttribute('x',W/2);t.setAttribute('y',H/2);t.setAttribute('text-anchor','middle');t.setAttribute('fill','rgba(152,153,179,.7)');t.setAttribute('font-size','14');t.setAttribute('font-family','Plus Jakarta Sans');t.textContent='Complete a few sessions to see your trend ✨';svgEl.appendChild(t);return;}
-      const vals=points.map(p=>Math.max(0,Math.min(1,p)));const mn=Math.min(...vals),mx=Math.max(...vals),sp=(mx-mn)||.25;
-      const xs=(W-pX*2)/(vals.length-1);
-      const XY=vals.map((v,i)=>[pX+i*xs,(H-pY)-((v-mn)/sp)*(H-pY*2)]);
-      const area=document.createElementNS('http://www.w3.org/2000/svg','path');
-      let dA=`M${XY[0][0]} ${H-pY} L${XY[0][0]} ${XY[0][1]}`;XY.slice(1).forEach(p=>dA+=` L${p[0]} ${p[1]}`);dA+=` L${XY[XY.length-1][0]} ${H-pY}Z`;
-      area.setAttribute('d',dA);area.setAttribute('fill','rgba(108,92,231,.12)');svgEl.appendChild(area);
-      const line=document.createElementNS('http://www.w3.org/2000/svg','path');
-      let dL=`M${XY[0][0]} ${XY[0][1]}`;XY.slice(1).forEach(p=>dL+=` L${p[0]} ${p[1]}`);
-      line.setAttribute('d',dL);line.setAttribute('fill','none');line.setAttribute('stroke','rgba(108,92,231,.85)');line.setAttribute('stroke-width','3');line.setAttribute('stroke-linecap','round');line.setAttribute('stroke-linejoin','round');svgEl.appendChild(line);
-      XY.forEach(([x,y],i)=>{const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',x);c.setAttribute('cy',y);c.setAttribute('r',i===XY.length-1?'6':'3.5');c.setAttribute('fill',i===XY.length-1?'rgba(0,210,160,.95)':'rgba(108,92,231,.85)');c.setAttribute('stroke',i===XY.length-1?'rgba(0,210,160,.3)':'rgba(108,92,231,.3)');c.setAttribute('stroke-width',i===XY.length-1?'4':'2');svgEl.appendChild(c);});
-    }
-
-    // ——— Main boot ———
-    async function boot(){
-      if(!SB_URL||!SB_KEY){ $('authNotice').style.display='block'; return; }
-            const envRes = await fetch('/api/env', { cache: 'no-store' });
-      if (!envRes.ok) throw new Error('Failed to load /api/env (' + envRes.status + ')');
-      const env = await envRes.json();
-      if (!env?.supabaseUrl || !env?.supabaseAnonKey) throw new Error('Invalid env payload');
-      sb = supabase.createClient(env.supabaseUrl, env.supabaseAnonKey, {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: true,
-          storageKey: 'logicpals.auth'
-        }
-      });
-
-      // Use SubscriptionGuard for auth — same as learn.html
-      try {
-        if(typeof SubscriptionGuard !== 'undefined'){
-          const loggedIn = await SubscriptionGuard.requireLogin();
-          if(!loggedIn){
-            $('authNotice').style.display='block';
-            $('content').style.display='none';
-            return;
-          }
-        }
-      } catch(e){ console.warn('SubscriptionGuard not available:', e); }
-
-      // Try getSession first, then getUser as fallback
-      let user = null;
-      try {
-        const { data:{ session: s } } = await sb.auth.getSession();
-        if(s) { session = s; user = s.user; }
-      } catch(e){ console.warn('getSession failed:', e); }
-
-      // Fallback: if getSession returned null, try getUser (works when session storage differs)
-      if(!user){
-        try {
-          const { data:{ user: u } } = await sb.auth.getUser();
-          if(u) user = u;
-        } catch(e){ console.warn('getUser failed:', e); }
-      }
-
-      if(!user){
-        $('authNotice').style.display='block';
-        $('content').style.display='none';
-        return;
-      }
-      $('authNotice').style.display='none';
-      $('content').style.display='block';
-
-      // Get user name
-      const userName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'there';
-      safe($('helloText'), `Hi ${userName} 👋`);
-
-      // Get child id (same as learn.html)
-      try {
-        const { data: child } = await sb.from('children').select('id').eq('parent_id', user.id).single();
-        if(child) childId = child.id;
-      } catch(e){}
-
-      // Subscription info
-      try {
-        if(typeof SubscriptionGuard !== 'undefined'){
-          const sub = await SubscriptionGuard.getUserSubscription();
-          if(sub){
-            safe($('planText'), sub.expired ? 'Expired' : (sub.tier || 'Active'));
-            const dot = $('planBadge').querySelector('.chip-dot');
-            if(dot){ dot.classList.remove('dot-good','dot-warn'); dot.classList.add(sub.expired?'dot-warn':'dot-good'); }
-          } else { safe($('planText'),'Active'); }
-        } else { safe($('planText'),'Active'); }
-      } catch(e){ safe($('planText'),'Active'); }
-
-      safe($('updatedText'), 'just now');
-
-      // Fetch attempts for this child
-      let attempts = [];
-      if(childId){
-        try {
-          const { data } = await sb.from('attempts').select('*, problems(category, difficulty)').eq('child_id', childId).order('created_at', { ascending: false }).limit(100);
-          if(data) attempts = data;
-        } catch(e){ console.warn('Could not fetch attempts:', e); }
-      }
-
-      renderKPIs(attempts);
-      renderChart7d(attempts, '7d');
-      renderSkills(attempts);
-      renderActivity(attempts);
-      renderHero(attempts);
-    }
-
-    function renderKPIs(attempts){
-      const total = attempts.length;
-      const correct = attempts.filter(a=>a.solved_correctly).length;
-      const acc = total > 0 ? Math.round((correct/total)*100) : 0;
-      const totalHints = attempts.reduce((s,a)=>s+(a.hints_used||0),0);
-      const avgHints = total > 0 ? (totalHints/total).toFixed(1) : '0';
-
-      safe($('kpiSolved'), total);
-      safe($('kpiAccuracy'), acc + '%');
-      safe($('kpiHints'), avgHints);
-
-      // Goal ring = accuracy
-      const ring = $('goalRing');
-      if(ring) ring.style.setProperty('--p', acc+'%');
-      safe($('goalPct'), acc+'%');
-    }
-
-    function renderHero(attempts){
-      // Figure out weakest category
-      const cats = {};
-      attempts.forEach(a=>{
-        const cat = a.problems?.category || 'logic';
-        if(!cats[cat]) cats[cat] = {total:0, correct:0};
-        cats[cat].total++;
-        if(a.solved_correctly) cats[cat].correct++;
-      });
-      let weakest = null, weakAcc = 999;
-      Object.entries(cats).forEach(([cat,{total,correct}])=>{
-        const acc = total>0 ? correct/total : 1;
-        if(acc < weakAcc){ weakAcc = acc; weakest = cat; }
-      });
-      if(weakest){
-        safe($('heroFocusLabel'), weakest.charAt(0).toUpperCase() + weakest.slice(1));
-        safe($('heroReason'), `Based on your ${attempts.length} attempts — ${weakest} needs more practice`);
-      } else {
-        safe($('heroFocusLabel'), 'Logic & Patterns');
-        safe($('heroReason'), 'Start your first session to get personalized recommendations');
-      }
-      safe($('heroMinutes'), '10–12');
-    }
-
-    let allAttempts = [];
-    function renderChart7d(attempts, windowKey){
-      allAttempts = attempts;
-      document.querySelectorAll('.seg button').forEach(b=> b.classList.toggle('active', b.dataset.window===windowKey));
-
-      const now = Date.now();
-      const days = windowKey==='7d' ? 7 : windowKey==='30d' ? 30 : 9999;
-      const filtered = attempts.filter(a=>{
-        const t = new Date(a.created_at).getTime();
-        return (now - t) < days * 86400000;
-      });
-
-      // Group by day, compute daily accuracy
-      const byDay = {};
-      filtered.forEach(a=>{
-        const day = new Date(a.created_at).toISOString().slice(0,10);
-        if(!byDay[day]) byDay[day]={correct:0,total:0};
-        byDay[day].total++;
-        if(a.solved_correctly) byDay[day].correct++;
-      });
-      const sorted = Object.keys(byDay).sort();
-      const points = sorted.map(d => byDay[d].total>0 ? byDay[d].correct/byDay[d].total : 0);
-
-      renderChart($('trendSvg'), points);
-
-      // Insight
-      if(points.length >= 2){
-        const last = points[points.length-1], prev = points[points.length-2];
-        if(last > prev) safe($('insightText'), 'Your accuracy is trending up — keep it going!');
-        else if(last < prev) safe($('insightText'), 'Accuracy dipped slightly. Try shorter focused sessions.');
-        else safe($('insightText'), 'Steady performance. Challenge yourself with harder problems!');
-      } else {
-        safe($('insightText'), 'Complete a few more sessions to unlock trend insights.');
-      }
-    }
-
-    function renderSkills(attempts){
-      const grid = $('skillGrid'); grid.innerHTML = '';
-      const cats = {};
-      attempts.forEach(a=>{
-        const cat = a.problems?.category || 'unknown';
-        if(!cats[cat]) cats[cat] = {total:0, correct:0};
-        cats[cat].total++;
-        if(a.solved_correctly) cats[cat].correct++;
-      });
-
-      if(Object.keys(cats).length === 0){
-        grid.innerHTML = '<div class="notice" style="grid-column:1/-1;"><b>No skills tracked yet.</b> Start a session to see your skill breakdown.</div>';
-        return;
-      }
-
-      Object.entries(cats).sort((a,b)=>b[1].total-a[1].total).forEach(([cat, {total, correct}])=>{
-        const acc = total>0 ? Math.round((correct/total)*100) : 0;
-        const label = cat.charAt(0).toUpperCase() + cat.slice(1).replace('-',' ');
-        const stateLabel = acc >= 80 ? 'Solid' : 'Practicing';
-        const stateClass = acc >= 80 ? 'solid' : 'practicing';
-        const el = document.createElement('div');
-        el.className = 'skill';
-        el.innerHTML = `
-          <div class="top"><div class="name">${label}</div><div class="state ${stateClass}">${stateLabel}</div></div>
-          <div style="font-size:12px;color:var(--text2);margin-top:auto;">${correct}/${total} correct (${acc}%)</div>
-          <button class="go" type="button" data-topic="${cat}">Practice</button>
-        `;
-        grid.appendChild(el);
-      });
-
-      grid.querySelectorAll('.go').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          location.href = `learn.html?track=regular&focus=${encodeURIComponent(btn.dataset.topic)}`;
-        });
-      });
-    }
-
-    function renderActivity(attempts){
-      const tl = $('timeline'); tl.innerHTML = '';
-      if(!attempts.length){
-        tl.innerHTML = '<div class="notice"><b>No recent activity yet.</b> Start a session to build your trail.</div>';
-        return;
-      }
-      attempts.slice(0,8).forEach(a=>{
-        const el = document.createElement('div');
-        el.className = 'evt';
-        const cat = a.problems?.category || 'logic';
-        const icon = a.solved_correctly ? '✓' : '✗';
-        el.innerHTML = `
-          <div class="ic">${icon}</div>
-          <div>
-            <b>${a.solved_correctly?'Solved':'Attempted'} — ${cat}</b>
-            <span>${fmtAgo(a.created_at)}${a.hints_used?' · '+a.hints_used+' hints':''}</span>
+      <aside class="card">
+        <div class="hd">
+          <h2>Parent / Child View</h2>
+          <p>Parents can observe progress without accessing restricted Olympiad data.</p>
+        </div>
+        <div class="bd">
+          <div class="row">
+            <div>
+              <b>Child Profile</b>
+              <div style="color:var(--muted);font-size:12px">(placeholder) For multi-child, wire to your Step 7 parent-child link.</div>
+            </div>
+            <span class="tag" id="roleTag">role: —</span>
           </div>
-        `;
-        tl.appendChild(el);
-      });
+          <div class="list" style="margin-top:10px">
+            <div class="row"><div><b>Weekly insight</b><div style="color:var(--muted);font-size:12px">Strengths + next focus.</div></div><span class="tag">coming</span></div>
+            <div class="row"><div><b>Next milestone</b><div style="color:var(--muted);font-size:12px">Unlock badges via consistency.</div></div><span class="tag">coming</span></div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="card">
+        <div class="hd"><h2>Progress</h2>
+          <p>These tiles should be fed by Step 7 safe aggregates (never raw attempts directly in the browser).</p>
+        </div>
+        <div class="bd">
+          <div class="list">
+            <div class="row"><div><b>Mastery (Regular)</b><div style="color:var(--muted);font-size:12px">Top strengths + gaps.</div></div><span class="tag" id="mTag">safe-view</span></div>
+            <div class="row"><div><b>Recent sessions</b><div style="color:var(--muted);font-size:12px">Last 5 session receipts (hash-verified).</div></div><span class="tag" id="rTag">safe-view</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="hd"><h2>Parent Mode</h2>
+          <p>Bangladesh-friendly: parents often support the journey even if students don’t have an email. Surface evidence + trust.</p>
+        </div>
+        <div class="bd">
+          <div class="parentGrid">
+            <div class="row"><div><b>Evidence summary</b><div style="color:var(--muted);font-size:12px">“Solved 18 problems this week with 72% accuracy.”</div></div></div>
+            <div class="row"><div><b>Explainability</b><div style="color:var(--muted);font-size:12px">“We recommended pattern practice because the last 10 attempts show a gap.”</div></div></div>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+            <button id="btnRefresh" class="btn" type="button" disabled>Refresh</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="/assets/js/env-loader.js"></script>
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+    const pill = $('sessPill');
+    const dot = $('sessDot');
+    const text = $('sessText');
+
+    function setSession(ok, msg){
+      dot.className = 'dot' + (ok ? ' ok' : '');
+      text.textContent = msg;
     }
 
-    // ——— Events ———
-    $('btnOlympiad').addEventListener('click', ()=> openModal('olymModal'));
-    $('closeOlymp').addEventListener('click', ()=> closeModalFn('olymModal'));
-    $('olymCancelBtn').addEventListener('click', ()=> closeModalFn('olymModal'));
-    $('olymModal').addEventListener('click', e=>{ if(e.target.id==='olymModal') closeModalFn('olymModal'); });
+    async function safeGetRole(client){
+      // Enterprise contract: role comes from DB/RPC, not localStorage.
+      // If you already have an RPC, wire it here.
+      try{
+        // Example placeholder: if you have rpc('get_my_role')
+        const { data, error } = await client.rpc('get_my_role');
+        if (error) throw error;
+        return (data && (data.role || data)) || 'unknown';
+      } catch {
+        return 'unknown';
+      }
+    }
 
-    $('btnPickTopic').addEventListener('click', ()=> openModal('topicModal'));
-    $('closeTopic').addEventListener('click', ()=> closeModalFn('topicModal'));
-    $('topicModal').addEventListener('click', e=>{ if(e.target.id==='topicModal') closeModalFn('topicModal'); });
-    $('topicModal').querySelectorAll('[data-topic]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{ closeModalFn('topicModal'); location.href=`learn.html?track=regular&topic=${encodeURIComponent(btn.dataset.topic)}`; });
+    async function refresh(){
+      const client = await window.lpGetClient();
+      const { data } = await client.auth.getSession();
+      const signedIn = !!data?.session?.user;
+
+      $('btnSignOut').disabled = !signedIn;
+      $('btnStart').disabled = !signedIn;
+      $('btnRefresh').disabled = !signedIn;
+
+      if (!signedIn){
+        setSession(false, 'Sign-in required');
+        // show CTA
+        $('btnStart').textContent = 'Start regular practice';
+        $('btnStart').onclick = () => location.href = '/login.html?next=/dashboard.html';
+        $('btnRefresh').onclick = () => location.href = '/login.html?next=/dashboard.html';
+        return;
+      }
+
+      setSession(true, 'Signed in');
+
+      const role = await safeGetRole(client);
+      $('roleTag').textContent = 'role: ' + role;
+
+      // Demo stats placeholders (replace with Step 7 safe aggregates)
+      $('sSessions').textContent = '—';
+      $('sAcc').textContent = '—';
+      $('sTime').textContent = '—';
+      $('sStreak').textContent = '—';
+
+      $('btnStart').onclick = () => location.href = '/learn.html';
+      $('btnRefresh').onclick = () => location.reload();
+    }
+
+    $('btnGoOlympiad').addEventListener('click', () => {
+      // Regular dashboard always allows navigation, but Olympiad page enforces strict gating.
+      location.href = '/olympiad.html';
     });
 
-    document.querySelectorAll('.seg button').forEach(btn=>{
-      btn.addEventListener('click', ()=> renderChart7d(allAttempts, btn.dataset.window));
+    $('btnSignOut').addEventListener('click', async () => {
+      const client = await window.lpGetClient();
+      await client.auth.signOut();
+      location.replace('/login.html?next=/dashboard.html');
     });
 
-    $('btnStart').addEventListener('click', ()=> location.href='learn.html?track=regular');
-    $('btnSignOut').addEventListener('click', async ()=>{
-      try{ await sb.auth.signOut(); }catch(e){}
-      ['lp_jwt','access_token','supabase_access_token','sb-access-token','sb:token'].forEach(k=>localStorage.removeItem(k));
-      location.href='index.html';
-    });
-    $('btnGoLogin').addEventListener('click', ()=> location.href='index.html');
-
-    // ——— Boot (wait for deferred scripts like learn.html) ———
-    window.onload = () => boot();
+    // Auth change refresh
+    (async () => {
+      try{
+        const client = await window.lpGetClient();
+        client.auth.onAuthStateChange(() => refresh());
+      } catch {}
+      await refresh();
+    })();
   </script>
 </body>
 </html>
