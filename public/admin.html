@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LogicPals Admin Console</title>
 
-  <!-- BFCache/Back button hardening: always revalidate -->
+  <!-- Loads window.__LP_ENV via Vercel route -->
+<!-- BFCache/Back button hardening: always revalidate -->
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -13,7 +14,7 @@
   <style>
     :root{
       --bg:#f6f7fb; --card:#ffffff; --text:#0f172a; --muted:#64748b; --line:#e5e7eb;
-      --primary:#2563EB; --primary-weak:#e8efff;
+      --primary:#4f46e5; --primary-weak:#eef2ff;
       --success:#10b981; --warn:#f59e0b; --danger:#ef4444;
       --shadow:0 18px 45px rgba(15,23,42,.08);
       --radius:18px; --radius-sm:12px;
@@ -23,8 +24,8 @@
     html,body{height:100%}
     body{
       margin:0; font-family:var(--font); color:var(--text);
-      background:radial-gradient(900px 600px at 18% 12%, rgba(37,99,235,.12), transparent 60%),
-                 radial-gradient(900px 600px at 82% 20%, rgba(245,158,11,.10), transparent 60%),
+      background:radial-gradient(900px 600px at 18% 12%, rgba(79,70,229,.10), transparent 60%),
+                 radial-gradient(900px 600px at 82% 20%, rgba(16,185,129,.08), transparent 60%),
                  var(--bg);
     }
     .shell{max-width:1180px;margin:22px auto;padding:0 18px;}
@@ -35,9 +36,9 @@
     }
     .brand{display:flex;align-items:center;gap:12px;min-width:240px;}
     .logo{
-      width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#2563EB,#60A5FA);
-      display:grid;place-items:center;color:#fff;font-weight:900;letter-spacing:.5px;
-      box-shadow:0 14px 28px rgba(37,99,235,.25);
+      width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#6366f1,#8b5cf6);
+      display:grid;place-items:center;color:#fff;font-weight:800;letter-spacing:.5px;
+      box-shadow:0 14px 28px rgba(79,70,229,.25);
     }
     .brand h1{margin:0;font-size:15px;line-height:1.15}
     .brand p{margin:2px 0 0;color:var(--muted);font-size:12px}
@@ -54,13 +55,13 @@
 
     .btn{
       border:1px solid var(--line);background:#fff;color:var(--text);
-      padding:10px 14px;border-radius:999px;font-weight:800;font-size:13px;cursor:pointer;
+      padding:10px 14px;border-radius:999px;font-weight:700;font-size:13px;cursor:pointer;
       transition:transform .06s ease, box-shadow .12s ease, background .12s ease, opacity .12s ease;
     }
     .btn:hover{box-shadow:0 10px 22px rgba(15,23,42,.08)}
     .btn:active{transform:translateY(1px)}
     .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
-    .btn.primary:hover{box-shadow:0 14px 26px rgba(37,99,235,.22)}
+    .btn.primary:hover{box-shadow:0 14px 26px rgba(79,70,229,.22)}
     .btn.ghost{background:transparent}
     .btn[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none}
     .btn.danger{border-color:rgba(239,68,68,.30); color:#991b1b; background:rgba(239,68,68,.06)}
@@ -74,13 +75,12 @@
     .card .hd h2{margin:0;font-size:16px}
     .card .hd small{color:var(--muted)}
     .card .bd{padding:16px 18px;}
-
     .kv{display:grid;grid-template-columns:120px 1fr;row-gap:10px;column-gap:12px;margin-top:10px;font-size:13px}
     .k{color:var(--muted)}
 
     .tabs{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 0;}
-    .tab{padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:800;font-size:13px}
-    .tab.active{background:var(--primary-weak);border-color:rgba(37,99,235,.28);color:#1e3a8a}
+    .tab{padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:700;font-size:13px}
+    .tab.active{background:var(--primary-weak);border-color:rgba(79,70,229,.30);color:#1e1b4b}
     .panel{display:none}
     .panel.active{display:block}
 
@@ -114,7 +114,7 @@
       padding:12px 12px;border-radius:12px;border:1px solid var(--line);
       background:#fff;font-size:14px;outline:none;
     }
-    .input:focus{border-color:rgba(37,99,235,.55);box-shadow:0 0 0 4px rgba(37,99,235,.10)}
+    .input:focus{border-color:rgba(79,70,229,.55);box-shadow:0 0 0 4px rgba(79,70,229,.10)}
     .help{color:var(--muted);font-size:12px;line-height:1.35}
     .out{margin-top:12px;padding:12px;border-radius:12px;border:1px dashed var(--line);background:#fafafa;color:#0f172a;white-space:pre-wrap;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-size:12px;min-height:56px}
 
@@ -141,18 +141,6 @@
     .gate-box h3{margin:0 0 6px;font-size:14px}
     .gate-box p{margin:0;color:var(--muted);font-size:13px;line-height:1.35}
     .gate-box .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-
-    /* Metrics table */
-    .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
-    .select{padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#fff;font-weight:700;font-size:13px;}
-    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
-    table{width:100%;border-collapse:separate;border-spacing:0;margin-top:10px;overflow:hidden;border:1px solid var(--line);border-radius:14px;background:#fff}
-    th,td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-    th{background:#f8fafc;color:#0f172a;font-weight:900}
-    tr:last-child td{border-bottom:none}
-    .tag{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:12px;font-weight:800;color:#334155}
-    .tag.ok{border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.08);color:#064e3b}
-    .tag.warn{border-color:rgba(245,158,11,.40);background:rgba(245,158,11,.12);color:#7c2d12}
   </style>
   <script src="/assets/js/env-loader.js"></script>
 </head>
@@ -192,11 +180,11 @@
           </div>
 
           <div class="banner warn" style="margin-top:14px" id="roleHint">
-            <div>Sign in to load admin capabilities. If your role is <b>super_admin</b>, you can manage experiments, roles, and monetization.</div>
+            <div>Sign in to load admin capabilities. If your role is <b>super_admin</b>, you can assign roles and manage monetization.</div>
           </div>
 
           <div class="banner" style="margin-top:12px">
-            <div><b>Roadmap contract:</b> Admin UI never writes protected tables directly. Mutations must go through <b>RPC</b> + <b>audit events</b>.</div>
+            <div><b>Roadmap contract:</b> Admin UI never directly writes protected tables. All mutations go through <b>RPC</b> + <b>audit events</b>.</div>
           </div>
 
           <div class="banner danger" style="margin-top:12px; display:none" id="logoutWarn">
@@ -208,10 +196,9 @@
       <main class="card" id="workspaceCard" style="position:relative">
         <div class="hd">
           <h2>Admin Workspace</h2>
-          <small>Strict Regular vs Olympiad separation • A/B metrics are per-track</small>
+          <small>Clean controls with hard boundaries for Regular vs Olympiad</small>
           <div class="tabs" style="margin-top:12px">
             <button class="tab active" data-tab="overview" type="button">Overview</button>
-            <button class="tab" data-tab="ab" type="button">A/B Metrics</button>
             <button class="tab" data-tab="content" type="button">Content</button>
             <button class="tab" data-tab="monetization" type="button">Monetization</button>
             <button class="tab" data-tab="access" type="button">Access</button>
@@ -221,16 +208,9 @@
         <div class="bd" id="workspaceBody">
           <section class="panel active" id="tab-overview">
             <div class="banner" style="margin-bottom:14px">
-              <div><b>Status:</b> Steps 1–8 exist. This console provides safe, read-only admin views until each admin mutation has an audit-backed RPC.</div>
+              <div><b>Step 7 readiness:</b> Explainability events + receipts are working. Next: surface trustworthy admin views + immutable audit.</div>
             </div>
             <div class="cards">
-              <div class="mini">
-                <h3>A/B Metrics</h3>
-                <p>Verified loop: get-variant → log-metric → aggregation. Next: dashboard hardening + audit alignment.</p>
-                <div class="row">
-                  <button class="btn gated" id="btnGoAB" type="button">Open A/B Panel</button>
-                </div>
-              </div>
               <div class="mini">
                 <h3>Regular Review</h3>
                 <p>Content management for standard curriculum (admin_regular, super_admin).</p>
@@ -241,10 +221,18 @@
               </div>
               <div class="mini">
                 <h3>Olympiad Review</h3>
-                <p>Competition prep (admin_olympiad, super_admin). Strict separation.</p>
+                <p>Competition prep (admin_olympiad, super_admin). Strict separation + no hints in mock mode.</p>
                 <div class="row">
                   <button class="btn gated" id="btnOlyUpload" type="button">Upload / Seed</button>
                   <button class="btn gated" id="btnOlyQueue" type="button">Failed Criteria Queue</button>
+                </div>
+              </div>
+              <div class="mini">
+                <h3>Role Management</h3>
+                <p>Assign admin roles (super_admin only). Uses RPC + RLS. Audit required.</p>
+                <div class="row">
+                  <button class="btn gated" id="btnRoles" type="button">Open Role Manager</button>
+                  <button class="btn gated" id="btnAudit" type="button">View Admin Audit</button>
                 </div>
               </div>
               <div class="mini">
@@ -254,53 +242,6 @@
                   <button class="btn gated" id="btnPayments" type="button">Payments</button>
                   <button class="btn gated" id="btnSubs" type="button">Subscriptions</button>
                 </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- A/B METRICS PANEL (NO external metrics-summary.js needed) -->
-          <section class="panel" id="tab-ab">
-            <div class="banner" style="margin-bottom:14px">
-              <div>
-                <b>Enterprise guarantees:</b> Per-track experiments + per-track variants + metric idempotency.
-                This panel is <b>read-only</b> and calls your existing Vercel routes under <span class="mono">/api/ab/*</span>.
-              </div>
-            </div>
-
-            <div class="mini">
-              <h3>Experiment selector</h3>
-              <p>Select an experiment key and track, then refresh. If the API route names differ, update only the <span class="mono">API</span> constants in this file.</p>
-
-              <div class="controls">
-                <span class="tag" id="abAuthTag">Auth: unknown</span>
-                <select class="select" id="abTrack">
-                  <option value="regular">Regular</option>
-                  <option value="olympiad">Olympiad</option>
-                  <option value="both">Both</option>
-                </select>
-                <select class="select" id="abWindow">
-                  <option value="7">Last 7 days</option>
-                  <option value="30" selected>Last 30 days</option>
-                  <option value="0">All-time</option>
-                </select>
-                <input class="select" id="abKey" style="min-width:280px" placeholder="experiment_key (e.g. reg_home_tutor_hint_v1)" />
-                <button class="btn primary gated" id="abRefresh" type="button">Refresh</button>
-                <button class="btn gated" id="abLoadKeys" type="button">Load keys</button>
-              </div>
-
-              <div class="out" id="abOut">Waiting…</div>
-            </div>
-
-            <div class="cards" style="margin-top:14px">
-              <div class="mini">
-                <h3>Variant performance</h3>
-                <p>Exposures vs metric users (conversion) for the chosen window. Per-track only.</p>
-                <div id="abTableWrap"></div>
-              </div>
-              <div class="mini">
-                <h3>Event counts</h3>
-                <p>Event totals by <span class="mono">event_name</span> for the chosen window.</p>
-                <div id="abEventsWrap"></div>
               </div>
             </div>
           </section>
@@ -416,20 +357,17 @@
 
     const $ = (id) => document.getElementById(id);
 
-    // ====== API ROUTES (only edit these if your filenames differ) ======
-    const API = {
-      env: '/api/env',
-      abAdminBundle: '/api/ab/admin-bundle',
-      abRefreshDashboard: '/api/ab/refresh-dashboard',
-    };
-
-    async function fetchEnv() {
-      const r = await fetch(API.env, { method: 'GET' });
+        async function fetchEnv() {
+      const r = await fetch('/api/env', { method: 'GET' });
       if (!r.ok) throw new Error('env_fetch_failed');
       const j = await r.json();
-      const supabaseUrl = j.supabaseUrl || j.SUPABASE_URL || j.url;
-      const supabaseAnonKey = j.supabaseAnonKey || j.SUPABASE_ANON_KEY || j.anonKey;
-      if (!supabaseUrl || !supabaseAnonKey) throw new Error('missing_supabase_env');
+
+      const supabaseUrl = j.supabaseUrl || j.SUPABASE_URL || j.url || j.SUPABASE_URL;
+      const supabaseAnonKey = j.supabaseAnonKey || j.SUPABASE_ANON_KEY || j.anonKey || j.SUPABASE_KEY;
+
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('missing_supabase_env');
+      }
       return { supabaseUrl, supabaseAnonKey };
     }
 
@@ -437,6 +375,8 @@
     const supabase = createClient(env.supabaseUrl, env.supabaseAnonKey, {
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
     });
+
+    // Expose for DevTools debugging
     window.supabase = supabase;
 
     const dlg = $('dlgLogin');
@@ -467,8 +407,6 @@
     $('btnVisit').addEventListener('click', () => location.href = '/');
     $('btnDashboard').addEventListener('click', () => location.href = '/dashboard.html');
 
-    $('btnGoAB').addEventListener('click', () => setTab('ab'));
-
     const guardedNav = (path) => async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { gateWorkspace(true); openDlg(); return; }
@@ -482,9 +420,9 @@
 
     const notYet = (label) => () => alert(label + "\n\nNext step: confirm / implement the admin RPCs, then we wire these buttons.");
     [
-      'btnRegUpload','btnRegQueue','btnOlyUpload','btnOlyQueue',
+      'btnRegUpload','btnRegQueue','btnOlyUpload','btnOlyQueue','btnRoles','btnAudit',
       'goRegUpload','goOlyUpload','goOlyReview','goAudit','openRoleManager','openAdminAudit'
-    ].forEach((id) => $(id)?.addEventListener('click', notYet('This module is UI-ready but RPC wiring is pending.')));
+    ].forEach((id) => $(id).addEventListener('click', notYet('This module is UI-ready but RPC wiring is pending.')));
 
     async function safeGetRole() {
       try {
@@ -493,7 +431,9 @@
         return data ?? 'unknown';
       } catch (e) {
         console.error('rpc_lp_my_role failed:', e);
-        $('accessOut').textContent = 'Role RPC failed:\n' + (e?.message || String(e));
+        $('accessOut').textContent =
+          'Role RPC failed:\n' + (e?.message || String(e)) +
+          '\n\nFix: ensure rpc_lp_my_role returns app_role and supports no_role.';
         return 'unknown';
       }
     }
@@ -503,7 +443,7 @@
     }
 
     function hardClearAuthStorage() {
-      const ref = getProjectRefFromUrl(env.supabaseUrl || env.SUPABASE_URL || env.url);
+      const ref = getProjectRefFromUrl(env.SUPABASE_URL);
       const prefixes = ['supabase.auth.','sb-'];
       const rm = (store) => {
         const keys = [];
@@ -519,18 +459,36 @@
     }
 
     async function hardLogout() {
+      // Immediately lock the UI (enterprise-safe). Even if network signOut is slow/fails, UI becomes read-only.
       gateWorkspace(true);
-      setStatus('warn', 'Signing out…');
-      try { await supabase.auth.signOut({ scope: 'local' }); } catch (e) { console.warn('signOut failed:', e); }
+      setStatus('Signing out…');
+
+      try {
+        // Local sign-out is enough for this admin SPA and is faster/more reliable than global.
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (e) {
+        console.warn('signOut failed (continuing with local cleanup):', e);
+      }
+
+      // Hard cleanup: remove cached auth tokens to prevent back-button rehydration.
       try {
         const keys = [];
         for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
-        keys.filter(k => k && (k.startsWith('sb-') || k.includes('supabase'))).forEach(k => localStorage.removeItem(k));
+        keys
+          .filter(k => k && (k.startsWith('sb-') || k.includes('supabase')))
+          .forEach(k => localStorage.removeItem(k));
       } catch (_) {}
-      try { sessionStorage.clear(); } catch (_) {}
+      try {
+        sessionStorage.clear();
+      } catch (_) {}
 
+      // Prevent BFCache/back restoring a \"signed-in looking\" page.
       const bust = Date.now();
-      try { history.replaceState(null, '', '/admin.html?logged_out=1&t=' + bust); } catch (_) {}
+      try {
+        history.replaceState(null, '', '/admin.html?logged_out=1&t=' + bust);
+      } catch (_) {}
+
+      // Full redirect to a clean state.
       window.location.replace('/admin.html?logged_out=1&t=' + bust);
     }
 
@@ -553,124 +511,6 @@
       closeDlg();
     });
 
-    // ===== A/B panel helpers =====
-    function setAbOut(msg) { $('abOut').textContent = msg; }
-
-    async function getJWTOrThrow() {
-      const { data: { session } } = await supabase.auth.getSession();
-      const jwt = session?.access_token;
-      if (!jwt) throw new Error('missing_auth');
-      return jwt;
-    }
-
-    async function postJson(url, body, jwt) {
-      const r = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + jwt,
-        },
-        body: JSON.stringify(body || {})
-      });
-      const text = await r.text();
-      let json;
-      try { json = JSON.parse(text); } catch { json = { raw: text }; }
-      if (!r.ok) {
-        const e = new Error('http_' + r.status);
-        e.payload = json;
-        throw e;
-      }
-      return json;
-    }
-
-    function renderTable(rows, cols) {
-      if (!rows?.length) return '<div class="help">No rows.</div>';
-      const head = '<tr>' + cols.map(c => `<th>${c.label}</th>`).join('') + '</tr>';
-      const body = rows.map(r => {
-        return '<tr>' + cols.map(c => {
-          const v = (typeof c.get === 'function') ? c.get(r) : r[c.key];
-          const safe = (v === null || v === undefined) ? '' : String(v);
-          return `<td>${safe}</td>`;
-        }).join('') + '</tr>';
-      }).join('');
-      return `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
-    }
-
-    async function abLoadKeys() {
-      setAbOut('Loading experiment keys…');
-      try {
-        const jwt = await getJWTOrThrow();
-        const j = await postJson(API.abAdminBundle, { action: 'list_experiments' }, jwt);
-
-        // Expecting either: { ok:true, result:[{experiment_key, track, status, is_killswitched}...] }
-        const list = j?.result || j?.data || j?.experiments || [];
-        const keys = Array.from(new Set(list.map(x => x.experiment_key).filter(Boolean))).sort();
-        if (!keys.length) {
-          setAbOut('No experiments returned. If admin-bundle uses a different payload shape, adjust parsing in abLoadKeys().\nRaw: ' + JSON.stringify(j, null, 2));
-          return;
-        }
-        $('abKey').value = keys[0];
-        setAbOut('Loaded ' + keys.length + ' keys. Selected: ' + keys[0]);
-      } catch (e) {
-        setAbOut('Load keys failed: ' + (e?.payload ? JSON.stringify(e.payload, null, 2) : (e?.message || String(e))));
-      }
-    }
-
-    async function abRefresh() {
-      const key = $('abKey').value.trim();
-      const track = $('abTrack').value;
-      const windowDays = Number($('abWindow').value);
-
-      if (!key) { setAbOut('Please enter experiment_key.'); return; }
-
-      setAbOut('Refreshing metrics…');
-      $('abTableWrap').innerHTML = '';
-      $('abEventsWrap').innerHTML = '';
-
-      try {
-        const jwt = await getJWTOrThrow();
-        const payload = { experiment_key: key, track, window_days: windowDays };
-        const j = await postJson(API.abRefreshDashboard, payload, jwt);
-
-        // Expected shape (recommended):
-        // { ok:true, result:{ variants:[{track, variant_key, exposed_users, metric_users, conversion}], events:[{track,event_name,events,value_sum}] , meta:{...}} }
-        const result = j?.result || j;
-        const variants = result?.variants || result?.rows || [];
-        const events = result?.events || [];
-
-        const vTable = renderTable(variants, [
-          { label: 'track', key: 'track' },
-          { label: 'variant_key', key: 'variant_key' },
-          { label: 'exposed_users', key: 'exposed_users' },
-          { label: 'metric_users', key: 'metric_users' },
-          { label: 'conversion', get: (r) => {
-              const c = r.conversion;
-              if (c === null || c === undefined || Number.isNaN(Number(c))) return '';
-              return (Math.round(Number(c) * 10000) / 100).toFixed(2) + '%';
-            }
-          },
-        ]);
-
-        const eTable = renderTable(events, [
-          { label: 'track', key: 'track' },
-          { label: 'event_name', key: 'event_name' },
-          { label: 'events', key: 'events' },
-          { label: 'value_sum', key: 'value_sum' },
-        ]);
-
-        $('abTableWrap').innerHTML = vTable;
-        $('abEventsWrap').innerHTML = eTable;
-
-        setAbOut('OK.\nRequest: ' + JSON.stringify(payload) + '\nResponse: ' + JSON.stringify(j, null, 2));
-      } catch (e) {
-        setAbOut('Refresh failed: ' + (e?.payload ? JSON.stringify(e.payload, null, 2) : (e?.message || String(e))));
-      }
-    }
-
-    $('abRefresh').addEventListener('click', abRefresh);
-    $('abLoadKeys').addEventListener('click', abLoadKeys);
-
-    // ===== core auth UI =====
     async function refreshUI() {
       const { data: { session } } = await supabase.auth.getSession();
       const signedIn = !!session?.user;
@@ -688,15 +528,6 @@
       const role = signedIn ? await safeGetRole() : 'unknown';
       $('kvRole').textContent = role || 'unknown';
 
-      // A/B auth tag
-      if (!signedIn) {
-        $('abAuthTag').className = 'tag warn';
-        $('abAuthTag').textContent = 'Auth: signed out';
-      } else {
-        $('abAuthTag').className = 'tag ok';
-        $('abAuthTag').textContent = 'Auth: ok (' + (role || 'unknown') + ')';
-      }
-
       setStatus('ok', 'Ready');
 
       if (!signedIn) {
@@ -704,31 +535,19 @@
         $('accessOut').textContent = 'Signed out. Workspace locked.';
         const qp = new URLSearchParams(location.search);
         if (qp.get('logged_out') === '1') hardClearAuthStorage();
-        setAbOut('Signed out. Sign in to load A/B metrics.');
       } else {
         $('authOut').textContent = `Signed in as ${session.user.email || session.user.id}. Role: ${role}`;
         $('accessOut').textContent = `Role: ${role}`;
       }
     }
 
-  
-       // === BFCache hardening (enterprise) ===
-// If Chrome restores from back/forward cache, force a clean reload so auth + listeners are correct.
-window.addEventListener("pageshow", (e) => {
-  if (e.persisted) {
-    window.location.reload();
-    return;
-  }
-  // normal navigation: re-check session/UI
-  refreshUI().catch(() => {});
-});
+    // Back/Forward cache fix: revalidate on BFCache restore
+    window.addEventListener('pageshow', (event) => { if (event.persisted) refreshUI(); });
+    window.addEventListener('focus', () => refreshUI());
+    supabase.auth.onAuthStateChange(() => refreshUI());
 
-// extra safety: when tab becomes visible again
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") {
-    refreshUI().catch(() => {});
-  }
-});
+    setStatus('', 'Loading…');
+    await refreshUI();
   </script>
 </body>
 </html>
