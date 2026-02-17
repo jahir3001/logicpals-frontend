@@ -711,13 +711,14 @@
       }
     }
 
-    // Back/Forward cache fix: revalidate on BFCache restore
-    window.addEventListener('pageshow', (event) => { if (event.persisted) refreshUI(); });
-    window.addEventListener('focus', () => refreshUI());
-    supabase.auth.onAuthStateChange(() => refreshUI());
-
-    setStatus('', 'Loading…');
-    await refreshUI();
-  </script>
+  
+    // === BFCache hardening (Back button fix) ===
+   window.addEventListener("pageshow", (e) => {
+   if (e.persisted) {
+    // admin console: safest behavior
+    window.location.reload();
+    }
+  });
+<script>
 </body>
 </html>
