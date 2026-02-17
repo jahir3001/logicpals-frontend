@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>LogicPals — Regular Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/subscription-guard.js" defer></script>
   <style>
     :root{
       --primary:#6c5ce7; --accent:#feca57;
@@ -16,11 +18,9 @@
       --font:'Plus Jakarta Sans',-apple-system,sans-serif;
       --font-d:'Outfit',-apple-system,sans-serif;
       --glow:rgba(108,92,231,.35); --glow2:rgba(0,210,160,.25);
-      --as:rgba(108,92,231,.12); --gs:rgba(0,210,160,.10);
-      --ys:rgba(254,202,87,.10);
+      --as:rgba(108,92,231,.12); --gs:rgba(0,210,160,.10); --ys:rgba(254,202,87,.10);
     }
-    *{box-sizing:border-box;}
-    html,body{height:100%;}
+    *{box-sizing:border-box;}html,body{height:100%;}
     body{margin:0;font-family:var(--font);color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;}
     body::before{content:'';position:fixed;top:-200px;left:-100px;width:600px;height:600px;background:radial-gradient(circle,var(--glow) 0%,transparent 70%);pointer-events:none;z-index:0;animation:drift 20s ease-in-out infinite alternate;}
     body::after{content:'';position:fixed;bottom:-200px;right:-100px;width:500px;height:500px;background:radial-gradient(circle,var(--glow2) 0%,transparent 70%);pointer-events:none;z-index:0;animation:drift 25s ease-in-out infinite alternate-reverse;}
@@ -32,9 +32,7 @@
     .topbar-inner{max-width:var(--max);margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px;}
     .brand{display:flex;align-items:center;gap:10px;min-width:140px;}
     .logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#a29bfe);box-shadow:0 4px 20px var(--glow);display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;}
-    .brand-title{line-height:1.1;}
-    .brand-title b{display:block;font-size:15px;font-weight:800;}
-    .brand-title span{display:block;font-size:11px;color:var(--muted);font-weight:500;margin-top:1px;}
+    .brand-title{line-height:1.1;}.brand-title b{display:block;font-size:15px;font-weight:800;}.brand-title span{display:block;font-size:11px;color:var(--muted);font-weight:500;margin-top:1px;}
     .center-pill{flex:1;display:flex;justify-content:center;}
     .track-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:100px;background:var(--as);border:1px solid rgba(108,92,231,.2);color:#b8b0f0;font-weight:700;font-size:12px;}
     .track-dot{width:8px;height:8px;border-radius:50%;background:var(--primary);box-shadow:0 0 8px var(--glow);animation:pdot 2s ease-in-out infinite;}
@@ -61,7 +59,6 @@
     .chip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
     .dot-good{background:var(--good);box-shadow:0 0 8px var(--glow2);}
     .dot-warn{background:var(--accent);box-shadow:0 0 8px rgba(254,202,87,.25);}
-    .dot-bad{background:var(--bad);box-shadow:0 0 8px rgba(255,107,107,.3);}
 
     .grid{display:grid;grid-template-columns:1fr;gap:16px;}
     @media(min-width:860px){.grid{grid-template-columns:1.3fr .7fr;align-items:start;}}
@@ -95,8 +92,6 @@
     .tile .k{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
     .tile .v{margin-top:8px;font-family:var(--font-d);font-size:28px;font-weight:800;letter-spacing:-.5px;}
     .tile .d{margin-top:8px;font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;}
-    .delta-up{color:var(--good);font-weight:700;}
-    .delta-down{color:var(--bad);font-weight:700;}
     .mini{width:20px;height:20px;border-radius:7px;display:grid;place-items:center;font-size:11px;background:var(--ys);border:1px solid rgba(254,202,87,.15);}
 
     .chart-wrap{padding:16px 22px 22px;}
@@ -111,23 +106,17 @@
     .spark{width:24px;height:24px;border-radius:8px;background:rgba(254,202,87,.12);display:grid;place-items:center;flex-shrink:0;font-weight:900;}
 
     .mastery{padding:16px 22px 22px;}
-    .skill-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:0;}
+    .skill-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
     @media(min-width:860px){.skill-grid{grid-template-columns:repeat(3,1fr);}}
-    .skill{border-radius:var(--radius2);border:1px solid var(--border);background:rgba(255,255,255,.03);padding:16px;display:flex;flex-direction:column;gap:10px;min-height:136px;transition:all .15s;}
+    .skill{padding:16px;border-radius:var(--radius2);background:rgba(255,255,255,.03);border:1px solid var(--border);display:flex;flex-direction:column;gap:10px;min-height:100px;transition:all .15s;}
     .skill:hover{background:rgba(255,255,255,.05);transform:translateY(-2px);}
     .skill .top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
     .skill .name{font-weight:700;font-size:14px;line-height:1.15;}
     .state{font-size:10px;font-weight:700;padding:4px 10px;border-radius:100px;white-space:nowrap;text-transform:uppercase;letter-spacing:.4px;}
     .state.practicing{background:var(--ys);border:1px solid rgba(254,202,87,.15);color:var(--accent);}
     .state.solid{background:var(--gs);border:1px solid rgba(0,210,160,.12);color:var(--good);}
-    .state.review{background:var(--as);border:1px solid rgba(108,92,231,.15);color:#b8b0f0;}
-    .bar{width:100%;height:6px;border-radius:100px;background:rgba(255,255,255,.06);overflow:hidden;}
-    .bar > div{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--primary),#a29bfe);transition:width .5s;}
-    .skill .foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:auto;}
-    .skill small{color:var(--muted);font-weight:600;font-size:11px;}
     .skill .go{height:32px;border-radius:8px;border:1px solid rgba(108,92,231,.2);background:var(--as);color:#b8b0f0;font:700 12px var(--font);padding:0 12px;cursor:pointer;transition:all .12s;}
     .skill .go:hover{background:rgba(108,92,231,.2);}
-    .skill .go:active{transform:scale(.95);}
 
     .activity{padding:16px 22px 22px;}
     .timeline{display:flex;flex-direction:column;gap:8px;}
@@ -144,66 +133,54 @@
     .pbox h4{margin:0;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;}
     .pbox p{margin:8px 0 0;font-size:13px;color:var(--muted);line-height:1.45;}
     .p-actions{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;}
-    select{height:40px;border-radius:10px;border:1px solid var(--border);padding:0 14px;background:var(--card);color:var(--text);font:600 13px var(--font);}
     .foot{margin-top:24px;color:var(--muted);font-size:11px;text-align:center;padding:12px;}
 
     .modal-backdrop{position:fixed;inset:0;background:rgba(8,10,22,.7);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;z-index:100;}
-    .modal{width:min(500px,96vw);border-radius:var(--radius);background:rgba(20,24,52,.75);backdrop-filter:blur(24px);border:1px solid var(--border);box-shadow:0 24px 64px rgba(0,0,0,.4);overflow:hidden;animation:mslide .25s ease;}
+    .modal{width:min(500px,96vw);border-radius:var(--radius);background:rgba(20,24,52,.85);backdrop-filter:blur(24px);border:1px solid var(--border);box-shadow:0 24px 64px rgba(0,0,0,.4);overflow:hidden;animation:mslide .25s ease;}
     @keyframes mslide{from{opacity:0;transform:translateY(16px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
     .modal-h{padding:22px 22px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
     .modal-h b{font-family:var(--font-d);font-size:17px;font-weight:700;}
-    .modal-h button{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer;font-weight:700;display:grid;place-items:center;transition:all .12s;}
-    .modal-h button:hover{background:rgba(255,255,255,.08);color:var(--text);}
+    .modal-h button{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer;font-weight:700;display:grid;place-items:center;}
     .modal-b{padding:14px 22px 22px;color:var(--muted);font-size:14px;line-height:1.5;}
     .modal-actions{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;}
 
     .notice{padding:20px 22px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);font-size:14px;color:var(--muted);line-height:1.5;}
     .notice b{color:var(--text);display:block;margin-bottom:6px;}
-    .notice .btn{margin-top:12px;}
-
     .skeleton{height:12px;border-radius:100px;background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 75%);background-size:200% 100%;animation:shimmer 1.2s ease-in-out infinite;}
     @keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
-
     @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
     .reveal{animation:fadeUp .5s cubic-bezier(.25,.46,.45,.94) both;}
     .r1{animation-delay:0s;}.r2{animation-delay:.07s;}.r3{animation-delay:.14s;}.r4{animation-delay:.21s;}.r5{animation-delay:.28s;}.r6{animation-delay:.35s;}
 
     @media(max-width:600px){.wrap{padding:82px 12px 28px;}.topbar-inner{padding:10px 12px;}.brand-title span{display:none;}.hero{padding:22px 18px 20px;}.hero-head{font-size:20px;}.card-h{padding:16px 18px 0;}.card-b,.tiles,.chart-wrap,.mastery,.activity,.parent{padding:14px 18px 18px;}.tile .v{font-size:24px;}.status-strip{padding:0 12px 6px;}}
-    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important;}}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
   </style>
+  <script src="/assets/js/env-loader.js"></script>
 </head>
 <body>
   <div class="topbar">
     <div class="topbar-inner">
-      <div class="brand">
-        <div class="logo">LP</div>
-        <div class="brand-title"><b>LogicPals</b><span>Student Dashboard</span></div>
-      </div>
-      <div class="center-pill">
-        <div class="track-pill" title="You are in Regular Practice track"><span class="track-dot"></span>Regular Practice</div>
-      </div>
+      <div class="brand"><div class="logo">LP</div><div class="brand-title"><b>LogicPals</b><span>Student Dashboard</span></div></div>
+      <div class="center-pill"><div class="track-pill"><span class="track-dot"></span>Regular Practice</div></div>
       <div class="actions">
-        <button id="btnOlympiad" class="btn btn-accent" type="button" title="Switch to Olympiad track"><span>Olympiad</span><span id="olympiadState">→</span></button>
-        <button id="btnSignOut" class="btn btn-ghost" type="button" title="Sign out">Sign out</button>
+        <button id="btnOlympiad" class="btn btn-accent" type="button"><span>Olympiad</span><span id="olympiadState">🔒</span></button>
+        <button id="btnSignOut" class="btn btn-ghost" type="button">Sign out</button>
       </div>
     </div>
     <div class="status-strip">
       <div class="status-left">
-        <span class="badge" id="planBadge"><span class="chip-dot dot-warn"></span><b>Plan:</b> <span id="planText">Loading…</span></span>
+        <span class="badge" id="planBadge"><span class="chip-dot dot-good"></span><b>Plan:</b> <span id="planText">Loading…</span></span>
         <span class="badge" id="streakBadge" style="display:none;"><span class="chip-dot dot-good"></span><b>Streak:</b> <span id="streakText">—</span></span>
       </div>
-      <div class="status-right">
-        <span class="badge"><b>Updated:</b> <span id="updatedText">—</span></span>
-      </div>
+      <div class="status-right"><span class="badge"><b>Updated:</b> <span id="updatedText">—</span></span></div>
     </div>
   </div>
 
   <main class="wrap">
     <div id="authNotice" class="notice" style="display:none;">
-      <b>Sign-in required.</b> We couldn't find your login token in this browser.
-      <div><button class="btn btn-primary btn-wide" id="btnGoLogin" type="button">Go to Login</button></div>
+      <b>Sign-in required.</b> We couldn't find your session.
+      <div style="margin-top:12px;"><button class="btn btn-primary btn-wide" id="btnGoLogin" type="button">Go to Login</button></div>
     </div>
-
     <div id="content" style="display:none;">
       <div class="grid">
         <section class="card reveal r1">
@@ -214,12 +191,10 @@
                 <div class="hero-head">Continue your Regular Practice</div>
                 <div class="sub" id="heroReason"><span class="skeleton" style="width:220px;display:inline-block;"></span></div>
               </div>
-              <div class="ring" id="goalRing" style="--p:35%;">
-                <div><span id="goalPct">35%</span></div>
-              </div>
+              <div class="ring" id="goalRing" style="--p:0%;"><div><span id="goalPct">0%</span></div></div>
             </div>
-            <div class="hero-focus" id="heroFocus">
-              <span class="pill"><strong>Next:</strong> <span id="heroMinutes">—</span> min</span>
+            <div class="hero-focus">
+              <span class="pill"><strong>Next:</strong> <span id="heroMinutes">10</span> min</span>
               <span class="pill">Focus: <span id="heroFocusLabel">—</span></span>
             </div>
             <div class="hero-actions">
@@ -228,14 +203,13 @@
             </div>
           </div>
         </section>
-
         <section class="card reveal r2">
-          <div class="card-h"><div><div class="card-title">Today at a glance ✨</div><div class="sub">Quick signals that matter (Regular only).</div></div></div>
+          <div class="card-h"><div><div class="card-title">Today at a glance ✨</div><div class="sub">Your key metrics this week</div></div></div>
           <div class="tiles">
-            <div class="tile-row" id="tileRow">
-              <div class="tile"><div class="k">Streak</div><div class="v" id="kpiStreak">—</div><div class="d"><span class="mini">🔥</span> Keep it alive today</div></div>
+            <div class="tile-row">
+              <div class="tile"><div class="k">Problems solved</div><div class="v" id="kpiSolved">—</div><div class="d"><span class="mini">🔥</span> Total</div></div>
               <div class="tile"><div class="k">Accuracy</div><div class="v" id="kpiAccuracy">—</div><div class="d"><span class="mini">✓</span> Last 7 days</div></div>
-              <div class="tile"><div class="k">Mastery moves</div><div class="v" id="kpiMoves">—</div><div class="d"><span class="mini">↑</span> This week</div></div>
+              <div class="tile"><div class="k">Hints used</div><div class="v" id="kpiHints">—</div><div class="d"><span class="mini">💡</span> Average per problem</div></div>
             </div>
           </div>
         </section>
@@ -243,7 +217,7 @@
 
       <section class="card reveal r3" style="margin-top:16px;">
         <div class="card-h">
-          <div><div class="card-title">Your progress story 📈</div><div class="sub">Trends help you stay consistent — not stressed.</div></div>
+          <div><div class="card-title">Your progress story 📈</div><div class="sub">Accuracy over your recent sessions</div></div>
           <div class="seg">
             <button class="active" data-window="7d" type="button">7d</button>
             <button data-window="30d" type="button">30d</button>
@@ -251,636 +225,297 @@
           </div>
         </div>
         <div class="chart-wrap">
-          <div class="chart" aria-label="Progress chart"><svg id="trendSvg" viewBox="0 0 1000 190" preserveAspectRatio="none"></svg></div>
-          <div class="insight" id="insightBox"><div class="spark">💡</div><div><b>Insight</b><div id="insightText">Loading…</div></div></div>
+          <div class="chart"><svg id="trendSvg" viewBox="0 0 1000 190" preserveAspectRatio="none"></svg></div>
+          <div class="insight"><div class="spark">💡</div><div><b>Insight</b><div id="insightText">Loading…</div></div></div>
         </div>
       </section>
 
       <section class="card reveal r4" style="margin-top:16px;">
-        <div class="card-h"><div><div class="card-title">Your skills (Regular) 🧠</div><div class="sub">Practice the right thing at the right time.</div></div><button class="btn btn-ghost" id="btnSeeAllSkills" type="button">See all</button></div>
+        <div class="card-h"><div><div class="card-title">Categories practiced 🧠</div><div class="sub">Your skill breakdown</div></div></div>
         <div class="mastery"><div class="skill-grid" id="skillGrid"></div></div>
       </section>
 
-      <div class="grid" style="margin-top:16px;">
-        <section class="card reveal r5">
-          <div class="card-h"><div><div class="card-title">Recent activity 🧾</div><div class="sub">A clear trail of progress (trust & motivation).</div></div></div>
-          <div class="activity"><div class="timeline" id="timeline"></div></div>
-        </section>
-        <section class="card reveal r6">
-          <div class="card-h"><div><div class="card-title" id="parentTitle">Parent/Guardian Summary 👪</div><div class="sub" id="parentSub">Share weekly development highlights safely.</div></div></div>
-          <div class="parent">
-            <div id="parentModeRow" style="display:none;margin-top:4px;"><label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">Select child</label><select id="childSelect"></select></div>
-            <div class="parent-grid">
-              <div class="pbox"><h4>Weekly snapshot</h4><p id="parentWeekly">Loading…</p></div>
-              <div class="pbox"><h4>Next encouragement</h4><p id="parentNext">Loading…</p></div>
-            </div>
-            <div class="p-actions" id="parentActions">
-              <button class="btn btn-primary" id="btnShareReport" type="button">Share report</button>
-              <a class="btn btn-ghost" id="btnInviteParent" href="subscriptions.html">Invite parent</a>
-            </div>
-          </div>
-        </section>
-      </div>
-      <div class="foot">Regular dashboard only • Track boundary enforced • No Olympiad data loaded here</div>
+      <section class="card reveal r5" style="margin-top:16px;">
+        <div class="card-h"><div><div class="card-title">Recent activity 🧾</div><div class="sub">Your last sessions</div></div></div>
+        <div class="activity"><div class="timeline" id="timeline"></div></div>
+      </section>
+
+      <div class="foot">Regular dashboard · Track boundary enforced · No Olympiad data loaded</div>
     </div>
   </main>
 
   <div class="modal-backdrop" id="olymModal">
-    <div class="modal" role="dialog" aria-modal="true" aria-label="Olympiad access">
-      <div class="modal-h"><div><b>Olympiad Track</b><div class="sub">A separate advanced track — strictly isolated from Regular.</div></div><button type="button" id="closeOlymp">✕</button></div>
-      <div class="modal-b"><div id="olymModalBody">Loading…</div><div class="modal-actions"><a class="btn btn-primary btn-wide" id="olymUpgradeLink" href="subscriptions.html">View plans</a><button class="btn btn-ghost btn-wide" id="olymCancelBtn" type="button">Not now</button></div></div>
-    </div>
+    <div class="modal"><div class="modal-h"><div><b>Olympiad Track</b><div class="sub">A separate advanced track.</div></div><button type="button" id="closeOlymp">✕</button></div>
+    <div class="modal-b"><p id="olymModalBody">Olympiad is a separate advanced track. Upgrade to unlock it.</p><div class="modal-actions"><a class="btn btn-primary btn-wide" href="subscriptions.html">View plans</a><button class="btn btn-ghost btn-wide" id="olymCancelBtn" type="button">Not now</button></div></div></div>
+  </div>
+  <div class="modal-backdrop" id="topicModal">
+    <div class="modal"><div class="modal-h"><div><b>Choose a topic</b><div class="sub">Pick a focus for your session.</div></div><button type="button" id="closeTopic">✕</button></div>
+    <div class="modal-b"><div style="display:grid;gap:8px;">
+      <button class="btn btn-secondary btn-wide" data-topic="numbers" type="button" style="width:100%;justify-content:center;">Numbers & Arithmetic</button>
+      <button class="btn btn-secondary btn-wide" data-topic="fractions" type="button" style="width:100%;justify-content:center;">Fractions & Ratio</button>
+      <button class="btn btn-secondary btn-wide" data-topic="geometry" type="button" style="width:100%;justify-content:center;">Geometry Basics</button>
+      <button class="btn btn-secondary btn-wide" data-topic="logic" type="button" style="width:100%;justify-content:center;">Logic & Patterns</button>
+    </div></div></div>
   </div>
 
-  <div class="modal-backdrop" id="topicModal">
-    <div class="modal" role="dialog" aria-modal="true" aria-label="Choose topic">
-      <div class="modal-h"><div><b>Choose a topic</b><div class="sub">Pick a focus — still Regular track only.</div></div><button type="button" id="closeTopic">✕</button></div>
-      <div class="modal-b">
-        <div style="display:grid;gap:8px;margin-top:10px;">
-          <button class="btn btn-secondary btn-wide" data-topic="numbers" type="button" style="width:100%;justify-content:center;">Numbers & Arithmetic</button>
-          <button class="btn btn-secondary btn-wide" data-topic="fractions" type="button" style="width:100%;justify-content:center;">Fractions & Ratio</button>
-          <button class="btn btn-secondary btn-wide" data-topic="geometry" type="button" style="width:100%;justify-content:center;">Geometry Basics</button>
-          <button class="btn btn-secondary btn-wide" data-topic="logic" type="button" style="width:100%;justify-content:center;">Logic & Patterns</button>
-        </div>
-      </div>
-    </div>
-  </div>
   <script>
-    // =========================
-    // Enterprise-safe helpers
-    // =========================
+    /* ============================================
+       DASHBOARD — queries Supabase directly
+       Same pattern as learn.html (no /api/dashboard needed)
+       ============================================ */
+
+    const { SUPABASE_URL: SB_URL, SUPABASE_ANON_KEY: SB_KEY } = window.__LP_ENV || {};
+    let sb, session, childId;
 
     function $(id){ return document.getElementById(id); }
+    function safe(el,t){ if(el) el.textContent = (t==null||t==='')?'—':String(t); }
+    function fmtAgo(iso){
+      if(!iso) return '—';
+      const d=Date.now()-new Date(iso).getTime(), m=Math.floor(d/60000);
+      if(m<1) return 'just now'; if(m<60) return m+' min ago';
+      const h=Math.floor(m/60); if(h<24) return h+' hr ago';
+      return Math.floor(h/24)+' days ago';
+    }
+    function openModal(id){ $(id).style.display='flex'; document.body.style.overflow='hidden'; }
+    function closeModalFn(id){ $(id).style.display='none'; document.body.style.overflow=''; }
 
-    function safeText(el, text){
-      el.textContent = (text === null || text === undefined || text === "") ? "—" : String(text);
+    // ——— SVG chart ———
+    function renderChart(svgEl, points){
+      const W=1000,H=190,pX=28,pY=24; svgEl.innerHTML='';
+      const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+      for(let i=0;i<4;i++){const y=pY+(H-pY*2)*(i/3);const l=document.createElementNS('http://www.w3.org/2000/svg','line');l.setAttribute('x1','0');l.setAttribute('x2',W);l.setAttribute('y1',y);l.setAttribute('y2',y);l.setAttribute('stroke','rgba(255,255,255,.04)');g.appendChild(l);}
+      svgEl.appendChild(g);
+      if(!points||points.length<2){const t=document.createElementNS('http://www.w3.org/2000/svg','text');t.setAttribute('x',W/2);t.setAttribute('y',H/2);t.setAttribute('text-anchor','middle');t.setAttribute('fill','rgba(152,153,179,.7)');t.setAttribute('font-size','14');t.setAttribute('font-family','Plus Jakarta Sans');t.textContent='Complete a few sessions to see your trend ✨';svgEl.appendChild(t);return;}
+      const vals=points.map(p=>Math.max(0,Math.min(1,p)));const mn=Math.min(...vals),mx=Math.max(...vals),sp=(mx-mn)||.25;
+      const xs=(W-pX*2)/(vals.length-1);
+      const XY=vals.map((v,i)=>[pX+i*xs,(H-pY)-((v-mn)/sp)*(H-pY*2)]);
+      const area=document.createElementNS('http://www.w3.org/2000/svg','path');
+      let dA=`M${XY[0][0]} ${H-pY} L${XY[0][0]} ${XY[0][1]}`;XY.slice(1).forEach(p=>dA+=` L${p[0]} ${p[1]}`);dA+=` L${XY[XY.length-1][0]} ${H-pY}Z`;
+      area.setAttribute('d',dA);area.setAttribute('fill','rgba(108,92,231,.12)');svgEl.appendChild(area);
+      const line=document.createElementNS('http://www.w3.org/2000/svg','path');
+      let dL=`M${XY[0][0]} ${XY[0][1]}`;XY.slice(1).forEach(p=>dL+=` L${p[0]} ${p[1]}`);
+      line.setAttribute('d',dL);line.setAttribute('fill','none');line.setAttribute('stroke','rgba(108,92,231,.85)');line.setAttribute('stroke-width','3');line.setAttribute('stroke-linecap','round');line.setAttribute('stroke-linejoin','round');svgEl.appendChild(line);
+      XY.forEach(([x,y],i)=>{const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',x);c.setAttribute('cy',y);c.setAttribute('r',i===XY.length-1?'6':'3.5');c.setAttribute('fill',i===XY.length-1?'rgba(0,210,160,.95)':'rgba(108,92,231,.85)');c.setAttribute('stroke',i===XY.length-1?'rgba(0,210,160,.3)':'rgba(108,92,231,.3)');c.setAttribute('stroke-width',i===XY.length-1?'4':'2');svgEl.appendChild(c);});
     }
 
-    function fmtPct(x){
-      if (x === null || x === undefined || Number.isNaN(Number(x))) return "—";
-      return Math.round(Number(x) * 100) + "%";
-    }
+    // ——— Main boot ———
+    async function boot(){
+      if(!SB_URL||!SB_KEY){ $('authNotice').style.display='block'; return; }
+      sb = supabase.createClient(SB_URL, SB_KEY);
 
-    function fmtNum(x){
-      if (x === null || x === undefined || Number.isNaN(Number(x))) return "—";
-      return String(x);
-    }
-
-    function fmtTimeAgo(iso){
-      if (!iso) return "—";
-      const t = new Date(iso).getTime();
-      if (!Number.isFinite(t)) return "—";
-      const diff = Date.now() - t;
-      const m = Math.floor(diff / 60000);
-      if (m < 1) return "just now";
-      if (m < 60) return m + " min ago";
-      const h = Math.floor(m / 60);
-      if (h < 24) return h + " hr ago";
-      const d = Math.floor(h / 24);
-      return d + " day" + (d>1?"s":"") + " ago";
-    }
-
-    // Try multiple storage keys (robust across setups)
-    function getJWT(){
-      const candidates = [
-        localStorage.getItem("lp_jwt"),
-        localStorage.getItem("access_token"),
-        localStorage.getItem("supabase_access_token"),
-        localStorage.getItem("sb-access-token"),
-        localStorage.getItem("sb:token"),
-      ].filter(Boolean);
-
-      if (candidates.length) return candidates[0];
-
-      // Supabase v2 stores session under "sb-<project_ref>-auth-token" as JSON
-      for (let i = 0; i < localStorage.length; i++){
-        const key = localStorage.key(i);
-        if (key && key.startsWith("sb-") && key.endsWith("-auth-token")){
-          try {
-            const raw = localStorage.getItem(key);
-            const parsed = JSON.parse(raw);
-            // Supabase stores { access_token, refresh_token, ... } or nested under currentSession
-            const token = parsed?.access_token
-              || parsed?.currentSession?.access_token
-              || parsed?.session?.access_token;
-            if (token) return token;
-          } catch(_){}
-        }
-      }
-
-      // Try URL hash (common in OAuth redirects)
-      const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
-      const token = hash.get("access_token") || hash.get("token");
-      if (token) return token;
-
-      // Try query param
-      const qp = new URLSearchParams(location.search);
-      return qp.get("token") || qp.get("access_token");
-    }
-
-    async function apiFetch(path, jwt, opts={}){
-      const headers = Object.assign(
-        { "Content-Type":"application/json" },
-        opts.headers || {}
-      );
-      if (jwt) headers["Authorization"] = "Bearer " + jwt;
-
-      const res = await fetch(path, Object.assign({}, opts, { headers }));
-      let data = null;
-      try{ data = await res.json(); } catch(_){ /* ignore */ }
-      if (!res.ok){
-        // Stable error object (no stack traces)
-        return { ok:false, status: res.status, data: data || { error:"request_failed" } };
-      }
-      return { ok:true, status: res.status, data };
-    }
-
-    function openModal(backdropId){
-      const b = $(backdropId);
-      b.style.display = "flex";
-      document.body.style.overflow = "hidden";
-    }
-
-    function closeModal(backdropId){
-      const b = $(backdropId);
-      b.style.display = "none";
-      document.body.style.overflow = "";
-    }
-
-    // Simple SVG line chart (no external libs)
-    function renderTrend(svgEl, points){
-      // points: [{date, value}] where value is 0..1
-      const W = 1000, H = 180, padX = 28, padY = 22;
-
-      svgEl.innerHTML = "";
-
-      // grid lines
-      const grid = document.createElementNS("http://www.w3.org/2000/svg","g");
-      grid.setAttribute("opacity","0.65");
-      for (let i=0;i<4;i++){
-        const y = padY + (H - padY*2) * (i/3);
-        const line = document.createElementNS("http://www.w3.org/2000/svg","line");
-        line.setAttribute("x1","0");
-        line.setAttribute("x2", String(W));
-        line.setAttribute("y1", String(y));
-        line.setAttribute("y2", String(y));
-        line.setAttribute("stroke","rgba(255,255,255,.04)");
-        line.setAttribute("stroke-width","1");
-        grid.appendChild(line);
-      }
-      svgEl.appendChild(grid);
-
-      if (!points || points.length < 2){
-        const t = document.createElementNS("http://www.w3.org/2000/svg","text");
-        t.setAttribute("x", String(W/2));
-        t.setAttribute("y", String(H/2));
-        t.setAttribute("text-anchor","middle");
-        t.setAttribute("fill","rgba(152,153,179,.7)");
-        t.setAttribute("font-size","14");
-        t.textContent = "Not enough data yet — do a short session today ✨";
-        svgEl.appendChild(t);
+      const { data:{ session: s } } = await sb.auth.getSession();
+      if(!s){
+        $('authNotice').style.display='block';
+        $('content').style.display='none';
         return;
       }
+      session = s;
+      $('authNotice').style.display='none';
+      $('content').style.display='block';
 
-      const vals = points.map(p => Math.max(0, Math.min(1, Number(p.value))));
-      const min = Math.min(...vals), max = Math.max(...vals);
-      const span = (max - min) || 0.25;
+      // Get user name
+      const userName = s.user?.user_metadata?.full_name || s.user?.user_metadata?.name || s.user?.email?.split('@')[0] || 'there';
+      safe($('helloText'), `Hi ${userName} 👋`);
 
-      const xStep = (W - padX*2) / (points.length - 1);
+      // Get child id (same as learn.html)
+      try {
+        const { data: child } = await sb.from('children').select('id').eq('parent_id', s.user.id).single();
+        if(child) childId = child.id;
+      } catch(e){}
 
-      const XY = vals.map((v,i)=>{
-        const x = padX + i*xStep;
-        const norm = (v - min) / span;
-        const y = (H - padY) - norm*(H - padY*2);
-        return [x,y,v];
+      // Subscription info
+      try {
+        if(typeof SubscriptionGuard !== 'undefined'){
+          const sub = await SubscriptionGuard.getUserSubscription();
+          if(sub){
+            safe($('planText'), sub.expired ? 'Expired' : (sub.tier || 'Active'));
+            const dot = $('planBadge').querySelector('.chip-dot');
+            if(dot){ dot.classList.remove('dot-good','dot-warn'); dot.classList.add(sub.expired?'dot-warn':'dot-good'); }
+          } else { safe($('planText'),'Active'); }
+        } else { safe($('planText'),'Active'); }
+      } catch(e){ safe($('planText'),'Active'); }
+
+      safe($('updatedText'), 'just now');
+
+      // Fetch attempts for this child
+      let attempts = [];
+      if(childId){
+        try {
+          const { data } = await sb.from('attempts').select('*, problems(category, difficulty)').eq('child_id', childId).order('created_at', { ascending: false }).limit(100);
+          if(data) attempts = data;
+        } catch(e){ console.warn('Could not fetch attempts:', e); }
+      }
+
+      renderKPIs(attempts);
+      renderChart7d(attempts, '7d');
+      renderSkills(attempts);
+      renderActivity(attempts);
+      renderHero(attempts);
+    }
+
+    function renderKPIs(attempts){
+      const total = attempts.length;
+      const correct = attempts.filter(a=>a.solved_correctly).length;
+      const acc = total > 0 ? Math.round((correct/total)*100) : 0;
+      const totalHints = attempts.reduce((s,a)=>s+(a.hints_used||0),0);
+      const avgHints = total > 0 ? (totalHints/total).toFixed(1) : '0';
+
+      safe($('kpiSolved'), total);
+      safe($('kpiAccuracy'), acc + '%');
+      safe($('kpiHints'), avgHints);
+
+      // Goal ring = accuracy
+      const ring = $('goalRing');
+      if(ring) ring.style.setProperty('--p', acc+'%');
+      safe($('goalPct'), acc+'%');
+    }
+
+    function renderHero(attempts){
+      // Figure out weakest category
+      const cats = {};
+      attempts.forEach(a=>{
+        const cat = a.problems?.category || 'logic';
+        if(!cats[cat]) cats[cat] = {total:0, correct:0};
+        cats[cat].total++;
+        if(a.solved_correctly) cats[cat].correct++;
       });
-
-      // area
-      const area = document.createElementNS("http://www.w3.org/2000/svg","path");
-      let dA = `M ${XY[0][0]} ${H-padY} L ${XY[0][0]} ${XY[0][1]}`;
-      for (let i=1;i<XY.length;i++) dA += ` L ${XY[i][0]} ${XY[i][1]}`;
-      dA += ` L ${XY[XY.length-1][0]} ${H-padY} Z`;
-      area.setAttribute("d", dA);
-      area.setAttribute("fill","rgba(108,92,231,.14)");
-      svgEl.appendChild(area);
-
-      // line
-      const line = document.createElementNS("http://www.w3.org/2000/svg","path");
-      let d = `M ${XY[0][0]} ${XY[0][1]}`;
-      for (let i=1;i<XY.length;i++) d += ` L ${XY[i][0]} ${XY[i][1]}`;
-      line.setAttribute("d", d);
-      line.setAttribute("fill","none");
-      line.setAttribute("stroke","rgba(108,92,231,.85)");
-      line.setAttribute("stroke-width","4");
-      line.setAttribute("stroke-linecap","round");
-      line.setAttribute("stroke-linejoin","round");
-      svgEl.appendChild(line);
-
-      // dots
-      for (let i=0;i<XY.length;i++){
-        const c = document.createElementNS("http://www.w3.org/2000/svg","circle");
-        c.setAttribute("cx", String(XY[i][0]));
-        c.setAttribute("cy", String(XY[i][1]));
-        c.setAttribute("r", i === XY.length-1 ? "6" : "4");
-        c.setAttribute("fill", i === XY.length-1 ? "rgba(0,210,160,.95)" : "rgba(108,92,231,.85)");
-        c.setAttribute("stroke", i === XY.length-1 ? "rgba(0,210,160,.3)" : "rgba(108,92,231,.3)");
-        c.setAttribute("stroke-width", i === XY.length-1 ? "4" : "2");
-        svgEl.appendChild(c);
-      }
-    }
-
-    function stateClass(s){
-      const x = String(s || "").toLowerCase();
-      if (x.includes("solid")) return "solid";
-      if (x.includes("review")) return "review";
-      return "practicing";
-    }
-
-    function iconForEvent(type){
-      const t = (type || "").toLowerCase();
-      if (t.includes("session")) return "▶";
-      if (t.includes("mastery")) return "↑";
-      if (t.includes("hint")) return "💡";
-      if (t.includes("review")) return "⟲";
-      return "•";
-    }
-
-    // =========================
-    // Data wiring
-    // =========================
-
-    let JWT = null;
-    let bundle = null;
-    let trendWindow = "7d";
-
-    async function loadBundle(){
-      JWT = getJWT();
-      console.log("[Dashboard] JWT found:", !!JWT, JWT ? "(token length: " + JWT.length + ")" : "(none)");
-      // Debug: show all localStorage keys to help troubleshoot
-      console.log("[Dashboard] localStorage keys:", Object.keys(localStorage));
-      if (!JWT){
-        $("authNotice").style.display = "block";
-        $("content").style.display = "none";
-        return;
-      }
-      $("authNotice").style.display = "none";
-      $("content").style.display = "block";
-
-      // You should implement this endpoint server-side to call ONLY RPC and enforce track='regular'
-      const r = await apiFetch("/api/dashboard/regular-bundle", JWT, { method:"GET" });
-      if (!r.ok || !r.data || !r.data.ok){
-        // show a safe message only
-        $("content").innerHTML = `
-          <div class="notice">
-            <b>Dashboard temporarily unavailable.</b><br/>
-            Please refresh, or try again in a moment.
-            <div><button class="btn btn-primary btn-wide" onclick="location.reload()">Refresh</button></div>
-          </div>
-        `;
-        return;
-      }
-
-      bundle = r.data;
-      renderAll();
-    }
-
-    function renderAll(){
-      // Header
-      const userName = bundle?.user?.name || "there";
-      safeText($("helloText"), `Hi ${userName} 👋`);
-
-      // Plan badge
-      const ent = bundle.entitlements || {};
-      const planStatus = ent.plan_status || "unknown";
-      const expires = ent.expires_at ? (" • expires " + fmtTimeAgo(ent.expires_at)) : "";
-      safeText($("planText"), planStatus + expires);
-
-      const planDot = $("planBadge").querySelector(".chip-dot");
-      planDot.classList.remove("dot-good","dot-warn","dot-bad");
-      if (planStatus === "active") planDot.classList.add("dot-good");
-      else if (planStatus === "expiring") planDot.classList.add("dot-warn");
-      else if (planStatus === "past_due") planDot.classList.add("dot-bad");
-      else planDot.classList.add("dot-warn");
-
-      // Updated time
-      safeText($("updatedText"), fmtTimeAgo(bundle.generated_at || new Date().toISOString()));
-
-      // Olympiad switch state
-      const olyEntitled = !!(ent.olympiad);
-      safeText($("olympiadState"), olyEntitled ? "→" : "🔒");
-
-      // Hero
-      const hero = bundle.hero || {};
-      safeText($("heroMinutes"), hero.recommended_minutes ?? "—");
-      safeText($("heroFocusLabel"), hero.focus_label || "—");
-      safeText($("heroReason"), hero.reason || "Based on your recent attempts");
-
-      // goal ring
-      const pct = Math.max(0, Math.min(100, Math.round((hero.goal_pct ?? 35))));
-      $("goalRing").style.setProperty("--p", pct + "%");
-      safeText($("goalPct"), pct + "%");
-
-      // KPIs
-      const kpis = bundle.kpis || {};
-      safeText($("kpiStreak"), fmtNum(kpis.streak_days));
-      safeText($("kpiAccuracy"), fmtPct(kpis.accuracy_7d));
-      safeText($("kpiMoves"), fmtNum(kpis.mastery_moves_7d));
-
-      // streak badge in header
-      if (kpis.streak_days !== undefined && kpis.streak_days !== null){
-        $("streakBadge").style.display = "inline-flex";
-        safeText($("streakText"), `${kpis.streak_days} days`);
+      let weakest = null, weakAcc = 999;
+      Object.entries(cats).forEach(([cat,{total,correct}])=>{
+        const acc = total>0 ? correct/total : 1;
+        if(acc < weakAcc){ weakAcc = acc; weakest = cat; }
+      });
+      if(weakest){
+        safe($('heroFocusLabel'), weakest.charAt(0).toUpperCase() + weakest.slice(1));
+        safe($('heroReason'), `Based on your ${attempts.length} attempts — ${weakest} needs more practice`);
       } else {
-        $("streakBadge").style.display = "none";
+        safe($('heroFocusLabel'), 'Logic & Patterns');
+        safe($('heroReason'), 'Start your first session to get personalized recommendations');
       }
-
-      // Trend chart
-      renderTrendForWindow(trendWindow);
-
-      // Mastery cards
-      renderMastery();
-
-      // Activity
-      renderActivity();
-
-      // Parent panel (both modes on Regular)
-      renderParentPanel();
+      safe($('heroMinutes'), '10–12');
     }
 
-    function renderTrendForWindow(windowKey){
-      trendWindow = windowKey;
-      // mark active button
-      document.querySelectorAll(".seg button").forEach(b=>{
-        b.classList.toggle("active", b.dataset.window === windowKey);
+    let allAttempts = [];
+    function renderChart7d(attempts, windowKey){
+      allAttempts = attempts;
+      document.querySelectorAll('.seg button').forEach(b=> b.classList.toggle('active', b.dataset.window===windowKey));
+
+      const now = Date.now();
+      const days = windowKey==='7d' ? 7 : windowKey==='30d' ? 30 : 9999;
+      const filtered = attempts.filter(a=>{
+        const t = new Date(a.created_at).getTime();
+        return (now - t) < days * 86400000;
       });
 
-      const t = bundle.trend || {};
-      const series = (t.series_by_window && t.series_by_window[windowKey]) ? t.series_by_window[windowKey] : t.series;
-      const points = (series || []).map(p=>({ date:p.date, value: (p.accuracy ?? p.value) }));
+      // Group by day, compute daily accuracy
+      const byDay = {};
+      filtered.forEach(a=>{
+        const day = new Date(a.created_at).toISOString().slice(0,10);
+        if(!byDay[day]) byDay[day]={correct:0,total:0};
+        byDay[day].total++;
+        if(a.solved_correctly) byDay[day].correct++;
+      });
+      const sorted = Object.keys(byDay).sort();
+      const points = sorted.map(d => byDay[d].total>0 ? byDay[d].correct/byDay[d].total : 0);
 
-      renderTrend($("trendSvg"), points);
-      safeText($("insightText"), (t.insight_by_window && t.insight_by_window[windowKey]) ? t.insight_by_window[windowKey] : (t.insight || "Keep sessions short and consistent ✨"));
+      renderChart($('trendSvg'), points);
+
+      // Insight
+      if(points.length >= 2){
+        const last = points[points.length-1], prev = points[points.length-2];
+        if(last > prev) safe($('insightText'), 'Your accuracy is trending up — keep it going!');
+        else if(last < prev) safe($('insightText'), 'Accuracy dipped slightly. Try shorter focused sessions.');
+        else safe($('insightText'), 'Steady performance. Challenge yourself with harder problems!');
+      } else {
+        safe($('insightText'), 'Complete a few more sessions to unlock trend insights.');
+      }
     }
 
-    function renderMastery(){
-      const m = bundle.mastery || {};
-      const items = [];
-      (m.weakest || []).slice(0,3).forEach(x=> items.push(Object.assign({ tag:"Needs focus" }, x)));
-      (m.improving || []).slice(0,3).forEach(x=> items.push(Object.assign({ tag:"Improving" }, x)));
+    function renderSkills(attempts){
+      const grid = $('skillGrid'); grid.innerHTML = '';
+      const cats = {};
+      attempts.forEach(a=>{
+        const cat = a.problems?.category || 'unknown';
+        if(!cats[cat]) cats[cat] = {total:0, correct:0};
+        cats[cat].total++;
+        if(a.solved_correctly) cats[cat].correct++;
+      });
 
-      const grid = $("skillGrid");
-      grid.innerHTML = "";
-
-      if (!items.length){
-        grid.innerHTML = `
-          <div class="notice" style="grid-column:1/-1;">
-            <b>No mastery snapshot yet.</b> Do one short session and we’ll personalize this map.
-          </div>
-        `;
+      if(Object.keys(cats).length === 0){
+        grid.innerHTML = '<div class="notice" style="grid-column:1/-1;"><b>No skills tracked yet.</b> Start a session to see your skill breakdown.</div>';
         return;
       }
 
-      items.forEach((s, idx)=>{
-        const name = s.skill || s.name || "Skill";
-        const state = s.state || "PRACTICING";
-        const conf = Math.max(0, Math.min(1, Number(s.confidence ?? 0.45)));
-        const last = s.last_practiced_at ? fmtTimeAgo(s.last_practiced_at) : "—";
-        const cls = stateClass(state);
-
-        const el = document.createElement("div");
-        el.className = "skill";
+      Object.entries(cats).sort((a,b)=>b[1].total-a[1].total).forEach(([cat, {total, correct}])=>{
+        const acc = total>0 ? Math.round((correct/total)*100) : 0;
+        const label = cat.charAt(0).toUpperCase() + cat.slice(1).replace('-',' ');
+        const stateLabel = acc >= 80 ? 'Solid' : 'Practicing';
+        const stateClass = acc >= 80 ? 'solid' : 'practicing';
+        const el = document.createElement('div');
+        el.className = 'skill';
         el.innerHTML = `
-          <div class="top">
-            <div>
-              <div class="name">${escapeHtml(name)}</div>
-              <div class="sub" style="margin-top:6px;">${escapeHtml(s.tag || "")}</div>
-            </div>
-            <div class="state ${cls}">${escapeHtml(stateLabel(state))}</div>
-          </div>
-          <div class="bar" aria-label="Confidence"><div style="width:${Math.round(conf*100)}%"></div></div>
-          <div class="foot">
-            <small>Last: ${escapeHtml(last)}</small>
-            <button class="go" type="button" data-skill="${escapeAttr(name)}">Practice</button>
-          </div>
+          <div class="top"><div class="name">${label}</div><div class="state ${stateClass}">${stateLabel}</div></div>
+          <div style="font-size:12px;color:var(--text2);margin-top:auto;">${correct}/${total} correct (${acc}%)</div>
+          <button class="go" type="button" data-topic="${cat}">Practice</button>
         `;
         grid.appendChild(el);
       });
 
-      // bind practice buttons
-      grid.querySelectorAll("button.go").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
-          const skill = btn.getAttribute("data-skill");
-          // Navigate to learn page (Regular only) with a hint param
-          location.href = `learn.html?track=regular&focus=${encodeURIComponent(skill)}`;
+      grid.querySelectorAll('.go').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          location.href = `learn.html?track=regular&focus=${encodeURIComponent(btn.dataset.topic)}`;
         });
       });
     }
 
-    function renderActivity(){
-      const list = bundle.activity || [];
-      const tl = $("timeline");
-      tl.innerHTML = "";
-
-      if (!list.length){
-        tl.innerHTML = `
-          <div class="notice">
-            <b>No recent activity yet.</b> Start a session to build your progress trail.
-          </div>
-        `;
+    function renderActivity(attempts){
+      const tl = $('timeline'); tl.innerHTML = '';
+      if(!attempts.length){
+        tl.innerHTML = '<div class="notice"><b>No recent activity yet.</b> Start a session to build your trail.</div>';
         return;
       }
-
-      list.slice(0,10).forEach(evt=>{
-        const el = document.createElement("div");
-        el.className = "evt";
+      attempts.slice(0,8).forEach(a=>{
+        const el = document.createElement('div');
+        el.className = 'evt';
+        const cat = a.problems?.category || 'logic';
+        const icon = a.solved_correctly ? '✓' : '✗';
         el.innerHTML = `
-          <div class="ic">${escapeHtml(iconForEvent(evt.type))}</div>
+          <div class="ic">${icon}</div>
           <div>
-            <b>${escapeHtml(evt.label || "Activity")}</b>
-            <span>${escapeHtml(fmtTimeAgo(evt.ts))}</span>
+            <b>${a.solved_correctly?'Solved':'Attempted'} — ${cat}</b>
+            <span>${fmtAgo(a.created_at)}${a.hints_used?' · '+a.hints_used+' hints':''}</span>
           </div>
         `;
         tl.appendChild(el);
       });
     }
 
-    function renderParentPanel(){
-      const role = bundle?.user?.role || "student";
-      const panel = bundle.parent_panel || {};
-      const mode = role === "parent" ? "parent_mode" : (panel.mode || "student_share");
+    // ——— Events ———
+    $('btnOlympiad').addEventListener('click', ()=> openModal('olymModal'));
+    $('closeOlymp').addEventListener('click', ()=> closeModalFn('olymModal'));
+    $('olymCancelBtn').addEventListener('click', ()=> closeModalFn('olymModal'));
+    $('olymModal').addEventListener('click', e=>{ if(e.target.id==='olymModal') closeModalFn('olymModal'); });
 
-      if (mode === "parent_mode"){
-        safeText($("parentTitle"), "Parent Mode 👪");
-        safeText($("parentSub"), "High-level development summary — safe and integrity-preserving.");
-
-        // child selector
-        $("parentModeRow").style.display = "block";
-        const children = panel.children || [];
-        const sel = $("childSelect");
-        sel.innerHTML = "";
-        if (!children.length){
-          const opt = document.createElement("option");
-          opt.value = "";
-          opt.textContent = "No linked child found";
-          sel.appendChild(opt);
-        } else {
-          children.forEach((c,i)=>{
-            const opt = document.createElement("option");
-            opt.value = c.child_id || String(i);
-            opt.textContent = c.child_name || ("Child " + (i+1));
-            sel.appendChild(opt);
-          });
-        }
-
-        // default summary
-        const chosen = children[0] || panel.selected_child_summary || {};
-        fillParentSummary(chosen.summary || chosen.weekly_summary || panel.weekly_summary || {});
-        // Share button becomes "Download report" (still safe)
-        $("btnShareReport").textContent = "Download report";
-        $("btnInviteParent").style.display = "none";
-
-        sel.onchange = ()=>{
-          const id = sel.value;
-          const c = children.find(x => (x.child_id || "") === id) || children[sel.selectedIndex] || {};
-          fillParentSummary(c.summary || c.weekly_summary || {});
-        };
-      } else {
-        // student share mode
-        $("parentModeRow").style.display = "none";
-        safeText($("parentTitle"), "Parent/Guardian Summary 👪");
-        safeText($("parentSub"), "Share weekly development highlights safely.");
-
-        fillParentSummary(panel.weekly_summary || {});
-        $("btnShareReport").textContent = "Share report";
-        $("btnInviteParent").style.display = "inline-flex";
-      }
-    }
-
-    function fillParentSummary(ws){
-      const minutes = ws.minutes ?? "—";
-      const topics = Array.isArray(ws.topics) ? ws.topics.slice(0,4).join(", ") : (ws.topics || "—");
-      const highlights = Array.isArray(ws.highlights) ? ws.highlights.slice(0,2).join(" • ") : (ws.highlights || "—");
-      const next = ws.next_focus || ws.next || "Encourage a short 10–12 min session today.";
-
-      safeText($("parentWeekly"),
-        `Minutes: ${minutes} • Topics: ${topics}\nHighlights: ${highlights}`
-      );
-      safeText($("parentNext"), next);
-    }
-
-    function stateLabel(s){
-      const x = String(s || "").toLowerCase();
-      if (x.includes("solid")) return "Solid";
-      if (x.includes("review")) return "Review";
-      return "Practicing";
-    }
-
-    function escapeHtml(s){
-      return String(s ?? "").replace(/[&<>"']/g, m => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-      }[m]));
-    }
-    function escapeAttr(s){
-      return escapeHtml(s).replace(/"/g, "&quot;");
-    }
-
-    // =========================
-    // UI actions
-    // =========================
-
-    $("btnOlympiad").addEventListener("click", ()=>{
-      const ent = bundle?.entitlements || {};
-      if (ent.olympiad){
-        location.href = "olympiad.html";
-      } else {
-        $("olymModalBody").textContent =
-          "Olympiad is a separate advanced track with stricter gating and a different content pipeline. Upgrade to unlock it.";
-        openModal("olymModal");
-      }
-    });
-    $("closeOlymp").addEventListener("click", ()=> closeModal("olymModal"));
-    $("olymCancelBtn").addEventListener("click", ()=> closeModal("olymModal"));
-    $("olymModal").addEventListener("click", (e)=>{ if (e.target.id === "olymModal") closeModal("olymModal"); });
-
-    $("btnPickTopic").addEventListener("click", ()=> openModal("topicModal"));
-    $("closeTopic").addEventListener("click", ()=> closeModal("topicModal"));
-    $("topicModal").addEventListener("click", (e)=>{ if (e.target.id === "topicModal") closeModal("topicModal"); });
-    $("topicModal").querySelectorAll("button[data-topic]").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        const topic = btn.getAttribute("data-topic");
-        closeModal("topicModal");
-        location.href = `learn.html?track=regular&topic=${encodeURIComponent(topic)}`;
-      });
+    $('btnPickTopic').addEventListener('click', ()=> openModal('topicModal'));
+    $('closeTopic').addEventListener('click', ()=> closeModalFn('topicModal'));
+    $('topicModal').addEventListener('click', e=>{ if(e.target.id==='topicModal') closeModalFn('topicModal'); });
+    $('topicModal').querySelectorAll('[data-topic]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ closeModalFn('topicModal'); location.href=`learn.html?track=regular&topic=${encodeURIComponent(btn.dataset.topic)}`; });
     });
 
-    document.querySelectorAll(".seg button").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        renderTrendForWindow(btn.dataset.window);
-      });
+    document.querySelectorAll('.seg button').forEach(btn=>{
+      btn.addEventListener('click', ()=> renderChart7d(allAttempts, btn.dataset.window));
     });
 
-    $("btnStart").addEventListener("click", ()=>{
-      const hero = bundle?.hero || {};
-      // If server pre-creates session_id, use it; otherwise go learn page and let backend compose
-      if (hero.session_id){
-        location.href = `learn.html?track=regular&session_id=${encodeURIComponent(hero.session_id)}`;
-      } else {
-        location.href = "learn.html?track=regular";
-      }
+    $('btnStart').addEventListener('click', ()=> location.href='learn.html?track=regular');
+    $('btnSignOut').addEventListener('click', async ()=>{
+      try{ await sb.auth.signOut(); }catch(e){}
+      ['lp_jwt','access_token','supabase_access_token','sb-access-token','sb:token'].forEach(k=>localStorage.removeItem(k));
+      location.href='index.html';
     });
+    $('btnGoLogin').addEventListener('click', ()=> location.href='index.html');
 
-    $("btnSeeAllSkills").addEventListener("click", ()=>{
-      location.href = "learn.html?track=regular&view=skills";
-    });
-
-    $("btnShareReport").addEventListener("click", async ()=>{
-      const role = bundle?.user?.role || "student";
-      const panel = bundle?.parent_panel || {};
-      const ws = panel.weekly_summary || {};
-
-      // Safe share: copy text summary. (You can later replace with a share-link endpoint.)
-      const lines = [];
-      lines.push("LogicPals — Weekly Summary (Regular)");
-      lines.push(`Minutes: ${ws.minutes ?? "—"}`);
-      if (ws.topics) lines.push(`Topics: ${Array.isArray(ws.topics)? ws.topics.join(", ") : ws.topics}`);
-      if (ws.highlights) lines.push(`Highlights: ${Array.isArray(ws.highlights)? ws.highlights.join(" • ") : ws.highlights}`);
-      if (ws.next_focus) lines.push(`Next focus: ${ws.next_focus}`);
-      const text = lines.join("\n");
-
-      try{
-        await navigator.clipboard.writeText(text);
-        alert(role === "parent" ? "Report copied (safe summary)." : "Copied! Share this with your parent/guardian.");
-      } catch(e){
-        alert("Could not copy. You can manually select and copy from the Parent Summary section.");
-      }
-    });
-
-    $("btnSignOut").addEventListener("click", ()=>{
-      // Clear common tokens (best effort)
-      ["lp_jwt","access_token","supabase_access_token","sb-access-token","sb:token"].forEach(k=> localStorage.removeItem(k));
-      location.href = "index.html";
-    });
-
-    $("btnGoLogin").addEventListener("click", ()=>{
-      location.href = "index.html";
-    });
-
-    // =========================
-    // Boot
-    // =========================
-    loadBundle();
+    // ——— Boot ———
+    boot();
   </script>
-
-  <!--
-    IMPLEMENTATION NOTE (server side):
-    You need /api/dashboard/regular-bundle that returns:
-      { ok:true, track:"regular", user:{name,role}, entitlements:{regular,olympiad,plan_status,expires_at}, hero, kpis, trend, mastery, activity, parent_panel, generated_at }
-
-    QC RULES:
-    - Must enforce track='regular' inside RPC or server logic.
-    - Must never leak stack traces.
-    - Must never query raw tables directly from the browser.
-    - Parent panel must be parent-safe (summary only).
-  -->
 </body>
 </html>
