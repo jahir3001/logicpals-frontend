@@ -373,7 +373,12 @@
 
     const env = await fetchEnv();
     const supabase = createClient(env.supabaseUrl, env.supabaseAnonKey, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+      auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: 'logicpals.auth'
+          }
     });
 
     // Expose for DevTools debugging
@@ -416,7 +421,7 @@
     $('btnSubs').addEventListener('click', guardedNav('/admin/admin-subscriptions.html'));
     $('goPayments').addEventListener('click', guardedNav('/admin/admin-payments.html'));
     $('goSubs').addEventListener('click', guardedNav('/admin/admin-subscriptions.html'));
-    $('goTrust').addEventListener('click', guardedNav('/admin-subscriptions.html#trust'));
+    $('goTrust').addEventListener('click', guardedNav('/admin/admin-subscriptions.html#trust'));
 
     const notYet = (label) => () => alert(label + "\n\nNext step: confirm / implement the admin RPCs, then we wire these buttons.");
     [
@@ -548,6 +553,11 @@
 
     setStatus('', 'Loading…');
     await refreshUI();
+	// BFCache hardening: if browser restores this page from cache (Back button),
+	// reload so auth state + event handlers are guaranteed correct.
+	window.addEventListener('pageshow', (e) => {
+  	if (e.persisted) window.location.reload();
+	});
   </script>
 </body>
 </html>
