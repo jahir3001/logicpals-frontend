@@ -412,11 +412,11 @@
       if (!session) { gateWorkspace(true); openDlg(); return; }
       location.href = path;
     };
-    $('btnPayments').addEventListener('click', guardedNav('/admin-payments.html'));
-    $('btnSubs').addEventListener('click', guardedNav('/admin-subscriptions.html'));
-    $('goPayments').addEventListener('click', guardedNav('/admin-payments.html'));
-    $('goSubs').addEventListener('click', guardedNav('/admin-subscriptions.html'));
-    $('goTrust').addEventListener('click', guardedNav('/admin-subscriptions.html#trust'));
+    $('btnPayments').addEventListener('click', guardedNav('/admin/admin-payments.html'));
+    $('btnSubs').addEventListener('click', guardedNav('/admin/admin-subscriptions.html'));
+    $('goPayments').addEventListener('click', guardedNav('/admin/admin-payments.html'));
+    $('goSubs').addEventListener('click', guardedNav('/admin/admin-subscriptions.html'));
+    $('goTrust').addEventListener('click', guardedNav('/admin/admin-subscriptions.html#trust'));
 
     const notYet = (label) => () => alert(label + "\n\nNext step: confirm / implement the admin RPCs, then we wire these buttons.");
     [
@@ -548,6 +548,11 @@
 
     setStatus('', 'Loading…');
     await refreshUI();
+	// BFCache hardening: if browser restores this page from cache (Back button),
+	// reload so auth state + event handlers are guaranteed correct.
+	window.addEventListener('pageshow', (e) => {
+  	if (e.persisted) window.location.reload();
+	});
   </script>
 </body>
 </html>
