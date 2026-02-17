@@ -352,6 +352,22 @@
 
       if (candidates.length) return candidates[0];
 
+      // Supabase v2 stores session under "sb-<project_ref>-auth-token" as JSON
+      for (let i = 0; i < localStorage.length; i++){
+        const key = localStorage.key(i);
+        if (key && key.startsWith("sb-") && key.endsWith("-auth-token")){
+          try {
+            const raw = localStorage.getItem(key);
+            const parsed = JSON.parse(raw);
+            // Supabase stores { access_token, refresh_token, ... } or nested under currentSession
+            const token = parsed?.access_token
+              || parsed?.currentSession?.access_token
+              || parsed?.session?.access_token;
+            if (token) return token;
+          } catch(_){}
+        }
+      }
+
       // Try URL hash (common in OAuth redirects)
       const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
       const token = hash.get("access_token") || hash.get("token");
@@ -499,6 +515,9 @@
 
     async function loadBundle(){
       JWT = getJWT();
+      console.log("[Dashboard] JWT found:", !!JWT, JWT ? "(token length: " + JWT.length + ")" : "(none)");
+      // Debug: show all localStorage keys to help troubleshoot
+      console.log("[Dashboard] localStorage keys:", Object.keys(localStorage));
       if (!JWT){
         $("authNotice").style.display = "block";
         $("content").style.display = "none";
