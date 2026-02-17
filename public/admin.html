@@ -712,12 +712,23 @@
     }
 
   
-       // === BFCache hardening (Back button fix) ===
-    window.addEventListener("pageshow", (e) => {
-      if (e.persisted) {
-        window.location.reload();
-      }
-    });
+       // === BFCache hardening (enterprise) ===
+// If Chrome restores from back/forward cache, force a clean reload so auth + listeners are correct.
+window.addEventListener("pageshow", (e) => {
+  if (e.persisted) {
+    window.location.reload();
+    return;
+  }
+  // normal navigation: re-check session/UI
+  refreshUI().catch(() => {});
+});
+
+// extra safety: when tab becomes visible again
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    refreshUI().catch(() => {});
+  }
+});
   </script>
 </body>
 </html>
