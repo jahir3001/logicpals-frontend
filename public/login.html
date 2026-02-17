@@ -2,136 +2,157 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>LogicPals — Login</title>
   <style>
-    :root{
-      --bg:#EEF4FF; --card:#ffffff; --text:#111827; --muted:#6B7280;
-      --primary:#2563EB; --danger:#EF4444; --border:#E5E7EB;
-    }
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text);}
-    .wrap{min-height:100vh;display:grid;place-items:center;padding:24px;}
-    .card{width:min(520px,92vw);background:var(--card);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.12);padding:34px;}
-    h1{margin:0 0 8px;font-size:34px;letter-spacing:-.02em;}
-    p{margin:0 0 22px;color:var(--muted);}
-    label{display:block;font-weight:600;margin:14px 0 6px;}
-    input{width:100%;padding:12px 12px;border:1px solid var(--border);border-radius:10px;font-size:16px;}
-    button{width:100%;margin-top:18px;padding:12px 14px;border-radius:10px;border:0;background:var(--primary);color:#fff;font-weight:700;font-size:16px;cursor:pointer;}
-    button:disabled{opacity:.6;cursor:not-allowed;}
-    .msg{margin-top:14px;padding:12px;border-radius:10px;border:1px solid var(--border);background:#F9FAFB;color:var(--muted);font-size:14px;}
-    .msg.err{border-color:#FECACA;background:#FEF2F2;color:var(--danger);}
-    .row{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:14px;}
-    .link{color:var(--primary);text-decoration:none;font-weight:600;}
-    .tiny{font-size:12px;color:var(--muted);}
+    :root{--bg:#EEF2FF;--card:#fff;--text:#1F2937;--muted:#6B7280;--blue:#2563EB;--ring:rgba(37,99,235,.25);--border:#E5E7EB;--danger:#DC2626;}
+    *{box-sizing:border-box} body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:radial-gradient(1200px 600px at 30% 20%, #E0E7FF 0%, rgba(224,231,255,0) 60%), radial-gradient(900px 600px at 80% 30%, #FEF3C7 0%, rgba(254,243,199,0) 55%), var(--bg); color:var(--text); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
+    .card{width:min(520px,100%); background:var(--card); border:1px solid var(--border); border-radius:20px; box-shadow:0 22px 60px rgba(15,23,42,.12); padding:28px;}
+    .h{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+    .logo{width:44px;height:44px;border-radius:14px; background:linear-gradient(135deg,#2563EB,#60A5FA); display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;}
+    h1{margin:0;font-size:30px;letter-spacing:-.02em;}
+    .sub{margin:0;color:var(--muted);font-size:14px;}
+    label{display:block;margin-top:16px;font-size:13px;color:var(--muted);font-weight:700;}
+    input{width:100%;margin-top:8px;padding:12px 14px;border:1px solid #CBD5E1;border-radius:12px;font-size:16px;outline:none;}
+    input:focus{border-color:var(--blue); box-shadow:0 0 0 4px var(--ring);}
+    .btn{margin-top:18px;width:100%;padding:12px 14px;border-radius:12px;border:0;background:var(--blue);color:#fff;font-weight:800;font-size:16px;cursor:pointer;}
+    .btn[disabled]{opacity:.6;cursor:not-allowed;}
+    .err{margin-top:14px; padding:10px 12px;border-radius:12px;background:rgba(220,38,38,.08); border:1px solid rgba(220,38,38,.25); color:var(--danger); font-size:13px; display:none;}
+    .row{display:flex;gap:12px;justify-content:center;margin-top:16px;font-size:14px;color:var(--muted);}
+    a{color:var(--blue);text-decoration:none;font-weight:700}
+    .mini{margin-top:14px; display:flex; justify-content:space-between; gap:10px; align-items:center; font-size:12px; color:var(--muted)}
+    .tag{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--border); background:#F8FAFC;}
+    .dot{width:8px;height:8px;border-radius:999px;background:#9CA3AF}
+    .dot.ok{background:#10B981}
   </style>
-
-  <!-- Supabase JS (v2) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Welcome Back 👋</h1>
-      <p>Log in to continue your learning journey.</p>
-
-      <form id="loginForm">
-        <label>Email Address</label>
-        <input id="email" type="email" autocomplete="email" required />
-
-        <label>Password</label>
-        <input id="password" type="password" autocomplete="current-password" required />
-
-        <button id="btnLogin" type="submit" disabled>Loading…</button>
-      </form>
-
-      <div id="out" class="msg">Initializing…</div>
-
-      <div class="row">
-        <div class="tiny">Don't have an account? <a class="link" href="/signup.html">Sign Up Free</a></div>
+  <div class="card">
+    <div class="h">
+      <div class="logo">LP</div>
+      <div>
+        <h1>Welcome Back 👋</h1>
+        <p class="sub">Log in to continue your learning journey.</p>
       </div>
-      <div class="row">
-        <a class="link" href="/index.html">← Back to Home</a>
-      </div>
+    </div>
+
+    <div class="mini">
+      <div class="tag"><span id="envDot" class="dot"></span><span id="envTag">Loading config…</span></div>
+      <a href="/index.html">← Back to Home</a>
+    </div>
+
+    <form id="loginForm">
+      <label>Email Address</label>
+      <input id="email" type="email" autocomplete="email" required />
+      <label>Password</label>
+      <input id="password" type="password" autocomplete="current-password" required />
+      <button id="btnLogin" class="btn" type="submit" disabled>Log In</button>
+      <div id="err" class="err"></div>
+    </form>
+
+    <div class="row">
+      <span>Don't have an account?</span>
+      <a href="/signup.html">Sign Up Free</a>
     </div>
   </div>
 
-  <script>
-    const $ = (id) => document.getElementById(id);
+<script>
+(() => {
+  "use strict";
 
-    let supabaseClient = null;
+  // Enterprise rule: ONE shared Supabase client per page, created ONLY after /api/env arrives.
+  let supabaseClient = null;
 
-    function setMsg(text, isErr=false){
-      const el = $('out');
-      el.textContent = text;
-      el.className = 'msg' + (isErr ? ' err' : '');
+  const $ = (id) => document.getElementById(id);
+  const errBox = $("err");
+  const btn = $("btnLogin");
+
+  function setEnv(ok, msg){
+    $("envDot").className = "dot" + (ok ? " ok" : "");
+    $("envTag").textContent = msg;
+  }
+  function showErr(msg){
+    errBox.style.display = "block";
+    errBox.textContent = msg;
+  }
+  function clearErr(){
+    errBox.style.display = "none";
+    errBox.textContent = "";
+  }
+
+  async function loadEnv(){
+    // IMPORTANT: This must be same origin so it works on Vercel + local.
+    const r = await fetch("/api/env", { cache: "no-store" });
+    if(!r.ok) throw new Error("env_fetch_failed");
+    const j = await r.json();
+    if(!j?.SUPABASE_URL || !j?.SUPABASE_ANON_KEY) throw new Error("env_missing_keys");
+    return j;
+  }
+
+  async function init(){
+    try{
+      setEnv(false, "Loading config…");
+      const env = await loadEnv();
+      supabaseClient = window.supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+      });
+      window.supabaseClient = supabaseClient; // optional debug handle
+      setEnv(true, "Config loaded");
+      btn.disabled = false;
+
+      // If already signed in, go straight to dashboard.
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if(session?.user){
+        window.location.replace("/dashboard.html");
+      }
+    }catch(e){
+      console.error(e);
+      showErr("Login is unavailable: failed to load config. (Check /api/env on Vercel)");
+      setEnv(false, "Config load failed");
+      btn.disabled = true;
+    }
+  }
+
+  $("loginForm").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    clearErr();
+
+    if(!supabaseClient){
+      showErr("Please wait: still loading config.");
+      return;
     }
 
-    async function loadEnv() {
-      // Single source of truth for URL/key: your existing Vercel route
-      const res = await fetch('/api/env', { cache: 'no-store' });
-      if (!res.ok) throw new Error('Failed to load /api/env (' + res.status + ')');
-      const env = await res.json();
+    const email = $("email").value.trim();
+    const password = $("password").value;
 
-      // Expect these keys from your /api/env implementation
-      const url = env.SUPABASE_URL || env.supabaseUrl || env.url;
-      const anon = env.SUPABASE_ANON_KEY || env.supabaseAnonKey || env.anonKey;
+    btn.disabled = true;
+    btn.textContent = "Signing in…";
+    try{
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if(error) throw error;
+      if(!data?.session) throw new Error("no_session_returned");
 
-      if (!url || !anon) throw new Error('Missing SUPABASE_URL / SUPABASE_ANON_KEY from /api/env');
-      return { url, anon };
+      // Enterprise navigation: replace to avoid weird history loops.
+      window.location.replace("/dashboard.html");
+    }catch(e){
+      console.error(e);
+      showErr("Login Failed: " + (e?.message || "unknown_error"));
+      btn.disabled = false;
+      btn.textContent = "Log In";
     }
+  });
 
-    async function initSupabase() {
-      try {
-        const { url, anon } = await loadEnv();
-
-        supabaseClient = window.supabase.createClient(url, anon, {
-          auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true
-          }
-        });
-
-        $('btnLogin').disabled = false;
-        $('btnLogin').textContent = 'Log In';
-        setMsg('Ready.');
-      } catch (e) {
-        $('btnLogin').disabled = true;
-        $('btnLogin').textContent = 'Log In';
-        setMsg('Login init failed: ' + (e?.message || String(e)), true);
-      }
+  // BFCache hardening: if the browser restores this page, re-check session/config.
+  window.addEventListener("pageshow", (e) => {
+    if(e.persisted){
+      // safest: full reload to restore JS state
+      window.location.reload();
     }
+  });
 
-    $('loginForm').addEventListener('submit', async (ev) => {
-      ev.preventDefault();
-
-      if (!supabaseClient) {
-        setMsg('Supabase not initialized yet. Refresh the page.', true);
-        return;
-      }
-
-      const email = $('email').value.trim();
-      const password = $('password').value;
-
-      try {
-        $('btnLogin').disabled = true;
-        $('btnLogin').textContent = 'Signing in…';
-
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-
-        setMsg('Signed in. Redirecting…');
-        // Student dashboard (regular)
-        window.location.href = '/dashboard.html';
-      } catch (e) {
-        setMsg('Login Failed: ' + (e?.message || String(e)), true);
-      } finally {
-        $('btnLogin').disabled = false;
-        $('btnLogin').textContent = 'Log In';
-      }
-    });
-
-    initSupabase();
-  </script>
+  init();
+})();
+</script>
 </body>
 </html>
