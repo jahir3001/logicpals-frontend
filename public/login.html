@@ -74,47 +74,77 @@
     </div>
 
     <script>
-        await (window.__LP_ENV_READY || Promise.resolve());
-const { SUPABASE_URL: supabaseUrl, SUPABASE_ANON_KEY: supabaseAnonKey } = (window.__LP_ENV || {});
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase config. Ensure /api/env is deployed and reachable.');
-    }
-        // PASTE YOUR KEY BELOW
-        
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'logicpals.auth' } });
+        (async () => {
+          const errBox = document.getElementById('errorMessage');
+          const btn = document.getElementById('submitBtn');
 
-        async function handleLogin(e) {
+          // Wait for env-loader (if present). No top-level await (browser-safe).
+          try {
+            await (window.__LP_ENV_READY || Promise.resolve());
+          } catch (_) {}
+
+          const env = (window.__LP_ENV || {});
+          const supabaseUrl = env.SUPABASE_URL || env.supabaseUrl || env.url;
+          const supabaseAnonKey = env.SUPABASE_ANON_KEY || env.supabaseAnonKey || env.anonKey;
+
+          if (!supabaseUrl || !supabaseAnonKey) {
+            const msg = 'Missing Supabase config. Ensure /api/env is deployed and reachable.';
+            console.error(msg, env);
+            if (errBox) { errBox.innerText = msg; errBox.style.display = 'block'; }
+            if (btn) { btn.disabled = true; btn.innerText = 'Config missing'; }
+            return;
+          }
+
+          const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey, {
+            auth: {
+              persistSession: true,
+              autoRefreshToken: true,
+              detectSessionInUrl: true,
+              storageKey: 'logicpals.auth'
+            }
+          });
+
+          window.supabaseClient = supabaseClient;
+
+          // If already signed in, go straight to dashboard.
+          try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session?.user) {
+              window.location.replace('dashboard.html');
+              return;
+            }
+          } catch (e) {
+            console.warn('getSession failed:', e);
+          }
+
+          // Expose handler for inline onsubmit="handleLogin(event)"
+          window.handleLogin = async function handleLogin(e) {
             e.preventDefault();
+
             const btn = document.getElementById('submitBtn');
             const err = document.getElementById('errorMessage');
-            
-            const email = document.getElementById('email').value;
+
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
 
-            btn.innerText = "Logging in...";
+            btn.innerText = 'Logging in...';
             btn.disabled = true;
             err.style.display = 'none';
 
             try {
-                // Supabase Login Logic
-                const { data, error } = await supabaseClient.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
+              const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+              if (error) throw error;
 
-                if (error) throw error;
-
-                // Success! Go to Dashboard
-                window.location.href = "dashboard.html";
-
+              window.location.href = 'dashboard.html';
             } catch (error) {
-                console.error(error);
-                err.innerText = "Login Failed: " + error.message;
-                err.style.display = 'block';
-                btn.innerText = "Log In";
-                btn.disabled = false;
+              console.error(error);
+              err.innerText = 'Login Failed: ' + (error?.message || String(error));
+              err.style.display = 'block';
+              btn.innerText = 'Log In';
+              btn.disabled = false;
             }
-        }
+          };
+        })();
     </script>
 </body>
 </html>
