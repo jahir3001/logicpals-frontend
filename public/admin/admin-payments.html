@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LogicPals Admin — Payments</title>
 
-  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     :root{--bg:#f6f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e5e7eb;--accent:#4f46e5;--accent2:#06b6d4;--good:#16a34a;--warn:#b45309;--bad:#dc2626;--shadow:0 18px 45px rgba(2,6,23,.08);--r:18px}
-    *{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";color:var(--text);background:linear-gradient(180deg,#ffffff 0%, #f6f7fb 100%)}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--text);background:linear-gradient(180deg,#ffffff 0%, #f6f7fb 100%)}
     a{color:inherit;text-decoration:none}
     .shell{max-width:1200px;margin:28px auto;padding:0 18px}
     .top{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px 16px;box-shadow:var(--shadow)}
@@ -18,7 +20,7 @@
     .right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
     .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 10px;font-size:13px;color:var(--muted)}
     .dot{width:8px;height:8px;border-radius:999px;background:#94a3b8}
-    .btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer}
+    .btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer}
     .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
     .btn:disabled{opacity:.55;cursor:not-allowed}
 
@@ -28,14 +30,14 @@
     .h h2{margin:0;font-size:18px}.hint{color:var(--muted);font-size:13px}
     .form{display:grid;grid-template-columns:1.3fr .7fr;gap:12px;margin-top:12px}
     .field{display:flex;flex-direction:column;gap:6px}
-    label{font-size:12px;color:var(--muted);font-weight:700}
+    label{font-size:12px;color:var(--muted);font-weight:800}
     input,select{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px;outline:none}
-    textarea{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;min-height:160px;resize:vertical;outline:none;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    textarea{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;min-height:180px;resize:vertical;outline:none;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
     .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
-    .note{margin-top:8px;font-size:12px;color:var(--muted)}
+    .note{margin-top:10px;font-size:12px;color:var(--muted)}
+    .lock{margin-top:14px;padding:12px 14px;border-radius:14px;border:1px solid rgba(220,38,38,.25);background:#fef2f2;color:#991b1b;font-size:13px;display:none}
     @media (max-width:900px){.form{grid-template-columns:1fr}}
   </style>
-  <script src="/assets/js/env-loader.js"></script>
 </head>
 
 <body>
@@ -49,12 +51,14 @@
         </div>
       </div>
       <div class="right">
-        <span class="pill" id="status"><span class="dot" id="dot"></span><span id="statusTxt">Loading…</span></span>
+        <span class="pill" id="status"><span class="dot" id="dot"></span><span id="statusTxt">Booting…</span></span>
         <a class="btn" href="/admin.html">Back to Admin</a>
         <button class="btn primary" id="btnSignIn">Sign in</button>
         <button class="btn" id="btnSignOut" style="display:none">Sign out</button>
       </div>
     </header>
+
+    <div id="lockBox" class="lock"></div>
 
     <div class="grid">
       <section class="card">
@@ -91,11 +95,17 @@
         </div>
 
         <div class="actions">
-          <button class="btn primary" id="run">Run</button>
-          <button class="btn" id="trust">Load trust summary</button>
+          <button class="btn primary" id="run" disabled>Run</button>
+          <button class="btn" id="trust" disabled>Load trust summary</button>
         </div>
 
-        <p class="note">Expected RPCs: <code>admin_list_payments</code>, <code>admin_refund_payment</code>, <code>admin_reconcile_payment</code>, <code>admin_trust_summary</code>. (If your function names differ, tell me and I will wire them.)</p>
+        <p class="note">
+          Expected RPCs:
+          <code>admin_list_payments</code>,
+          <code>admin_refund_payment</code>,
+          <code>admin_reconcile_payment</code>,
+          <code>admin_trust_summary</code>.
+        </p>
       </section>
 
       <section class="card">
@@ -120,102 +130,191 @@
     </form>
   </dialog>
 
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+<script>
+(function(){
+  'use strict';
 
-    const env = window.__LP_ENV || {};
-    const SUPABASE_URL = env.SUPABASE_URL;
-    const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY;
+  const STORAGE_KEY = 'logicpals.auth';     // must match login/dashboard/admin
+  const ENV_ENDPOINT = '/api/env';
 
-    const $ = (id) => document.getElementById(id);
-    const setStatus = (kind, msg) => {
-      $('statusTxt').textContent = msg;
-      const dot = $('dot');
-      dot.style.background = kind === 'good' ? 'var(--good)' : kind === 'bad' ? 'var(--bad)' : kind === 'warn' ? 'var(--warn)' : '#94a3b8';
-    };
-    const log = (obj) => { $('out').value = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2); };
-    const openDlg = () => $('dlg').showModal();
-    const closeDlg = () => $('dlg').close();
+  const $ = (id)=>document.getElementById(id);
+  const setStatus = (kind, msg)=>{
+    $('statusTxt').textContent = msg;
+    const dot = $('dot');
+    dot.style.background = kind === 'good' ? 'var(--good)' : kind === 'bad' ? 'var(--bad)' : kind === 'warn' ? 'var(--warn)' : '#94a3b8';
+  };
+  const log = (obj)=>{ $('out').value = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2); };
 
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      setStatus('bad', 'Missing env');
-      log('Missing window.__LP_ENV (SUPABASE_URL / SUPABASE_ANON_KEY). Open /api/env and confirm it loads.');
-      $('btnSignIn').disabled = true;
-      throw new Error('Missing env');
-    }
+  const lock = (msg)=>{
+    $('lockBox').style.display = 'block';
+    $('lockBox').textContent = msg;
+    $('run').disabled = true;
+    $('trust').disabled = true;
+  };
+  const unlock = ()=>{
+    $('lockBox').style.display = 'none';
+    $('lockBox').textContent = '';
+    $('run').disabled = false;
+    $('trust').disabled = false;
+  };
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true } });
+  function hardClearAuthStorage(){
+    try{
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_KEY + '-code-verifier');
+      localStorage.removeItem(STORAGE_KEY + '-provider-token');
+      localStorage.removeItem(STORAGE_KEY + '-provider-refresh-token');
+    }catch(_){}
+  }
 
-    async function refreshAuthUI(){
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        $('who').textContent = `Signed in: ${session.user.email}`;
-        $('btnSignIn').style.display = 'none';
-        $('btnSignOut').style.display = 'inline-flex';
-        setStatus('good', 'Ready');
-      } else {
-        $('who').textContent = 'Signed out';
-        $('btnSignIn').style.display = 'inline-flex';
-        $('btnSignOut').style.display = 'none';
-        setStatus('warn', 'Sign in required');
+  async function fetchEnv(){
+    const res = await fetch(ENV_ENDPOINT, { cache:'no-store' });
+    if(!res.ok) throw new Error('ENV_ENDPOINT failed: ' + res.status);
+    const data = await res.json();
+    const supabaseUrl = data.supabaseUrl || data.SUPABASE_URL || data.url;
+    const supabaseAnonKey = data.supabaseAnonKey || data.SUPABASE_ANON_KEY || data.anonKey;
+    if(!supabaseUrl || !supabaseAnonKey) throw new Error('Missing Supabase config from ' + ENV_ENDPOINT);
+    return { supabaseUrl, supabaseAnonKey };
+  }
+
+  let sb = null;
+
+  async function roleCheckFailClosed(){
+    // Enterprise rule: payments page FAILS CLOSED unless role is proven.
+    // Expected RPC: get_my_role() -> text (super_admin/admin_regular/admin_olympiad/etc).
+    try{
+      const rpcsToTry = ['get_my_role','my_role','get_current_role'];
+      for(const fn of rpcsToTry){
+        const { data, error } = await sb.rpc(fn);
+        if(!error && data) return String(data);
       }
+      return null;
+    }catch(_){
+      return null;
     }
+  }
+
+  async function refreshAuthUI(){
+    const { data:{ session } } = await sb.auth.getSession();
+    if (session?.user) {
+      $('who').textContent = `Signed in: ${session.user.email}`;
+      $('btnSignIn').style.display = 'none';
+      $('btnSignOut').style.display = 'inline-flex';
+      setStatus('warn', 'Verifying access…');
+
+      const role = await roleCheckFailClosed();
+      if(!role){
+        lock('Access verification RPC missing. Add get_my_role() (or tell me your role RPC name). Locked by design.');
+        setStatus('bad','Locked');
+        return;
+      }
+
+      const allowed = ['super_admin','admin_regular','admin_olympiad','admin'].includes(role);
+      if(!allowed){
+        lock(`Not an admin. Role="${role}". Locked.`);
+        setStatus('bad','Locked');
+        return;
+      }
+
+      unlock();
+      setStatus('good','Ready');
+    } else {
+      $('who').textContent = 'Signed out';
+      $('btnSignIn').style.display = 'inline-flex';
+      $('btnSignOut').style.display = 'none';
+      lock('Sign-in required.');
+      setStatus('warn','Sign in required');
+    }
+  }
+
+  function openDlg(){ $('dlg').showModal(); }
+  function closeDlg(){ $('dlg').close(); }
+
+  async function init(){
+    setStatus('', 'Booting…');
+    lock('Booting…');
+
+    let env;
+    try{
+      env = await fetchEnv();
+    }catch(e){
+      setStatus('bad','Missing env');
+      lock('Missing Supabase config from /api/env. Fix /api/env first.');
+      log('Missing Supabase config from /api/env. Technical: ' + (e && e.message ? e.message : String(e)));
+      $('btnSignIn').disabled = true;
+      return;
+    }
+
+    sb = window.supabase.createClient(env.supabaseUrl, env.supabaseAnonKey, {
+      auth: { storageKey: STORAGE_KEY, persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
+    });
 
     $('btnSignIn').addEventListener('click', openDlg);
-    $('btnSignOut').addEventListener('click', async () => { await supabase.auth.signOut(); await refreshAuthUI(); });
+    $('btnSignOut').addEventListener('click', async ()=>{
+      setStatus('warn', 'Signing out…');
+      try{ await sb.auth.signOut({ scope:'global' }); }catch(_){}
+      hardClearAuthStorage();
+      await refreshAuthUI();
+    });
 
-    $('doLogin').addEventListener('click', async (e) => {
+    $('doLogin').addEventListener('click', async (e)=>{
       e.preventDefault();
       $('authOut').textContent = 'Signing in…';
-      const { error } = await supabase.auth.signInWithPassword({ email: $('lgEmail').value.trim(), password: $('lgPass').value });
-      if (error) { $('authOut').textContent = error.message; return; }
+      const email = $('lgEmail').value.trim();
+      const password = $('lgPass').value;
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if(error){ $('authOut').textContent = error.message; return; }
       $('authOut').textContent = '';
       closeDlg();
       await refreshAuthUI();
     });
 
-    async function callRpc(name, args){
-      const { data, error } = await supabase.rpc(name, args);
-      if (error) throw error;
-      return data;
-    }
-
-    $('run').addEventListener('click', async () => {
-      try {
+    $('run').addEventListener('click', async ()=>{
+      try{
         setStatus('', 'Running…');
         const email = $('email').value.trim();
         const track = $('track').value;
         const ref = $('ref').value.trim() || null;
-        if (!email) { log('Please enter customer email.'); setStatus('warn','Missing email'); return; }
+        if(!email){ log('Please enter customer email.'); setStatus('warn','Missing email'); return; }
+
         const action = $('action').value;
         const rpc = action === 'refund' ? 'admin_refund_payment' : action === 'reconcile' ? 'admin_reconcile_payment' : 'admin_list_payments';
-        const result = await callRpc(rpc, { p_email: email, p_track: track, p_reference: ref });
-        log({ rpc, args: { email, track, ref }, result });
+        const { data, error } = await sb.rpc(rpc, { p_email: email, p_track: track, p_reference: ref });
+        if(error) throw error;
+        log({ rpc, args: { email, track, ref }, result: data });
         setStatus('good','Ready');
-      } catch (err) {
-        log({ error: err?.message || String(err), details: err });
+      }catch(err){
+        log({ error: err?.message || String(err) });
         setStatus('bad','Error');
       }
     });
 
-    $('trust').addEventListener('click', async () => {
-      try {
+    $('trust').addEventListener('click', async ()=>{
+      try{
         setStatus('', 'Running…');
         const email = $('email').value.trim();
-        if (!email) { log('Please enter customer email.'); setStatus('warn','Missing email'); return; }
+        if(!email){ log('Please enter customer email.'); setStatus('warn','Missing email'); return; }
         const track = $('track').value;
-        const result = await callRpc('admin_trust_summary', { p_email: email, p_track: track });
-        log({ rpc: 'admin_trust_summary', args: { email, track }, result });
+
+        const { data, error } = await sb.rpc('admin_trust_summary', { p_email: email, p_track: track });
+        if(error) throw error;
+        log({ rpc: 'admin_trust_summary', args: { email, track }, result: data });
         setStatus('good','Ready');
-      } catch (err) {
-        log({ error: err?.message || String(err), details: err });
+      }catch(err){
+        log({ error: err?.message || String(err) });
         setStatus('bad','Error');
       }
     });
 
-    setStatus('', 'Loading…');
     await refreshAuthUI();
-    supabase.auth.onAuthStateChange(() => refreshAuthUI());
-  </script>
+    sb.auth.onAuthStateChange(()=> refreshAuthUI());
+  }
+
+  // BFCache reliability: if user clicks back/forward, rerun init
+  window.addEventListener('pageshow', (e)=>{ if(e.persisted) location.reload(); });
+
+  init();
+})();
+</script>
 </body>
 </html>
