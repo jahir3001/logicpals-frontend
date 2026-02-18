@@ -373,8 +373,12 @@
 
     const env = await fetchEnv();
     const supabase = createClient(env.supabaseUrl, env.supabaseAnonKey, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true 
-      storageKey: 'logicpals.auth',}
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storageKey: 'logicpals.auth'
+      }
     });
 
     // Expose for DevTools debugging
@@ -444,7 +448,7 @@
     }
 
     function hardClearAuthStorage() {
-      const ref = getProjectRefFromUrl(env.SUPABASE_URL);
+      const ref = getProjectRefFromUrl(env.supabaseUrl);
       const prefixes = ['supabase.auth.','sb-'];
       const rm = (store) => {
         const keys = [];
@@ -462,7 +466,7 @@
     async function hardLogout() {
       // Immediately lock the UI (enterprise-safe). Even if network signOut is slow/fails, UI becomes read-only.
       gateWorkspace(true);
-      setStatus('Signing out…');
+      setStatus('warn', 'Signing out…');
 
       try {
         // Local sign-out is enough for this admin SPA and is faster/more reliable than global.
