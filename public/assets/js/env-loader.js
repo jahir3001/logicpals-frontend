@@ -1,82 +1,51 @@
-// LogicPals env + Supabase bootstrap (ES module)
-// Contract:
-//  - Provides a single, consistent Supabase client across ALL pages.
-//  - Uses a fixed storageKey so auth persists across pages.
-//  - Exposes: window.supabaseClient, window.lpGetClient(), window.lpGetEnv()
-//  - BFCache hardening: reload on pageshow persisted
+/**
+ * LogicPals env-loader (enterprise hardening)
+ * - Single source of truth for browser config: GET /api/env
+ * - Exposes:
+ *    window.__LP_ENV_READY  -> Promise that resolves once env is loaded (or null on failure)
+ *    window.__LP_ENV        -> { SUPABASE_URL, SUPABASE_ANON_KEY }
+ *    window.__LP_GET_ENV()  -> helper to await and return env
+ */
+(function () {
+  const CACHE_BUST = String(Date.now());
 
-function withTimeout(promise, ms, label) {
-  let t;
-  const timeout = new Promise((_, rej) => {
-    t = setTimeout(() => rej(new Error(label + ' timed out after ' + ms + 'ms')), ms);
-  });
-  return Promise.race([promise, timeout]).finally(() => clearTimeout(t));
-}
-
-async function fetchEnv() {
-  const res = await withTimeout(fetch('/api/env', {
-    method: 'GET',
-    headers: { 'Accept': 'application/json' },
-    cache: 'no-store',
-    credentials: 'omit'
-  }), 8000, 'GET /api/env');
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error('Env fetch failed (' + res.status + '): ' + text.slice(0, 200));
-  }
-
-  const j = await res.json();
-  const supabaseUrl = j.supabaseUrl || j.SUPABASE_URL || j.url;
-  const supabaseAnonKey = j.supabaseAnonKey || j.SUPABASE_ANON_KEY || j.anonKey;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Env missing supabaseUrl/supabaseAnonKey');
-  }
-  return { supabaseUrl, supabaseAnonKey };
-}
-
-async function getCreateClient() {
-  if (window.supabase && typeof window.supabase.createClient === 'function') {
-    return window.supabase.createClient;
-  }
-  // Fallback to ESM import if CDN global isn't present.
-  const mod = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-  return mod.createClient;
-}
-
-async function init() {
-  const env = await fetchEnv();
-  const createClient = await getCreateClient();
-
-  const client = createClient(env.supabaseUrl, env.supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      storageKey: 'logicpals.auth'
+  async function loadEnv() {
+    if (window.__LP_ENV && window.__LP_ENV.SUPABASE_URL && window.__LP_ENV.SUPABASE_ANON_KEY) {
+      return window.__LP_ENV;
     }
-  });
 
-  // Expose globally for all pages
-  window.__lpEnv = env;
-  window.supabaseClient = client;
+    const res = await fetch('/api/env?cb=' + CACHE_BUST, {
+      method: 'GET',
+      cache: 'no-store',
+      headers: { 'Accept': 'application/json' }
+    });
 
-  return client;
-}
+    if (!res.ok) {
+      throw new Error('Failed to load /api/env (' + res.status + ')');
+    }
 
-// Single shared init promise
-window.__lpClientPromise = window.__lpClientPromise || init();
+    const j = await res.json();
 
-window.lpGetClient = function lpGetClient() {
-  return window.__lpClientPromise;
-};
+    const SUPABASE_URL = j.SUPABASE_URL || j.supabaseUrl || j.supabase_url || j.url || '';
+    const SUPABASE_ANON_KEY = j.SUPABASE_ANON_KEY || j.supabaseAnonKey || j.supabase_anon_key || j.anonKey || '';
 
-window.lpGetEnv = function lpGetEnv() {
-  return window.__lpEnv || null;
-};
+    window.__LP_ENV = { SUPABASE_URL, SUPABASE_ANON_KEY };
 
-// BFCache hardening: on Back button restore, ensure scripts re-run and auth handlers are alive.
-window.addEventListener('pageshow', (e) => {
-  if (e.persisted) window.location.reload();
-});
+    return window.__LP_ENV;
+  }
+
+  // create/keep a single in-flight promise across BFCache navigations
+  if (!window.__LP_ENV_READY) {
+    window.__LP_ENV_READY = loadEnv()
+      .catch((err) => {
+        window.__LP_ENV_ERROR = err;
+        console.error('[LogicPals] env-loader failed:', err);
+        return null;
+      });
+  }
+
+  window.__LP_GET_ENV = async function () {
+    await (window.__LP_ENV_READY || Promise.resolve());
+    return window.__LP_ENV || null;
+  };
+})();
