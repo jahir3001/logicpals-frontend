@@ -1,111 +1,120 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LogicPals — Sign in</title>
-  <style>
-    :root{--primary:#2563EB;--bg:#EEF2FF;--card:#fff;--text:#111827;--muted:#6B7280;--danger:#DC2626;--border:#E5E7EB;}
-    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(1200px 600px at 20% 20%, #e0e7ff 0%, #f8fafc 50%, #fff 100%)}
-    .card{width:min(520px,92vw);background:var(--card);border:1px solid var(--border);border-radius:18px;box-shadow:0 25px 60px rgba(15,23,42,.12);padding:32px}
-    h1{margin:0 0 6px;font-size:34px;letter-spacing:-.02em;color:var(--text);display:flex;gap:10px;align-items:center;justify-content:center}
-    .sub{margin:0 0 22px;text-align:center;color:var(--muted)}
-    label{display:block;margin:14px 0 6px;color:var(--text);font-weight:600;font-size:14px}
-    input{width:100%;padding:13px 14px;border:1px solid #CBD5E1;border-radius:10px;font-size:16px;outline:none}
-    input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
-    button{width:100%;margin-top:18px;padding:13px 14px;border:0;border-radius:10px;background:var(--primary);color:#fff;font-weight:700;font-size:16px;cursor:pointer}
-    button:disabled{opacity:.65;cursor:not-allowed}
-    .status{margin-top:12px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);color:var(--muted);background:#F9FAFB}
-    .err{border-color:#FECACA;background:#FEF2F2;color:var(--danger)}
-    .links{margin-top:16px;text-align:center;color:var(--muted);font-size:14px}
-    .links a{color:var(--primary);text-decoration:none;font-weight:700}
-    .links a:hover{text-decoration:underline}
-    .back{display:block;margin-top:10px}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - LogicPals</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563EB">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/brain--v1.png">
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js');
+            });
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+
+    <style>
+        :root { --primary: #2563EB; --bg: #EFF6FF; --text: #111827; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        
+        .card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+        h1 { color: var(--text); text-align: center; margin-bottom: 8px; }
+        .subtitle { text-align: center; color: #6B7280; margin-bottom: 30px; font-size: 14px; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: #374151; }
+        input { width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 16px; transition: 0.2s; }
+        input:focus { border-color: var(--primary); outline: none; ring: 2px solid #BFDBFE; }
+        
+        .btn { width: 100%; background: var(--primary); color: white; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .btn:hover { background: #1D4ED8; }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        .footer-link { text-align: center; margin-top: 20px; font-size: 14px; color: #6B7280; }
+        .footer-link a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        
+        .error { color: #EF4444; font-size: 14px; text-align: center; margin-top: 15px; display: none; background: #FEF2F2; padding: 10px; border-radius: 6px; }
+    </style>  <script src="/assets/js/env-loader.js"></script>
 </head>
 <body>
-  <div class="card">
-    <h1>Welcome Back <span aria-hidden="true">👋</span></h1>
-    <p class="sub">Log in to continue your learning journey.</p>
 
-    <form id="form">
-      <label for="email">Email Address</label>
-      <input id="email" type="email" autocomplete="email" required />
+    <div class="card">
+        <h1>Welcome Back 👋</h1>
+        <p class="subtitle">Log in to continue your learning journey.</p>
 
-      <label for="password">Password</label>
-      <input id="password" type="password" autocomplete="current-password" required />
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" required placeholder="parent@example.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" required placeholder="******">
+            </div>
 
-      <button id="btn" type="submit" disabled>Loading…</button>
-      <div id="out" class="status">Initializing…</div>
-    </form>
+            <button type="submit" id="submitBtn" class="btn">Log In</button>
+            <div class="error" id="errorMessage"></div>
 
-    <div class="links">
-      Don't have an account? <a href="/signup.html">Sign Up Free</a>
-      <a class="back" href="/index.html">← Back to Home</a>
+            <div class="footer-link">
+                Don't have an account? <a href="signup.html">Sign Up Free</a>
+            </div>
+            <div class="footer-link" style="margin-top: 10px;">
+                <a href="index.html">← Back to Home</a>
+            </div>
+        </form>
     </div>
-  </div>
 
-  <script type="module" src="/assets/js/env-loader.js"></script>
-  <script type="module">
-    const $ = (id) => document.getElementById(id);
-    const out = $('out');
-    const btn = $('btn');
-
-    function setOut(msg, isErr=false){
-      out.textContent = msg;
-      out.className = 'status' + (isErr ? ' err' : '');
+    <script>
+        await (window.__LP_ENV_READY || Promise.resolve());
+const { SUPABASE_URL: supabaseUrl, SUPABASE_ANON_KEY: supabaseAnonKey } = (window.__LP_ENV || {});
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Missing Supabase config. Ensure /api/env is deployed and reachable.');
     }
+        // PASTE YOUR KEY BELOW
+        
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'logicpals.auth' } });
 
-    async function boot(){
-      try{
-        await window.lpGetClient();
-        btn.disabled = false;
-        btn.textContent = 'Log In';
-        setOut('Ready.');
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const err = document.getElementById('errorMessage');
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
 
-        // If already signed in, go straight to dashboard.
-        const client = await window.lpGetClient();
-        const { data } = await client.auth.getSession();
-        if (data?.session?.user) {
-          const qp = new URLSearchParams(location.search);
-          const next = qp.get('next') || '/dashboard.html';
-          location.replace(next);
+            btn.innerText = "Logging in...";
+            btn.disabled = true;
+            err.style.display = 'none';
+
+            try {
+                // Supabase Login Logic
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                // Success! Go to Dashboard
+                window.location.href = "dashboard.html";
+
+            } catch (error) {
+                console.error(error);
+                err.innerText = "Login Failed: " + error.message;
+                err.style.display = 'block';
+                btn.innerText = "Log In";
+                btn.disabled = false;
+            }
         }
-      } catch(e){
-        btn.disabled = true;
-        btn.textContent = 'Log In';
-        setOut('Init failed: ' + (e?.message || e), true);
-      }
-    }
-
-    $('form').addEventListener('submit', async (ev) => {
-      ev.preventDefault();
-      btn.disabled = true;
-      btn.textContent = 'Signing in…';
-      setOut('Signing in…');
-
-      try{
-        const client = await window.lpGetClient();
-        const email = $('email').value.trim();
-        const password = $('password').value;
-
-        const { data, error } = await client.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        if (!data?.session?.user) throw new Error('No session returned');
-
-        const qp = new URLSearchParams(location.search);
-        const next = qp.get('next') || '/dashboard.html';
-        setOut('Signed in. Redirecting…');
-        location.replace(next);
-      } catch(e){
-        setOut('Login failed: ' + (e?.message || e), true);
-        btn.disabled = false;
-        btn.textContent = 'Log In';
-      }
-    });
-
-    boot();
-  </script>
+    </script>
 </body>
 </html>
