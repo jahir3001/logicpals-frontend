@@ -430,11 +430,28 @@ doctype html>
     ].forEach((id) => $(id).addEventListener('click', notYet('This module is UI-ready but RPC wiring is pending.')));
 
     async function safeGetRole() {
-      try {
-        const { data, error } = await supabase.rpc('rpc_lp_my_role');
-        if (error) throw error;
-        return data ?? 'unknown';
-      } catch (e) {
+  // Enterprise role lookup: try our preferred RPC, then fall back to common names.
+  // Must run as the *current* user (authenticated); never trust UI-only state.
+  const candidates = ["rpc_lp_my_role", "get_my_role", "rpc_get_my_role", "my_role", "lp_my_role"];
+  let lastErr = null;
+  for (const fn of candidates) {
+    try {
+      const { data, error } = await supabase.rpc(fn, {});
+      if (error) { lastErr = error; continue; }
+      // Accept either a plain string or an object like { role: "admin" }
+      if (typeof data === "string") return data;
+      if (data && typeof data === "object") {
+        if (typeof data.role === "string") return data.role;
+        if (typeof data.current_role === "string") return data.current_role;
+        if (typeof data.required_role === "string") return data.required_role;
+      }
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  console.warn("safeGetRole: role RPC not found / failed", lastErr);
+  return "no_role";
+} catch (e) {
         console.error('rpc_lp_my_role failed:', e);
         $('accessOut').textContent =
           'Role RPC failed:\n' + (e?.message || String(e)) +
@@ -522,6 +539,14 @@ doctype html>
         gateWorkspace(true);
         await supabase.auth.signOut();
         hardClearAuthStorage();
+        // Immediately reflect signed-out state in UI
+        $('kvAuth').textContent = 'signed out';
+        $('kvUser').textContent = '—';
+        $('kvRole').textContent = '—';
+        $('btnSignInTop').style.display = '';
+        $('btnSignOutTop').style.display = 'none';
+        $('btnSignOutInDlg').style.display = 'none';
+        gateWorkspace(true);
         return;
       }
 
@@ -554,6 +579,13 @@ doctype html>
         gateWorkspace(true);
         await supabase.auth.signOut();
         hardClearAuthStorage();
+        $('kvAuth').textContent = 'signed out';
+        $('kvUser').textContent = '—';
+        $('kvRole').textContent = '—';
+        $('btnSignInTop').style.display = '';
+        $('btnSignOutTop').style.display = 'none';
+        $('btnSignOutInDlg').style.display = 'none';
+        gateWorkspace(true);
         return;
       }
 

@@ -49,7 +49,7 @@
       </div>
       <div class="right">
         <span class="pill" id="status"><span class="dot" id="dot"></span><span id="statusTxt">Loading…</span></span>
-        <a class="btn" href="/admin.html">Back to Admin</a>
+        <button class="btn" id="btnBack" type="button">Back to Admin</button>
         <button class="btn primary" id="btnSignIn">Sign in</button>
         <button class="btn" id="btnSignOut" style="display:none">Sign out</button>
       </div>
@@ -146,12 +146,29 @@
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, storageKey: 'logicpals.auth' } });
 
     const ADMIN_ROLES = new Set(['super_admin','admin_regular','admin_olympiad','admin']);
-    async function safeGetRole(){
-      try {
-        const { data, error } = await supabase.rpc('rpc_lp_my_role');
-        if (error) throw error;
-        return (data && (data.role || data)) || 'unknown';
-      } catch (e) {
+    async function safeGetRole() {
+  // Enterprise role lookup: try our preferred RPC, then fall back to common names.
+  // Must run as the *current* user (authenticated); never trust UI-only state.
+  const candidates = ["rpc_lp_my_role", "get_my_role", "rpc_get_my_role", "my_role", "lp_my_role"];
+  let lastErr = null;
+  for (const fn of candidates) {
+    try {
+      const { data, error } = await supabase.rpc(fn, {});
+      if (error) { lastErr = error; continue; }
+      // Accept either a plain string or an object like { role: "admin" }
+      if (typeof data === "string") return data;
+      if (data && typeof data === "object") {
+        if (typeof data.role === "string") return data.role;
+        if (typeof data.current_role === "string") return data.current_role;
+        if (typeof data.required_role === "string") return data.required_role;
+      }
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  console.warn("safeGetRole: role RPC not found / failed", lastErr);
+  return "no_role";
+} catch (e) {
         return 'unknown';
       }
     }
@@ -159,16 +176,35 @@
 
 
     async function refreshAuthUI(){
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const role = await safeGetRole();
-        $('who').textContent = `Signed in: ${session.user.email} (${role})`;
-        if (!isAdminRole(role)) {
-          log(`Access verification RPC missing or role denied. Role=${role}. Admin-only page locked by design.`);
-          setStatus('bad','Locked');
-          await supabase.auth.signOut();
-          return;
-        }
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session?.user) {
+    $('who').textContent = 'Signed out';
+    $('btnSignIn').style.display = 'inline-flex';
+    $('btnSignOut').style.display = 'none';
+    setStatus('warn', 'Sign in required');
+    return;
+  }
+
+  const role = await safeGetRole();
+  $('who').textContent = `Signed in: ${session.user.email} (${role})`;
+
+  if (!isAdminRole(role)) {
+    // CRITICAL: do not allow non-admin sessions to persist on admin pages.
+    log(`Access denied: role "${role}". Admin pages require admin/super_admin. Signing out.`);
+    setStatus('bad','Access denied');
+    try { await supabase.auth.signOut(); } catch (_) {}
+    try { hardClearAuthStorage(); } catch (_) {}
+    $('who').textContent = 'Signed out (access denied)';
+    $('btnSignIn').style.display = 'inline-flex';
+    $('btnSignOut').style.display = 'none';
+    return;
+  }
+
+  $('btnSignIn').style.display = 'none';
+  $('btnSignOut').style.display = 'inline-flex';
+  setStatus('good', 'Ready');
+}
         $('btnSignIn').style.display = 'none';
         $('btnSignOut').style.display = 'inline-flex';
         setStatus('good', 'Ready');
@@ -181,9 +217,20 @@
     }
 
     $('btnSignIn').addEventListener('click', openDlg);
-    $('btnSignOut').addEventListener('click', async () => { setStatus('warn','Signing out…'); await supabase.auth.signOut(); await refreshAuthUI(); });
-
-    $('doLogin').addEventListener('click', async (e) => {
+    $('btnSignOut').addEventListener('click', async () => {
+try {
+  setStatus('warn','Signing out…');
+  await supabase.auth.signOut();
+} catch (e) {
+  console.warn(e);
+}
+try { hardClearAuthStorage(); } catch (_) {}
+setStatus('idle','Signed out');
+// Always return to Admin landing after sign out
+location.href = '/admin.html';
+});
+$('btnBack')?.addEventListener('click', () => { location.href = '/admin.html'; });
+$('doLogin').addEventListener('click', async (e) => {
       e.preventDefault();
       $('authOut').textContent = 'Signing in…';
       const { error } = await supabase.auth.signInWithPassword({ email: $('lgEmail').value.trim(), password: $('lgPass').value });
