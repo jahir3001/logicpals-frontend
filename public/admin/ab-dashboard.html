@@ -1,124 +1,406 @@
 <!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>LogicPals — A/B Dashboard</title>
-    
-    <style>
-      body { font-family: system-ui; padding: 16px; }
-      .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
-      input, select, button { padding: 8px; }
-      pre { background:#111; color:#0f0; padding:12px; overflow:auto; border-radius: 10px; }
-      .card { border:1px solid #ddd; border-radius:12px; padding:12px; min-width:160px; }
-      .muted { opacity:.7; font-size:12px; }
-      .err { color: crimson; }
-      a { color: #2563eb; font-weight: 700; text-decoration: none; }
-    </style>
-    <script src="/assets/js/env-loader.js"></script>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LogicPals — A/B Dashboard</title>
+
+  <!-- Enterprise: always revalidate on back/forward -->
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root{
+      --bg:#0b1220; --card:rgba(255,255,255,.06); --card2:rgba(255,255,255,.10);
+      --text:#e5e7eb; --muted:#94a3b8; --line:rgba(148,163,184,.22);
+      --good:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+      --accent:#8b5cf6; --accent2:#06b6d4;
+      --r:18px;
+      --shadow: 0 18px 45px rgba(2,6,23,.55);
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--font);
+      color:var(--text);
+      background:
+        radial-gradient(900px 600px at 15% 12%, rgba(139,92,246,.18), transparent 60%),
+        radial-gradient(900px 600px at 85% 18%, rgba(6,182,212,.12), transparent 60%),
+        var(--bg);
+    }
+    a{color:inherit; text-decoration:none}
+    .shell{max-width:1180px;margin:20px auto;padding:0 18px;}
+    .top{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+      padding:14px 16px;border:1px solid var(--line);border-radius:22px;
+      background:rgba(255,255,255,.04);
+      box-shadow:var(--shadow);
+      backdrop-filter:saturate(140%) blur(10px);
+    }
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{
+      width:40px;height:40px;border-radius:14px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      display:grid;place-items:center;font-weight:900;color:#0b1220;
+    }
+    .title{font-weight:900}
+    .sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;
+      border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--muted);font-size:12px;
+    }
+    .dot{width:8px;height:8px;border-radius:999px;background:#64748b}
+    .btn{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:10px 12px;border-radius:999px;
+      font-weight:800; cursor:pointer;
+    }
+    .btn.primary{background:rgba(139,92,246,.18); border-color:rgba(139,92,246,.35)}
+    .btn.danger{background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.28)}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+    .card{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+    label{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:12px;font-weight:800}
+    input,select{
+      min-width:220px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+      color:var(--text);
+      padding:10px 12px;border-radius:12px;
+      outline:none;
+      font-weight:700;
+    }
+    input[type="number"]{min-width:120px;width:120px}
+    .cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:12px}
+    @media (max-width: 980px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media (max-width: 560px){.cards{grid-template-columns:1fr}}
+    .mini{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      border-radius:16px;
+      padding:12px;
+    }
+    .mini .k{font-size:12px;color:var(--muted);font-weight:800}
+    .mini .v{font-size:22px;font-weight:900;margin-top:6px}
+    pre{
+      margin:0;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.35);
+      color:#d1fae5;
+      padding:12px;
+      border-radius:16px;
+      overflow:auto;
+      font-size:12px;
+      min-height:160px;
+    }
+    .err{color:#fecaca}
+    .ok{color:#bbf7d0}
+    .muted{color:var(--muted)}
+  </style>
 </head>
-  <body>
-    <div style="margin-bottom:10px;">
-      <a href="/admin.html">← Back to Admin</a>
-    </div>
 
-    <h1>A/B Dashboard</h1>
+<body>
+  <div class="shell">
+    <header class="top">
+      <div class="brand">
+        <div class="logo">LP</div>
+        <div>
+          <div class="title">A/B Dashboard</div>
+          <div class="sub">Admin-only aggregates via Vercel → RPC (Step 8.6.C)</div>
+        </div>
+      </div>
 
-    <div class="row">
-      <label>Experiment key
-        <input id="experimentKey" value="reg_home_tutor_hint_v1" style="min-width:280px; margin-left:8px;" />
-      </label>
+      <div class="right">
+        <span class="chip"><span class="dot" id="dot"></span><span id="status">Booting…</span></span>
+        <a class="btn" href="/admin.html">Back to Admin</a>
+        <button class="btn primary" id="btnSignIn">Sign in</button>
+        <button class="btn danger" id="btnSignOut" style="display:none">Sign out</button>
+      </div>
+    </header>
 
-      <label>Track
-        <select id="track" style="margin-left:8px;">
-          <option value="regular" selected>regular</option>
-          <option value="olympiad">olympiad</option>
-        </select>
-      </label>
+    <section class="card">
+      <div class="row">
+        <label>Experiment key
+          <input id="experimentKey" value="reg_home_tutor_hint_v1" />
+        </label>
 
-      <label>Days
-        <input id="days" type="number" value="14" min="1" max="90" style="width:90px; margin-left:8px;" />
-      </label>
+        <label>Track
+          <select id="track">
+            <option value="regular" selected>regular</option>
+            <option value="olympiad">olympiad</option>
+          </select>
+        </label>
 
-      <button id="refreshBtn">Refresh</button>
-    </div>
+        <label>Days
+          <input id="days" type="number" value="14" min="1" max="90" />
+        </label>
 
-    <div id="msg" style="margin-top:12px;"></div>
+        <button class="btn primary" id="btnRefresh">Refresh</button>
+      </div>
 
-    <h2 style="margin-top:20px;">Snapshot</h2>
-    <div class="row" id="cards"></div>
+      <div class="muted" style="margin-top:10px" id="who">—</div>
 
-    <h2 style="margin-top:20px;">Variant summary</h2>
-    <pre id="summary">[]</pre>
+      <div class="cards" id="cards" style="margin-top:12px"></div>
+    </section>
 
-    <h2 style="margin-top:20px;">Lift</h2>
-    <pre id="lift">[]</pre>
+    <section class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div style="font-weight:900">Variant summary</div>
+        <div class="muted">Raw JSON returned by <code>/api/ab/admin-bundle</code></div>
+      </div>
+      <div style="margin-top:10px">
+        <pre id="summary">[]</pre>
+      </div>
+    </section>
 
-    <script>
-      function setMsg(html) { document.getElementById("msg").innerHTML = html || ""; }
+    <section class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div style="font-weight:900">Lift</div>
+        <div class="muted">Depends on your lift RPC inside the bundle</div>
+      </div>
+      <div style="margin-top:10px">
+        <pre id="lift">[]</pre>
+      </div>
+    </section>
+  </div>
 
-      async function getJwt() {
-        // Set by admin-login.html after successful admin sign-in
-        return localStorage.getItem("lp_access_token");
-      }
+  <dialog id="dlg" style="border:none;border-radius:16px;max-width:420px;width:calc(100% - 24px);padding:0;box-shadow:0 25px 90px rgba(2,6,23,.65)">
+    <form method="dialog" style="padding:16px 16px 14px;background:#0b1220;border:1px solid rgba(148,163,184,.22);border-radius:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div style="font-weight:900">Admin sign-in</div>
+        <button class="btn" value="cancel" style="padding:8px 10px">✕</button>
+      </div>
+      <div style="margin-top:12px">
+        <label>Email</label>
+        <input id="inEmail" autocomplete="email" />
+      </div>
+      <div style="margin-top:10px">
+        <label>Password</label>
+        <input id="inPass" type="password" autocomplete="current-password" />
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn primary" id="btnDoLogin" value="default" type="button">Sign in</button>
+        <button class="btn" value="cancel">Cancel</button>
+      </div>
+      <div class="muted" style="margin-top:10px;font-size:12px">Email/password for staff accounts only.</div>
+      <div class="muted" style="margin-top:8px;font-size:12px" id="authOut"></div>
+    </form>
+  </dialog>
 
-      function renderCards(summary) {
-        const cards = document.getElementById("cards");
-        cards.innerHTML = "";
+<script>
+(function(){
+  'use strict';
 
-        // Best-effort: take first row of summary if present (structure depends on your RPC).
-        const r0 = Array.isArray(summary) && summary.length ? summary[0] : {};
-        const items = [
-          ["Top Variant", r0?.variant_key ?? r0?.variant ?? "—"],
-          ["Exposures", r0?.exposures ?? r0?.events_exposure ?? 0],
-          ["Conversions", r0?.conversions ?? r0?.events_conversion ?? 0],
-          ["Users", r0?.unique_users ?? r0?.assigned_users ?? 0],
-        ];
+  const STORAGE_KEY = 'logicpals.auth';   // must match admin/login/dashboard
+  const ENV_ENDPOINT = '/api/env';
 
-        for (const [t,v] of items) {
-          const div = document.createElement("div");
-          div.className = "card";
-          div.innerHTML = `<div class="muted">${t}</div><div style="font-size:18px;font-weight:600;margin-top:6px;">${String(v)}</div>`;
-          cards.appendChild(div);
-        }
-      }
+  const $ = (id)=>document.getElementById(id);
+  const setStatus = (kind, msg)=>{
+    $('status').textContent = msg;
+    $('dot').style.background = kind==='good' ? 'var(--good)' : kind==='bad' ? 'var(--bad)' : kind==='warn' ? 'var(--warn)' : '#64748b';
+  };
 
-      async function load() {
-        setMsg("Loading…");
+  async function fetchEnv(){
+    const res = await fetch(ENV_ENDPOINT, { cache:'no-store' });
+    if(!res.ok) throw new Error('ENV_ENDPOINT failed: ' + res.status);
+    const data = await res.json();
+    const supabaseUrl = data.supabaseUrl || data.SUPABASE_URL || data.url;
+    const supabaseAnonKey = data.supabaseAnonKey || data.SUPABASE_ANON_KEY || data.anonKey;
+    if(!supabaseUrl || !supabaseAnonKey) throw new Error('Missing Supabase config from ' + ENV_ENDPOINT);
+    return { supabaseUrl, supabaseAnonKey };
+  }
 
-        const jwt = await getJwt();
-        if (!jwt) {
-          setMsg(`<div class="err">Not logged in as admin. Please login via <a href="/admin-login.html">admin-login.html</a>.</div>`);
-          return;
-        }
+  let sb = null;
 
-        const experiment_key = document.getElementById("experimentKey").value.trim();
-        const track = document.getElementById("track").value;
-        const days = Number(document.getElementById("days").value || 14);
+  async function getRoleFailClosed(){
+    // Align with admin.html: prefer rpc_lp_my_role if present.
+    const fns = ['rpc_lp_my_role','get_my_role','my_role','get_current_role'];
+    for(const fn of fns){
+      try{
+        const { data, error } = await sb.rpc(fn);
+        if(!error && data) return String(data);
+      }catch(_){}
+    }
+    return null;
+  }
 
-        const res = await fetch("/api/ab/admin-bundle", {
-          method: "POST",
-          headers: { "Content-Type":"application/json", "Authorization": "Bearer " + jwt },
-          body: JSON.stringify({ experiment_key, track, days })
-        });
+  function renderCards(summary){
+    const cards = $('cards');
+    cards.innerHTML = '';
 
-        const json = await res.json().catch(()=> ({}));
-        if (!res.ok) {
-          setMsg(`<div class="err">${json?.details || json?.detail || json?.error || "Failed"}</div>`);
-          return;
-        }
+    // Best-effort normalize: accept either array rows or object with fields
+    const r0 = Array.isArray(summary) && summary.length ? summary[0] : (summary && typeof summary === 'object' ? summary : {});
+    const exposures = r0.exposures ?? r0.events_exposure ?? r0.exposure_count ?? 0;
+    const conversions = r0.conversions ?? r0.events_conversion ?? r0.conversion_count ?? 0;
+    const users = r0.unique_users ?? r0.assigned_users ?? r0.users ?? 0;
+    const topVariant = r0.variant_key ?? r0.variant ?? r0.top_variant ?? '—';
+    const rate = exposures ? ((Number(conversions) / Number(exposures)) * 100).toFixed(2) + '%' : '—';
 
-        // Matches our enterprise admin-bundle.js response:
-        // { ok, experiment_key, track, days, summary, lift }
-        renderCards(json.summary);
+    const items = [
+      ['Top variant', topVariant],
+      ['Exposures', exposures],
+      ['Conversions', conversions],
+      ['Conversion rate', rate],
+      ['Users', users],
+    ];
 
-        document.getElementById("summary").textContent = JSON.stringify(json.summary || [], null, 2);
-        document.getElementById("lift").textContent = JSON.stringify(json.lift || [], null, 2);
+    // show 4 cards; keep it clean
+    const pick = [items[0], items[1], items[2], items[3]];
+    for(const [k,v] of pick){
+      const d = document.createElement('div');
+      d.className = 'mini';
+      d.innerHTML = '<div class="k">'+escapeHtml(k)+'</div><div class="v">'+escapeHtml(String(v))+'</div>';
+      cards.appendChild(d);
+    }
+  }
 
-        setMsg(`<div>OK ✅</div>`);
-      }
+  function escapeHtml(s){
+    return String(s)
+      .replaceAll('&','&amp;')
+      .replaceAll('<','&lt;')
+      .replaceAll('>','&gt;')
+      .replaceAll('"','&quot;')
+      .replaceAll("'","&#039;");
+  }
 
-      document.getElementById("refreshBtn").addEventListener("click", load);
-      load();
-    </script>
-  </body>
+  function openDlg(){ $('dlg').showModal(); }
+  function closeDlg(){ $('dlg').close(); }
+
+  async function refreshAuthUI(){
+    const { data:{ session } } = await sb.auth.getSession();
+    const signedIn = !!session?.user;
+
+    $('btnSignIn').style.display = signedIn ? 'none' : 'inline-flex';
+    $('btnSignOut').style.display = signedIn ? 'inline-flex' : 'none';
+
+    if(!signedIn){
+      $('who').innerHTML = '<span class="err">Sign-in required.</span> This dashboard is admin-only.';
+      setStatus('warn','Sign in required');
+      return { session:null, role:null };
+    }
+
+    $('who').textContent = `Signed in: ${session.user.email || session.user.id}`;
+    setStatus('warn','Verifying access…');
+
+    const role = await getRoleFailClosed();
+    if(!role){
+      $('who').innerHTML = `<span class="err">Locked:</span> role RPC missing. Expected <code>rpc_lp_my_role</code> (preferred) or <code>get_my_role</code>.`;
+      setStatus('bad','Locked');
+      return { session, role:null };
+    }
+
+    const allowed = ['super_admin','admin_regular','admin_olympiad','admin'].includes(role);
+    if(!allowed){
+      $('who').innerHTML = `<span class="err">Locked:</span> role="${escapeHtml(role)}" is not admin.`;
+      setStatus('bad','Locked');
+      return { session, role };
+    }
+
+    $('who').textContent = `Signed in: ${session.user.email || session.user.id}  •  role: ${role}`;
+    setStatus('good','Ready');
+    return { session, role };
+  }
+
+  async function load(){
+    const auth = await refreshAuthUI();
+    if(!auth.session) return;
+
+    setStatus('warn','Loading…');
+
+    const experiment_key = $('experimentKey').value.trim();
+    const track = $('track').value;
+    const days = Number($('days').value || 14);
+
+    // Use the current access token (enterprise: no extra localStorage token plumbing).
+    const jwt = auth.session.access_token;
+
+    const res = await fetch('/api/ab/admin-bundle', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization': 'Bearer ' + jwt },
+      body: JSON.stringify({ experiment_key, track, days })
+    });
+
+    const json = await res.json().catch(()=> ({}));
+    if(!res.ok){
+      $('summary').textContent = JSON.stringify(json, null, 2);
+      $('lift').textContent = '[]';
+      $('cards').innerHTML = '';
+      setStatus('bad','Error');
+      $('who').innerHTML = $('who').innerHTML + `<br/><span class="err">admin-bundle error:</span> ${escapeHtml(json?.details || json?.detail || json?.error || ('HTTP '+res.status))}`;
+      return;
+    }
+
+    renderCards(json.summary || []);
+    $('summary').textContent = JSON.stringify(json.summary || [], null, 2);
+    $('lift').textContent = JSON.stringify(json.lift || [], null, 2);
+    setStatus('good','Ready');
+  }
+
+  async function init(){
+    setStatus('', 'Booting…');
+
+    let env;
+    try{
+      env = await fetchEnv();
+    }catch(e){
+      setStatus('bad','Missing env');
+      $('who').innerHTML = '<span class="err">Missing Supabase config from /api/env.</span> Fix /api/env and redeploy.';
+      return;
+    }
+
+    sb = window.supabase.createClient(env.supabaseUrl, env.supabaseAnonKey, {
+      auth: { storageKey: STORAGE_KEY, persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
+    });
+
+    $('btnSignIn').onclick = openDlg;
+    $('btnSignOut').onclick = async ()=>{
+      setStatus('warn','Signing out…');
+      try{ await sb.auth.signOut({ scope:'local' }); }catch(_){}
+      await refreshAuthUI();
+    };
+
+    $('btnDoLogin').onclick = async ()=>{
+      $('authOut').textContent = 'Signing in…';
+      const email = $('inEmail').value.trim();
+      const password = $('inPass').value;
+      if(!email || !password){ $('authOut').textContent = 'Enter email + password.'; return; }
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if(error){ $('authOut').textContent = error.message; return; }
+      $('authOut').textContent = '';
+      closeDlg();
+      await load();
+    };
+
+    $('btnRefresh').onclick = load;
+
+    // BFCache hardening
+    window.addEventListener('pageshow', (e)=>{ if(e.persisted) location.reload(); });
+
+    sb.auth.onAuthStateChange(()=> refreshAuthUI());
+
+    await refreshAuthUI();
+    // Optionally auto-load if already signed in
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session) await load();
+  }
+
+  init();
+})();
+</script>
+</body>
 </html>
