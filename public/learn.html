@@ -181,24 +181,31 @@ async function requireSessionOrRedirect() {
   return session;
 }
 
+
+// Best-effort subscription fetch (won't break page if RPC not present)
+async function safeGetSubscription(client) {
+  try {
+    // If you later add an RPC like get_my_subscription_status(), this will start working automatically
+    const { data, error } = await client.rpc('get_my_subscription_status');
+    if (!error && data) return data;
+  } catch (e) {}
+  return null;
+}
+
 window.onload = async () => {
   sb = await initSupabase();
-            
-            // CHECK SUBSCRIPTION FIRST
-            const loggedIn = await SubscriptionGuard.requireLogin();
-            if (!loggedIn) return;
+            // REQUIRE SESSION (no silent redirect loops)
+            const sessionObj = await requireSessionOrRedirect();
+            if (!sessionObj) return;
 
-            userSubscription = await SubscriptionGuard.getUserSubscription();
-            
-            // Check if subscription is expired
+            // OPTIONAL: subscription banner (best-effort; safe if RPC not present)
+            userSubscription = await safeGetSubscription(sb);
             if (userSubscription && userSubscription.expired) {
                 showSubscriptionBanner('expired');
-                // Still allow them to see the page but with limited functionality
             } else if (userSubscription && userSubscription.tier === 'free_trial') {
-                // Show days remaining for free trial
-                const tierInfo = await SubscriptionGuard.getUserTierInfo();
-                if (tierInfo.daysRemaining <= 3) {
-                    showSubscriptionBanner('trial_ending', tierInfo.daysRemaining);
+                const daysRemaining = Number(userSubscription.days_remaining || userSubscription.daysRemaining || 0);
+                if (daysRemaining > 0 && daysRemaining <= 3) {
+                    showSubscriptionBanner('trial_ending', daysRemaining);
                 }
             }
 
@@ -286,7 +293,7 @@ window.onload = async () => {
         async function loadNextPuzzle(clearMemory) {
             // Check subscription before loading problems
             if (userSubscription && userSubscription.expired) {
-                SubscriptionGuard.showUpgradeModal(
+                (window.SubscriptionGuard && typeof SubscriptionGuard.showUpgradeModal==='function' ? SubscriptionGuard.showUpgradeModal : function(){alert('Upgrade required to continue.');})(
                     'Your free trial has ended! Upgrade to continue solving unlimited problems.',
                     'champion'
                 );
