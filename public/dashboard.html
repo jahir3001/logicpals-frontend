@@ -6,6 +6,8 @@
   <title>LogicPals — Regular Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/env-loader.js"></script>
+  <script src="/subscription-guard.js" defer></script>
 
   <style>
     :root{
@@ -71,7 +73,7 @@
     .hero-focus{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;position:relative;z-index:1;}
     .pill{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:100px;background:var(--card);border:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text2);}
     .pill strong{color:var(--primary);font-weight:700;}
-    .ring{width:68px;height:68px;border-radius:999px;display:grid;place-items:center;background:conic-gradient(var(--primary) var(--p,40%),rgba(255,255,255,.06) 0);box-shadow:0 0 20px var(--glow);position:relative;z-index:1;}
+    .ring{width:68px;height:68px;border-radius:999px;display:grid;place-items:center;background:conic-gradient(var(--primary) var(--p,0%),rgba(255,255,255,.06) 0);box-shadow:0 0 20px var(--glow);position:relative;z-index:1;}
     .ring > div{width:54px;height:54px;border-radius:999px;background:rgba(12,14,26,.9);display:grid;place-items:center;font-family:var(--font-d);font-weight:800;font-size:14px;color:#b8b0f0;border:1px solid var(--border);}
     .hero-actions{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;position:relative;z-index:1;}
 
@@ -85,8 +87,48 @@
     .tile .d{margin-top:8px;font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;}
     .mini{width:20px;height:20px;border-radius:7px;display:grid;place-items:center;font-size:11px;background:var(--ys);border:1px solid rgba(254,202,87,.15);}
 
+    .chart-card{padding:22px;}
+    .chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap;}
+    .chart-title{font-family:var(--font-d);font-size:16px;font-weight:700;}
+    .chart-tabs{display:flex;gap:4px;}
+    .chart-tab{padding:6px 12px;border-radius:8px;background:transparent;border:1px solid transparent;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;}
+    .chart-tab.active,.chart-tab:hover{background:var(--as);border-color:rgba(108,92,231,.2);color:#b8b0f0;}
+    .chart-area{width:100%;height:160px;}
+    .chart-insight{margin-top:12px;font-size:12px;color:var(--text2);line-height:1.5;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);}
+
+    .skills-card{padding:22px;}
+    .skills-title{font-family:var(--font-d);font-size:16px;font-weight:700;margin-bottom:16px;}
+    .skill-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+    .skill-item:last-child{border-bottom:none;}
+    .skill-icon{width:36px;height:36px;border-radius:10px;background:var(--as);border:1px solid rgba(108,92,231,.15);display:grid;place-items:center;font-size:16px;flex-shrink:0;}
+    .skill-info{flex:1;min-width:0;}
+    .skill-name{font-size:13px;font-weight:700;color:var(--text);}
+    .skill-detail{font-size:11px;color:var(--muted);margin-top:2px;}
+    .skill-bar{width:100%;height:4px;border-radius:4px;background:rgba(255,255,255,.06);margin-top:6px;overflow:hidden;}
+    .skill-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--primary),#a29bfe);transition:width .5s ease;}
+    .skill-pct{font-family:var(--font-d);font-size:14px;font-weight:800;color:#b8b0f0;flex-shrink:0;}
+    .skill-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;margin-left:8px;}
+    .skill-badge.solid{background:rgba(0,210,160,.12);color:var(--good);border:1px solid rgba(0,210,160,.2);}
+    .skill-badge.practicing{background:var(--ys);color:var(--accent);border:1px solid rgba(254,202,87,.2);}
+    .skill-action{padding:4px 10px;border-radius:8px;background:var(--as);border:1px solid rgba(108,92,231,.15);color:#b8b0f0;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .15s;}
+    .skill-action:hover{background:rgba(108,92,231,.2);}
+
+    .activity-card{padding:22px;}
+    .activity-title{font-family:var(--font-d);font-size:16px;font-weight:700;margin-bottom:16px;}
+    .activity-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+    .activity-item:last-child{border-bottom:none;}
+    .activity-icon{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:13px;flex-shrink:0;}
+    .activity-icon.solved{background:rgba(0,210,160,.12);color:var(--good);border:1px solid rgba(0,210,160,.15);}
+    .activity-icon.wrong{background:rgba(255,107,107,.1);color:var(--bad);border:1px solid rgba(255,107,107,.15);}
+    .activity-info{flex:1;min-width:0;}
+    .activity-label{font-size:12px;font-weight:700;color:var(--text);}
+    .activity-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+    .activity-time{font-size:11px;color:var(--muted);flex-shrink:0;}
+
     .notice{padding:20px 22px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);font-size:14px;color:var(--muted);line-height:1.5;}
     .notice b{color:var(--text);display:block;margin-bottom:6px;}
+    .empty-state{text-align:center;padding:32px 20px;color:var(--muted);font-size:13px;line-height:1.6;}
+    .empty-state .emoji{font-size:32px;margin-bottom:12px;}
     .foot{margin-top:24px;color:var(--muted);font-size:11px;text-align:center;padding:12px;}
 
     .modal-backdrop{position:fixed;inset:0;background:rgba(8,10,22,.7);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;z-index:100;}
@@ -96,15 +138,33 @@
     .modal-h button{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer;font-weight:700;display:grid;place-items:center;}
     .modal-b{padding:14px 22px 22px;color:var(--muted);font-size:14px;line-height:1.5;}
     .modal-actions{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;}
+
+    .full-width{grid-column:1/-1;}
+    .section-gap{margin-top:16px;}
+
+    .loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:10px;color:var(--muted);font-size:13px;}
+    .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    /* Error banner */
+    .error-banner{padding:14px 20px;border-radius:var(--radius2);background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.2);color:var(--bad);font-size:13px;margin-bottom:16px;display:none;}
+    .error-banner.show{display:block;}
+
+    @media(max-width:600px){
+      .hero-head{font-size:20px;}
+      .tile .v{font-size:22px;}
+      .chart-area{height:120px;}
+    }
   </style>
 </head>
 <body>
+  <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-inner">
       <div class="brand"><div class="logo">LP</div><div class="brand-title"><b>LogicPals</b><span>Student Dashboard</span></div></div>
       <div class="center-pill"><div class="track-pill"><span class="track-dot"></span>Regular Practice</div></div>
       <div class="actions">
-        <button id="btnOlympiad" class="btn btn-accent" type="button"><span>Olympiad</span><span id="olympiadState">🔒</span></button>
+        <button id="btnOlympiad" class="btn btn-accent" type="button"><span>Olympiad</span><span id="olympiadState">&#128274;</span></button>
         <button id="btnSignOut" class="btn btn-ghost" type="button" disabled>Sign out</button>
       </div>
     </div>
@@ -117,29 +177,41 @@
   </div>
 
   <main class="wrap">
+    <!-- Auth notice -->
     <div id="authNotice" class="notice" style="display:none;">
       <b>Sign-in required.</b> We couldn't find your session.
       <div style="margin-top:12px;"><button class="btn btn-primary btn-wide" id="btnGoLogin" type="button">Go to Login</button></div>
     </div>
 
+    <!-- Error banner -->
+    <div id="errorBanner" class="error-banner"></div>
+
+    <!-- Loading state -->
+    <div id="loadingState" class="loading">
+      <div class="spinner"></div>
+      <span>Loading dashboard…</span>
+    </div>
+
+    <!-- Main content -->
     <div id="content" style="display:none;">
+
+      <!-- Row 1: Hero + KPI tiles -->
       <div class="grid">
         <section class="card">
           <div class="hero">
             <div class="hero-top">
               <div>
-                <div class="hello" id="helloText">Hi 👋</div>
-                <div class="hero-head">Continue your Regular Practice</div>
+                <div class="hello" id="helloText">Hi &#128075;</div>
+                <div class="hero-head" id="heroHeadline">Continue your Regular Practice</div>
                 <div class="hero-focus">
                   <span class="pill"><strong>Next:</strong> <span id="heroMinutes">10</span> min</span>
-                  <span class="pill">Focus: <span id="heroFocusLabel">—</span></span>
+                  <span class="pill">Focus: <span id="heroFocusLabel">General</span></span>
                 </div>
               </div>
               <div class="ring" id="goalRing" style="--p:0%;"><div><span id="goalPct">0%</span></div></div>
             </div>
             <div class="hero-actions">
               <button id="btnStart" class="btn btn-primary btn-wide" type="button">Start now</button>
-              <button id="btnPickTopic" class="btn btn-secondary btn-wide" type="button">Choose topic</button>
             </div>
           </div>
         </section>
@@ -147,10 +219,43 @@
         <section class="card">
           <div class="tiles">
             <div class="tile-row">
-              <div class="tile"><div class="k">Problems solved</div><div class="v" id="kpiSolved">—</div><div class="d"><span class="mini">🔥</span> Total</div></div>
-              <div class="tile"><div class="k">Accuracy</div><div class="v" id="kpiAccuracy">—</div><div class="d"><span class="mini">✓</span> Last 7 days</div></div>
-              <div class="tile"><div class="k">Hints used</div><div class="v" id="kpiHints">—</div><div class="d"><span class="mini">💡</span> Avg</div></div>
+              <div class="tile"><div class="k">Problems solved</div><div class="v" id="kpiSolved">—</div><div class="d"><span class="mini">&#128293;</span> Total</div></div>
+              <div class="tile"><div class="k">Accuracy</div><div class="v" id="kpiAccuracy">—</div><div class="d"><span class="mini">&#10003;</span> Overall</div></div>
+              <div class="tile"><div class="k">Hints used</div><div class="v" id="kpiHints">—</div><div class="d"><span class="mini">&#128161;</span> Avg per problem</div></div>
             </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Row 2: Chart -->
+      <div class="section-gap">
+        <section class="card chart-card full-width">
+          <div class="chart-header">
+            <div class="chart-title">Accuracy over time</div>
+            <div class="chart-tabs">
+              <button class="chart-tab active" data-range="7">7 days</button>
+              <button class="chart-tab" data-range="30">30 days</button>
+              <button class="chart-tab" data-range="0">All time</button>
+            </div>
+          </div>
+          <svg class="chart-area" id="chartSvg"></svg>
+          <div class="chart-insight" id="chartInsight">Loading chart data…</div>
+        </section>
+      </div>
+
+      <!-- Row 3: Skills + Activity -->
+      <div class="grid section-gap">
+        <section class="card skills-card">
+          <div class="skills-title">Skills breakdown</div>
+          <div id="skillsList">
+            <div class="loading"><div class="spinner"></div><span>Loading skills…</span></div>
+          </div>
+        </section>
+
+        <section class="card activity-card">
+          <div class="activity-title">Recent activity</div>
+          <div id="activityList">
+            <div class="loading"><div class="spinner"></div><span>Loading activity…</span></div>
           </div>
         </section>
       </div>
@@ -159,14 +264,15 @@
     </div>
   </main>
 
+  <!-- Olympiad Modal -->
   <div class="modal-backdrop" id="olymModal">
     <div class="modal">
       <div class="modal-h">
-        <div><b>Olympiad Track</b><div class="sub">A separate advanced track.</div></div>
-        <button type="button" id="closeOlymp">✕</button>
+        <div><b>Olympiad Track</b><div style="font-size:12px;color:var(--muted);margin-top:4px;">A separate advanced track.</div></div>
+        <button type="button" id="closeOlymp">&#10005;</button>
       </div>
       <div class="modal-b">
-        <p id="olymModalBody">Olympiad is a separate advanced track. Upgrade to unlock it.</p>
+        <p>Olympiad is a separate advanced track. Upgrade to unlock it.</p>
         <div class="modal-actions">
           <a class="btn btn-primary btn-wide" href="subscriptions.html">View plans</a>
           <button class="btn btn-ghost btn-wide" id="olymCancelBtn" type="button">Not now</button>
@@ -179,112 +285,454 @@
 (function(){
   'use strict';
 
+  /* ─── Helpers ─── */
+  const $ = (id) => document.getElementById(id);
+  const safe = (el, text) => { if(el) el.textContent = (text != null && text !== '') ? text : '—'; };
   const STORAGE_KEY = 'logicpals.auth';
-  const ENV_ENDPOINT = '/api/env';
   const LOGIN_URL = '/login.html?next=' + encodeURIComponent('/dashboard.html');
 
-  const $ = (id)=>document.getElementById(id);
   const planText = $('planText');
-  const planDot = $('planDot');
-
-  let sb = null;
+  const planDot  = $('planDot');
 
   function setStatus(state, msg){
-    planText.textContent = msg;
+    safe(planText, msg);
     planDot.classList.remove('dot-good','dot-warn','dot-bad');
     planDot.classList.add(state === 'good' ? 'dot-good' : state === 'bad' ? 'dot-bad' : 'dot-warn');
   }
 
+  function showAuth(){
+    $('loadingState').style.display = 'none';
+    $('authNotice').style.display = 'block';
+    $('content').style.display = 'none';
+  }
+
+  function showContent(){
+    $('loadingState').style.display = 'none';
+    $('authNotice').style.display = 'none';
+    $('content').style.display = 'block';
+  }
+
+  function showError(msg){
+    const el = $('errorBanner');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
   function hardClearAuthStorage(){
     try{
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(STORAGE_KEY + '-code-verifier');
-      localStorage.removeItem(STORAGE_KEY + '-provider-token');
-      localStorage.removeItem(STORAGE_KEY + '-provider-refresh-token');
+      ['', '-code-verifier', '-provider-token', '-provider-refresh-token'].forEach(s =>
+        localStorage.removeItem(STORAGE_KEY + s)
+      );
     }catch(_){}
   }
 
-  async function fetchEnv(){
-    const res = await fetch(ENV_ENDPOINT, { cache:'no-store' });
-    if(!res.ok) throw new Error('ENV_ENDPOINT failed: ' + res.status);
-    const data = await res.json();
-    const supabaseUrl = data.supabaseUrl || data.SUPABASE_URL || data.url;
-    const supabaseAnonKey = data.supabaseAnonKey || data.SUPABASE_ANON_KEY || data.anonKey;
-    if(!supabaseUrl || !supabaseAnonKey) throw new Error('Missing Supabase config from ' + ENV_ENDPOINT);
-    return { supabaseUrl, supabaseAnonKey };
+  function fmtAgo(iso){
+    if(!iso) return '';
+    const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+    if(diff < 60)   return 'just now';
+    if(diff < 3600)  return Math.floor(diff/60) + ' min ago';
+    if(diff < 86400) return Math.floor(diff/3600) + ' hr ago';
+    return Math.floor(diff/86400) + ' days ago';
   }
 
+  const CAT_ICONS = { logic:'\uD83E\uDDE0', arithmetic:'\uD83D\uDD22', 'word-problem':'\uD83D\uDCDD', pattern:'\uD83D\uDCC8', algebra:'\uD83D\uDD2E', geometry:'\uD83D\uDFE3' };
+  const CAT_LABELS = { logic:'Logic & Reasoning', arithmetic:'Arithmetic', 'word-problem':'Word Problems', pattern:'Pattern Recognition', algebra:'Algebra', geometry:'Geometry' };
+
+  /* ─── Main init ─── */
   async function init(){
     setStatus('warn', 'Checking session…');
 
-    let env;
-    try{
-      env = await fetchEnv();
-    }catch(e){
+    // 1) Get Supabase config from env-loader.js (matches learn.html exactly)
+    const env = window.__LP_ENV || {};
+    const SB_URL = env.SUPABASE_URL;
+    const SB_KEY = env.SUPABASE_ANON_KEY;
+
+    if(!SB_URL || !SB_KEY){
+      console.error('[Dashboard] Missing SUPABASE_URL or SUPABASE_ANON_KEY from window.__LP_ENV');
       setStatus('bad', 'Config missing');
-      $('authNotice').style.display = 'block';
-      $('content').style.display = 'none';
+      showError('Environment config not loaded. Check that /assets/js/env-loader.js is deployed and sets window.__LP_ENV.');
+      showAuth();
       return;
     }
 
-    sb = window.supabase.createClient(env.supabaseUrl, env.supabaseAnonKey, {
-      auth: { storageKey: STORAGE_KEY, persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
+    // 2) Create Supabase client (same storageKey as rest of app)
+    const sb = window.supabase.createClient(SB_URL, SB_KEY, {
+      auth: { storageKey: STORAGE_KEY, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
     });
 
-    const { data:{ session }, error } = await sb.auth.getSession();
-    if(error){
-      setStatus('bad', 'Session error');
-      $('authNotice').style.display = 'block';
-      $('content').style.display = 'none';
-      return;
+    // 3) Get authenticated user — try getSession first, fallback to getUser
+    let user = null;
+    try {
+      const { data: sessionData } = await sb.auth.getSession();
+      if(sessionData && sessionData.session && sessionData.session.user){
+        user = sessionData.session.user;
+      }
+    } catch(e){ console.warn('[Dashboard] getSession failed:', e); }
+
+    if(!user){
+      try {
+        const { data: userData } = await sb.auth.getUser();
+        if(userData && userData.user) user = userData.user;
+      } catch(e){ console.warn('[Dashboard] getUser fallback failed:', e); }
     }
 
-    if(!session){
+    if(!user){
       setStatus('bad', 'Signed out');
-      $('authNotice').style.display = 'block';
-      $('content').style.display = 'none';
+      showAuth();
       return;
     }
 
+    // 4) Signed in — basic UI setup
     setStatus('good', 'Signed in');
-    $('authNotice').style.display = 'none';
-    $('content').style.display = 'block';
     $('btnSignOut').disabled = false;
 
-    const user = session.user;
-    const userName = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || (user.email ? user.email.split('@')[0] : 'there');
-    $('helloText').textContent = 'Hi ' + userName + ' 👋';
-    $('updatedText').textContent = 'just now';
+    const userName = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name))
+      || (user.email ? user.email.split('@')[0] : 'there');
+    safe($('helloText'), 'Hi ' + userName + ' \uD83D\uDC4B');
+    safe($('updatedText'), 'just now');
 
-    $('btnSignOut').addEventListener('click', async ()=>{
+    // Sign out
+    $('btnSignOut').addEventListener('click', async () => {
       $('btnSignOut').disabled = true;
       setStatus('warn', 'Signing out…');
-      try{ await sb.auth.signOut({ scope:'global' }); }catch(_){}
+      try { await sb.auth.signOut({ scope: 'global' }); } catch(_){}
       hardClearAuthStorage();
       location.replace('/index.html');
     });
 
-    sb.auth.onAuthStateChange((evt, s)=>{
-      if(evt === 'SIGNED_OUT' || !s){
+    sb.auth.onAuthStateChange((evt) => {
+      if(evt === 'SIGNED_OUT'){
         hardClearAuthStorage();
         location.replace('/index.html');
       }
     });
 
-    $('btnStart').addEventListener('click', ()=> location.assign('/learn.html?track=regular'));
-    $('btnPickTopic').addEventListener('click', ()=> location.assign('/learn.html?track=regular'));
+    // 5) Check subscription (graceful — works even if subscription-guard.js hasn't loaded)
+    try {
+      if(window.SubscriptionGuard){
+        const sub = await SubscriptionGuard.getUserSubscription();
+        if(sub && !sub.expired){
+          safe(planText, 'Active');
+          planDot.classList.remove('dot-warn','dot-bad');
+          planDot.classList.add('dot-good');
+        } else if(sub && sub.expired){
+          safe(planText, 'Expired');
+          planDot.classList.remove('dot-good','dot-warn');
+          planDot.classList.add('dot-bad');
+        }
+      }
+    } catch(_){}
+
+    // 6) Get child ID (same query as learn.html line 360)
+    let childId = null;
+    try {
+      const { data: child, error: childErr } = await sb.from('children').select('id').eq('parent_id', user.id).single();
+      if(childErr) console.warn('[Dashboard] children query error:', childErr.message);
+      if(child) childId = child.id;
+    } catch(e){ console.warn('[Dashboard] children query failed:', e); }
+
+    if(!childId){
+      // No child profile yet — show empty state
+      showContent();
+      safe($('kpiSolved'), '0');
+      safe($('kpiAccuracy'), '0%');
+      safe($('kpiHints'), '0');
+      $('heroHeadline').textContent = 'Start your first practice session!';
+      $('heroFocusLabel').textContent = 'Logic & Patterns';
+      $('skillsList').innerHTML = '<div class="empty-state"><div class="emoji">\uD83D\uDCDA</div>No practice data yet.<br>Start a session to see your skills here.</div>';
+      $('activityList').innerHTML = '<div class="empty-state"><div class="emoji">\u23F0</div>No activity yet.<br>Your recent practice will show up here.</div>';
+      $('chartInsight').textContent = 'Complete some problems to see your accuracy trend.';
+      renderChart($('chartSvg'), []);
+      $('btnStart').addEventListener('click', () => location.assign('/learn.html?track=regular'));
+      return;
+    }
+
+    // 7) Fetch attempts with joined problem data
+    let attempts = [];
+    try {
+      const { data, error } = await sb
+        .from('attempts')
+        .select('*, problems(category, difficulty)')
+        .eq('child_id', childId)
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+      if(error){
+        console.error('[Dashboard] attempts query error:', error.message);
+        showError('Could not load practice data: ' + error.message);
+      }
+      if(data) attempts = data;
+    } catch(e){
+      console.error('[Dashboard] attempts fetch failed:', e);
+      showError('Could not load practice data. Please try refreshing.');
+    }
+
+    // 8) Render all sections
+    showContent();
+    renderKPIs(attempts);
+    renderHero(attempts);
+    renderChart($('chartSvg'), attempts, 7);
+    renderSkills(attempts);
+    renderActivity(attempts);
+    setupChartTabs(attempts);
+
+    // Start button
+    $('btnStart').addEventListener('click', () => location.assign('/learn.html?track=regular'));
   }
 
-  $('btnGoLogin').addEventListener('click', ()=> location.assign(LOGIN_URL));
+  /* ─── KPIs ─── */
+  function renderKPIs(attempts){
+    const total = attempts.length;
+    const correct = attempts.filter(a => a.is_correct).length;
+    const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+    const totalHints = attempts.reduce((s, a) => s + (a.hints_used || 0), 0);
+    const avgHints = total > 0 ? (totalHints / total).toFixed(1) : '0';
 
-  $('btnOlympiad').addEventListener('click', ()=> $('olymModal').style.display = 'flex');
-  $('closeOlymp').addEventListener('click', ()=> $('olymModal').style.display = 'none');
-  $('olymCancelBtn').addEventListener('click', ()=> $('olymModal').style.display = 'none');
-  $('olymModal').addEventListener('click', (e)=>{ if(e.target.id==='olymModal') $('olymModal').style.display='none'; });
+    safe($('kpiSolved'), String(total));
+    safe($('kpiAccuracy'), accuracy + '%');
+    safe($('kpiHints'), avgHints);
 
-  window.addEventListener('pageshow', (e)=>{ if(e.persisted) location.reload(); });
+    // Goal ring
+    $('goalRing').style.setProperty('--p', accuracy + '%');
+    safe($('goalPct'), accuracy + '%');
+  }
 
-  init();
+  /* ─── Hero recommendation ─── */
+  function renderHero(attempts){
+    if(attempts.length === 0){
+      $('heroHeadline').textContent = 'Start your first practice session!';
+      $('heroFocusLabel').textContent = 'Logic & Patterns';
+      $('heroMinutes').textContent = '10';
+      return;
+    }
+
+    // Find weakest category
+    const cats = {};
+    attempts.forEach(a => {
+      const cat = (a.problems && a.problems.category) || 'general';
+      if(!cats[cat]) cats[cat] = { total: 0, correct: 0 };
+      cats[cat].total++;
+      if(a.is_correct) cats[cat].correct++;
+    });
+
+    let weakest = null, lowestAcc = 101;
+    Object.entries(cats).forEach(([cat, d]) => {
+      const acc = d.total > 0 ? (d.correct / d.total) * 100 : 0;
+      if(acc < lowestAcc){ lowestAcc = acc; weakest = cat; }
+    });
+
+    const label = CAT_LABELS[weakest] || weakest || 'Logic & Patterns';
+    $('heroHeadline').textContent = 'Continue your Regular Practice';
+    $('heroFocusLabel').textContent = label;
+    $('heroMinutes').textContent = lowestAcc < 60 ? '12' : '10';
+  }
+
+  /* ─── Chart ─── */
+  function renderChart(svgEl, attempts, days){
+    if(!svgEl) return;
+    svgEl.innerHTML = '';
+
+    let filtered = attempts;
+    if(days && days > 0){
+      const cutoff = Date.now() - days * 86400000;
+      filtered = attempts.filter(a => new Date(a.created_at).getTime() >= cutoff);
+    }
+
+    if(filtered.length === 0){
+      svgEl.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#5d5f7e" font-size="13" font-family="Plus Jakarta Sans">No data for this period</text>';
+      $('chartInsight').textContent = 'Complete some problems to see your accuracy trend.';
+      return;
+    }
+
+    // Group by day
+    const byDay = {};
+    filtered.forEach(a => {
+      const day = a.created_at ? a.created_at.slice(0, 10) : 'unknown';
+      if(!byDay[day]) byDay[day] = { total: 0, correct: 0 };
+      byDay[day].total++;
+      if(a.is_correct) byDay[day].correct++;
+    });
+
+    const sortedDays = Object.keys(byDay).sort();
+    const points = sortedDays.map(day => ({
+      label: day,
+      accuracy: Math.round((byDay[day].correct / byDay[day].total) * 100),
+      count: byDay[day].total
+    }));
+
+    const W = svgEl.clientWidth || svgEl.getBoundingClientRect().width || 600;
+    const H = svgEl.clientHeight || svgEl.getBoundingClientRect().height || 160;
+    const pad = { t: 20, r: 20, b: 30, l: 40 };
+    const cw = W - pad.l - pad.r;
+    const ch = H - pad.t - pad.b;
+
+    if(points.length === 1){
+      const cx = pad.l + cw / 2;
+      const cy = pad.t + ch - (points[0].accuracy / 100) * ch;
+      svgEl.innerHTML = `
+        <line x1="${pad.l}" y1="${pad.t+ch}" x2="${pad.l+cw}" y2="${pad.t+ch}" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+        <circle cx="${cx}" cy="${cy}" r="5" fill="#6c5ce7"/>
+        <text x="${cx}" y="${cy-12}" text-anchor="middle" fill="#b8b0f0" font-size="12" font-weight="700" font-family="Outfit">${points[0].accuracy}%</text>
+        <text x="${cx}" y="${H-6}" text-anchor="middle" fill="#5d5f7e" font-size="10" font-family="Plus Jakarta Sans">${points[0].label.slice(5)}</text>`;
+    } else {
+      const xStep = cw / (points.length - 1);
+      const coords = points.map((p, i) => ({
+        x: pad.l + i * xStep,
+        y: pad.t + ch - (p.accuracy / 100) * ch
+      }));
+
+      const linePath = coords.map((c, i) => (i === 0 ? 'M' : 'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
+      const areaPath = linePath + ` L${coords[coords.length-1].x.toFixed(1)},${(pad.t+ch).toFixed(1)} L${coords[0].x.toFixed(1)},${(pad.t+ch).toFixed(1)} Z`;
+
+      let gridLines = '';
+      [0, 25, 50, 75, 100].forEach(v => {
+        const y = pad.t + ch - (v / 100) * ch;
+        gridLines += `<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${(pad.l+cw).toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,.04)" stroke-width="1"/>`;
+        gridLines += `<text x="${pad.l-8}" y="${(y+4).toFixed(1)}" text-anchor="end" fill="#5d5f7e" font-size="9" font-family="Plus Jakarta Sans">${v}</text>`;
+      });
+
+      let xLabels = '';
+      const idxs = points.length <= 7 ? points.map((_,i)=>i) : [0, Math.floor(points.length/2), points.length-1];
+      idxs.forEach(i => {
+        xLabels += `<text x="${coords[i].x.toFixed(1)}" y="${H-6}" text-anchor="middle" fill="#5d5f7e" font-size="10" font-family="Plus Jakarta Sans">${points[i].label.slice(5)}</text>`;
+      });
+
+      const dots = coords.map(c => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="#6c5ce7" stroke="rgba(12,14,26,.9)" stroke-width="2"/>`).join('');
+
+      svgEl.innerHTML = `
+        <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#6c5ce7" stop-opacity=".25"/>
+          <stop offset="100%" stop-color="#6c5ce7" stop-opacity="0"/>
+        </linearGradient></defs>
+        ${gridLines}
+        <path d="${areaPath}" fill="url(#ag)"/>
+        <path d="${linePath}" fill="none" stroke="#6c5ce7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        ${dots}${xLabels}`;
+    }
+
+    // Insight
+    if(points.length >= 2){
+      const first = points[0].accuracy, last = points[points.length-1].accuracy;
+      const diff = last - first;
+      if(diff > 5) $('chartInsight').textContent = '\uD83D\uDCC8 Your accuracy is trending up — great progress!';
+      else if(diff < -5) $('chartInsight').textContent = '\uD83D\uDCCB Accuracy dipped recently. Review the tricky categories below.';
+      else $('chartInsight').textContent = '\uD83D\uDCAA Steady performance. Try harder topics to push even higher.';
+    } else {
+      $('chartInsight').textContent = 'Keep practicing to see your accuracy trend over time.';
+    }
+  }
+
+  function setupChartTabs(attempts){
+    document.querySelectorAll('.chart-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        renderChart($('chartSvg'), attempts, parseInt(tab.dataset.range, 10));
+      });
+    });
+  }
+
+  /* ─── Skills ─── */
+  function renderSkills(attempts){
+    const el = $('skillsList');
+    if(attempts.length === 0){
+      el.innerHTML = '<div class="empty-state"><div class="emoji">\uD83D\uDCDA</div>No practice data yet.<br>Start a session to see your skills here.</div>';
+      return;
+    }
+
+    const cats = {};
+    attempts.forEach(a => {
+      const cat = (a.problems && a.problems.category) || 'general';
+      if(!cats[cat]) cats[cat] = { total:0, correct:0 };
+      cats[cat].total++;
+      if(a.is_correct) cats[cat].correct++;
+    });
+
+    let html = '';
+    Object.entries(cats).sort((a,b) => (a[1].correct/a[1].total) - (b[1].correct/b[1].total)).forEach(([cat, d]) => {
+      const acc = Math.round((d.correct / d.total) * 100);
+      const label = CAT_LABELS[cat] || cat;
+      const icon = CAT_ICONS[cat] || '\uD83D\uDD2C';
+      const solid = acc >= 80;
+
+      html += `<div class="skill-item">
+        <div class="skill-icon">${icon}</div>
+        <div class="skill-info">
+          <div class="skill-name">${label} <span class="skill-badge ${solid?'solid':'practicing'}">${solid?'Solid':'Practicing'}</span></div>
+          <div class="skill-detail">${d.correct}/${d.total} correct</div>
+          <div class="skill-bar"><div class="skill-fill" style="width:${acc}%"></div></div>
+        </div>
+        <div class="skill-pct">${acc}%</div>
+        <button class="skill-action" onclick="location.assign('/learn.html?track=regular&focus=${encodeURIComponent(cat)}')">Practice</button>
+      </div>`;
+    });
+
+    el.innerHTML = html;
+  }
+
+  /* ─── Activity ─── */
+  function renderActivity(attempts){
+    const el = $('activityList');
+    if(attempts.length === 0){
+      el.innerHTML = '<div class="empty-state"><div class="emoji">\u23F0</div>No activity yet.<br>Your recent practice will show up here.</div>';
+      return;
+    }
+
+    let html = '';
+    attempts.slice(0, 8).forEach(a => {
+      const solved = a.is_correct;
+      const cat = (a.problems && a.problems.category) || 'general';
+      const label = CAT_LABELS[cat] || cat;
+      const hints = a.hints_used || 0;
+
+      html += `<div class="activity-item">
+        <div class="activity-icon ${solved?'solved':'wrong'}">${solved?'\u2713':'\u2717'}</div>
+        <div class="activity-info">
+          <div class="activity-label">${label} — ${solved?'Solved':'Attempted'}</div>
+          <div class="activity-sub">${hints} hint${hints!==1?'s':''} used</div>
+        </div>
+        <div class="activity-time">${fmtAgo(a.created_at)}</div>
+      </div>`;
+    });
+
+    el.innerHTML = html;
+  }
+
+  /* ─── Static event listeners ─── */
+  $('btnGoLogin').addEventListener('click', () => location.assign(LOGIN_URL));
+  $('btnOlympiad').addEventListener('click', () => $('olymModal').style.display = 'flex');
+  $('closeOlymp').addEventListener('click', () => $('olymModal').style.display = 'none');
+  $('olymCancelBtn').addEventListener('click', () => $('olymModal').style.display = 'none');
+  $('olymModal').addEventListener('click', (e) => { if(e.target.id === 'olymModal') $('olymModal').style.display = 'none'; });
+  window.addEventListener('pageshow', (e) => { if(e.persisted) location.reload(); });
+
+  /* ─── Boot ─── */
+  // Small delay to ensure env-loader.js has populated window.__LP_ENV
+  function boot(){
+    if(window.__LP_ENV && window.__LP_ENV.SUPABASE_URL){
+      init();
+    } else {
+      // Retry up to 10 times (env-loader might be async)
+      let retries = 0;
+      const check = setInterval(() => {
+        retries++;
+        if(window.__LP_ENV && window.__LP_ENV.SUPABASE_URL){
+          clearInterval(check);
+          init();
+        } else if(retries >= 10){
+          clearInterval(check);
+          init(); // Will show "Config missing" error
+        }
+      }, 200);
+    }
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+
 })();
 </script>
 </body>
