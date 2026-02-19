@@ -4,13 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LogicPals Admin — Subscriptions</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+  
   <style>
     :root{--bg:#f6f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e5e7eb;--accent:#4f46e5;--good:#16a34a;--warn:#b45309;--bad:#dc2626;--shadow:0 18px 45px rgba(2,6,23,.08);--r:18px}
-    *{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--text);background:linear-gradient(180deg,#ffffff 0%, #f6f7fb 100%)}
+    *{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";color:var(--text);background:linear-gradient(180deg,#ffffff 0%, #f6f7fb 100%)}
     a{color:inherit;text-decoration:none}
     .shell{max-width:1200px;margin:28px auto;padding:0 18px}
     .top{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px 16px;box-shadow:var(--shadow)}
@@ -21,23 +18,26 @@
     .actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:12px}
     .dot{width:8px;height:8px;border-radius:999px;background:#94a3b8}
-    .btn{cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--text);padding:10px 12px;border-radius:12px;font-weight:800}
+    .btn{cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--text);padding:10px 12px;border-radius:12px;font-weight:700}
+    .btn:hover{border-color:#cbd5e1}
     .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .btn.primary:hover{filter:brightness(.96)}
+    .btn.ghost{background:transparent}
     .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;margin-top:16px}
     .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
     .card .hd{padding:16px 16px 10px;border-bottom:1px solid var(--line)}
     .card .hd h2{margin:0;font-size:16px}
     .card .hd p{margin:6px 0 0;color:var(--muted);font-size:12px}
     .card .bd{padding:16px}
-    label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px;font-weight:800}
+    label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
     input,select{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:#fff;outline:none}
+    input:focus,select:focus{border-color:#b9c3ff;box-shadow:0 0 0 4px rgba(79,70,229,.12)}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
     .stack{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
     pre{margin:0;padding:14px;border-radius:14px;background:#0b1220;color:#e5e7eb;min-height:220px;overflow:auto;font-size:12px}
     .note{padding:10px 12px;border-radius:14px;border:1px dashed #dbeafe;background:#eff6ff;color:#1e3a8a;font-size:12px}
-    .lock{margin-top:14px;padding:12px 14px;border-radius:14px;border:1px solid rgba(220,38,38,.25);background:#fef2f2;color:#991b1b;font-size:13px;display:none}
+    .warn{padding:10px 12px;border-radius:14px;border:1px dashed #fed7aa;background:#fff7ed;color:#7c2d12;font-size:12px}
     @media (max-width: 980px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
@@ -52,15 +52,13 @@
         </div>
       </div>
       <div class="actions">
-        <span class="chip" id="chipStatus"><span class="dot" id="dot"></span><span id="statusText">Booting…</span></span>
-        <a class="btn" href="/admin.html">← Back to Admin</a>
-        <a class="btn" href="/dashboard.html">Dashboard</a>
+        <span class="chip" id="chipStatus"><span class="dot" id="dot"></span><span id="statusText">Loading…</span></span>
+        <button class="btn ghost" id="btnBack">← Back to Admin</button>
+        <button class="btn" id="btnDashboard">Dashboard</button>
         <button class="btn primary" id="btnSignIn">Sign in</button>
-        <button class="btn" id="btnSignOut" style="display:none">Sign out</button>
+        <button class="btn" id="btnSignOut" style="display:none">Log out</button>
       </div>
     </header>
-
-    <div id="lockBox" class="lock"></div>
 
     <div class="grid">
       <section class="card">
@@ -103,14 +101,15 @@
           </div>
 
           <div class="stack">
-            <button class="btn" id="btnLoad" disabled>Load subscriptions</button>
-            <button class="btn" id="btnTrust" disabled>Load trust summary</button>
-            <button class="btn primary" id="btnExtend" disabled>Extend</button>
-            <button class="btn" id="btnCancel" disabled>Cancel</button>
+            <button class="btn" id="btnLoad">Load subscriptions</button>
+            <button class="btn" id="btnTrust">Load trust summary</button>
+            <button class="btn primary" id="btnExtend">Extend</button>
+            <button class="btn" id="btnCancel">Cancel</button>
           </div>
 
-          <div class="note" style="margin-top:12px">
-            Expected RPCs: <code>admin_list_subscriptions</code>, <code>admin_extend_subscription</code>, <code>admin_cancel_subscription</code>, <code>admin_trust_summary</code>.
+          <div class="warn" style="margin-top:12px">
+            Expected RPCs (you can rename — just update here):
+            <code>admin_list_subscriptions</code>, <code>admin_extend_subscription</code>, <code>admin_cancel_subscription</code>, <code>admin_trust_summary</code>.
           </div>
         </div>
       </section>
@@ -122,6 +121,9 @@
         </div>
         <div class="bd">
           <pre id="out">Waiting…</pre>
+          <div class="note" style="margin-top:12px">
+            If you see “permission denied”, that’s GOOD — it means RLS is enforcing. Then assign your admin role and retry.
+          </div>
         </div>
       </section>
     </div>
@@ -145,186 +147,103 @@
         <button class="btn primary" id="btnDoLogin" value="default" type="button">Sign in</button>
         <button class="btn" value="cancel">Cancel</button>
       </div>
-      <div style="margin-top:10px;color:var(--muted);font-size:12px">Use email/password for staff accounts.</div>
+      <div style="margin-top:10px;color:var(--muted);font-size:12px">Use email/password for staff accounts. (Student/parent login stays in the main app.)</div>
     </form>
   </dialog>
 
-<script>
-(function(){
-  'use strict';
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    const $ = (id) => document.getElementById(id);
+    const out = (v) => { $('out').textContent = typeof v === 'string' ? v : JSON.stringify(v, null, 2); };
 
-  const STORAGE_KEY = 'logicpals.auth';     // must match login/dashboard/admin
-  const ENV_ENDPOINT = '/api/env';
-
-  const $ = (id)=>document.getElementById(id);
-  const out = (v)=>{ $('out').textContent = typeof v === 'string' ? v : JSON.stringify(v, null, 2); };
-
-  const setStatus = (text, kind='idle')=>{
-    $('statusText').textContent = text;
-    $('dot').style.background = kind === 'good' ? 'var(--good)' : kind === 'bad' ? 'var(--bad)' : kind === 'warn' ? 'var(--warn)' : '#94a3b8';
-  };
-
-  const lock = (msg)=>{
-    $('lockBox').style.display='block';
-    $('lockBox').textContent = msg;
-    ['btnLoad','btnTrust','btnExtend','btnCancel'].forEach(id=>$(id).disabled=true);
-  };
-  const unlock = ()=>{
-    $('lockBox').style.display='none';
-    $('lockBox').textContent='';
-    ['btnLoad','btnTrust','btnExtend','btnCancel'].forEach(id=>$(id).disabled=false);
-  };
-
-  function hardClearAuthStorage(){
-    try{
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(STORAGE_KEY + '-code-verifier');
-      localStorage.removeItem(STORAGE_KEY + '-provider-token');
-      localStorage.removeItem(STORAGE_KEY + '-provider-refresh-token');
-    }catch(_){}
-  }
-
-  async function fetchEnv(){
-    const res = await fetch(ENV_ENDPOINT, { cache:'no-store' });
-    if(!res.ok) throw new Error('ENV_ENDPOINT failed: ' + res.status);
-    const data = await res.json();
-    const supabaseUrl = data.supabaseUrl || data.SUPABASE_URL || data.url;
-    const supabaseAnonKey = data.supabaseAnonKey || data.SUPABASE_ANON_KEY || data.anonKey;
-    if(!supabaseUrl || !supabaseAnonKey) throw new Error('Missing Supabase config from ' + ENV_ENDPOINT);
-    return { supabaseUrl, supabaseAnonKey };
-  }
-
-  let sb = null;
-
-  async function roleCheckFailClosed(){
-    try{
-      const rpcsToTry = ['get_my_role','my_role','get_current_role'];
-      for(const fn of rpcsToTry){
-        const { data, error } = await sb.rpc(fn);
-        if(!error && data) return String(data);
-      }
-      return null;
-    }catch(_){
-      return null;
-    }
-  }
-
-  async function syncAuthUI(){
-    const { data:{ session } } = await sb.auth.getSession();
-    const signedIn = !!session;
-    $('btnSignIn').style.display = signedIn ? 'none' : '';
-    $('btnSignOut').style.display = signedIn ? '' : 'none';
-
-    if(!signedIn){
-      lock('Sign-in required.');
-      setStatus('Signed out','warn');
-      return;
+    const env = window.__LP_ENV || window.LP_ENV || null;
+    if (!env?.SUPABASE_URL || !env?.SUPABASE_ANON_KEY) {
+      $('statusText').textContent = 'Missing env';
+      out('Missing SUPABASE_URL / SUPABASE_ANON_KEY. Ensure /api/env is deployed and not cached.');
+      throw new Error('Missing env');
     }
 
-    setStatus('Verifying access…','warn');
-    const role = await roleCheckFailClosed();
-    if(!role){
-      lock('Access verification RPC missing. Add get_my_role() (or tell me your role RPC name). Locked by design.');
-      setStatus('Locked','bad');
-      return;
-    }
+    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
 
-    const allowed = ['super_admin','admin_regular','admin_olympiad','admin'].includes(role);
-    if(!allowed){
-      lock(`Not an admin. Role="${role}". Locked.`);
-      setStatus('Locked','bad');
-      return;
-    }
+    const setStatus = (text, kind='idle') => {
+      $('statusText').textContent = text;
+      const dot = $('dot');
+      dot.style.background = kind === 'good' ? '#22c55e' : kind === 'bad' ? '#ef4444' : '#94a3b8';
+    };
 
-    unlock();
-    setStatus('Ready','good');
-  }
+    const syncAuthUI = async () => {
+      const { data } = await supabase.auth.getSession();
+      const signedIn = !!data.session;
+      $('btnSignIn').style.display = signedIn ? 'none' : '';
+      $('btnSignOut').style.display = signedIn ? '' : 'none';
+      setStatus(signedIn ? 'Signed in' : 'Signed out', signedIn ? 'good' : 'idle');
+    };
 
-  async function rpc(fn, args){
-    const { data, error } = await sb.rpc(fn, args);
-    if(error) throw error;
-    return data;
-  }
+    // nav
+    $('btnBack').onclick = () => (window.location.href = '/admin.html');
+    $('btnDashboard').onclick = () => (window.location.href = '/dashboard.html');
+    $('btnSignIn').onclick = () => $('dlg').showModal();
+    $('btnSignOut').onclick = async () => { await supabase.auth.signOut(); await syncAuthUI(); };
 
-  async function init(){
-    setStatus('Booting…','idle');
-    lock('Booting…');
-
-    let env;
-    try{
-      env = await fetchEnv();
-    }catch(e){
-      setStatus('Missing env','bad');
-      lock('Missing Supabase config from /api/env. Fix /api/env first.');
-      out('Missing env: ' + (e && e.message ? e.message : String(e)));
-      $('btnSignIn').disabled = true;
-      return;
-    }
-
-    sb = window.supabase.createClient(env.supabaseUrl, env.supabaseAnonKey, {
-      auth: { storageKey: STORAGE_KEY, persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
-    });
-
-    $('btnSignIn').onclick = ()=> $('dlg').showModal();
-    $('btnSignOut').onclick = async ()=>{ setStatus('Signing out…','warn'); try{ await sb.auth.signOut({ scope:'global' }); }catch(_){ } hardClearAuthStorage(); await syncAuthUI(); };
-
-    $('btnDoLogin').onclick = async ()=>{
+    $('btnDoLogin').onclick = async () => {
       const email = $('inEmail').value.trim();
       const password = $('inPass').value;
-      if(!email || !password) return;
+      if (!email || !password) return;
       out('Signing in…');
-      const { error } = await sb.auth.signInWithPassword({ email, password });
-      if(error) out({ error: error.message });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) out({ error: error.message });
       else out('Signed in.');
       $('dlg').close();
       await syncAuthUI();
     };
 
-    const getInputs = ()=>({
+    // RPC helpers
+    const rpc = async (fn, args) => {
+      const { data, error } = await supabase.rpc(fn, args);
+      if (error) throw error;
+      return data;
+    };
+
+    const getInputs = () => ({
       email: $('email').value.trim(),
       track: $('track').value,
-      months: Math.max(1, parseInt($('months').value || '1',10)),
+      months: Math.max(1, parseInt($('months').value || '1', 10)),
       plan: $('plan').value,
       note: $('note').value.trim() || null,
     });
 
-    $('btnLoad').onclick = async ()=>{
-      try{
+    $('btnLoad').onclick = async () => {
+      try {
         const { email, track } = getInputs();
-        if(!email) return out('Enter a customer email first.');
+        if (!email) return out('Enter a customer email first.');
         out(await rpc('admin_list_subscriptions', { p_email: email, p_track: track }));
-      }catch(e){ out({ error: e.message }); }
+      } catch (e) { out({ error: e.message }); }
     };
-    $('btnTrust').onclick = async ()=>{
-      try{
-        const { email, track } = getInputs();
-        if(!email) return out('Enter a customer email first.');
-        out(await rpc('admin_trust_summary', { p_email: email, p_track: track }));
-      }catch(e){ out({ error: e.message }); }
+    $('btnTrust').onclick = async () => {
+      try {
+        const { email } = getInputs();
+        if (!email) return out('Enter a customer email first.');
+        out(await rpc('admin_trust_summary', { p_email: email }));
+      } catch (e) { out({ error: e.message }); }
     };
-    $('btnExtend').onclick = async ()=>{
-      try{
+    $('btnExtend').onclick = async () => {
+      try {
         const { email, track, months, plan, note } = getInputs();
-        if(!email) return out('Enter a customer email first.');
+        if (!email) return out('Enter a customer email first.');
         out(await rpc('admin_extend_subscription', { p_email: email, p_track: track, p_months: months, p_plan: plan, p_note: note }));
-      }catch(e){ out({ error: e.message }); }
+      } catch (e) { out({ error: e.message }); }
     };
-    $('btnCancel').onclick = async ()=>{
-      try{
+    $('btnCancel').onclick = async () => {
+      try {
         const { email, track, note } = getInputs();
-        if(!email) return out('Enter a customer email first.');
+        if (!email) return out('Enter a customer email first.');
         out(await rpc('admin_cancel_subscription', { p_email: email, p_track: track, p_note: note }));
-      }catch(e){ out({ error: e.message }); }
+      } catch (e) { out({ error: e.message }); }
     };
 
+    // init
     await syncAuthUI();
-    sb.auth.onAuthStateChange(()=> syncAuthUI());
-  }
-
-  window.addEventListener('pageshow', (e)=>{ if(e.persisted) location.reload(); });
-
-  init();
-})();
-</script>
+    supabase.auth.onAuthStateChange(() => { syncAuthUI(); });
+  </script>
 </body>
 </html>
