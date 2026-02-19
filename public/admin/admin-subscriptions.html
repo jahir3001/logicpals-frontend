@@ -40,6 +40,28 @@
     .warn{padding:10px 12px;border-radius:14px;border:1px dashed #fed7aa;background:#fff7ed;color:#7c2d12;font-size:12px}
     @media (max-width: 980px){.grid{grid-template-columns:1fr}}
   </style>
+  <script src="/assets/js/env-loader.js">
+    function wireNavButtons__lp() {
+      const back = document.querySelector('[data-action="back-admin"], #btnBack, #backBtn, a[href="/admin.html"], button[data-back-admin]');
+      const signOutBtn = document.querySelector('[data-action="signout"], #btnSignOut, #signOutBtn, button[data-signout]');
+      if (back) {
+        back.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.location.href = '/admin.html';
+        });
+      }
+      if (signOutBtn) {
+        signOutBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
+          try { hardClearAuthStorage(); } catch (_) {}
+          window.location.href = '/admin.html?signout=1&t=' + Date.now();
+        });
+      }
+    }
+    wireNavButtons__lp();
+
+</script>
 </head>
 <body>
   <div class="shell">
@@ -153,46 +175,64 @@
 
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-    const $ = (id) => document.getElementById(id);
+    
+    function hardClearAuthStorage() {
+      try {
+        const keys = Object.keys(window.localStorage || {});
+        for (const k of keys) if (k.startsWith('sb-') || k.includes('supabase') || k.includes('logicpals.')) localStorage.removeItem(k);
+      } catch (_) {}
+      try {
+        const keys = Object.keys(window.sessionStorage || {});
+        for (const k of keys) if (k.startsWith('sb-') || k.includes('supabase') || k.includes('logicpals.')) sessionStorage.removeItem(k);
+      } catch (_) {}
+    }
+
+    async function safeGetRole() {
+      const candidates = ['admin_get_my_role', 'rpc_lp_my_role', 'admin_get_my_role', 'my_role'];
+      for (const fn of candidates) {
+        try {
+          const { data, error } = await supabase.rpc(fn);
+          if (error) throw error;
+          if (typeof data === 'string') return data;
+          if (data && typeof data === 'object') return data.role || data.app_role || data.name || 'unknown';
+          return (data ?? 'unknown');
+        } catch (e) {}
+      }
+      return 'unknown';
+    }
+
+    function isAdminRole(role) {
+      if (!role) return false;
+      if (role === 'super_admin') return true;
+      return String(role).startsWith('admin_');
+    }
+
+    async function requireAdminOrLogout() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return { ok: false, role: 'none' };
+      const role = await safeGetRole();
+      if (!isAdminRole(role)) {
+        try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
+        try { hardClearAuthStorage(); } catch (_) {}
+        window.location.replace('/admin.html?unauthorized=1&t=' + Date.now());
+        return { ok: false, role };
+      }
+      return { ok: true, role };
+    }
+const $ = (id) => document.getElementById(id);
     const out = (v) => { $('out').textContent = typeof v === 'string' ? v : JSON.stringify(v, null, 2); };
 
-    
-async function fetchEnv() {
-  const res = await fetch('/api/env', { cache: 'no-store' });
-  if (!res.ok) throw new Error('Failed to load /api/env: ' + res.status);
-  return await res.json();
-}
+    const env = window.__LP_ENV || window.LP_ENV || null;
+    if (!env?.SUPABASE_URL || !env?.SUPABASE_ANON_KEY) {
+      $('statusText').textContent = 'Missing env';
+      out('Missing SUPABASE_URL / SUPABASE_ANON_KEY. Ensure /api/env is deployed and not cached.');
+      throw new Error('Missing env');
+    }
 
-const env = await fetchEnv();
-if (!env?.SUPABASE_URL || !env?.SUPABASE_ANON_KEY) {
-  $('statusText').textContent = 'Missing env';
-  out('Missing SUPABASE_URL / SUPABASE_ANON_KEY from /api/env.');
-  throw new Error('Missing env');
-}
+    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
 
-const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
 
-const ADMIN_ROLES = new Set(['admin', 'super_admin']);
-function isAdminRole(role) { return ADMIN_ROLES.has(String(role || '').toLowerCase()); }
-
-async function safeGetRole() {
-  const candidates = ['rpc_lp_my_role','get_my_role','rpc_get_my_role','my_role','lp_my_role'];
-  let lastErr = null;
-  for (const fn of candidates) {
-    try {
-      const { data, error } = await supabase.rpc(fn, {});
-      if (error) { lastErr = error; continue; }
-      if (typeof data === 'string') return data;
-      if (data && typeof data === 'object') {
-        if (typeof data.role === 'string') return data.role;
-        if (typeof data.current_role === 'string') return data.current_role;
-      }
-    } catch (e) { lastErr = e; }
-  }
-  console.warn('safeGetRole failed', lastErr);
-  return 'no_role';
-}
-
+    const __guard = await requireAdminOrLogout();
     const setStatus = (text, kind='idle') => {
       $('statusText').textContent = text;
       const dot = $('dot');
@@ -200,49 +240,18 @@ async function safeGetRole() {
     };
 
     const syncAuthUI = async () => {
-  const { data } = await supabase.auth.getSession();
-  const session = data?.session || null;
-  const signedIn = !!session;
-
-  if (!signedIn) {
-    $('btnSignIn').style.display = '';
-    $('btnSignOut').style.display = 'none';
-    setStatus('Signed out', 'idle');
-    return;
-  }
-
-  // Signed in: must be admin/super_admin or we immediately sign out.
-  const role = await safeGetRole();
-  if (!isAdminRole(role)) {
-    try { await supabase.auth.signOut(); } catch (_) {}
-    $('btnSignIn').style.display = '';
-    $('btnSignOut').style.display = 'none';
-    setStatus('Access denied (not admin). Signed out.', 'bad');
-    out('Access denied: your account role is "' + role + '". Admin pages require admin/super_admin.');
-    return;
-  }
-
-  $('btnSignIn').style.display = 'none';
-  $('btnSignOut').style.display = '';
-  setStatus('Signed in (role: ' + role + ')', 'good');
-};
+      const { data } = await supabase.auth.getSession();
+      const signedIn = !!data.session;
+      $('btnSignIn').style.display = signedIn ? 'none' : '';
+      $('btnSignOut').style.display = signedIn ? '' : 'none';
+      setStatus(signedIn ? 'Signed in' : 'Signed out', signedIn ? 'good' : 'idle');
+    };
 
     // nav
     $('btnBack').onclick = () => (window.location.href = '/admin.html');
     $('btnDashboard').onclick = () => (window.location.href = '/dashboard.html');
     $('btnSignIn').onclick = () => $('dlg').showModal();
-    $('btnSignOut').onclick = async () => {
-try {
-  setStatus('Signing out…', 'warn');
-  await supabase.auth.signOut();
-} catch (e) {
-  console.warn(e);
-}
-try { localStorage.removeItem('sb-access-token'); localStorage.removeItem('sb-refresh-token'); } catch(_) {}
-setStatus('Signed out', 'idle');
-location.href = '/admin.html';
-};
-
+    $('btnSignOut').onclick = async () => { await supabase.auth.signOut(); await syncAuthUI(); };
 
     $('btnDoLogin').onclick = async () => {
       const email = $('inEmail').value.trim();

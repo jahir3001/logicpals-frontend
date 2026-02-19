@@ -1,8 +1,4 @@
-<!
-    // Admin access contract: ONLY allow these roles into admin UI
-    const ADMIN_ROLES = new Set(['super_admin','admin_regular','admin_olympiad','admin']);
-    function isAdminRole(role) { return ADMIN_ROLES.has(String(role || '').trim()); }
-doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -377,8 +373,12 @@ doctype html>
 
     const env = await fetchEnv();
     const supabase = createClient(env.supabaseUrl, env.supabaseAnonKey, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true 
-      storageKey: 'logicpals.auth',}
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storageKey: 'logicpals.auth'
+      }
     });
 
     // Expose for DevTools debugging
@@ -417,11 +417,11 @@ doctype html>
       if (!session) { gateWorkspace(true); openDlg(); return; }
       location.href = path;
     };
-    $('btnPayments').addEventListener('click', guardedNav('/admin-payments.html'));
-    $('btnSubs').addEventListener('click', guardedNav('/admin-subscriptions.html'));
-    $('goPayments').addEventListener('click', guardedNav('/admin-payments.html'));
-    $('goSubs').addEventListener('click', guardedNav('/admin-subscriptions.html'));
-    $('goTrust').addEventListener('click', guardedNav('/admin-subscriptions.html#trust'));
+    $('btnPayments').addEventListener('click', guardedNav('/admin/admin-payments.html'));
+    $('btnSubs').addEventListener('click', guardedNav('/admin/admin-subscriptions.html'));
+    $('goPayments').addEventListener('click', guardedNav('/admin/admin-payments.html'));
+    $('goSubs').addEventListener('click', guardedNav('/admin/admin-subscriptions.html'));
+    $('goTrust').addEventListener('click', guardedNav('/admin/admin-subscriptions.html#trust'));
 
     const notYet = (label) => () => alert(label + "\n\nNext step: confirm / implement the admin RPCs, then we wire these buttons.");
     [
@@ -430,34 +430,27 @@ doctype html>
     ].forEach((id) => $(id).addEventListener('click', notYet('This module is UI-ready but RPC wiring is pending.')));
 
     async function safeGetRole() {
-  // Enterprise role lookup: try our preferred RPC, then fall back to common names.
-  // Must run as the *current* user (authenticated); never trust UI-only state.
-  const candidates = ["rpc_lp_my_role", "get_my_role", "rpc_get_my_role", "my_role", "lp_my_role"];
-  let lastErr = null;
-  for (const fn of candidates) {
-    try {
-      const { data, error } = await supabase.rpc(fn, {});
-      if (error) { lastErr = error; continue; }
-      // Accept either a plain string or an object like { role: "admin" }
-      if (typeof data === "string") return data;
-      if (data && typeof data === "object") {
-        if (typeof data.role === "string") return data.role;
-        if (typeof data.current_role === "string") return data.current_role;
-        if (typeof data.required_role === "string") return data.required_role;
+      // Prefer enterprise admin role RPC; fallback to older names if present.
+      const candidates = ['admin_get_my_role', 'rpc_lp_my_role', 'get_my_role', 'my_role'];
+      for (const fn of candidates) {
+        try {
+          const { data, error } = await supabase.rpc(fn);
+          if (error) throw error;
+          if (typeof data === 'string') return data;
+          if (data && typeof data === 'object') return data.role || data.app_role || data.name || 'unknown';
+          return (data ?? 'unknown');
+        } catch (e) {
+          // try next candidate
+        }
       }
-    } catch (e) {
-      lastErr = e;
+      return 'unknown';
     }
-  }
-  console.warn("safeGetRole: role RPC not found / failed", lastErr);
-  return "no_role";
-} catch (e) {
-        console.error('rpc_lp_my_role failed:', e);
-        $('accessOut').textContent =
-          'Role RPC failed:\n' + (e?.message || String(e)) +
-          '\n\nFix: ensure rpc_lp_my_role returns app_role and supports no_role.';
-        return 'unknown';
-      }
+
+    function isAdminRole(role) {
+      if (!role) return false;
+      if (role === 'super_admin') return true;
+      return String(role).startsWith('admin_');
+    }
     }
 
     function getProjectRefFromUrl(url) {
@@ -483,7 +476,7 @@ doctype html>
     async function hardLogout() {
       // Immediately lock the UI (enterprise-safe). Even if network signOut is slow/fails, UI becomes read-only.
       gateWorkspace(true);
-      setStatus('Signing out…');
+      setStatus('warn', 'Signing out…');
 
       try {
         // Local sign-out is enough for this admin SPA and is faster/more reliable than global.
@@ -529,27 +522,6 @@ doctype html>
       if (!email || !password) { $('authOut').textContent = 'Please enter email + password.'; return; }
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) { $('authOut').textContent = 'Sign-in failed: ' + error.message; setStatus('warn','Auth error'); return; }
-
-      // Enforce admin role immediately (no non-admin accounts allowed into admin console)
-      const role = await safeGetRole();
-      if (!isAdminRole(role)) {
-        $('authOut').textContent = `Access denied: ${email} is not an admin role (${role}).`;
-        $('accessOut').textContent = 'Denied: non-admin account attempted to access admin console.';
-        setStatus('danger','Denied');
-        gateWorkspace(true);
-        await supabase.auth.signOut();
-        hardClearAuthStorage();
-        // Immediately reflect signed-out state in UI
-        $('kvAuth').textContent = 'signed out';
-        $('kvUser').textContent = '—';
-        $('kvRole').textContent = '—';
-        $('btnSignInTop').style.display = '';
-        $('btnSignOutTop').style.display = 'none';
-        $('btnSignOutInDlg').style.display = 'none';
-        gateWorkspace(true);
-        return;
-      }
-
       await refreshUI();
       closeDlg();
     });
@@ -566,32 +538,32 @@ doctype html>
       $('btnDoLogin').style.display = signedIn ? 'none' : 'inline-flex';
       $('btnAuth').textContent = signedIn ? 'Account' : 'Sign in';
 
-      gateWorkspace(!signedIn);
+      /* gateWorkspace finalized after role check */
 
       const role = signedIn ? await safeGetRole() : 'unknown';
-      $('kvRole').textContent = role || 'unknown';
-
-      // If a non-admin session is present, immediately revoke it (admin console must never be accessible)
+      // CRITICAL: non-admin users must not retain a session on admin pages.
       if (signedIn && !isAdminRole(role)) {
-        $('authOut').textContent = `Access denied: ${session.user.email || session.user.id} is not an admin role (${role}).`;
-        $('accessOut').textContent = 'Denied: non-admin session revoked.';
-        setStatus('danger','Denied');
-        gateWorkspace(true);
-        await supabase.auth.signOut();
-        hardClearAuthStorage();
-        $('kvAuth').textContent = 'signed out';
-        $('kvUser').textContent = '—';
-        $('kvRole').textContent = '—';
-        $('btnSignInTop').style.display = '';
-        $('btnSignOutTop').style.display = 'none';
-        $('btnSignOutInDlg').style.display = 'none';
-        gateWorkspace(true);
+        $('kvRole').textContent = role || 'unknown';
+      gateWorkspace(!signedIn || (signedIn && !isAdminRole(role)));
+        $('accessOut').textContent = 'Not authorized for admin console. Signing out…';
+        setStatus('warn', 'Not authorized');
+        try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
+        try { hardClearAuthStorage(); } catch (_) {}
+        window.location.replace('/admin.html?unauthorized=1&t=' + Date.now());
         return;
       }
+
+      $('kvRole').textContent = role || 'unknown';
+      gateWorkspace(!signedIn || (signedIn && !isAdminRole(role)));
 
       setStatus('ok', 'Ready');
 
       if (!signedIn) {
+        const qp2 = new URLSearchParams(location.search);
+        if (qp2.get('unauthorized') === '1') {
+          $('authOut').textContent = 'Access denied (not an admin). Please sign in with an admin account.';
+          $('accessOut').textContent = 'Denied: non-admin session was cleared.';
+        }
         $('authOut').textContent = 'Signed out.';
         $('accessOut').textContent = 'Signed out. Workspace locked.';
         const qp = new URLSearchParams(location.search);
