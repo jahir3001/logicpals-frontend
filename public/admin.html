@@ -1,4 +1,8 @@
-<!doctype html>
+<!
+    // Admin access contract: ONLY allow these roles into admin UI
+    const ADMIN_ROLES = new Set(['super_admin','admin_regular','admin_olympiad','admin']);
+    function isAdminRole(role) { return ADMIN_ROLES.has(String(role || '').trim()); }
+doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -373,12 +377,8 @@
 
     const env = await fetchEnv();
     const supabase = createClient(env.supabaseUrl, env.supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storageKey: 'logicpals.auth'
-      }
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true 
+      storageKey: 'logicpals.auth',}
     });
 
     // Expose for DevTools debugging
@@ -417,11 +417,11 @@
       if (!session) { gateWorkspace(true); openDlg(); return; }
       location.href = path;
     };
-    $('btnPayments').addEventListener('click', guardedNav('/admin/admin-payments.html'));
-    $('btnSubs').addEventListener('click', guardedNav('/admin/admin-subscriptions.html'));
-    $('goPayments').addEventListener('click', guardedNav('/admin/admin-payments.html'));
-    $('goSubs').addEventListener('click', guardedNav('/admin/admin-subscriptions.html'));
-    $('goTrust').addEventListener('click', guardedNav('/admin/admin-subscriptions.html#trust'));
+    $('btnPayments').addEventListener('click', guardedNav('/admin-payments.html'));
+    $('btnSubs').addEventListener('click', guardedNav('/admin-subscriptions.html'));
+    $('goPayments').addEventListener('click', guardedNav('/admin-payments.html'));
+    $('goSubs').addEventListener('click', guardedNav('/admin-subscriptions.html'));
+    $('goTrust').addEventListener('click', guardedNav('/admin-subscriptions.html#trust'));
 
     const notYet = (label) => () => alert(label + "\n\nNext step: confirm / implement the admin RPCs, then we wire these buttons.");
     [
@@ -466,7 +466,7 @@
     async function hardLogout() {
       // Immediately lock the UI (enterprise-safe). Even if network signOut is slow/fails, UI becomes read-only.
       gateWorkspace(true);
-      setStatus('warn', 'Signing out…');
+      setStatus('Signing out…');
 
       try {
         // Local sign-out is enough for this admin SPA and is faster/more reliable than global.
@@ -512,6 +512,19 @@
       if (!email || !password) { $('authOut').textContent = 'Please enter email + password.'; return; }
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) { $('authOut').textContent = 'Sign-in failed: ' + error.message; setStatus('warn','Auth error'); return; }
+
+      // Enforce admin role immediately (no non-admin accounts allowed into admin console)
+      const role = await safeGetRole();
+      if (!isAdminRole(role)) {
+        $('authOut').textContent = `Access denied: ${email} is not an admin role (${role}).`;
+        $('accessOut').textContent = 'Denied: non-admin account attempted to access admin console.';
+        setStatus('danger','Denied');
+        gateWorkspace(true);
+        await supabase.auth.signOut();
+        hardClearAuthStorage();
+        return;
+      }
+
       await refreshUI();
       closeDlg();
     });
@@ -532,6 +545,17 @@
 
       const role = signedIn ? await safeGetRole() : 'unknown';
       $('kvRole').textContent = role || 'unknown';
+
+      // If a non-admin session is present, immediately revoke it (admin console must never be accessible)
+      if (signedIn && !isAdminRole(role)) {
+        $('authOut').textContent = `Access denied: ${session.user.email || session.user.id} is not an admin role (${role}).`;
+        $('accessOut').textContent = 'Denied: non-admin session revoked.';
+        setStatus('danger','Denied');
+        gateWorkspace(true);
+        await supabase.auth.signOut();
+        hardClearAuthStorage();
+        return;
+      }
 
       setStatus('ok', 'Ready');
 
