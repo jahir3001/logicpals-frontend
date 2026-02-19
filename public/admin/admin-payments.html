@@ -35,6 +35,28 @@
     .note{margin-top:8px;font-size:12px;color:var(--muted)}
     @media (max-width:900px){.form{grid-template-columns:1fr}}
   </style>
+  <script src="/assets/js/env-loader.js">
+    function wireNavButtons__lp() {
+      const back = document.querySelector('[data-action="back-admin"], #btnBack, #backBtn, a[href="/admin.html"], button[data-back-admin]');
+      const signOutBtn = document.querySelector('[data-action="signout"], #btnSignOut, #signOutBtn, button[data-signout]');
+      if (back) {
+        back.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.location.href = '/admin.html';
+        });
+      }
+      if (signOutBtn) {
+        signOutBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
+          try { hardClearAuthStorage(); } catch (_) {}
+          window.location.href = '/admin.html?signout=1&t=' + Date.now();
+        });
+      }
+    }
+    wireNavButtons__lp();
+
+</script>
 </head>
 
 <body>
@@ -49,7 +71,7 @@
       </div>
       <div class="right">
         <span class="pill" id="status"><span class="dot" id="dot"></span><span id="statusTxt">Loading…</span></span>
-        <button class="btn" id="btnBack" type="button">Back to Admin</button>
+        <a class="btn" href="/admin.html">Back to Admin</a>
         <button class="btn primary" id="btnSignIn">Sign in</button>
         <button class="btn" id="btnSignOut" style="display:none">Sign out</button>
       </div>
@@ -122,11 +144,55 @@
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-    const env = await (await fetch('/api/env', { cache: 'no-store' })).json().catch(() => ({}));
-    const SUPABASE_URL = env.supabaseUrl || env.SUPABASE_URL;
-    const SUPABASE_ANON_KEY = env.supabaseAnonKey || env.SUPABASE_ANON_KEY;
+    const env = window.__LP_ENV || {};
+    const SUPABASE_URL = env.SUPABASE_URL;
+    const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY;
 
-    const $ = (id) => document.getElementById(id);
+    
+    function hardClearAuthStorage() {
+      try {
+        const keys = Object.keys(window.localStorage || {});
+        for (const k of keys) if (k.startsWith('sb-') || k.includes('supabase') || k.includes('logicpals.')) localStorage.removeItem(k);
+      } catch (_) {}
+      try {
+        const keys = Object.keys(window.sessionStorage || {});
+        for (const k of keys) if (k.startsWith('sb-') || k.includes('supabase') || k.includes('logicpals.')) sessionStorage.removeItem(k);
+      } catch (_) {}
+    }
+
+    async function safeGetRole() {
+      const candidates = ['admin_get_my_role', 'rpc_lp_my_role', 'admin_get_my_role', 'my_role'];
+      for (const fn of candidates) {
+        try {
+          const { data, error } = await supabase.rpc(fn);
+          if (error) throw error;
+          if (typeof data === 'string') return data;
+          if (data && typeof data === 'object') return data.role || data.app_role || data.name || 'unknown';
+          return (data ?? 'unknown');
+        } catch (e) {}
+      }
+      return 'unknown';
+    }
+
+    function isAdminRole(role) {
+      if (!role) return false;
+      if (role === 'super_admin') return true;
+      return String(role).startsWith('admin_');
+    }
+
+    async function requireAdminOrLogout() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return { ok: false, role: 'none' };
+      const role = await safeGetRole();
+      if (!isAdminRole(role)) {
+        try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
+        try { hardClearAuthStorage(); } catch (_) {}
+        window.location.replace('/admin.html?unauthorized=1&t=' + Date.now());
+        return { ok: false, role };
+      }
+      return { ok: true, role };
+    }
+const $ = (id) => document.getElementById(id);
     const setStatus = (kind, msg) => {
       $('statusTxt').textContent = msg;
       const dot = $('dot');
@@ -143,68 +209,14 @@
       throw new Error('Missing env');
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, storageKey: 'logicpals.auth' } });
-
-    const ADMIN_ROLES = new Set(['super_admin','admin_regular','admin_olympiad','admin']);
-    async function safeGetRole() {
-  // Enterprise role lookup: try our preferred RPC, then fall back to common names.
-  // Must run as the *current* user (authenticated); never trust UI-only state.
-  const candidates = ["rpc_lp_my_role", "get_my_role", "rpc_get_my_role", "my_role", "lp_my_role"];
-  let lastErr = null;
-  for (const fn of candidates) {
-    try {
-      const { data, error } = await supabase.rpc(fn, {});
-      if (error) { lastErr = error; continue; }
-      // Accept either a plain string or an object like { role: "admin" }
-      if (typeof data === "string") return data;
-      if (data && typeof data === "object") {
-        if (typeof data.role === "string") return data.role;
-        if (typeof data.current_role === "string") return data.current_role;
-        if (typeof data.required_role === "string") return data.required_role;
-      }
-    } catch (e) {
-      lastErr = e;
-    }
-  }
-  console.warn("safeGetRole: role RPC not found / failed", lastErr);
-  return "no_role";
-} catch (e) {
-        return 'unknown';
-      }
-    }
-    function isAdminRole(role){ return ADMIN_ROLES.has(String(role||'').trim()); }
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true } });
 
 
+    const __guard = await requireAdminOrLogout();
     async function refreshAuthUI(){
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session?.user) {
-    $('who').textContent = 'Signed out';
-    $('btnSignIn').style.display = 'inline-flex';
-    $('btnSignOut').style.display = 'none';
-    setStatus('warn', 'Sign in required');
-    return;
-  }
-
-  const role = await safeGetRole();
-  $('who').textContent = `Signed in: ${session.user.email} (${role})`;
-
-  if (!isAdminRole(role)) {
-    // CRITICAL: do not allow non-admin sessions to persist on admin pages.
-    log(`Access denied: role "${role}". Admin pages require admin/super_admin. Signing out.`);
-    setStatus('bad','Access denied');
-    try { await supabase.auth.signOut(); } catch (_) {}
-    try { hardClearAuthStorage(); } catch (_) {}
-    $('who').textContent = 'Signed out (access denied)';
-    $('btnSignIn').style.display = 'inline-flex';
-    $('btnSignOut').style.display = 'none';
-    return;
-  }
-
-  $('btnSignIn').style.display = 'none';
-  $('btnSignOut').style.display = 'inline-flex';
-  setStatus('good', 'Ready');
-}
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        $('who').textContent = `Signed in: ${session.user.email}`;
         $('btnSignIn').style.display = 'none';
         $('btnSignOut').style.display = 'inline-flex';
         setStatus('good', 'Ready');
@@ -217,20 +229,9 @@
     }
 
     $('btnSignIn').addEventListener('click', openDlg);
-    $('btnSignOut').addEventListener('click', async () => {
-try {
-  setStatus('warn','Signing out…');
-  await supabase.auth.signOut();
-} catch (e) {
-  console.warn(e);
-}
-try { hardClearAuthStorage(); } catch (_) {}
-setStatus('idle','Signed out');
-// Always return to Admin landing after sign out
-location.href = '/admin.html';
-});
-$('btnBack')?.addEventListener('click', () => { location.href = '/admin.html'; });
-$('doLogin').addEventListener('click', async (e) => {
+    $('btnSignOut').addEventListener('click', async () => { await supabase.auth.signOut(); await refreshAuthUI(); });
+
+    $('doLogin').addEventListener('click', async (e) => {
       e.preventDefault();
       $('authOut').textContent = 'Signing in…';
       const { error } = await supabase.auth.signInWithPassword({ email: $('lgEmail').value.trim(), password: $('lgPass').value });
