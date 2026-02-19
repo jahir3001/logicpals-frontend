@@ -133,33 +133,56 @@
     <script>
         // (All existing learn.html JavaScript code stays the same)
         // Just adding subscription checking at the beginning
-        // Runtime config injected by Vercel (public values only)
-        const { SUPABASE_URL: SB_URL, SUPABASE_ANON_KEY: SB_KEY } = window.__LP_ENV || {};
-        if (!SB_URL || !SB_KEY) {
-            alert("Missing Supabase config. Set SUPABASE_URL and SUPABASE_ANON_KEY in Vercel Environment Variables.");
-        }
+        // =========================
+// Enterprise Supabase boot (shared with login/dashboard)
+// =========================
+const STORAGE_KEY = 'logicpals.auth';
+const ENV_ENDPOINT = '/api/env';
 
+let sb = null;
+let SB_URL = null;
+let SB_KEY = null;
 
-        let sb, currentProblem, currentChildId;
-        let hintsUsed = 0, chatLog = [], startTime, timerInt;
-        let isProcessing = false;
-        let questionsAsked = 0;
-        let userSubscription = null;
+async function fetchEnv() {
+  const res = await fetch(ENV_ENDPOINT, { cache: 'no-store' });
+  if (!res.ok) throw new Error('Env endpoint failed: ' + res.status);
+  const env = await res.json();
+  const url = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = env.SUPABASE_ANON_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error('Missing Supabase config. Set SUPABASE_URL and SUPABASE_ANON_KEY in Vercel Environment Variables.');
+  SB_URL = url; SB_KEY = key;
+  return { url, key };
+}
 
-        const learningInsights = {
-            'logic': 'LATERAL THINKING - looking at problems in creative ways!',
-            'arithmetic': 'NUMBER SENSE - understanding how numbers work together!',
-            'word-problem': 'COMPREHENSION - understanding what the question really asks!',
-            'pattern': 'PATTERN RECOGNITION - spotting what comes next!',
-            'algebra': 'ABSTRACT THINKING - working with unknown values!'
-        };
+async function initSupabase() {
+  if (sb) return sb;
+  await fetchEnv();
+  sb = supabase.createClient(SB_URL, SB_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storageKey: STORAGE_KEY,
+    },
+  });
+  return sb;
+}
 
-        const localPuzzles = [
-            { id: "999", problem_text: "A farmer has 17 sheep and all but 9 die. How many are left?", solution_explanation: "9", category: "logic", difficulty: "medium", hints: ["Read carefully!", "It says 'all but 9'"] }
-        ];
+async function requireSessionOrRedirect() {
+  const client = await initSupabase();
+  const { data, error } = await client.auth.getSession();
+  if (error) throw error;
+  const session = data?.session || null;
+  if (!session) {
+    const next = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.href = `/login.html?next=${next}`;
+    return null;
+  }
+  return session;
+}
 
-        window.onload = async () => {
-            sb = supabase.createClient(SB_URL, SB_KEY);
+window.onload = async () => {
+  sb = await initSupabase();
             
             // CHECK SUBSCRIPTION FIRST
             const loggedIn = await SubscriptionGuard.requireLogin();
