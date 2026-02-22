@@ -151,7 +151,7 @@
     }
     function createClient(url,key){
       assertSupabaseLoaded();
-      return window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+      return window.supabase.createClient(url,key,{auth: { persistSession: true, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'lp_admin_auth', storage: window.sessionStorage }});
     }
     let sb=null;
 
@@ -257,7 +257,7 @@
         const url=j?.SUPABASE_URL||j?.supabaseUrl||j?.url;
         const key=j?.SUPABASE_ANON_KEY||j?.anonKey||j?.key;
         if(window.supabase && url && key){
-          window.sb = window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+          window.sb = window.supabase.createClient(url,key,{auth: { persistSession: true, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'lp_admin_auth', storage: window.sessionStorage }});
         }
       }catch(_e){}
     })();
