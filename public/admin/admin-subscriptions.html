@@ -194,25 +194,33 @@ const ADMIN_ROLES = new Set(["super_admin", "admin_regular", "admin_olympiad"]);
 
 function isAdminRole(role){ return ADMIN_ROLES.has(String(role||"").trim()); }
 
-async function loadSupabaseLib(){
-  if (window.__lp_supabase_lib_ready) return window.__lp_supabase_lib_ready;
-  window.__lp_supabase_lib_ready = (async()=>{
-    try{
-      const mod = await import("https://esm.sh/@supabase/supabase-js@2");
-      return { createClient: mod.createClient };
-    }catch(e){
-      await new Promise((resolve,reject)=>{
-        const s=document.createElement("script");
-        s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-        s.async=true; s.onload=resolve; s.onerror=reject;
+async function loadSupabaseLib() {
+      // Enterprise-grade: avoid ESM import edge cases by loading the UMD bundle once.
+      if (window.supabase && window.supabase.createClient) return window.supabase;
+      if (window.__LP_SUPABASE_LIB_PROMISE) return window.__LP_SUPABASE_LIB_PROMISE;
+
+      window.__LP_SUPABASE_LIB_PROMISE = new Promise((resolve, reject) => {
+        const existing = document.querySelector('script[data-lp-supabase-umd="1"]');
+        if (existing) {
+          existing.addEventListener('load', () => resolve(window.supabase));
+          existing.addEventListener('error', reject);
+          return;
+        }
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+        s.async = true;
+        s.defer = true;
+        s.setAttribute('data-lp-supabase-umd', '1');
+        s.onload = () => {
+          if (window.supabase && window.supabase.createClient) resolve(window.supabase);
+          else reject(new Error('supabase_umd_load_failed'));
+        };
+        s.onerror = () => reject(new Error('supabase_umd_load_failed'));
         document.head.appendChild(s);
       });
-      if(!window.supabase?.createClient) throw new Error("supabase_js_missing");
-      return { createClient: window.supabase.createClient };
+
+      return window.__LP_SUPABASE_LIB_PROMISE;
     }
-  })();
-  return window.__lp_supabase_lib_ready;
-}
 
 async function fetchEnv(){
   const res = await fetch("/api/env",{cache:"no-store"});
@@ -222,28 +230,36 @@ async function fetchEnv(){
   return env;
 }
 
-async function getSupabase(){
-  if(window.__lp_admin_supabase) return window.__lp_admin_supabase;
-  const [{createClient}, env] = await Promise.all([loadSupabaseLib(), fetchEnv()]);
-  window.__lp_admin_supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
-    auth:{
-      persistSession:true,
-      autoRefreshToken:true,
-      detectSessionInUrl:false,
-      storageKey:"lp_admin_auth"
-    },
-    global:{headers:{"x-client-info":"logicpals-admin-ui/enterprise"}}
-  });
-  return window.__lp_admin_supabase;
-}
+async function getSupabase() {
+      // Singleton Supabase client per page (prevents GoTrue lock/timeouts)
+      if (window.__LP_SUPABASE_ADMIN_CLIENT) return window.__LP_SUPABASE_ADMIN_CLIENT;
+
+      const env = await getEnv();
+      const url = env.supabase_url || env.SUPABASE_URL;
+      const anonKey = env.supabase_anon_key || env.SUPABASE_ANON_KEY;
+      if (!url || !anonKey) throw new Error("supabase_env_missing");
+
+      const lib = await loadSupabaseLib();
+      const client = lib.createClient(url, anonKey, {
+        auth: {
+          storageKey: "lp_admin_auth",
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: false
+        }
+      });
+
+      window.__LP_SUPABASE_ADMIN_CLIENT = client;
+      return client;
+    }
 
 async function safeGetRole(supabase){
-  const candidates=["get_my_role","admin_get_role","rp_admin_get_role","current_role","get_current_role"];
+  const candidates=["get_my_role","admin_get_role, rp_get_my_role","rp_admin_get_role, rp_get_my_role","","get_current_role"];
   for(const fn of candidates){
     try{
       const {data,error}=await supabase.rpc(fn);
       if(!error){
-        const role = (typeof data==="string")?data:(data?.role ?? data?.current_role ?? data?.name ?? null);
+        const role = (typeof data==="string")?data:(data?.role ?? data?.?? data?.name ?? null);
         if(role) return String(role);
       }
     }catch(_e){}
