@@ -4,150 +4,60 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LogicPals Admin Console</title>
-
-  <!-- Loads window.__LP_ENV via Vercel route -->
-<!-- BFCache/Back button hardening: always revalidate -->
-  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-
+  <link rel="icon" href="/favicon.ico" />
   <style>
-    :root{
-      --bg:#f6f7fb; --card:#ffffff; --text:#0f172a; --muted:#64748b; --line:#e5e7eb;
-      --primary:#4f46e5; --primary-weak:#eef2ff;
-      --success:#10b981; --warn:#f59e0b; --danger:#ef4444;
-      --shadow:0 18px 45px rgba(15,23,42,.08);
-      --radius:18px; --radius-sm:12px;
-      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family:var(--font); color:var(--text);
-      background:radial-gradient(900px 600px at 18% 12%, rgba(79,70,229,.10), transparent 60%),
-                 radial-gradient(900px 600px at 82% 20%, rgba(16,185,129,.08), transparent 60%),
-                 var(--bg);
-    }
-    .shell{max-width:1180px;margin:22px auto;padding:0 18px;}
-    .topbar{
-      display:flex;align-items:center;justify-content:space-between;gap:14px;
-      padding:16px 18px;background:rgba(255,255,255,.9);border:1px solid var(--line);
-      border-radius:22px;box-shadow:var(--shadow);backdrop-filter:saturate(140%) blur(12px);
-    }
-    .brand{display:flex;align-items:center;gap:12px;min-width:240px;}
-    .logo{
-      width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#6366f1,#8b5cf6);
-      display:grid;place-items:center;color:#fff;font-weight:800;letter-spacing:.5px;
-      box-shadow:0 14px 28px rgba(79,70,229,.25);
-    }
-    .brand h1{margin:0;font-size:15px;line-height:1.15}
+    :root{--bg:#f4f6ff;--card:#fff;--muted:#6b7280;--pri:#4f46e5;--danger:#ef4444;--ok:#10b981;--warn:#f59e0b;}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:radial-gradient(1200px 600px at 20% 10%, #e9e7ff 0%, transparent 60%), var(--bg);}
+    .wrap{max-width:1100px;margin:28px auto;padding:0 16px;}
+    .topbar{display:flex;align-items:center;justify-content:space-between;background:var(--card);border-radius:18px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.06);}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#6d28d9,#4f46e5);display:grid;place-items:center;color:#fff;font-weight:800}
+    .brand h1{font-size:16px;margin:0}
     .brand p{margin:2px 0 0;color:var(--muted);font-size:12px}
-
-    .actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
-    .pill{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:10px 12px;border:1px solid var(--line);border-radius:999px;
-      background:#fff;color:var(--muted);font-size:12px;
-    }
-    .dot{width:8px;height:8px;border-radius:999px;background:#cbd5e1;}
-    .dot.ok{background:var(--success)}
-    .dot.warn{background:var(--warn)}
-
-    .btn{
-      border:1px solid var(--line);background:#fff;color:var(--text);
-      padding:10px 14px;border-radius:999px;font-weight:700;font-size:13px;cursor:pointer;
-      transition:transform .06s ease, box-shadow .12s ease, background .12s ease, opacity .12s ease;
-    }
-    .btn:hover{box-shadow:0 10px 22px rgba(15,23,42,.08)}
-    .btn:active{transform:translateY(1px)}
-    .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
-    .btn.primary:hover{box-shadow:0 14px 26px rgba(79,70,229,.22)}
-    .btn.ghost{background:transparent}
-    .btn[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none}
-    .btn.danger{border-color:rgba(239,68,68,.30); color:#991b1b; background:rgba(239,68,68,.06)}
-    .btn.danger:hover{box-shadow:0 10px 22px rgba(239,68,68,.12)}
-
-    .grid{display:grid;grid-template-columns:360px 1fr;gap:16px;margin-top:16px;}
+    .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .pill{font-size:12px;color:var(--muted);border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;background:#fff;display:flex;align-items:center;gap:8px}
+    .dot{width:8px;height:8px;border-radius:50%}
+    .btn{border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:8px 12px;font-weight:600;cursor:pointer}
+    .btn.primary{background:var(--pri);border-color:var(--pri);color:#fff}
+    .btn.danger{border-color:#fecaca;background:#fff;color:var(--danger)}
+    .grid{margin-top:16px;display:grid;grid-template-columns: 380px 1fr; gap:16px}
     @media (max-width: 980px){.grid{grid-template-columns:1fr}}
-
-    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
-    .card .hd{padding:18px 18px 12px;border-bottom:1px solid var(--line);}
-    .card .hd h2{margin:0;font-size:16px}
-    .card .hd small{color:var(--muted)}
-    .card .bd{padding:16px 18px;}
-    .kv{display:grid;grid-template-columns:120px 1fr;row-gap:10px;column-gap:12px;margin-top:10px;font-size:13px}
-    .k{color:var(--muted)}
-
-    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 0;}
-    .tab{padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:700;font-size:13px}
-    .tab.active{background:var(--primary-weak);border-color:rgba(79,70,229,.30);color:#1e1b4b}
-    .panel{display:none}
-    .panel.active{display:block}
-
-    .banner{
-      display:flex;gap:10px;align-items:flex-start;
-      padding:12px 14px;border-radius:14px;border:1px solid rgba(16,185,129,.25);
-      background:rgba(16,185,129,.08);color:#064e3b;font-size:13px;
-    }
-    .banner.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.12);color:#7c2d12}
-    .banner.danger{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#7f1d1d}
-
-    .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px;}
-    @media (max-width: 980px){.cards{grid-template-columns:1fr}}
-    .mini{border:1px solid var(--line);border-radius:var(--radius-sm);background:#fff;padding:14px;}
-    .mini h3{margin:0 0 6px;font-size:14px}
-    .mini p{margin:0;color:var(--muted);font-size:13px;line-height:1.35}
-    .mini .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-
-    dialog{
-      width:min(520px, calc(100% - 24px));
-      border:none;border-radius:18px;box-shadow:0 30px 80px rgba(2,6,23,.35);
-      padding:0;overflow:hidden;
-    }
-    dialog::backdrop{background:rgba(2,6,23,.45)}
-    .modal-hd{padding:16px 18px;border-bottom:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:space-between}
-    .modal-hd strong{font-size:14px}
-    .modal-bd{padding:16px 18px;background:#fff}
-    .field{display:grid;gap:6px;margin:10px 0}
+    .card{background:var(--card);border-radius:18px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.06);}
+    .card h2{margin:0 0 4px;font-size:16px}
+    .card p{margin:0;color:var(--muted);font-size:12px}
+    .kv{margin-top:14px;border-top:1px solid #eef2ff;padding-top:12px;display:grid;grid-template-columns: 120px 1fr; row-gap:8px; column-gap:10px; font-size:13px}
+    .kv .k{color:var(--muted)}
+    .banner{margin-top:12px;border-radius:14px;padding:12px 12px;border:1px solid #e5e7eb;background:#f9fafb;font-size:13px}
+    .banner.ok{border-color:#bbf7d0;background:#f0fdf4}
+    .banner.warn{border-color:#fde68a;background:#fffbeb}
+    .banner.bad{border-color:#fecaca;background:#fef2f2}
+    .tabs{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap}
+    .tab{padding:8px 12px;border-radius:999px;border:1px solid #e5e7eb;background:#fff;font-weight:700;font-size:13px;cursor:pointer}
+    .tab.active{border-color:#c7d2fe;background:#eef2ff;color:#3730a3}
+    .panel{margin-top:12px}
+    .row{display:grid;grid-template-columns:1fr 1fr; gap:12px}
+    @media (max-width: 980px){.row{grid-template-columns:1fr}}
+    .tile{border:1px solid #e5e7eb;border-radius:16px;padding:14px;background:#fff}
+    .tile h3{margin:0 0 6px;font-size:14px}
+    .tile p{margin:0 0 10px;font-size:12px;color:var(--muted)}
+    .tile .btn{padding:7px 10px;font-size:13px}
+    /* Modal */
+    .backdrop{position:fixed;inset:0;background:rgba(17,24,39,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+    .modal{background:#fff;border-radius:18px;max-width:520px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);padding:16px}
+    .modal h3{margin:0 0 8px}
+    .modal .x{float:right;border:1px solid #e5e7eb;background:#fff;border-radius:999px;width:34px;height:34px;cursor:pointer}
+    .field{display:flex;flex-direction:column;gap:6px;margin:10px 0}
     .field label{font-size:12px;color:var(--muted)}
-    .input{
-      padding:12px 12px;border-radius:12px;border:1px solid var(--line);
-      background:#fff;font-size:14px;outline:none;
-    }
-    .input:focus{border-color:rgba(79,70,229,.55);box-shadow:0 0 0 4px rgba(79,70,229,.10)}
-    .help{color:var(--muted);font-size:12px;line-height:1.35}
-    .out{margin-top:12px;padding:12px;border-radius:12px;border:1px dashed var(--line);background:#fafafa;color:#0f172a;white-space:pre-wrap;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-size:12px;min-height:56px}
-
-    .gate-overlay{
-      display:none;
-      position:absolute; inset:0;
-      background:rgba(246,247,251,.78);
-      backdrop-filter: blur(6px);
-      border-radius: var(--radius);
-      border:1px dashed rgba(100,116,139,.35);
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-    }
-    .gate-overlay.active{display:flex}
-    .gate-box{
-      max-width:520px;
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:18px;
-      box-shadow:0 24px 60px rgba(2,6,23,.20);
-      padding:16px 16px 14px;
-    }
-    .gate-box h3{margin:0 0 6px;font-size:14px}
-    .gate-box p{margin:0;color:var(--muted);font-size:13px;line-height:1.35}
-    .gate-box .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .field input{border:1px solid #e5e7eb;border-radius:12px;padding:10px 12px;font-size:14px}
+    .small{font-size:12px;color:var(--muted)}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px}
   </style>
-  <script src="/assets/js/env-loader.js"></script>
+  <!-- Robust UMD build (no module import; avoids esm.sh flakiness) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
-
 <body>
-  <div class="shell">
-    <header class="topbar">
+  <div class="wrap">
+    <div class="topbar">
       <div class="brand">
         <div class="logo">LP</div>
         <div>
@@ -155,411 +65,401 @@
           <p>Enterprise Admin System</p>
         </div>
       </div>
-
       <div class="actions">
-        <div class="pill" id="statusPill"><span class="dot" id="statusDot"></span><span id="statusText">Loading…</span></div>
-        <button class="btn" id="btnVisit" type="button">Visit Site</button>
-        <button class="btn" id="btnDashboard" type="button">Dashboard</button>
-        <button class="btn danger" id="btnTopLogout" type="button" style="display:none">Sign out</button>
-        <button class="btn primary" id="btnAuth" type="button">Sign in</button>
+        <div id="bootPill" class="pill"><span class="dot" id="bootDot" style="background:#9ca3af"></span><span id="bootText">Loading…</span></div>
+        <button class="btn" id="btnVisit">Visit Site</button>
+        <button class="btn" id="btnDash">Dashboard</button>
+        <button class="btn primary" id="btnSignIn">Sign in</button>
+        <button class="btn danger" id="btnSignOut" style="display:none">Sign out</button>
       </div>
-    </header>
+    </div>
 
     <div class="grid">
-      <aside class="card">
-        <div class="hd">
-          <h2>Console Status</h2>
-          <small>Access controlled via DB roles + RPC gates (Step 7)</small>
-        </div>
-        <div class="bd">
-          <div class="kv">
-            <div class="k">Project</div><div>LogicPals-App</div>
-            <div class="k">Auth state</div><div id="kvAuth">unknown</div>
-            <div class="k">Role</div><div id="kvRole">unknown</div>
-            <div class="k">User</div><div id="kvUser">—</div>
-          </div>
+      <div class="card">
+        <h2>Console Status</h2>
+        <p>Access controlled via DB roles + RPC gates (Step 7)</p>
 
-          <div class="banner warn" style="margin-top:14px" id="roleHint">
-            <div>Sign in to load admin capabilities. If your role is <b>super_admin</b>, you can assign roles and manage monetization.</div>
-          </div>
-
-          <div class="banner" style="margin-top:12px">
-            <div><b>Roadmap contract:</b> Admin UI never directly writes protected tables. All mutations go through <b>RPC</b> + <b>audit events</b>.</div>
-          </div>
-
-          <div class="banner danger" style="margin-top:12px; display:none" id="logoutWarn">
-            <div><b>Security:</b> You are signed out. Admin workspace is locked until you sign in again.</div>
-          </div>
-        </div>
-      </aside>
-
-      <main class="card" id="workspaceCard" style="position:relative">
-        <div class="hd">
-          <h2>Admin Workspace</h2>
-          <small>Clean controls with hard boundaries for Regular vs Olympiad</small>
-          <div class="tabs" style="margin-top:12px">
-            <button class="tab active" data-tab="overview" type="button">Overview</button>
-            <button class="tab" data-tab="content" type="button">Content</button>
-            <button class="tab" data-tab="monetization" type="button">Monetization</button>
-            <button class="tab" data-tab="access" type="button">Access</button>
-          </div>
+        <div class="kv" aria-label="status key-values">
+          <div class="k">Project</div><div id="sProject">LogicPals-App</div>
+          <div class="k">Auth state</div><div id="sAuth">unknown</div>
+          <div class="k">Role</div><div id="sRole">unknown</div>
+          <div class="k">User</div><div id="sUser">—</div>
         </div>
 
-        <div class="bd" id="workspaceBody">
-          <section class="panel active" id="tab-overview">
-            <div class="banner" style="margin-bottom:14px">
-              <div><b>Step 7 readiness:</b> Explainability events + receipts are working. Next: surface trustworthy admin views + immutable audit.</div>
-            </div>
-            <div class="cards">
-              <div class="mini">
-                <h3>Regular Review</h3>
-                <p>Content management for standard curriculum (admin_regular, super_admin).</p>
-                <div class="row">
-                  <button class="btn gated" id="btnRegUpload" type="button">Upload / Seed</button>
-                  <button class="btn gated" id="btnRegQueue" type="button">Review Queue</button>
-                </div>
-              </div>
-              <div class="mini">
-                <h3>Olympiad Review</h3>
-                <p>Competition prep (admin_olympiad, super_admin). Strict separation + no hints in mock mode.</p>
-                <div class="row">
-                  <button class="btn gated" id="btnOlyUpload" type="button">Upload / Seed</button>
-                  <button class="btn gated" id="btnOlyQueue" type="button">Failed Criteria Queue</button>
-                </div>
-              </div>
-              <div class="mini">
-                <h3>Role Management</h3>
-                <p>Assign admin roles (super_admin only). Uses RPC + RLS. Audit required.</p>
-                <div class="row">
-                  <button class="btn gated" id="btnRoles" type="button">Open Role Manager</button>
-                  <button class="btn gated" id="btnAudit" type="button">View Admin Audit</button>
-                </div>
-              </div>
-              <div class="mini">
-                <h3>Monetization</h3>
-                <p>Payments + subscriptions (manual activation / refunds). RPC-only with receipts.</p>
-                <div class="row">
-                  <button class="btn gated" id="btnPayments" type="button">Payments</button>
-                  <button class="btn gated" id="btnSubs" type="button">Subscriptions</button>
-                </div>
-              </div>
-            </div>
-          </section>
+        <div id="bannerAuth" class="banner warn">
+          Sign in to load admin capabilities. If your role is <b>super_admin</b>, you can assign roles and manage monetization.
+        </div>
+        <div class="banner ok">
+          <b>Roadmap contract:</b> Admin UI never directly writes protected tables. All mutations go through RPC + audit events.
+        </div>
+        <div id="bannerBoot" class="banner bad" style="display:none"></div>
+      </div>
 
-          <section class="panel" id="tab-content">
-            <div class="banner warn" style="margin-bottom:14px">
-              <div><b>Note:</b> UI is ready. We will enable actions after admin RPCs are confirmed (Step 7).</div>
-            </div>
-            <div class="cards">
-              <div class="mini">
-                <h3>Regular Problem Upload</h3>
-                <p>Upload/seed problems via RPC. No direct inserts.</p>
-                <div class="row"><button class="btn gated" id="goRegUpload" type="button">Open</button></div>
-              </div>
-              <div class="mini">
-                <h3>Olympiad Problem Upload</h3>
-                <p>Upload/seed problems via RPC. Strict criteria enforced.</p>
-                <div class="row"><button class="btn gated" id="goOlyUpload" type="button">Open</button></div>
-              </div>
-              <div class="mini">
-                <h3>Olympiad Failed Criteria Review</h3>
-                <p>Review problems that failed gate scoring + explainability.</p>
-                <div class="row"><button class="btn gated" id="goOlyReview" type="button">Open</button></div>
-              </div>
-              <div class="mini">
-                <h3>Audit Timeline</h3>
-                <p>Immutable admin actions: who changed what, when, and why.</p>
-                <div class="row"><button class="btn gated" id="goAudit" type="button">Open</button></div>
-              </div>
-            </div>
-          </section>
+      <div class="card">
+        <h2>Admin Workspace</h2>
+        <p>Clean controls with hard boundaries for Regular vs Olympiad</p>
 
-          <section class="panel" id="tab-monetization">
-            <div class="cards">
-              <div class="mini">
-                <h3>Payments</h3>
-                <p>Refund / charge / reconcile. Admin-only endpoints.</p>
-                <div class="row"><button class="btn gated" id="goPayments" type="button">Open Payments</button></div>
-              </div>
-              <div class="mini">
-                <h3>Subscriptions</h3>
-                <p>List / extend / cancel. Admin-only endpoints.</p>
-                <div class="row"><button class="btn gated" id="goSubs" type="button">Open Subscriptions</button></div>
-              </div>
-              <div class="mini">
-                <h3>Trust Summary</h3>
-                <p>Receipts, eligibility, explainability, warnings.</p>
-                <div class="row"><button class="btn gated" id="goTrust" type="button">Open Trust Summary</button></div>
-              </div>
-              <div class="mini">
-                <h3>Pricing Config</h3>
-                <p>Future: tier catalog + promotions (gated by Step 8 A/B testing).</p>
-                <div class="row"><button class="btn" disabled type="button">Coming soon</button></div>
-              </div>
-            </div>
-          </section>
-
-          <section class="panel" id="tab-access">
-            <div class="banner warn" style="margin-bottom:14px">
-              <div><b>Role assignment</b> must be <b>super_admin</b> only. If not super_admin, this section stays read-only.</div>
-            </div>
-            <div class="mini">
-              <h3>Access & Roles</h3>
-              <p>We will wire these to Step 7 RPCs once you confirm your function names.</p>
-              <div class="row">
-                <button class="btn gated" id="openRoleManager" type="button">Open Role Manager</button>
-                <button class="btn gated" id="openAdminAudit" type="button">View Admin Audit</button>
-              </div>
-              <div class="out" id="accessOut">Waiting…</div>
-            </div>
-          </section>
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-tab="overview">Overview</button>
+          <button class="tab" data-tab="content">Content</button>
+          <button class="tab" data-tab="monetization">Monetization</button>
+          <button class="tab" data-tab="access">Access</button>
         </div>
 
-        <div class="gate-overlay" id="gateOverlay" aria-live="polite">
-          <div class="gate-box">
-            <h3>Admin workspace locked</h3>
-            <p>You are signed out. For security, all admin actions and navigation are disabled until you sign in again.</p>
-            <div class="row">
-              <button class="btn primary" id="btnGateSignIn" type="button">Sign in</button>
-              <button class="btn" id="btnGateReload" type="button">Reload</button>
+        <div class="panel" id="panel">
+          <div class="banner ok"><b>Step 7 readiness:</b> Explainability events + receipts are working. Next: surface trustworthy admin views + immutable audit.</div>
+
+          <div class="row" style="margin-top:12px">
+            <div class="tile">
+              <h3>Regular Review</h3>
+              <p>Content management for standard curriculum (admin_regular, super_admin).</p>
+              <button class="btn" id="btnRegularSeed">Upload / Seed</button>
+              <button class="btn" id="btnRegularQueue">Review Queue</button>
+            </div>
+            <div class="tile">
+              <h3>Olympiad Review</h3>
+              <p>Competition prep (admin_olympiad, super_admin). Strict separation.</p>
+              <button class="btn" id="btnOlympSeed">Upload / Seed</button>
+              <button class="btn" id="btnOlympQueue">Failed Criteria Queue</button>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:12px">
+            <div class="tile">
+              <h3>Role Management</h3>
+              <p>Assign admin roles (super_admin only). Uses RPC + RLS. Audit required.</p>
+              <button class="btn" id="btnRoleMgr">Open Role Manager</button>
+              <button class="btn" id="btnAudit">View Admin Audit</button>
+            </div>
+            <div class="tile">
+              <h3>Monetization</h3>
+              <p>Payments + subscriptions (manual activation / refunds). RPC-only with receipts.</p>
+              <button class="btn" id="btnPayments">Payments</button>
+              <button class="btn" id="btnSubs">Subscriptions</button>
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   </div>
 
-  <dialog id="dlgLogin">
-    <div class="modal-hd">
-      <strong>LogicPals Admin Account</strong>
-      <button class="btn ghost" id="btnCloseDlg" type="button">✕</button>
-    </div>
-    <div class="modal-bd">
+  <!-- Sign-in Modal -->
+  <div class="backdrop" id="authBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Admin sign in">
+      <button class="x" id="authClose">✕</button>
+      <h3>LogicPals Admin Account</h3>
+      <div class="small">Admin console is email + password only.</div>
+
       <div class="field">
-        <label for="email">Email</label>
-        <input class="input" id="email" type="email" placeholder="admin@example.com" autocomplete="email" />
+        <label>Email</label>
+        <input id="email" type="email" placeholder="admin@email.com" autocomplete="username" />
       </div>
       <div class="field">
-        <label for="password">Password</label>
-        <input class="input" id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+        <label>Password</label>
+        <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
       </div>
-      <div class="help">Admin console is email + password only.</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-        <button class="btn primary" id="btnDoLogin" type="button">Sign in</button>
-        <button class="btn danger" id="btnDoLogout" type="button" style="display:none">Sign out</button>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">
+        <button class="btn primary" id="authDoSignIn">Sign in</button>
+        <button class="btn danger" id="authDoSignOut">Sign out</button>
+        <span class="small" id="authHint"></span>
       </div>
-      <div class="out" id="authOut">Waiting…</div>
+
+      <div class="banner" style="margin-top:12px">
+        <b>Enterprise rule:</b> non-admin accounts are immediately signed out after role verification.
+        <div class="small" style="margin-top:6px">Role RPC autodetect tries: <code>get_my_role</code>, <code>admin_get_role</code>, <code>rp_admin_get_role</code>, <code>current_role</code>…</div>
+      </div>
     </div>
-  </dialog>
+  </div>
 
-  <script type="module">
-/**
- * LogicPals Admin Console — enterprise-grade auth gate
- * Contract:
- *  - Admin pages must NEVER be usable by non-admin users.
- *  - Non-admin sign-in attempts are immediately signed out (no "soft login").
- *  - All privileged data access remains enforced by RLS + RPC on the backend.
- */
-const $$ = (id) => document.getElementById(id);
+  <script>
+    // ----------------------------
+    // Enterprise Boot (no shortcuts)
+    // ----------------------------
+    const UI = {
+      bootPill: document.getElementById('bootPill'),
+      bootDot: document.getElementById('bootDot'),
+      bootText: document.getElementById('bootText'),
+      bannerBoot: document.getElementById('bannerBoot'),
+      sAuth: document.getElementById('sAuth'),
+      sRole: document.getElementById('sRole'),
+      sUser: document.getElementById('sUser'),
+      btnSignIn: document.getElementById('btnSignIn'),
+      btnSignOut: document.getElementById('btnSignOut'),
+      backdrop: document.getElementById('authBackdrop'),
+      authClose: document.getElementById('authClose'),
+      authDoSignIn: document.getElementById('authDoSignIn'),
+      authDoSignOut: document.getElementById('authDoSignOut'),
+      authHint: document.getElementById('authHint'),
+      email: document.getElementById('email'),
+      password: document.getElementById('password'),
+    };
 
-const UI = {
-  project: $$("kvProject"),
-  authState: $$("kvAuth"),
-  role: $$("kvRole"),
-  user: $$("kvUser"),
-  statusPill: $$("statusPill"),
-  statusDot: $$("statusDot"),
-  statusText: $$("statusText"),
-  gateNotice: $$("gateNotice"),
-  gateSignIn: $$("btnGateSignIn"),
-  topSignIn: $$("btnTopSignIn"),
-  topSignOut: $$("btnTopSignOut"),
-  accountBtn: $$("btnAccount"),
-  modal: $$("accountModal"),
-  modalClose: $$("btnModalClose"),
-  modalEmail: $$("modalEmail"),
-  modalPassword: $$("modalPassword"),
-  modalSignIn: $$("btnModalSignIn"),
-  modalUseOther: $$("btnModalUseOther"),
-  modalContinue: $$("btnModalContinue"),
-  modalSignedAs: $$("modalSignedAs"),
-  modalError: $$("modalError"),
-};
+    const CFG = {
+      envEndpoint: '/api/env',
+      adminHome: '/admin.html',
+      allowedRoles: new Set(['super_admin','admin_regular','admin_olympiad']),
+      roleRpcCandidates: [
+        'get_my_role',
+        'admin_get_role',
+        'rp_admin_get_role',
+        'current_role',
+        'rp_current_role',
+        'get_user_role'
+      ],
+      // cache key for autodetected role rpc
+      roleRpcCacheKey: 'lp_role_rpc_v1'
+    };
 
-function setStatus(kind, text) {
-  if (!UI.statusText) return;
-  UI.statusText.textContent = text || "";
-  UI.statusPill?.classList.remove("ok","warn","bad");
-  if (kind) UI.statusPill?.classList.add(kind);
-  if (UI.statusDot) UI.statusDot.style.opacity = (kind === "ok" ? "1" : "0.8");
-}
-
-function setKV(el, v) { if (el) el.textContent = (v ?? "—"); }
-
-async function loadEnv() {
-  if (window.__LP_ENV?.SUPABASE_URL && window.__LP_ENV?.SUPABASE_ANON_KEY) return window.__LP_ENV;
-  const r = await fetch("/api/env", { cache: "no-store" });
-  if (!r.ok) throw new Error(`env_fetch_failed:${r.status}`);
-  const j = await r.json();
-  window.__LP_ENV = j;
-  return j;
-}
-
-function createSb(env) {
-  if (!window.supabase?.createClient) throw new Error("supabase_js_missing");
-  const storageKey = "lp_admin_auth_v1";
-  return window.supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, storageKey, detectSessionInUrl: true },
-  });
-}
-
-const ROLE_RPC_CANDIDATES = [
-  "get_my_role",
-  "rpc_lp_my_role",
-  "my_role",
-  "get_role",
-  "rpc_get_my_role",
-];
-
-const ADMIN_ROLES = new Set(["super_admin","admin_regular","admin_olympiad","admin"]);
-
-async function rpcGetRole(sb) {
-  for (const fn of ROLE_RPC_CANDIDATES) {
-    const { data, error } = await sb.rpc(fn);
-    if (!error) {
-      // Support either TEXT return or JSON return like {"role":"super_admin"}
-      if (typeof data === "string") return data;
-      if (data && typeof data === "object" && typeof data.role === "string") return data.role;
-      // fallback stringify
-      return (data ?? "unknown") + "";
+    function setBoot(state, text, color){
+      UI.bootText.textContent = text;
+      UI.bootDot.style.background = color;
+      if(state === 'error'){
+        UI.bootPill.style.borderColor = '#fecaca';
+        UI.bootPill.style.background = '#fef2f2';
+      } else if(state === 'ok'){
+        UI.bootPill.style.borderColor = '#bbf7d0';
+        UI.bootPill.style.background = '#f0fdf4';
+      } else {
+        UI.bootPill.style.borderColor = '#e5e7eb';
+        UI.bootPill.style.background = '#fff';
+      }
     }
-    // PGRST202 / function not found — try next
-    const msg = (error?.message || "").toLowerCase();
-    if (msg.includes("could not find the function") || msg.includes("pgrst202") || msg.includes("not found")) continue;
-    // any other error is meaningful
-    throw error;
-  }
-  throw new Error("role_rpc_missing");
-}
-
-async function hardSignOut(sb) {
-  try { await sb.auth.signOut(); } catch {}
-  // also clear any supabase auth keys to prevent "ghost session"
-  try {
-    for (const k of Object.keys(localStorage)) {
-      if (k.startsWith("sb-") || k.includes("lp_admin_auth")) localStorage.removeItem(k);
+    function showBootError(msg){
+      UI.bannerBoot.style.display = 'block';
+      UI.bannerBoot.textContent = msg;
+      setBoot('error','Boot error', '#ef4444');
     }
-  } catch {}
-}
 
-function openModal() { UI.modal?.classList.add("open"); }
-function closeModal() { UI.modal?.classList.remove("open"); UI.modalError && (UI.modalError.textContent=""); }
+    function openAuth(){ UI.backdrop.style.display='flex'; UI.backdrop.setAttribute('aria-hidden','false'); }
+    function closeAuth(){ UI.backdrop.style.display='none'; UI.backdrop.setAttribute('aria-hidden','true'); UI.authHint.textContent=''; }
 
-function lockUI(reason) {
-  setStatus("bad", reason || "Locked");
-  if (UI.gateNotice) UI.gateNotice.style.display = "block";
-  UI.topSignOut && (UI.topSignOut.style.display = "none");
-  UI.topSignIn && (UI.topSignIn.style.display = "inline-flex");
-}
+    UI.btnSignIn.addEventListener('click', openAuth);
+    UI.authClose.addEventListener('click', closeAuth);
+    UI.backdrop.addEventListener('click', (e)=>{ if(e.target===UI.backdrop) closeAuth(); });
 
-function unlockUI(role) {
-  setStatus("ok", "Ready");
-  if (UI.gateNotice) UI.gateNotice.style.display = "none";
-  UI.topSignOut && (UI.topSignOut.style.display = "inline-flex");
-  UI.topSignIn && (UI.topSignIn.style.display = "none");
-  if (UI.role) UI.role.textContent = role;
-}
+    document.getElementById('btnVisit').addEventListener('click', ()=> location.href = '/');
+    document.getElementById('btnDash').addEventListener('click', ()=> location.href = '/dashboard.html');
+    document.getElementById('btnPayments').addEventListener('click', ()=> location.href = '/admin/admin-payments.html');
+    document.getElementById('btnSubs').addEventListener('click', ()=> location.href = '/admin/admin-subscriptions.html');
 
-async function refreshAuth(sb) {
-  const { data: sessData } = await sb.auth.getSession();
-  const session = sessData?.session || null;
+    let sb = null;
+    let env = null;
 
-  if (!session) {
-    setKV(UI.authState, "signed_out");
-    setKV(UI.user, "—");
-    setKV(UI.role, "—");
-    lockUI("Signed out");
-    return { session: null, role: null };
-  }
+    function assertSupabaseLoaded(){
+      if(!window.supabase || typeof window.supabase.createClient !== 'function'){
+        const err = new Error('supabase_js_missing');
+        err.code = 'supabase_js_missing';
+        throw err;
+      }
+    }
 
-  setKV(UI.authState, "authenticated");
-  setKV(UI.user, session.user?.email || session.user?.id || "unknown");
+    async function fetchEnv(){
+      const r = await fetch(CFG.envEndpoint, { cache: 'no-store' });
+      if(!r.ok){
+        const t = await r.text().catch(()=> '');
+        const err = new Error('env_fetch_failed: ' + r.status + ' ' + t);
+        err.code = 'env_fetch_failed';
+        throw err;
+      }
+      const j = await r.json();
+      const url = j?.SUPABASE_URL || j?.supabaseUrl || j?.url;
+      const key = j?.SUPABASE_ANON_KEY || j?.anonKey || j?.key;
+      if(!url || !key){
+        const err = new Error('env_missing_SUPABASE_URL_or_ANON_KEY');
+        err.code = 'env_missing';
+        throw err;
+      }
+      return { url, key };
+    }
 
-  let role = "unknown";
-  try {
-    role = await rpcGetRole(sb);
-  } catch (e) {
-    // If role check fails, treat as locked (safer)
-    setKV(UI.role, "unknown");
-    lockUI("Role check failed");
-    return { session, role: null };
-  }
+    function createClient(url, key){
+      assertSupabaseLoaded();
+      return window.supabase.createClient(url, key, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+        global: { headers: { 'X-Client-Info': 'logicpals-admin-console' } }
+      });
+    }
 
-  setKV(UI.role, role);
+    function setSignedOutUI(){
+      UI.sAuth.textContent = 'signed_out';
+      UI.sRole.textContent = 'no_role';
+      UI.sUser.textContent = '—';
+      UI.btnSignOut.style.display = 'none';
+      UI.btnSignIn.style.display = 'inline-block';
+    }
 
-  if (!ADMIN_ROLES.has(role)) {
-    // CRITICAL: immediately sign out non-admins
-    await hardSignOut(sb);
-    lockUI("Not authorized (admin only)");
-    return { session: null, role: null };
-  }
+    function setSignedInUI(email, role){
+      UI.sAuth.textContent = 'authenticated';
+      UI.sUser.textContent = email || '—';
+      UI.sRole.textContent = role || 'unknown';
+      UI.btnSignOut.style.display = 'inline-block';
+      UI.btnSignIn.style.display = 'none';
+    }
 
-  unlockUI(role);
-  return { session, role };
-}
+    async function safeSignOut(){
+      try{
+        if(sb) await sb.auth.signOut();
+      }catch(e){ /* ignore */ }
+      setSignedOutUI();
+    }
 
-async function signInEmail(sb) {
-  const email = (UI.modalEmail?.value || "").trim();
-  const password = UI.modalPassword?.value || "";
-  UI.modalError && (UI.modalError.textContent = "");
-  if (!email || !password) {
-    UI.modalError && (UI.modalError.textContent = "Enter email + password.");
-    return;
-  }
-  setStatus("warn","Signing in…");
-  const { error } = await sb.auth.signInWithPassword({ email, password });
-  if (error) {
-    setStatus("bad","Sign-in failed");
-    UI.modalError && (UI.modalError.textContent = error.message || "Sign-in failed");
-    return;
-  }
-  await refreshAuth(sb);
-  closeModal();
-}
+    async function callRoleRpc(){
+      // Use cached rpc name first
+      const cached = localStorage.getItem(CFG.roleRpcCacheKey);
+      const candidates = cached ? [cached, ...CFG.roleRpcCandidates.filter(x=>x!==cached)] : [...CFG.roleRpcCandidates];
 
-async function bootstrap() {
-  try {
-    setStatus("warn", "Loading…");
-    const env = await loadEnv();
-    const sb = createSb(env);
-    window.__LP_SUPABASE = sb;
+      let lastErr = null;
+      for(const name of candidates){
+        try{
+          const { data, error } = await sb.rpc(name, {});
+          if(error){
+            lastErr = error;
+            // function missing / not found errors should continue to probe
+            const msg = (error.message || '').toLowerCase();
+            if(msg.includes('function') && msg.includes('not found')) continue;
+            if(msg.includes('could not find the function')) continue;
+            // If it exists but fails due to auth, bubble up.
+            throw error;
+          }
+          // Normalize role output
+          let role = null;
+          if(typeof data === 'string') role = data;
+          else if(data && typeof data === 'object'){
+            role = data.role || data.current_role || data.name || null;
+          }
+          if(role){
+            localStorage.setItem(CFG.roleRpcCacheKey, name);
+            return String(role);
+          }
+          // If returns null/empty, treat as no_role (but rpc exists)
+          localStorage.setItem(CFG.roleRpcCacheKey, name);
+          return 'no_role';
+        }catch(e){
+          lastErr = e;
+          // Continue probing if looks like missing function
+          const msg = String(e?.message || e || '').toLowerCase();
+          if(msg.includes('not found') || msg.includes('could not find the function') || msg.includes('pgrst202')) continue;
+        }
+      }
+      // If all fail, return special value + keep error for UI
+      const err = new Error('role_rpc_missing_or_failed');
+      err.detail = lastErr;
+      throw err;
+    }
 
-    setKV(UI.project, env.PROJECT_NAME || "LogicPals-App");
-    await refreshAuth(sb);
+    async function verifyAdminOrSignOut(){
+      const { data: { user } } = await sb.auth.getUser();
+      if(!user){
+        setSignedOutUI();
+        return { ok:false, reason:'no_session' };
+      }
+      let role = 'unknown';
+      try{
+        role = await callRoleRpc();
+      }catch(e){
+        // If role rpc missing, lock UI and sign out (safer)
+        await safeSignOut();
+        showBootError('Access verification failed: role RPC not available. Create a role RPC (e.g., get_my_role) or ensure it is exposed.');
+        return { ok:false, reason:'role_rpc_missing' };
+      }
 
-    sb.auth.onAuthStateChange(async () => { await refreshAuth(sb); });
+      const email = user.email || '';
+      setSignedInUI(email, role);
 
-    // Buttons
-    UI.topSignIn?.addEventListener("click", openModal);
-    UI.gateSignIn?.addEventListener("click", openModal);
-    UI.accountBtn?.addEventListener("click", openModal);
-    UI.modalClose?.addEventListener("click", closeModal);
-    UI.modalUseOther?.addEventListener("click", async () => { await hardSignOut(sb); await refreshAuth(sb); });
-    UI.modalContinue?.addEventListener("click", async () => { await refreshAuth(sb); closeModal(); });
-    UI.modalSignIn?.addEventListener("click", async () => { await signInEmail(sb); });
-    UI.topSignOut?.addEventListener("click", async () => { setStatus("warn","Signing out…"); await hardSignOut(sb); await refreshAuth(sb); });
+      if(!CFG.allowedRoles.has(role)){
+        // CRITICAL: Non-admin sessions get terminated immediately
+        await safeSignOut();
+        UI.authHint.textContent = 'Not authorized for admin. Signed out.';
+        return { ok:false, reason:'not_admin', role };
+      }
+      return { ok:true, role, email };
+    }
 
-    // Populate modal session hint
-    const { data: sessData } = await sb.auth.getSession();
-    const s = sessData?.session;
-    if (UI.modalSignedAs) UI.modalSignedAs.textContent = s?.user?.email ? `Signed in as ${s.user.email}` : "Not signed in";
-  } catch (e) {
-    console.error(e);
-    setStatus("bad", "Boot error");
-    lockUI("Boot error");
-  }
-}
-bootstrap();
-</script>
+    async function bootstrap(){
+      setBoot('loading','Loading…', '#9ca3af');
+      try{
+        env = await fetchEnv();
+        sb = createClient(env.url, env.key);
+
+        // Wire sign-out
+        UI.btnSignOut.addEventListener('click', async ()=>{
+          setBoot('loading','Signing out…', '#f59e0b');
+          await safeSignOut();
+          setBoot('ok','Ready', '#10b981');
+        });
+        UI.authDoSignOut.addEventListener('click', async ()=>{
+          UI.authHint.textContent = 'Signing out…';
+          await safeSignOut();
+          UI.authHint.textContent = 'Signed out.';
+        });
+
+        UI.authDoSignIn.addEventListener('click', async ()=>{
+          UI.authHint.textContent = '';
+          const email = (UI.email.value || '').trim();
+          const password = UI.password.value || '';
+          if(!email || !password){
+            UI.authHint.textContent = 'Enter email + password.';
+            return;
+          }
+          setBoot('loading','Signing in…', '#f59e0b');
+          UI.authHint.textContent = 'Signing in…';
+          const { error } = await sb.auth.signInWithPassword({ email, password });
+          if(error){
+            UI.authHint.textContent = 'Login failed: ' + (error.message || 'unknown error');
+            showBootError('Login failed.');
+            return;
+          }
+          // verify role gate
+          const verdict = await verifyAdminOrSignOut();
+          if(!verdict.ok){
+            UI.authHint.textContent = verdict.reason === 'not_admin'
+              ? 'Not an admin. Session terminated.'
+              : 'Access verification failed.';
+            return;
+          }
+          closeAuth();
+          setBoot('ok','Ready', '#10b981');
+        });
+
+        // React to auth state changes
+        sb.auth.onAuthStateChange(async (_event, _session)=>{
+          await verifyAdminOrSignOut();
+        });
+
+        // Initial verify
+        const verdict = await verifyAdminOrSignOut();
+        if(!verdict.ok){
+          setBoot('ok','Ready', '#10b981'); // page is usable for sign-in even if signed out
+        } else {
+          setBoot('ok','Ready', '#10b981');
+        }
+      }catch(e){
+        const msg = String(e?.message || e);
+        if(msg.includes('supabase_js_missing')){
+          showBootError('Supabase JS failed to load. Check if your network blocks cdn.jsdelivr.net, then retry.');
+        } else if(msg.includes('env_fetch_failed')){
+          showBootError('Failed to load /api/env. Verify Vercel function is deployed and returns SUPABASE_URL + SUPABASE_ANON_KEY.');
+        } else if(msg.includes('env_missing')){
+          showBootError('Missing SUPABASE_URL / SUPABASE_ANON_KEY from /api/env response.');
+        } else {
+          showBootError('Boot failure: ' + msg);
+        }
+        console.error(e);
+        setSignedOutUI();
+      }
+    }
+
+    // Tabs (UI-only)
+    document.querySelectorAll('.tab').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // Start
+    bootstrap();
+  </script>
 </body>
 </html>
