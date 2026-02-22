@@ -40,28 +40,7 @@
     .warn{padding:10px 12px;border-radius:14px;border:1px dashed #fed7aa;background:#fff7ed;color:#7c2d12;font-size:12px}
     @media (max-width: 980px){.grid{grid-template-columns:1fr}}
   </style>
-  <script src="/assets/js/env-loader.js">
-    function wireNavButtons__lp() {
-      const back = document.querySelector('[data-action="back-admin"], #btnBack, #backBtn, a[href="/admin.html"], button[data-back-admin]');
-      const signOutBtn = document.querySelector('[data-action="signout"], #btnSignOut, #signOutBtn, button[data-signout]');
-      if (back) {
-        back.addEventListener('click', (e) => {
-          e.preventDefault();
-          window.location.href = '/admin.html';
-        });
-      }
-      if (signOutBtn) {
-        signOutBtn.addEventListener('click', async (e) => {
-          e.preventDefault();
-          try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
-          try { hardClearAuthStorage(); } catch (_) {}
-          window.location.href = '/admin.html?signout=1&t=' + Date.now();
-        });
-      }
-    }
-    wireNavButtons__lp();
-
-</script>
+  <script src="/assets/js/env-loader.js"></script>
 </head>
 <body>
   <div class="shell">
@@ -174,144 +153,150 @@
   </dialog>
 
   <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-    
-    function hardClearAuthStorage() {
-      try {
-        const keys = Object.keys(window.localStorage || {});
-        for (const k of keys) if (k.startsWith('sb-') || k.includes('supabase') || k.includes('logicpals.')) localStorage.removeItem(k);
-      } catch (_) {}
-      try {
-        const keys = Object.keys(window.sessionStorage || {});
-        for (const k of keys) if (k.startsWith('sb-') || k.includes('supabase') || k.includes('logicpals.')) sessionStorage.removeItem(k);
-      } catch (_) {}
+/**
+ * LogicPals Admin Monetization pages — enterprise-grade gate
+ * - Must be callable ONLY by admin roles
+ * - Uses RPC role verification (get_my_role / fallbacks)
+ * - Sign out must clear session and remain on page locked
+ */
+const $$ = (id) => document.getElementById(id);
+
+function setStatus(kind, txt) {
+  const el = $$("statusTxt");
+  const dot = $$("dot");
+  const pill = $$("status");
+  if (el) el.textContent = txt || "";
+  if (pill) pill.dataset.kind = kind || "";
+  if (dot) dot.style.opacity = (kind === "ok" ? "1" : "0.8");
+}
+
+async function loadEnv() {
+  if (window.__LP_ENV?.SUPABASE_URL && window.__LP_ENV?.SUPABASE_ANON_KEY) return window.__LP_ENV;
+  const r = await fetch("/api/env", { cache: "no-store" });
+  if (!r.ok) throw new Error(`env_fetch_failed:${r.status}`);
+  window.__LP_ENV = await r.json();
+  return window.__LP_ENV;
+}
+
+function createSb(env) {
+  if (!window.supabase?.createClient) throw new Error("supabase_js_missing");
+  const storageKey = "lp_admin_auth_v1";
+  return window.supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, storageKey, detectSessionInUrl: true },
+  });
+}
+
+const ROLE_RPC_CANDIDATES = ["get_my_role","rpc_lp_my_role","my_role","get_role","rpc_get_my_role"];
+const ADMIN_ROLES = new Set(["super_admin","admin_regular","admin_olympiad","admin"]);
+
+async function rpcGetRole(sb) {
+  for (const fn of ROLE_RPC_CANDIDATES) {
+    const { data, error } = await sb.rpc(fn);
+    if (!error) {
+      if (typeof data === "string") return data;
+      if (data && typeof data === "object" && typeof data.role === "string") return data.role;
+      return (data ?? "unknown") + "";
     }
+    const msg = (error?.message || "").toLowerCase();
+    if (msg.includes("could not find the function") || msg.includes("pgrst202") || msg.includes("not found")) continue;
+    throw error;
+  }
+  throw new Error("role_rpc_missing");
+}
 
-    async function safeGetRole() {
-      const candidates = ['admin_get_my_role', 'rpc_lp_my_role', 'admin_get_my_role', 'my_role'];
-      for (const fn of candidates) {
-        try {
-          const { data, error } = await supabase.rpc(fn);
-          if (error) throw error;
-          if (typeof data === 'string') return data;
-          if (data && typeof data === 'object') return data.role || data.app_role || data.name || 'unknown';
-          return (data ?? 'unknown');
-        } catch (e) {}
-      }
-      return 'unknown';
+async function hardSignOut(sb) {
+  try { await sb.auth.signOut(); } catch {}
+  try {
+    for (const k of Object.keys(localStorage)) {
+      if (k.startsWith("sb-") || k.includes("lp_admin_auth")) localStorage.removeItem(k);
     }
+  } catch {}
+}
 
-    function isAdminRole(role) {
-      if (!role) return false;
-      if (role === 'super_admin') return true;
-      return String(role).startsWith('admin_');
+async function gate(sb) {
+  const { data: sessData } = await sb.auth.getSession();
+  const session = sessData?.session || null;
+  const signedEl = $$("signedAs");
+  const lockedBanner = $$("lockedBanner");
+  const btnSignIn = $$("btnSignIn");
+  const btnSignOut = $$("btnSignOut");
+
+  if (!session) {
+    if (signedEl) signedEl.textContent = "Signed out";
+    if (lockedBanner) lockedBanner.style.display = "block";
+    btnSignIn && (btnSignIn.style.display = "inline-flex");
+    btnSignOut && (btnSignOut.style.display = "none");
+    setStatus("bad","Locked");
+    return { ok:false };
+  }
+
+  if (signedEl) signedEl.textContent = `Signed in: ${session.user?.email || "unknown"}`;
+
+  let role = null;
+  try {
+    role = await rpcGetRole(sb);
+  } catch (e) {
+    console.warn("role check failed", e);
+    if (lockedBanner) {
+      lockedBanner.style.display = "block";
+      lockedBanner.textContent = "Access verification RPC missing. Add get_my_role() (or map to rpc_lp_my_role). Locked by design.";
     }
+    setStatus("bad","Locked");
+    return { ok:false };
+  }
 
-    async function requireAdminOrLogout() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return { ok: false, role: 'none' };
-      const role = await safeGetRole();
-      if (!isAdminRole(role)) {
-        try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
-        try { hardClearAuthStorage(); } catch (_) {}
-        window.location.replace('/admin.html?unauthorized=1&t=' + Date.now());
-        return { ok: false, role };
-      }
-      return { ok: true, role };
+  if (!ADMIN_ROLES.has(role)) {
+    await hardSignOut(sb);
+    if (lockedBanner) {
+      lockedBanner.style.display = "block";
+      lockedBanner.textContent = "Not authorized (admin only). You have been signed out.";
     }
-const $ = (id) => document.getElementById(id);
-    const out = (v) => { $('out').textContent = typeof v === 'string' ? v : JSON.stringify(v, null, 2); };
+    setStatus("bad","Locked");
+    return { ok:false };
+  }
 
-    const env = window.__LP_ENV || window.LP_ENV || null;
-    if (!env?.SUPABASE_URL || !env?.SUPABASE_ANON_KEY) {
-      $('statusText').textContent = 'Missing env';
-      out('Missing SUPABASE_URL / SUPABASE_ANON_KEY. Ensure /api/env is deployed and not cached.');
-      throw new Error('Missing env');
-    }
+  if (lockedBanner) lockedBanner.style.display = "none";
+  btnSignIn && (btnSignIn.style.display = "none");
+  btnSignOut && (btnSignOut.style.display = "inline-flex");
+  setStatus("ok","Ready");
+  return { ok:true, role };
+}
 
-    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+function openLogin() {
+  // Central admin login modal lives on /admin.html
+  window.location.href = "/admin.html";
+}
 
+async function bootstrap() {
+  try {
+    setStatus("warn","Loading…");
+    const env = await loadEnv();
+    const sb = createSb(env);
+    window.__LP_SUPABASE = sb;
 
-    const __guard = await requireAdminOrLogout();
-    const setStatus = (text, kind='idle') => {
-      $('statusText').textContent = text;
-      const dot = $('dot');
-      dot.style.background = kind === 'good' ? '#22c55e' : kind === 'bad' ? '#ef4444' : '#94a3b8';
-    };
+    const btnSignIn = $$("btnSignIn");
+    const btnSignOut = $$("btnSignOut");
 
-    const syncAuthUI = async () => {
-      const { data } = await supabase.auth.getSession();
-      const signedIn = !!data.session;
-      $('btnSignIn').style.display = signedIn ? 'none' : '';
-      $('btnSignOut').style.display = signedIn ? '' : 'none';
-      setStatus(signedIn ? 'Signed in' : 'Signed out', signedIn ? 'good' : 'idle');
-    };
-
-    // nav
-    $('btnBack').onclick = () => (window.location.href = '/admin.html');
-    $('btnDashboard').onclick = () => (window.location.href = '/dashboard.html');
-    $('btnSignIn').onclick = () => $('dlg').showModal();
-    $('btnSignOut').onclick = async () => { await supabase.auth.signOut(); await syncAuthUI(); };
-
-    $('btnDoLogin').onclick = async () => {
-      const email = $('inEmail').value.trim();
-      const password = $('inPass').value;
-      if (!email || !password) return;
-      out('Signing in…');
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) out({ error: error.message });
-      else out('Signed in.');
-      $('dlg').close();
-      await syncAuthUI();
-    };
-
-    // RPC helpers
-    const rpc = async (fn, args) => {
-      const { data, error } = await supabase.rpc(fn, args);
-      if (error) throw error;
-      return data;
-    };
-
-    const getInputs = () => ({
-      email: $('email').value.trim(),
-      track: $('track').value,
-      months: Math.max(1, parseInt($('months').value || '1', 10)),
-      plan: $('plan').value,
-      note: $('note').value.trim() || null,
+    btnSignIn?.addEventListener("click", openLogin);
+    btnSignOut?.addEventListener("click", async () => {
+      setStatus("warn","Signing out…");
+      await hardSignOut(sb);
+      await gate(sb);
     });
 
-    $('btnLoad').onclick = async () => {
-      try {
-        const { email, track } = getInputs();
-        if (!email) return out('Enter a customer email first.');
-        out(await rpc('admin_list_subscriptions', { p_email: email, p_track: track }));
-      } catch (e) { out({ error: e.message }); }
-    };
-    $('btnTrust').onclick = async () => {
-      try {
-        const { email } = getInputs();
-        if (!email) return out('Enter a customer email first.');
-        out(await rpc('admin_trust_summary', { p_email: email }));
-      } catch (e) { out({ error: e.message }); }
-    };
-    $('btnExtend').onclick = async () => {
-      try {
-        const { email, track, months, plan, note } = getInputs();
-        if (!email) return out('Enter a customer email first.');
-        out(await rpc('admin_extend_subscription', { p_email: email, p_track: track, p_months: months, p_plan: plan, p_note: note }));
-      } catch (e) { out({ error: e.message }); }
-    };
-    $('btnCancel').onclick = async () => {
-      try {
-        const { email, track, note } = getInputs();
-        if (!email) return out('Enter a customer email first.');
-        out(await rpc('admin_cancel_subscription', { p_email: email, p_track: track, p_note: note }));
-      } catch (e) { out({ error: e.message }); }
-    };
-
-    // init
-    await syncAuthUI();
-    supabase.auth.onAuthStateChange(() => { syncAuthUI(); });
-  </script>
+    sb.auth.onAuthStateChange(async () => { await gate(sb); });
+    await gate(sb);
+  } catch (e) {
+    console.error(e);
+    setStatus("bad","Boot error");
+    const lockedBanner = $$("lockedBanner");
+    if (lockedBanner) {
+      lockedBanner.style.display = "block";
+      lockedBanner.textContent = "Boot error (env/auth). Check /api/env and Supabase keys.";
+    }
+  }
+}
+bootstrap();
+</script>
 </body>
 </html>

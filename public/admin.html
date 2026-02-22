@@ -353,234 +353,213 @@
   </dialog>
 
   <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+/**
+ * LogicPals Admin Console — enterprise-grade auth gate
+ * Contract:
+ *  - Admin pages must NEVER be usable by non-admin users.
+ *  - Non-admin sign-in attempts are immediately signed out (no "soft login").
+ *  - All privileged data access remains enforced by RLS + RPC on the backend.
+ */
+const $$ = (id) => document.getElementById(id);
 
-    const $ = (id) => document.getElementById(id);
+const UI = {
+  project: $$("kvProject"),
+  authState: $$("kvAuth"),
+  role: $$("kvRole"),
+  user: $$("kvUser"),
+  statusPill: $$("statusPill"),
+  statusDot: $$("statusDot"),
+  statusText: $$("statusText"),
+  gateNotice: $$("gateNotice"),
+  gateSignIn: $$("btnGateSignIn"),
+  topSignIn: $$("btnTopSignIn"),
+  topSignOut: $$("btnTopSignOut"),
+  accountBtn: $$("btnAccount"),
+  modal: $$("accountModal"),
+  modalClose: $$("btnModalClose"),
+  modalEmail: $$("modalEmail"),
+  modalPassword: $$("modalPassword"),
+  modalSignIn: $$("btnModalSignIn"),
+  modalUseOther: $$("btnModalUseOther"),
+  modalContinue: $$("btnModalContinue"),
+  modalSignedAs: $$("modalSignedAs"),
+  modalError: $$("modalError"),
+};
 
-        async function fetchEnv() {
-      const r = await fetch('/api/env', { method: 'GET' });
-      if (!r.ok) throw new Error('env_fetch_failed');
-      const j = await r.json();
+function setStatus(kind, text) {
+  if (!UI.statusText) return;
+  UI.statusText.textContent = text || "";
+  UI.statusPill?.classList.remove("ok","warn","bad");
+  if (kind) UI.statusPill?.classList.add(kind);
+  if (UI.statusDot) UI.statusDot.style.opacity = (kind === "ok" ? "1" : "0.8");
+}
 
-      const supabaseUrl = j.supabaseUrl || j.SUPABASE_URL || j.url || j.SUPABASE_URL;
-      const supabaseAnonKey = j.supabaseAnonKey || j.SUPABASE_ANON_KEY || j.anonKey || j.SUPABASE_KEY;
+function setKV(el, v) { if (el) el.textContent = (v ?? "—"); }
 
-      if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error('missing_supabase_env');
-      }
-      return { supabaseUrl, supabaseAnonKey };
+async function loadEnv() {
+  if (window.__LP_ENV?.SUPABASE_URL && window.__LP_ENV?.SUPABASE_ANON_KEY) return window.__LP_ENV;
+  const r = await fetch("/api/env", { cache: "no-store" });
+  if (!r.ok) throw new Error(`env_fetch_failed:${r.status}`);
+  const j = await r.json();
+  window.__LP_ENV = j;
+  return j;
+}
+
+function createSb(env) {
+  if (!window.supabase?.createClient) throw new Error("supabase_js_missing");
+  const storageKey = "lp_admin_auth_v1";
+  return window.supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, storageKey, detectSessionInUrl: true },
+  });
+}
+
+const ROLE_RPC_CANDIDATES = [
+  "get_my_role",
+  "rpc_lp_my_role",
+  "my_role",
+  "get_role",
+  "rpc_get_my_role",
+];
+
+const ADMIN_ROLES = new Set(["super_admin","admin_regular","admin_olympiad","admin"]);
+
+async function rpcGetRole(sb) {
+  for (const fn of ROLE_RPC_CANDIDATES) {
+    const { data, error } = await sb.rpc(fn);
+    if (!error) {
+      // Support either TEXT return or JSON return like {"role":"super_admin"}
+      if (typeof data === "string") return data;
+      if (data && typeof data === "object" && typeof data.role === "string") return data.role;
+      // fallback stringify
+      return (data ?? "unknown") + "";
     }
+    // PGRST202 / function not found — try next
+    const msg = (error?.message || "").toLowerCase();
+    if (msg.includes("could not find the function") || msg.includes("pgrst202") || msg.includes("not found")) continue;
+    // any other error is meaningful
+    throw error;
+  }
+  throw new Error("role_rpc_missing");
+}
 
-    const env = await fetchEnv();
-    const supabase = createClient(env.supabaseUrl, env.supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storageKey: 'logicpals.auth'
-      }
-    });
-
-    // Expose for DevTools debugging
-    window.supabase = supabase;
-
-    const dlg = $('dlgLogin');
-    const openDlg = () => dlg.showModal();
-    const closeDlg = () => dlg.close();
-    $('btnCloseDlg').addEventListener('click', closeDlg);
-
-    const setStatus = (kind, text) => {
-      $('statusText').textContent = text;
-      $('statusDot').className = 'dot ' + (kind === 'ok' ? 'ok' : kind === 'warn' ? 'warn' : '');
-    };
-
-    const setTab = (key) => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === key));
-      document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `tab-${key}`));
-    };
-    document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => setTab(btn.dataset.tab)));
-
-    const gateWorkspace = (locked) => {
-      $('gateOverlay').classList.toggle('active', locked);
-      $('logoutWarn').style.display = locked ? 'flex' : 'none';
-      document.querySelectorAll('.gated').forEach(btn => btn.disabled = locked);
-    };
-
-    $('btnGateSignIn').addEventListener('click', () => openDlg());
-    $('btnGateReload').addEventListener('click', () => location.reload());
-
-    $('btnVisit').addEventListener('click', () => location.href = '/');
-    $('btnDashboard').addEventListener('click', () => location.href = '/dashboard.html');
-
-    const guardedNav = (path) => async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { gateWorkspace(true); openDlg(); return; }
-      location.href = path;
-    };
-    $('btnPayments').addEventListener('click', guardedNav('/admin/admin-payments.html'));
-    $('btnSubs').addEventListener('click', guardedNav('/admin/admin-subscriptions.html'));
-    $('goPayments').addEventListener('click', guardedNav('/admin/admin-payments.html'));
-    $('goSubs').addEventListener('click', guardedNav('/admin/admin-subscriptions.html'));
-    $('goTrust').addEventListener('click', guardedNav('/admin/admin-subscriptions.html#trust'));
-
-    const notYet = (label) => () => alert(label + "\n\nNext step: confirm / implement the admin RPCs, then we wire these buttons.");
-    [
-      'btnRegUpload','btnRegQueue','btnOlyUpload','btnOlyQueue','btnRoles','btnAudit',
-      'goRegUpload','goOlyUpload','goOlyReview','goAudit','openRoleManager','openAdminAudit'
-    ].forEach((id) => $(id).addEventListener('click', notYet('This module is UI-ready but RPC wiring is pending.')));
-
-    async function safeGetRole() {
-      // Prefer enterprise admin role RPC; fallback to older names if present.
-      const candidates = ['admin_get_my_role', 'rpc_lp_my_role', 'get_my_role', 'my_role'];
-      for (const fn of candidates) {
-        try {
-          const { data, error } = await supabase.rpc(fn);
-          if (error) throw error;
-          if (typeof data === 'string') return data;
-          if (data && typeof data === 'object') return data.role || data.app_role || data.name || 'unknown';
-          return (data ?? 'unknown');
-        } catch (e) {
-          // try next candidate
-        }
-      }
-      return 'unknown';
+async function hardSignOut(sb) {
+  try { await sb.auth.signOut(); } catch {}
+  // also clear any supabase auth keys to prevent "ghost session"
+  try {
+    for (const k of Object.keys(localStorage)) {
+      if (k.startsWith("sb-") || k.includes("lp_admin_auth")) localStorage.removeItem(k);
     }
+  } catch {}
+}
 
-    function isAdminRole(role) {
-      if (!role) return false;
-      if (role === 'super_admin') return true;
-      return String(role).startsWith('admin_');
-    }
-    }
+function openModal() { UI.modal?.classList.add("open"); }
+function closeModal() { UI.modal?.classList.remove("open"); UI.modalError && (UI.modalError.textContent=""); }
 
-    function getProjectRefFromUrl(url) {
-      try { return new URL(url).hostname.split('.')[0]; } catch { return null; }
-    }
+function lockUI(reason) {
+  setStatus("bad", reason || "Locked");
+  if (UI.gateNotice) UI.gateNotice.style.display = "block";
+  UI.topSignOut && (UI.topSignOut.style.display = "none");
+  UI.topSignIn && (UI.topSignIn.style.display = "inline-flex");
+}
 
-    function hardClearAuthStorage() {
-      const ref = getProjectRefFromUrl(env.supabaseUrl);
-      const prefixes = ['supabase.auth.','sb-'];
-      const rm = (store) => {
-        const keys = [];
-        for (let i=0; i<store.length; i++) keys.push(store.key(i));
-        keys.forEach(k => {
-          if (!k) return;
-          const ok = prefixes.some(p => k.startsWith(p)) || (ref && k.startsWith(`sb-${ref}-`));
-          if (ok) { try { store.removeItem(k); } catch {} }
-        });
-      };
-      rm(localStorage);
-      rm(sessionStorage);
-    }
+function unlockUI(role) {
+  setStatus("ok", "Ready");
+  if (UI.gateNotice) UI.gateNotice.style.display = "none";
+  UI.topSignOut && (UI.topSignOut.style.display = "inline-flex");
+  UI.topSignIn && (UI.topSignIn.style.display = "none");
+  if (UI.role) UI.role.textContent = role;
+}
 
-    async function hardLogout() {
-      // Immediately lock the UI (enterprise-safe). Even if network signOut is slow/fails, UI becomes read-only.
-      gateWorkspace(true);
-      setStatus('warn', 'Signing out…');
+async function refreshAuth(sb) {
+  const { data: sessData } = await sb.auth.getSession();
+  const session = sessData?.session || null;
 
-      try {
-        // Local sign-out is enough for this admin SPA and is faster/more reliable than global.
-        await supabase.auth.signOut({ scope: 'local' });
-      } catch (e) {
-        console.warn('signOut failed (continuing with local cleanup):', e);
-      }
+  if (!session) {
+    setKV(UI.authState, "signed_out");
+    setKV(UI.user, "—");
+    setKV(UI.role, "—");
+    lockUI("Signed out");
+    return { session: null, role: null };
+  }
 
-      // Hard cleanup: remove cached auth tokens to prevent back-button rehydration.
-      try {
-        const keys = [];
-        for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
-        keys
-          .filter(k => k && (k.startsWith('sb-') || k.includes('supabase')))
-          .forEach(k => localStorage.removeItem(k));
-      } catch (_) {}
-      try {
-        sessionStorage.clear();
-      } catch (_) {}
+  setKV(UI.authState, "authenticated");
+  setKV(UI.user, session.user?.email || session.user?.id || "unknown");
 
-      // Prevent BFCache/back restoring a \"signed-in looking\" page.
-      const bust = Date.now();
-      try {
-        history.replaceState(null, '', '/admin.html?logged_out=1&t=' + bust);
-      } catch (_) {}
+  let role = "unknown";
+  try {
+    role = await rpcGetRole(sb);
+  } catch (e) {
+    // If role check fails, treat as locked (safer)
+    setKV(UI.role, "unknown");
+    lockUI("Role check failed");
+    return { session, role: null };
+  }
 
-      // Full redirect to a clean state.
-      window.location.replace('/admin.html?logged_out=1&t=' + bust);
-    }
+  setKV(UI.role, role);
 
-    $('btnDoLogout').addEventListener('click', hardLogout);
-    $('btnTopLogout').addEventListener('click', hardLogout);
+  if (!ADMIN_ROLES.has(role)) {
+    // CRITICAL: immediately sign out non-admins
+    await hardSignOut(sb);
+    lockUI("Not authorized (admin only)");
+    return { session: null, role: null };
+  }
 
-    $('btnAuth').addEventListener('click', async () => {
-      await refreshUI();
-      openDlg();
-    });
+  unlockUI(role);
+  return { session, role };
+}
 
-    $('btnDoLogin').addEventListener('click', async () => {
-      $('authOut').textContent = 'Signing in…';
-      const email = $('email').value.trim();
-      const password = $('password').value;
-      if (!email || !password) { $('authOut').textContent = 'Please enter email + password.'; return; }
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) { $('authOut').textContent = 'Sign-in failed: ' + error.message; setStatus('warn','Auth error'); return; }
-      await refreshUI();
-      closeDlg();
-    });
+async function signInEmail(sb) {
+  const email = (UI.modalEmail?.value || "").trim();
+  const password = UI.modalPassword?.value || "";
+  UI.modalError && (UI.modalError.textContent = "");
+  if (!email || !password) {
+    UI.modalError && (UI.modalError.textContent = "Enter email + password.");
+    return;
+  }
+  setStatus("warn","Signing in…");
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) {
+    setStatus("bad","Sign-in failed");
+    UI.modalError && (UI.modalError.textContent = error.message || "Sign-in failed");
+    return;
+  }
+  await refreshAuth(sb);
+  closeModal();
+}
 
-    async function refreshUI() {
-      const { data: { session } } = await supabase.auth.getSession();
-      const signedIn = !!session?.user;
+async function bootstrap() {
+  try {
+    setStatus("warn", "Loading…");
+    const env = await loadEnv();
+    const sb = createSb(env);
+    window.__LP_SUPABASE = sb;
 
-      $('kvAuth').textContent = signedIn ? 'authenticated' : 'signed out';
-      $('kvUser').textContent = signedIn ? (session.user.email || session.user.id) : '—';
+    setKV(UI.project, env.PROJECT_NAME || "LogicPals-App");
+    await refreshAuth(sb);
 
-      $('btnTopLogout').style.display = signedIn ? 'inline-flex' : 'none';
-      $('btnDoLogout').style.display = signedIn ? 'inline-flex' : 'none';
-      $('btnDoLogin').style.display = signedIn ? 'none' : 'inline-flex';
-      $('btnAuth').textContent = signedIn ? 'Account' : 'Sign in';
+    sb.auth.onAuthStateChange(async () => { await refreshAuth(sb); });
 
-      /* gateWorkspace finalized after role check */
+    // Buttons
+    UI.topSignIn?.addEventListener("click", openModal);
+    UI.gateSignIn?.addEventListener("click", openModal);
+    UI.accountBtn?.addEventListener("click", openModal);
+    UI.modalClose?.addEventListener("click", closeModal);
+    UI.modalUseOther?.addEventListener("click", async () => { await hardSignOut(sb); await refreshAuth(sb); });
+    UI.modalContinue?.addEventListener("click", async () => { await refreshAuth(sb); closeModal(); });
+    UI.modalSignIn?.addEventListener("click", async () => { await signInEmail(sb); });
+    UI.topSignOut?.addEventListener("click", async () => { setStatus("warn","Signing out…"); await hardSignOut(sb); await refreshAuth(sb); });
 
-      const role = signedIn ? await safeGetRole() : 'unknown';
-      // CRITICAL: non-admin users must not retain a session on admin pages.
-      if (signedIn && !isAdminRole(role)) {
-        $('kvRole').textContent = role || 'unknown';
-      gateWorkspace(!signedIn || (signedIn && !isAdminRole(role)));
-        $('accessOut').textContent = 'Not authorized for admin console. Signing out…';
-        setStatus('warn', 'Not authorized');
-        try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
-        try { hardClearAuthStorage(); } catch (_) {}
-        window.location.replace('/admin.html?unauthorized=1&t=' + Date.now());
-        return;
-      }
-
-      $('kvRole').textContent = role || 'unknown';
-      gateWorkspace(!signedIn || (signedIn && !isAdminRole(role)));
-
-      setStatus('ok', 'Ready');
-
-      if (!signedIn) {
-        const qp2 = new URLSearchParams(location.search);
-        if (qp2.get('unauthorized') === '1') {
-          $('authOut').textContent = 'Access denied (not an admin). Please sign in with an admin account.';
-          $('accessOut').textContent = 'Denied: non-admin session was cleared.';
-        }
-        $('authOut').textContent = 'Signed out.';
-        $('accessOut').textContent = 'Signed out. Workspace locked.';
-        const qp = new URLSearchParams(location.search);
-        if (qp.get('logged_out') === '1') hardClearAuthStorage();
-      } else {
-        $('authOut').textContent = `Signed in as ${session.user.email || session.user.id}. Role: ${role}`;
-        $('accessOut').textContent = `Role: ${role}`;
-      }
-    }
-
-    // Back/Forward cache fix: revalidate on BFCache restore
-    window.addEventListener('pageshow', (event) => { if (event.persisted) refreshUI(); });
-    window.addEventListener('focus', () => refreshUI());
-    supabase.auth.onAuthStateChange(() => refreshUI());
-
-    setStatus('', 'Loading…');
-    await refreshUI();
-  </script>
+    // Populate modal session hint
+    const { data: sessData } = await sb.auth.getSession();
+    const s = sessData?.session;
+    if (UI.modalSignedAs) UI.modalSignedAs.textContent = s?.user?.email ? `Signed in as ${s.user.email}` : "Not signed in";
+  } catch (e) {
+    console.error(e);
+    setStatus("bad", "Boot error");
+    lockUI("Boot error");
+  }
+}
+bootstrap();
+</script>
 </body>
 </html>
