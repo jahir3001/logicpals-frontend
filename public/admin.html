@@ -289,7 +289,28 @@
       UI.btnSignIn.style.display = 'inline-block';
     }
 
-    function setSignedInUI(email, role){
+    
+    function lockWorkspace(message){
+      // Lock only privileged actions. Navigation + sign-out remain available.
+      const note = document.getElementById('bootText');
+      if(note && message){
+        note.textContent = message;
+        /* bootText always visible via pill */
+      }
+      // Disable known privileged buttons (defense-in-depth UI only; DB/RPC still enforces)
+      const privileged = [
+        'btnUploadSeedRegular','btnReviewQueueRegular','btnUploadSeedOlympiad','btnFailedQueueOlympiad',
+        'btnOpenRoleManager','btnViewAdminAudit','btnPayments','btnSubscriptions'
+      ];
+      privileged.forEach(id=>{
+        const el = document.getElementById(id);
+        if(el){
+          el.setAttribute('disabled','disabled');
+          el.classList.add('opacity-50','pointer-events-none');
+        }
+      });
+    }
+function setSignedInUI(email, role){
       UI.sAuth.textContent = 'authenticated';
       UI.sUser.textContent = email || '—';
       UI.sRole.textContent = role || 'unknown';
@@ -358,9 +379,11 @@
       try{
         role = await callRoleRpc();
       }catch(e){
-        // If role rpc missing, lock UI and sign out (safer)
-        await safeSignOut();
-        showBootError('Access verification failed: role RPC not available. Create a role RPC (e.g., get_my_role) or ensure it is exposed.');
+        // Enterprise rule: if role RPC is missing, DO NOT force-signout.
+        // We lock the workspace UI and require DB patch, while server-side RBAC still protects RPCs.
+        setSignedInUI(user.email || '', 'unknown');
+        lockWorkspace('Access verification RPC missing. Please create get_my_role() (SQL patch) and redeploy.');
+        showBootError('Role verification RPC missing (get_my_role). Admin UI locked by design.');
         return { ok:false, reason:'role_rpc_missing' };
       }
 
@@ -413,9 +436,19 @@
           // verify role gate
           const verdict = await verifyAdminOrSignOut();
           if(!verdict.ok){
-            UI.authHint.textContent = verdict.reason === 'not_admin'
-              ? 'Not an admin. Session terminated.'
-              : 'Access verification failed.';
+            if(verdict.reason === 'not_admin'){
+              UI.authHint.textContent = 'Not an admin. You have been signed out.';
+              setBoot('error','Not an admin', '#ef4444');
+              return;
+            }
+            if(verdict.reason === 'role_rpc_missing'){
+              UI.authHint.textContent = 'Signed in, but admin role verification RPC is missing. UI locked until DB patch.';
+              setBoot('error','Role RPC missing', '#ef4444');
+              // Keep modal open so you can click Sign out or retry after DB patch.
+              return;
+            }
+            UI.authHint.textContent = 'Access verification failed.';
+            setBoot('error','Access verification failed', '#ef4444');
             return;
           }
           closeAuth();
