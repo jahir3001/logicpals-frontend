@@ -39,20 +39,8 @@
     .note{padding:10px 12px;border-radius:14px;border:1px dashed #dbeafe;background:#eff6ff;color:#1e3a8a;font-size:12px}
     .warn{padding:10px 12px;border-radius:14px;border:1px dashed #fed7aa;background:#fff7ed;color:#7c2d12;font-size:12px}
     @media (max-width: 980px){.grid{grid-template-columns:1fr}}
-
-/* === Enterprise auth UI states (injected) === */
-.pill.is-ready, .chip.is-ready { border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.08); }
-.pill.is-loading, .chip.is-loading { border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.08); }
-.pill.is-error, .chip.is-error { border-color: rgba(225,29,72,.35); background: rgba(225,29,72,.08); }
-.dot.err, .statusDot.err { background: #e11d48 !important; }
-#loginMsg.msgErr { color: #e11d48; }
-#loginMsg.msgOk { color: #16a34a; }
-#loginMsg.msgInfo { color: #64748b; }
-/* DOM warning cleanup (not required, but nicer) */
-dialog form { margin: 0; }
-</style>
+  </style>
   <script src="/assets/js/env-loader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="shell">
@@ -164,207 +152,251 @@ dialog form { margin: 0; }
     </form>
   </dialog>
 
-  <script>
-(() => {
-  'use strict';
+  <script type="module">
+/**
+ * LogicPals Admin — Subscriptions (RPC-only)
+ * Enterprise guard: admin-only, auto sign-out non-admins.
+ */
+const UI = {
+  chipStatus: document.getElementById("chipStatus"),
+  statusText: document.getElementById("statusText"),
+  signedInEmail: document.getElementById("signedInEmail"),
+  roleName: document.getElementById("roleName"),
+  btnBack: document.getElementById("btnBack"),
+  btnSignOut: document.getElementById("btnSignOut"),
+  btnSignIn: document.getElementById("btnSignIn"),
+  btnDoLogin: document.getElementById("btnDoLogin"),
+  btnCancel: document.getElementById("btnCancel"),
+  dlg: document.getElementById("dlg"),
+  email: document.getElementById("email"),
+  inPass: document.getElementById("inPass"),
+  out: document.getElementById("out"),
+  track: document.getElementById("track"),
+  action: document.getElementById("action"),
+  reference: document.getElementById("reference"),
+  days: document.getElementById("days"),
+  btnRun: document.getElementById("btnRun"),
+  btnTrust: document.getElementById("btnTrust"),
+};
 
-  const ADMIN_ALLOWED = new Set(['super_admin','admin','admin_regular','admin_olympiad']);
-  const ROLE_RPC_CANDIDATES = [
-    'get_my_role',
-    'rpc_lp_my_role',
-    'admin_get_my_role',
-    'admin_get_role',
-    'rp_admin_get_role',
-    'current_role'
-  ];
-  const AUTH_STORAGE_KEY = 'lp_admin_auth_v1';
-
-  const $ = (id) => document.getElementById(id);
-  const pick = (...ids) => ids.map($).find(Boolean) || null;
-
-  const elStatus = pick('status','chipStatus');
-  const elDot = pick('dot','statusDot');
-  const elStatusTxt = pick('statusTxt','statusText');
-
-  const btnSignIn = pick('btnSignIn');
-  const btnSignOut = pick('btnSignOut','btnTopLogout');
-
-  const who = pick('who','signedIn');
-  const role = pick('role','kvRole');
-
-  const inEmail = pick('email','inEmail');
-  const inTrack = pick('track','inTrack');
-  const inAction = pick('action','inAction');
-
-  // subscription-specific
-  const inPlan = pick('plan','inPlan');
-  const inPeriod = pick('period','inPeriod');
-  const inRef = pick('ref','inRef');
-
-  const btnRun = pick('run','btnRun');
-  const out = pick('out');
-
-  let supa = null;
-  let env = null;
-
-  function setStatus(state, text) {
-    elStatus?.classList.remove('is-ready','is-loading','is-error');
-    elDot?.classList.remove('ok','warn','err');
-    if (state === 'ready') { elStatus?.classList.add('is-ready'); elDot?.classList.add('ok'); }
-    else if (state === 'error') { elStatus?.classList.add('is-error'); elDot?.classList.add('err'); }
-    else { elStatus?.classList.add('is-loading'); elDot?.classList.add('warn'); }
-    if (elStatusTxt) elStatusTxt.textContent = text;
+function setStatus(kind, text){
+  if(UI.statusText) UI.statusText.textContent = text || "";
+  if(UI.chipStatus){
+    UI.chipStatus.classList.remove("ok","warn","err");
+    UI.chipStatus.classList.add(kind);
   }
+}
 
-  function writeOut(x) {
-    if (!out) return;
-    out.textContent = (typeof x === 'string') ? x : JSON.stringify(x, null, 2);
-  }
+function openDlg(){ UI.dlg?.classList.add("open"); }
+function closeDlg(){ UI.dlg?.classList.remove("open"); }
 
-  async function fetchEnv() {
-    const res = await fetch('/api/env', { cache: 'no-store' });
-    if (!res.ok) throw new Error(`env_fetch_failed_${res.status}`);
-    const j = await res.json();
-    const url = j.supabase_url || j.SUPABASE_URL || j.NEXT_PUBLIC_SUPABASE_URL;
-    const anon = j.supabase_anon_key || j.SUPABASE_ANON_KEY || j.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !anon) throw new Error('env_missing_supabase');
-    return { url, anon };
-  }
+const ADMIN_ROLES = new Set(["super_admin", "admin_regular", "admin_olympiad"]);
 
-  function createSupabaseClient() {
-    if (!window.supabase || !window.supabase.createClient) throw new Error('supabase_js_missing');
-    if (!env) throw new Error('env_not_loaded');
-    if (supa) return supa;
-    supa = window.supabase.createClient(env.url, env.anon, {
-      auth: {
-        storageKey: AUTH_STORAGE_KEY,
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: false,
-        lock: false,
-      },
-      global: { headers: { 'X-Client-Info': 'logicpals-admin-static' } }
-    });
-    return supa;
-  }
+function isAdminRole(role){ return ADMIN_ROLES.has(String(role||"").trim()); }
 
-  async function rpcTryGetRole() {
-    for (const fn of ROLE_RPC_CANDIDATES) {
-      try {
-        const { data, error } = await supa.rpc(fn, {});
-        if (error) continue;
-        if (typeof data === 'string') return data;
-        if (data && typeof data === 'object') {
-          if (typeof data.role === 'string') return data.role;
-          if (typeof data.current_role === 'string') return data.current_role;
-        }
-      } catch (_) {}
+async function loadSupabaseLib(){
+  if (window.__lp_supabase_lib_ready) return window.__lp_supabase_lib_ready;
+  window.__lp_supabase_lib_ready = (async()=>{
+    try{
+      const mod = await import("https://esm.sh/@supabase/supabase-js@2");
+      return { createClient: mod.createClient };
+    }catch(e){
+      await new Promise((resolve,reject)=>{
+        const s=document.createElement("script");
+        s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+        s.async=true; s.onload=resolve; s.onerror=reject;
+        document.head.appendChild(s);
+      });
+      if(!window.supabase?.createClient) throw new Error("supabase_js_missing");
+      return { createClient: window.supabase.createClient };
     }
-    return null;
+  })();
+  return window.__lp_supabase_lib_ready;
+}
+
+async function fetchEnv(){
+  const res = await fetch("/api/env",{cache:"no-store"});
+  if(!res.ok) throw new Error(`env_fetch_failed_${res.status}`);
+  const env = await res.json();
+  if(!env?.SUPABASE_URL || !env?.SUPABASE_ANON_KEY) throw new Error("env_missing_supabase");
+  return env;
+}
+
+async function getSupabase(){
+  if(window.__lp_admin_supabase) return window.__lp_admin_supabase;
+  const [{createClient}, env] = await Promise.all([loadSupabaseLib(), fetchEnv()]);
+  window.__lp_admin_supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
+    auth:{
+      persistSession:true,
+      autoRefreshToken:true,
+      detectSessionInUrl:false,
+      storageKey:"lp_admin_auth"
+    },
+    global:{headers:{"x-client-info":"logicpals-admin-ui/enterprise"}}
+  });
+  return window.__lp_admin_supabase;
+}
+
+async function safeGetRole(supabase){
+  const candidates=["get_my_role","admin_get_role","rp_admin_get_role","current_role","get_current_role"];
+  for(const fn of candidates){
+    try{
+      const {data,error}=await supabase.rpc(fn);
+      if(!error){
+        const role = (typeof data==="string")?data:(data?.role ?? data?.current_role ?? data?.name ?? null);
+        if(role) return String(role);
+      }
+    }catch(_e){}
+  }
+  return "no_role";
+}
+
+async function enforceAdminOrSignOut({supabase, session, onDenied}){
+  if(!session) return {ok:false, role:"no_role"};
+  const role = await safeGetRole(supabase);
+  if(!isAdminRole(role)){
+    try{ await supabase.auth.signOut(); }catch{}
+    if(onDenied) onDenied(role);
+    return {ok:false, role};
+  }
+  return {ok:true, role};
+}
+
+async function refreshAuthUI(){
+  const supabase = await getSupabase();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  UI.signedInEmail.textContent = session?.user?.email || "—";
+  UI.roleName.textContent = "unknown";
+
+  UI.btnSignOut.style.display = session ? "inline-flex" : "none";
+  UI.btnSignIn.style.display = session ? "none" : "inline-flex";
+
+  if(!session){
+    setStatus("warn","Sign-in required");
+    openDlg();
+    return;
   }
 
-  async function ensureAdmin() {
-    const { data: { session } } = await supa.auth.getSession();
-    if (!session) {
-      setStatus('error', 'Sign-in required');
-      btnSignOut && (btnSignOut.style.display = 'none');
-      btnSignIn && (btnSignIn.style.display = 'inline-flex');
-      if (who) who.textContent = '—';
-      if (role) role.textContent = 'signed_out';
-      writeOut('Not signed in. Use the Admin Console to sign in.');
-      return false;
+  const gate = await enforceAdminOrSignOut({
+    supabase,
+    session,
+    onDenied: (role) => {
+      setStatus("err","Access denied (admin only). You were signed out.");
+      UI.roleName.textContent = role || "no_role";
+      openDlg();
     }
+  });
 
-    const email = session.user?.email || '—';
-    if (who) who.textContent = email;
+  UI.roleName.textContent = gate.role;
+  if(!gate.ok) return;
 
-    const roleVal = await rpcTryGetRole();
-    if (!roleVal) {
-      setStatus('error', 'Role RPC missing');
-      if (role) role.textContent = 'unknown';
-      writeOut('Role verification RPC missing. Create public.get_my_role() then reload.');
-      return false;
+  setStatus("ok","Ready");
+  closeDlg();
+}
+
+function appendOut(line){
+  const prev = UI.out.textContent || "";
+  UI.out.textContent = (prev ? prev + "
+" : "") + line;
+}
+
+async function callRpc(fn, payload){
+  const supabase = await getSupabase();
+  const { data: { session } } = await supabase.auth.getSession();
+  const gate = await enforceAdminOrSignOut({
+    supabase, session,
+    onDenied: ()=>{}
+  });
+  if(!gate.ok) throw new Error("not_admin_or_signed_out");
+  const { data, error } = await supabase.rpc(fn, payload);
+  if(error) throw error;
+  return data;
+}
+
+async function runAction(){
+  UI.out.textContent = "";
+  setStatus("warn","Running…");
+  const track = UI.track.value;
+  const email = (document.getElementById("customer_email")?.value || "").trim() || null;
+  const action = UI.action.value;
+  const ref = (UI.reference.value || "").trim() || null;
+  const days = parseInt(UI.days?.value || "0", 10);
+
+  try {
+    if(action === "list") {
+      const data = await callRpc("admin_list_subscriptions", { p_email: email, p_track: track });
+      appendOut(JSON.stringify(data, null, 2));
+    } else if(action === "cancel") {
+      if(!ref) throw new Error("Reference required for cancel");
+      const data = await callRpc("admin_cancel_subscription", { p_reference: ref, p_email: email, p_track: track });
+      appendOut(JSON.stringify(data, null, 2));
+    } else if(action === "extend") {
+      if(!ref) throw new Error("Reference required for extend");
+      if(!days || days <= 0) throw new Error("Days must be > 0");
+      const data = await callRpc("admin_extend_subscription", { p_reference: ref, p_days: days, p_email: email, p_track: track });
+      appendOut(JSON.stringify(data, null, 2));
+    } else {
+      throw new Error("unknown_action");
     }
+    setStatus("ok","Done");
+  } catch (e) {
+    appendOut(String(e?.message || e));
+    setStatus("err","Error");
+  }
+}
 
-    const roleStr = String(roleVal);
-    if (role) role.textContent = roleStr;
+async function doSignIn(){
+  const supabase = await getSupabase();
+  const email = (UI.email.value || "").trim();
+  const password = UI.inPass.value || "";
+  if(!email || !password) {
+    setStatus("warn","Email + password required");
+    return;
+  }
+  setStatus("warn","Signing in…");
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if(error) {
+    setStatus("err", error.message || "Sign in failed");
+    return;
+  }
+  const gate = await enforceAdminOrSignOut({
+    supabase, session: data?.session,
+    onDenied: () => setStatus("err","Not an admin account. Signed out.")
+  });
+  if(gate.ok) setStatus("ok","Signed in");
+  await refreshAuthUI();
+}
 
-    if (!ADMIN_ALLOWED.has(roleStr)) {
-      setStatus('error', 'Not authorized');
-      writeOut(`Your role "${roleStr}" is not allowed. Redirecting…`);
-      try { await supa.auth.signOut(); } catch (_) {}
-      setTimeout(() => (window.location.href = '/admin.html'), 500);
-      return false;
+async function doSignOut(){
+  const supabase = await getSupabase();
+  setStatus("warn","Signing out…");
+  try{ await supabase.auth.signOut(); }catch{}
+  await refreshAuthUI();
+}
+
+async function bootstrap(){
+  try {
+    await getSupabase();
+    UI.btnBack?.addEventListener("click", () => { window.location.href = "/admin.html"; });
+    UI.btnSignOut?.addEventListener("click", (e)=>{ e.preventDefault(); doSignOut(); });
+    UI.btnSignIn?.addEventListener("click", (e)=>{ e.preventDefault(); openDlg(); });
+    UI.btnDoLogin?.addEventListener("click", (e)=>{ e.preventDefault(); doSignIn(); });
+    UI.btnCancel?.addEventListener("click", (e)=>{ e.preventDefault(); closeDlg(); });
+    UI.btnRun?.addEventListener("click", (e)=>{ e.preventDefault(); runAction(); });
+    UI.btnTrust?.addEventListener("click", (e)=>{ e.preventDefault(); window.location.href="/admin.html#trust"; });
+
+    const supabase = await getSupabase();
+    if(!window.__lp_admin_auth_listener){
+      window.__lp_admin_auth_listener = supabase.auth.onAuthStateChange(()=>{ setTimeout(()=>refreshAuthUI().catch(()=>{}),0); });
     }
-
-    setStatus('ready', 'Ready');
-    btnSignIn && (btnSignIn.style.display = 'none');
-    btnSignOut && (btnSignOut.style.display = 'inline-flex');
-    return true;
+    await refreshAuthUI();
+  } catch(e) {
+    setStatus("err", (e?.message||String(e)));
+    openDlg();
   }
-
-  async function doSignOut() {
-    setStatus('loading', 'Signing out…');
-    try { await supa.auth.signOut(); } catch (_) {}
-    window.location.href = '/admin.html';
-  }
-
-  async function runRpc() {
-    setStatus('loading', 'Running…');
-    writeOut('Waiting…');
-
-    if (!(await ensureAdmin())) return;
-
-    const email = (inEmail?.value || '').trim() || null;
-    const track = (inTrack?.value || '').trim() || null;
-    const action = (inAction?.value || '').trim();
-    const plan = (inPlan?.value || '').trim() || null;
-    const period = (inPeriod?.value || '').trim() || null;
-    const reference = (inRef?.value || '').trim() || null;
-
-    let fn = null;
-    if (action === 'list') fn = 'admin_list_subscriptions';
-    if (action === 'activate') fn = 'admin_activate_subscription';
-    if (action === 'cancel') fn = 'admin_cancel_subscription';
-
-    if (!fn) { setStatus('error', 'Bad action'); writeOut('Invalid action.'); return; }
-
-    const payload = { p_email: email, p_track: track, p_plan: plan, p_period: period, p_reference: reference };
-    const { data, error } = await supa.rpc(fn, payload);
-
-    if (error) {
-      setStatus('error', 'RPC error');
-      writeOut({ rpc: fn, payload, error });
-      return;
-    }
-
-    setStatus('ready', 'Ready');
-    writeOut({ rpc: fn, payload, data });
-  }
-
-  function wire() {
-    btnSignIn?.addEventListener('click', () => (window.location.href = '/admin.html'));
-    btnSignOut?.addEventListener('click', (e) => { e.preventDefault(); doSignOut(); });
-    btnRun?.addEventListener('click', (e) => { e.preventDefault(); runRpc(); });
-    inTrack && (inTrack.value = inTrack.value || 'regular');
-  }
-
-  async function boot() {
-    try {
-      setStatus('loading', 'Loading…');
-      env = await fetchEnv();
-      createSupabaseClient();
-      wire();
-      await ensureAdmin();
-    } catch (err) {
-      console.error(err);
-      setStatus('error', 'Boot error');
-      writeOut(String(err?.message || err));
-    }
-  }
-
-  boot();
-})();
+}
+bootstrap();
 </script>
 </body>
 </html>
