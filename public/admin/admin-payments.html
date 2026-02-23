@@ -5,10 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LogicPals Admin — Payments</title>
 
-  
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
   <style>
     :root{--bg:#f6f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e5e7eb;--accent:#4f46e5;--accent2:#06b6d4;--good:#16a34a;--warn:#b45309;--bad:#dc2626;--shadow:0 18px 45px rgba(2,6,23,.08);--r:18px}
-    *{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";color:var(--text);background:linear-gradient(180deg,#ffffff 0%, #f6f7fb 100%)}
+    *{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--text);background:linear-gradient(180deg,#ffffff 0%, #f6f7fb 100%)}
     a{color:inherit;text-decoration:none}
     .shell{max-width:1200px;margin:28px auto;padding:0 18px}
     .top{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px 16px;box-shadow:var(--shadow)}
@@ -18,10 +21,10 @@
     .right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
     .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 10px;font-size:13px;color:var(--muted)}
     .dot{width:8px;height:8px;border-radius:999px;background:#94a3b8}
+    .dot.ok{background:var(--good)} .dot.warn{background:#f59e0b} .dot.err{background:var(--bad)}
     .btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer}
     .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
     .btn:disabled{opacity:.55;cursor:not-allowed}
-
     .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:18px}
     .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}
     .h{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -30,11 +33,12 @@
     .field{display:flex;flex-direction:column;gap:6px}
     label{font-size:12px;color:var(--muted);font-weight:700}
     input,select{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px;outline:none}
-    textarea{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;min-height:160px;resize:vertical;outline:none;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    textarea{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;min-height:180px;resize:vertical;outline:none;font-family:ui-monospace,Menlo,Consolas,monospace}
     .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
     .note{margin-top:8px;font-size:12px;color:var(--muted)}
     @media (max-width:900px){.form{grid-template-columns:1fr}}
   </style>
+
   <script src="/assets/js/env-loader.js"></script>
 </head>
 
@@ -51,7 +55,7 @@
       <div class="right">
         <span class="pill" id="status"><span class="dot" id="dot"></span><span id="statusTxt">Loading…</span></span>
         <a class="btn" href="/admin.html">Back to Admin</a>
-        <button class="btn primary" id="btnSignIn">Sign in</button>
+        <button class="btn primary" id="btnOpenLogin">Sign in</button>
         <button class="btn" id="btnSignOut" style="display:none">Sign out</button>
       </div>
     </header>
@@ -60,13 +64,13 @@
       <section class="card">
         <div class="h">
           <h2>Payment Operations</h2>
-          <div class="hint" id="who"></div>
+          <div class="hint" id="who">—</div>
         </div>
 
         <div class="form">
           <div class="field">
             <label>Customer email</label>
-            <input id="email" placeholder="student_or_parent@email.com" autocomplete="email" />
+            <input id="customerEmail" placeholder="student_or_parent@email.com" autocomplete="email" />
           </div>
           <div class="field">
             <label>Track</label>
@@ -86,16 +90,17 @@
           </div>
           <div class="field">
             <label>Reference (receipt/txn id)</label>
-            <input id="ref" placeholder="optional" />
+            <input id="reference" placeholder="required for refund/reconcile" />
           </div>
         </div>
 
         <div class="actions">
-          <button class="btn primary" id="run">Run</button>
-          <button class="btn" id="trust">Load trust summary</button>
+          <button class="btn primary" id="btnRun">Run</button>
         </div>
 
-        <p class="note">Expected RPCs: <code>admin_list_payments</code>, <code>admin_refund_payment</code>, <code>admin_reconcile_payment</code>, <code>admin_trust_summary</code>. (If your function names differ, tell me and I will wire them.)</p>
+        <p class="note">
+          Expected RPCs: <code>admin_list_payments</code>, <code>admin_refund_payment</code>, <code>admin_reconcile_payment</code>.
+        </p>
       </section>
 
       <section class="card">
@@ -105,283 +110,233 @@
     </div>
   </div>
 
-  <dialog id="dlg" style="border:none;border-radius:16px;max-width:420px;width:calc(100% - 24px);padding:0;box-shadow:0 20px 70px rgba(2,6,23,.25)">
-    <form method="dialog" style="padding:16px 16px 14px;background:#fff;border:1px solid var(--line);border-radius:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-        <div style="font-weight:900">Admin sign in</div>
-        <button class="btn" value="cancel">✕</button>
-      </div>
-      <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+  <dialog id="dlg">
+    <div style="padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff">
+      <strong>Admin sign in</strong>
+      <button class="btn" id="btnCloseDlg" type="button">✕</button>
+    </div>
+    <div style="padding:16px 18px;background:#fff">
+      <form id="loginForm">
         <div class="field"><label>Email</label><input id="lgEmail" type="email" autocomplete="email" required placeholder="admin@email.com"/></div>
         <div class="field"><label>Password</label><input id="lgPass" type="password" autocomplete="current-password" required /></div>
-        <button class="btn primary" id="doLogin" value="default">Sign in</button>
-        <div class="hint" id="authOut"></div>
-      </div>
-    </form>
+        <button class="btn primary" type="submit">Sign in</button>
+      </form>
+      <div class="hint" id="authOut" style="margin-top:10px">Waiting…</div>
+    </div>
   </dialog>
 
-  <script type="module">
-/**
- * LogicPals Admin — Payments (RPC-only)
- * Enterprise guard: admin-only, auto sign-out non-admins.
- */
-const UI = {
-  chipStatus: document.getElementById("chipStatus"),
-  statusText: document.getElementById("statusText"),
-  dot: document.getElementById("dot"),
-  signedInEmail: document.getElementById("signedInEmail"),
-  roleName: document.getElementById("roleName"),
-  btnBack: document.getElementById("btnBack"),
-  btnSignOut: document.getElementById("btnSignOut"),
-  btnSignIn: document.getElementById("btnSignIn"),
-  btnDoLogin: document.getElementById("btnDoLogin"),
-  btnCancel: document.getElementById("btnCancel"),
-  dlg: document.getElementById("dlg"),
-  email: document.getElementById("email"),
-  inPass: document.getElementById("inPass"),
-  out: document.getElementById("out"),
-  track: document.getElementById("track"),
-  action: document.getElementById("action"),
-  reference: document.getElementById("reference"),
-  btnRun: document.getElementById("btnRun"),
-  btnTrust: document.getElementById("btnTrust"),
-};
+  <script>
+  (function(){
+    "use strict";
 
-function setStatus(kind, text){
-  if(UI.statusText) UI.statusText.textContent = text || "";
-  if(UI.chipStatus){
-    UI.chipStatus.classList.remove("ok","warn","err");
-    UI.chipStatus.classList.add(kind);
-  }
-}
+    const ADMIN_ROLES = new Set(["super_admin","admin_regular","admin_olympiad"]);
 
-function openDlg(){ UI.dlg?.classList.add("open"); }
-function closeDlg(){ UI.dlg?.classList.remove("open"); }
+    const UI = {
+      dot: document.getElementById("dot"),
+      statusTxt: document.getElementById("statusTxt"),
+      who: document.getElementById("who"),
+      btnOpenLogin: document.getElementById("btnOpenLogin"),
+      btnSignOut: document.getElementById("btnSignOut"),
+      btnRun: document.getElementById("btnRun"),
+      out: document.getElementById("out"),
+      track: document.getElementById("track"),
+      action: document.getElementById("action"),
+      customerEmail: document.getElementById("customerEmail"),
+      reference: document.getElementById("reference"),
+      dlg: document.getElementById("dlg"),
+      btnCloseDlg: document.getElementById("btnCloseDlg"),
+      loginForm: document.getElementById("loginForm"),
+      lgEmail: document.getElementById("lgEmail"),
+      lgPass: document.getElementById("lgPass"),
+      authOut: document.getElementById("authOut"),
+    };
 
-const ADMIN_ROLES = new Set(["super_admin", "admin_regular", "admin_olympiad"]);
+    function setStatus(kind, txt){
+      UI.dot.classList.remove("ok","warn","err");
+      UI.dot.classList.add(kind);
+      UI.statusTxt.textContent = txt;
+    }
 
-function isAdminRole(role){ return ADMIN_ROLES.has(String(role||"").trim()); }
-
-async function loadSupabaseLib() {
-      // Enterprise-grade: avoid ESM import edge cases by loading the UMD bundle once.
+    async function loadSupabaseLib(){
       if (window.supabase && window.supabase.createClient) return window.supabase;
       if (window.__LP_SUPABASE_LIB_PROMISE) return window.__LP_SUPABASE_LIB_PROMISE;
-
       window.__LP_SUPABASE_LIB_PROMISE = new Promise((resolve, reject) => {
-        const existing = document.querySelector('script[data-lp-supabase-umd="1"]');
-        if (existing) {
-          existing.addEventListener('load', () => resolve(window.supabase));
-          existing.addEventListener('error', reject);
-          return;
-        }
-        const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
-        s.async = true;
-        s.defer = true;
-        s.setAttribute('data-lp-supabase-umd', '1');
-        s.onload = () => {
-          if (window.supabase && window.supabase.createClient) resolve(window.supabase);
-          else reject(new Error('supabase_umd_load_failed'));
-        };
-        s.onerror = () => reject(new Error('supabase_umd_load_failed'));
+        const s = document.createElement("script");
+        s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
+        s.async = true; s.defer = true;
+        s.onload = () => (window.supabase && window.supabase.createClient) ? resolve(window.supabase) : reject(new Error("supabase_umd_load_failed"));
+        s.onerror = () => reject(new Error("supabase_umd_load_failed"));
         document.head.appendChild(s);
       });
-
       return window.__LP_SUPABASE_LIB_PROMISE;
     }
 
-async function fetchEnv(){
-  const res = await fetch("/api/env",{cache:"no-store"});
-  if(!res.ok) throw new Error(`env_fetch_failed_${res.status}`);
-  const env = await res.json();
-  if(!env?.SUPABASE_URL || !env?.SUPABASE_ANON_KEY) throw new Error("env_missing_supabase");
-  return env;
-}
+    async function getEnv(){
+      if (window.__LP_ENV && (window.__LP_ENV.SUPABASE_URL || window.__LP_ENV.supabase_url)) return window.__LP_ENV;
+      const res = await fetch("/api/env",{cache:"no-store"});
+      if(!res.ok) throw new Error("env_fetch_failed_"+res.status);
+      const env = await res.json();
+      window.__LP_ENV = env;
+      return env;
+    }
 
-async function getSupabase() {
-      // Singleton Supabase client per page (prevents GoTrue lock/timeouts)
-      if (window.__LP_SUPABASE_ADMIN_CLIENT) return window.__LP_SUPABASE_ADMIN_CLIENT;
-
+    async function getSupabase(){
+      if (window.__LP_ADMIN_SB) return window.__LP_ADMIN_SB;
       const env = await getEnv();
       const url = env.supabase_url || env.SUPABASE_URL;
-      const anonKey = env.supabase_anon_key || env.SUPABASE_ANON_KEY;
-      if (!url || !anonKey) throw new Error("supabase_env_missing");
-
+      const anon = env.supabase_anon_key || env.SUPABASE_ANON_KEY;
+      if (!url || !anon) throw new Error("env_missing_supabase");
       const lib = await loadSupabaseLib();
-      const client = lib.createClient(url, anonKey, {
+      const sb = lib.createClient(url, anon, {
         auth: {
           storageKey: "lp_admin_auth",
           persistSession: true,
-          autoRefreshToken: true,
+          autoRefreshToken: false,
           detectSessionInUrl: false
         }
       });
-
-      window.__LP_SUPABASE_ADMIN_CLIENT = client;
-      return client;
+      window.__LP_ADMIN_SB = sb;
+      return sb;
     }
 
-async function safeGetRole(supabase){
-  const candidates=["get_my_role","admin_get_role, rp_get_my_role","rp_admin_get_role, rp_get_my_role","","get_current_role"];
-  for(const fn of candidates){
-    try{
-      const {data,error}=await supabase.rpc(fn);
-      if(!error){
-        const role = (typeof data==="string")?data:(data?.role ?? data?.?? data?.name ?? null);
-        if(role) return String(role);
+    function isAdminRole(role){
+      return ADMIN_ROLES.has(String(role||"").trim());
+    }
+
+    async function resolveRole(sb){
+      const candidates = ["get_my_role","rp_get_my_role","admin_get_role","rp_admin_get_user_role","get_current_user_role","current_role"];
+      for (const fn of candidates){
+        try{
+          const { data, error } = await sb.rpc(fn);
+          if (!error){
+            if (typeof data === "string") return data;
+            if (data && typeof data === "object") return String(data.role || data.current_role || data.name || "no_role");
+            return "no_role";
+          }
+        }catch(_e){}
       }
-    }catch(_e){}
-  }
-  return "no_role";
-}
-
-async function enforceAdminOrSignOut({supabase, session, onDenied}){
-  if(!session) return {ok:false, role:"no_role"};
-  const role = await safeGetRole(supabase);
-  if(!isAdminRole(role)){
-    try{ await supabase.auth.signOut(); }catch{}
-    if(onDenied) onDenied(role);
-    return {ok:false, role};
-  }
-  return {ok:true, role};
-}
-
-async function refreshAuthUI(){
-  const supabase = await getSupabase();
-  const { data: { session } } = await supabase.auth.getSession();
-
-  UI.signedInEmail.textContent = session?.user?.email || "—";
-  UI.roleName.textContent = "unknown";
-
-  UI.btnSignOut.style.display = session ? "inline-flex" : "none";
-  UI.btnSignIn.style.display = session ? "none" : "inline-flex";
-
-  if(!session){
-    setStatus("warn","Sign-in required");
-    openDlg();
-    return;
-  }
-
-  const gate = await enforceAdminOrSignOut({
-    supabase,
-    session,
-    onDenied: (role) => {
-      setStatus("err","Access denied (admin only). You were signed out.");
-      UI.roleName.textContent = role || "no_role";
-      openDlg();
+      return "no_role";
     }
-  });
 
-  UI.roleName.textContent = gate.role;
-  if(!gate.ok) return;
+    function openDlg(){ UI.dlg.showModal(); }
+    function closeDlg(){ try{ UI.dlg.close(); }catch(_e){} }
 
-  setStatus("ok","Ready");
-  closeDlg();
-}
-
-function appendOut(line){
-  const prev = UI.out.textContent || "";
-  UI.out.textContent = (prev ? prev + "
-" : "") + line;
-}
-
-async function callRpc(fn, payload){
-  const supabase = await getSupabase();
-  const { data: { session } } = await supabase.auth.getSession();
-  const gate = await enforceAdminOrSignOut({
-    supabase, session,
-    onDenied: ()=>{}
-  });
-  if(!gate.ok) {
-    throw new Error("not_admin_or_signed_out");
-  }
-  const { data, error } = await supabase.rpc(fn, payload);
-  if(error) throw error;
-  return data;
-}
-
-async function runAction(){
-  UI.out.textContent = "";
-  setStatus("warn","Running…");
-  const track = UI.track.value;
-  const email = (document.getElementById("customer_email")?.value || "").trim() || null;
-  const action = UI.action.value;
-  const ref = (UI.reference.value || "").trim() || null;
-
-  try {
-    if(action === "list") {
-      const data = await callRpc("admin_list_payments", { p_email: email, p_track: track });
-      appendOut(JSON.stringify(data, null, 2));
-    } else if(action === "refund") {
-      if(!ref) throw new Error("Reference required for refund");
-      const data = await callRpc("admin_refund_payment", { p_reference: ref, p_email: email, p_track: track });
-      appendOut(JSON.stringify(data, null, 2));
-    } else if(action === "reconcile") {
-      if(!ref) throw new Error("Reference required for reconcile");
-      const data = await callRpc("admin_reconcile_payment", { p_reference: ref, p_email: email, p_track: track });
-      appendOut(JSON.stringify(data, null, 2));
-    } else {
-      throw new Error("unknown_action");
+    function appendOut(obj){
+      UI.out.value = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
     }
-    setStatus("ok","Done");
-  } catch (e) {
-    appendOut(String(e?.message || e));
-    setStatus("err","Error");
-  }
-}
 
-async function doSignIn(){
-  const supabase = await getSupabase();
-  const email = (UI.email.value || "").trim();
-  const password = UI.inPass.value || "";
-  if(!email || !password) {
-    setStatus("warn","Email + password required");
-    return;
-  }
-  setStatus("warn","Signing in…");
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if(error) {
-    setStatus("err", error.message || "Sign in failed");
-    return;
-  }
-  // Verify role immediately
-  const gate = await enforceAdminOrSignOut({
-    supabase, session: data?.session,
-    onDenied: () => setStatus("err","Not an admin account. Signed out.")
-  });
-  if(gate.ok) setStatus("ok","Signed in");
-  await refreshAuthUI();
-}
+    async function enforceAdmin(){
+      const sb = await getSupabase();
+      const { data:{session} } = await sb.auth.getSession();
+      if (!session){
+        setStatus("warn","Sign-in required");
+        UI.who.textContent = "—";
+        UI.btnSignOut.style.display = "none";
+        UI.btnOpenLogin.style.display = "inline-flex";
+        UI.authOut.textContent = "Please sign in with an admin account.";
+        openDlg();
+        return { ok:false };
+      }
 
-async function doSignOut(){
-  const supabase = await getSupabase();
-  setStatus("warn","Signing out…");
-  try{ await supabase.auth.signOut(); }catch{}
-  await refreshAuthUI();
-}
+      const role = await resolveRole(sb);
+      UI.who.textContent = `Signed in: ${session.user.email}  •  Role: ${role}`;
+      UI.btnSignOut.style.display = "inline-flex";
+      UI.btnOpenLogin.style.display = "none";
 
-async function bootstrap(){
-  try {
-    await getSupabase();
-    UI.btnBack?.addEventListener("click", () => { window.location.href = "/admin.html"; });
-    UI.btnSignOut?.addEventListener("click", (e)=>{ e.preventDefault(); doSignOut(); });
-    UI.btnSignIn?.addEventListener("click", (e)=>{ e.preventDefault(); openDlg(); });
-    UI.btnDoLogin?.addEventListener("click", (e)=>{ e.preventDefault(); doSignIn(); });
-    UI.btnCancel?.addEventListener("click", (e)=>{ e.preventDefault(); closeDlg(); });
-    UI.btnRun?.addEventListener("click", (e)=>{ e.preventDefault(); runAction(); });
-    UI.btnTrust?.addEventListener("click", (e)=>{ e.preventDefault(); window.location.href="/admin.html#trust"; });
+      if (!isAdminRole(role)){
+        try{ await sb.auth.signOut(); }catch(_e){}
+        setStatus("err","Access denied (admin only)");
+        UI.authOut.textContent = "Not an admin account. Signed out.";
+        openDlg();
+        return { ok:false };
+      }
 
-    const supabase = await getSupabase();
-    if(!window.__lp_admin_auth_listener){
-      window.__lp_admin_auth_listener = supabase.auth.onAuthStateChange(()=>{ setTimeout(()=>refreshAuthUI().catch(()=>{}),0); });
+      setStatus("ok","Ready");
+      return { ok:true, sb };
     }
-    await refreshAuthUI();
-  } catch(e) {
-    setStatus("err", (e?.message||String(e)));
-    openDlg();
-  }
-}
-bootstrap();
-</script>
+
+    async function signIn(email, password){
+      const sb = await getSupabase();
+      setStatus("warn","Signing in…");
+      UI.authOut.textContent = "Signing in…";
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error){
+        setStatus("err","Sign in failed");
+        UI.authOut.textContent = error.message || "Sign in failed";
+        return;
+      }
+      await enforceAdmin();
+      closeDlg();
+    }
+
+    async function signOut(){
+      const sb = await getSupabase();
+      setStatus("warn","Signing out…");
+      try{ await sb.auth.signOut(); }catch(_e){}
+      await enforceAdmin();
+    }
+
+    async function run(){
+      UI.out.value = "Running…";
+      const gate = await enforceAdmin();
+      if (!gate.ok) return;
+
+      const sb = gate.sb;
+      const action = UI.action.value;
+      const track = UI.track.value;
+      const email = (UI.customerEmail.value || "").trim() || null;
+      const reference = (UI.reference.value || "").trim() || null;
+
+      try{
+        let data;
+        if (action === "list"){
+          data = await sb.rpc("admin_list_payments", { p_email: email, p_track: track }).then(r => { if(r.error) throw r.error; return r.data; });
+        } else if (action === "refund"){
+          if (!reference) throw new Error("Reference required for refund");
+          data = await sb.rpc("admin_refund_payment", { p_reference: reference, p_email: email, p_track: track }).then(r => { if(r.error) throw r.error; return r.data; });
+        } else if (action === "reconcile"){
+          if (!reference) throw new Error("Reference required for reconcile");
+          data = await sb.rpc("admin_reconcile_payment", { p_reference: reference, p_email: email, p_track: track }).then(r => { if(r.error) throw r.error; return r.data; });
+        } else {
+          throw new Error("Unknown action");
+        }
+        appendOut(data);
+        setStatus("ok","Done");
+      }catch(e){
+        appendOut(String(e?.message || e));
+        setStatus("err","Error");
+      }
+    }
+
+    async function bootstrap(){
+      try{
+        setStatus("warn","Loading…");
+
+        UI.btnOpenLogin.addEventListener("click", openDlg);
+        UI.btnCloseDlg.addEventListener("click", closeDlg);
+        UI.btnSignOut.addEventListener("click", signOut);
+        UI.btnRun.addEventListener("click", run);
+
+        UI.loginForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          signIn((UI.lgEmail.value||"").trim(), UI.lgPass.value||"");
+        });
+
+        const sb = await getSupabase();
+        if (!window.__LP_ADMIN_AUTH_SUB){
+          window.__LP_ADMIN_AUTH_SUB = sb.auth.onAuthStateChange(() => setTimeout(() => enforceAdmin().catch(()=>{}), 0));
+        }
+
+        await enforceAdmin();
+      }catch(e){
+        setStatus("err","Boot error");
+        appendOut(String(e?.message || e));
+        openDlg();
+      }
+    }
+
+    bootstrap();
+  })();
+  </script>
 </body>
 </html>
