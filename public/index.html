@@ -674,6 +674,7 @@
                 <a href="#faq">FAQ</a>
             </nav>
             <div class="nav-buttons">
+                <a id="btnBackToAdmin" href="admin.html" class="btn" style="display:none; margin-right:8px;">Back to Admin</a>
                 <a href="login.html">Login</a>
                 <a href="signup.html" class="btn btn-primary">Try Free for 7 Days</a>
             </div>
@@ -1146,7 +1147,7 @@
       throw new Error('Missing Supabase config. Ensure /api/env is deployed and reachable.');
     }
         
-        const sb = createClient(supabaseUrl, supabaseAnonKey);
+        const sb = createClient(supabaseUrl, supabaseAnonKey, { auth: { storageKey: 'lp_auth', persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
 
         async function fetchLiveRankings() {
             try {
@@ -1187,5 +1188,46 @@
         // Run on page load
         fetchLiveRankings();
     </script>
+
+    <script>
+      // Enterprise: show "Back to Admin" only for authenticated admin roles.
+      async function detectAdminOnLanding() {
+        try {
+          const btn = document.getElementById('btnBackToAdmin');
+          if (!btn) return;
+
+          // If supabase is not loaded, nothing to do.
+          if (!window.supabase || typeof window.supabase.createClient !== 'function') return;
+
+          // Use non-persistent client for public landing + role check.
+          const env = (window.__LP_ENV && (window.__LP_ENV.SUPABASE_URL || window.__LP_ENV.SUPABASE_ANON_KEY)) ? window.__LP_ENV : null;
+          if (!env) return;
+
+          const sb = window.supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
+            auth: { storageKey: 'lp_auth', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+          });
+
+          const { data: { session } } = await sb.auth.getSession();
+          if (!session) return;
+
+          // Backward-compatible role resolver: try get_my_role() first.
+          const roleCandidates = [];
+          const r1 = await sb.rpc('get_my_role');
+          if (!r1.error && typeof r1.data === 'string') roleCandidates.push(r1.data);
+
+          // Some deployments return role via JSON payload
+          if (!r1.error && r1.data && typeof r1.data === 'object' && r1.data.role) roleCandidates.push(r1.data.role);
+
+          const role = roleCandidates[0] || null;
+          if (role && (role === 'super_admin' || role === 'admin_regular' || role === 'admin_olympiad' || role === 'admin')) {
+            btn.style.display = 'inline-flex';
+          }
+        } catch (e) {
+          // silent on marketing page
+        }
+      }
+      window.addEventListener('load', detectAdminOnLanding);
+    </script>
+
 </body>
 </html>
