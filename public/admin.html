@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LogicPals Admin Console</title>
 
-  <!-- Loads window.__LP_ENV via Vercel route -->
-<!-- BFCache/Back button hardening: always revalidate -->
+  <!-- BFCache/Back button hardening -->
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -52,6 +51,7 @@
     .dot{width:8px;height:8px;border-radius:999px;background:#cbd5e1;}
     .dot.ok{background:var(--success)}
     .dot.warn{background:var(--warn)}
+    .dot.err{background:var(--danger)}
 
     .btn{
       border:1px solid var(--line);background:#fff;color:var(--text);
@@ -109,7 +109,7 @@
     .modal-hd strong{font-size:14px}
     .modal-bd{padding:16px 18px;background:#fff}
     .field{display:grid;gap:6px;margin:10px 0}
-    .field label{font-size:12px;color:var(--muted)}
+    .field label{font-size:12px;color:var(--muted);font-weight:700}
     .input{
       padding:12px 12px;border-radius:12px;border:1px solid var(--line);
       background:#fff;font-size:14px;outline:none;
@@ -119,14 +119,12 @@
     .out{margin-top:12px;padding:12px;border-radius:12px;border:1px dashed var(--line);background:#fafafa;color:#0f172a;white-space:pre-wrap;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-size:12px;min-height:56px}
 
     .gate-overlay{
-      display:none;
-      position:absolute; inset:0;
+      display:none; position:absolute; inset:0;
       background:rgba(246,247,251,.78);
       backdrop-filter: blur(6px);
       border-radius: var(--radius);
       border:1px dashed rgba(100,116,139,.35);
-      align-items:center;
-      justify-content:center;
+      align-items:center; justify-content:center;
       padding:18px;
     }
     .gate-overlay.active{display:flex}
@@ -142,6 +140,8 @@
     .gate-box p{margin:0;color:var(--muted);font-size:13px;line-height:1.35}
     .gate-box .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
   </style>
+
+  <!-- keep if you already use it; we do NOT depend on it exclusively -->
   <script src="/assets/js/env-loader.js"></script>
 </head>
 
@@ -221,7 +221,7 @@
               </div>
               <div class="mini">
                 <h3>Olympiad Review</h3>
-                <p>Competition prep (admin_olympiad, super_admin). Strict separation + no hints in mock mode.</p>
+                <p>Competition prep (admin_olympiad, super_admin). Strict separation.</p>
                 <div class="row">
                   <button class="btn gated" id="btnOlyUpload" type="button">Upload / Seed</button>
                   <button class="btn gated" id="btnOlyQueue" type="button">Failed Criteria Queue</button>
@@ -248,77 +248,38 @@
 
           <section class="panel" id="tab-content">
             <div class="banner warn" style="margin-bottom:14px">
-              <div><b>Note:</b> UI is ready. We will enable actions after admin RPCs are confirmed (Step 7).</div>
+              <div><b>Note:</b> UI is ready. We enable actions after admin RPCs are confirmed.</div>
             </div>
-            <div class="cards">
-              <div class="mini">
-                <h3>Regular Problem Upload</h3>
-                <p>Upload/seed problems via RPC. No direct inserts.</p>
-                <div class="row"><button class="btn gated" id="goRegUpload" type="button">Open</button></div>
-              </div>
-              <div class="mini">
-                <h3>Olympiad Problem Upload</h3>
-                <p>Upload/seed problems via RPC. Strict criteria enforced.</p>
-                <div class="row"><button class="btn gated" id="goOlyUpload" type="button">Open</button></div>
-              </div>
-              <div class="mini">
-                <h3>Olympiad Failed Criteria Review</h3>
-                <p>Review problems that failed gate scoring + explainability.</p>
-                <div class="row"><button class="btn gated" id="goOlyReview" type="button">Open</button></div>
-              </div>
-              <div class="mini">
-                <h3>Audit Timeline</h3>
-                <p>Immutable admin actions: who changed what, when, and why.</p>
-                <div class="row"><button class="btn gated" id="goAudit" type="button">Open</button></div>
-              </div>
-            </div>
+            <div class="out">Content tools will be wired to your existing RPCs next. (No direct table writes.)</div>
           </section>
 
           <section class="panel" id="tab-monetization">
             <div class="cards">
               <div class="mini">
                 <h3>Payments</h3>
-                <p>Refund / charge / reconcile. Admin-only endpoints.</p>
+                <p>Refund / charge / reconcile. Admin-only RPC calls.</p>
                 <div class="row"><button class="btn gated" id="goPayments" type="button">Open Payments</button></div>
               </div>
               <div class="mini">
                 <h3>Subscriptions</h3>
-                <p>List / extend / cancel. Admin-only endpoints.</p>
+                <p>List / extend / cancel. Admin-only RPC calls.</p>
                 <div class="row"><button class="btn gated" id="goSubs" type="button">Open Subscriptions</button></div>
-              </div>
-              <div class="mini">
-                <h3>Trust Summary</h3>
-                <p>Receipts, eligibility, explainability, warnings.</p>
-                <div class="row"><button class="btn gated" id="goTrust" type="button">Open Trust Summary</button></div>
-              </div>
-              <div class="mini">
-                <h3>Pricing Config</h3>
-                <p>Future: tier catalog + promotions (gated by Step 8 A/B testing).</p>
-                <div class="row"><button class="btn" disabled type="button">Coming soon</button></div>
               </div>
             </div>
           </section>
 
           <section class="panel" id="tab-access">
             <div class="banner warn" style="margin-bottom:14px">
-              <div><b>Role assignment</b> must be <b>super_admin</b> only. If not super_admin, this section stays read-only.</div>
+              <div><b>Role assignment</b> must be <b>super_admin</b> only. Non-super_admin stays read-only.</div>
             </div>
-            <div class="mini">
-              <h3>Access & Roles</h3>
-              <p>We will wire these to Step 7 RPCs once you confirm your function names.</p>
-              <div class="row">
-                <button class="btn gated" id="openRoleManager" type="button">Open Role Manager</button>
-                <button class="btn gated" id="openAdminAudit" type="button">View Admin Audit</button>
-              </div>
-              <div class="out" id="accessOut">Waiting…</div>
-            </div>
+            <div class="out">Access tools will be wired to your admin RPCs next.</div>
           </section>
         </div>
 
         <div class="gate-overlay" id="gateOverlay" aria-live="polite">
           <div class="gate-box">
             <h3>Admin workspace locked</h3>
-            <p>You are signed out. For security, all admin actions and navigation are disabled until you sign in again.</p>
+            <p id="gateMsg">You are signed out. For security, all admin actions and navigation are disabled until you sign in again.</p>
             <div class="row">
               <button class="btn primary" id="btnGateSignIn" type="button">Sign in</button>
               <button class="btn" id="btnGateReload" type="button">Reload</button>
@@ -335,314 +296,291 @@
       <button class="btn ghost" id="btnCloseDlg" type="button">✕</button>
     </div>
     <div class="modal-bd">
-      <div class="field">
-        <label for="email">Email</label>
-        <input class="input" id="email" type="email" placeholder="admin@example.com" autocomplete="email" />
-      </div>
-      <div class="field">
-        <label for="password">Password</label>
-        <input class="input" id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
-      </div>
-      <div class="help">Admin console is email + password only.</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-        <button class="btn primary" id="btnDoLogin" type="button">Sign in</button>
-        <button class="btn danger" id="btnDoLogout" type="button" style="display:none">Sign out</button>
-      </div>
+      <form id="loginForm">
+        <div class="field">
+          <label for="email">Email</label>
+          <input class="input" id="email" type="email" placeholder="admin@example.com" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input class="input" id="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+        <div class="help">Admin console is email + password only.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+          <button class="btn primary" id="btnDoLogin" type="submit">Sign in</button>
+          <button class="btn danger" id="btnDoLogout" type="button" style="display:none">Sign out</button>
+        </div>
+      </form>
       <div class="out" id="authOut">Waiting…</div>
     </div>
   </dialog>
 
-  <script type="module">
-/**
- * LogicPals Admin Console — Enterprise Auth Gate
- * Goals:
- *  - Never allow non-admin roles to stay signed-in on admin surfaces.
- *  - Single Supabase client instance (avoid GoTrue lock contention).
- *  - Auto-open login modal when signed out.
- *  - Robust role RPC autodetect with clear operator messages.
- */
+  <script>
+  (function(){
+    "use strict";
 
-const ADMIN_ROLES = new Set(["super_admin", "admin_regular", "admin_olympiad"]);
+    const ADMIN_ROLES = new Set(["super_admin","admin_regular","admin_olympiad"]);
 
-const UI = {
-  bootPill: document.getElementById("bootPill"),
-  bootPillText: document.getElementById("bootPillText"),
-  bootErrorBox: document.getElementById("bootErrorBox"),
-  bootErrorText: document.getElementById("bootErrorText"),
-  kvAuth: document.getElementById("kvAuth"),
-  kvRole: document.getElementById("kvRole"),
-  kvUser: document.getElementById("kvUser"),
-  btnAuth: document.getElementById("btnAuth"),
-  btnSignOut: document.getElementById("btnSignOut"),
-  lockOverlay: document.getElementById("lockOverlay"),
-  lockOverlayMsg: document.getElementById("lockOverlayMsg"),
-  // modal
-  authModal: document.getElementById("authModal"),
-  email: document.getElementById("email"),
-  password: document.getElementById("password"),
-  btnDoLogin: document.getElementById("btnDoLogin"),
-  btnDoLogout: document.getElementById("btnDoLogout"),
-  authMsg: document.getElementById("authMsg"),
-  roleRpcMsg: document.getElementById("roleRpcMsg"),
-  btnAuthClose: document.getElementById("btnAuthClose"),
-};
+    const UI = {
+      statusDot: document.getElementById("statusDot"),
+      statusText: document.getElementById("statusText"),
+      kvAuth: document.getElementById("kvAuth"),
+      kvRole: document.getElementById("kvRole"),
+      kvUser: document.getElementById("kvUser"),
+      btnAuth: document.getElementById("btnAuth"),
+      btnTopLogout: document.getElementById("btnTopLogout"),
+      logoutWarn: document.getElementById("logoutWarn"),
+      roleHint: document.getElementById("roleHint"),
 
-function setBoot(status, text, isError=false) {
-  if (!UI.bootPill || !UI.bootPillText) return;
-  UI.bootPill.classList.remove("boot-ok","boot-warn","boot-err");
-  UI.bootPill.classList.add(isError ? "boot-err" : (status === "Ready" ? "boot-ok" : "boot-warn"));
-  UI.bootPillText.textContent = text || status;
-  if (UI.bootErrorBox && UI.bootErrorText) {
-    UI.bootErrorBox.style.display = isError ? "block" : "none";
-    UI.bootErrorText.textContent = isError ? (text || "Boot error") : "";
-  }
-}
+      gateOverlay: document.getElementById("gateOverlay"),
+      gateMsg: document.getElementById("gateMsg"),
+      btnGateSignIn: document.getElementById("btnGateSignIn"),
+      btnGateReload: document.getElementById("btnGateReload"),
 
-function showAuthMsg(msg, kind="info") {
-  if (!UI.authMsg) return;
-  UI.authMsg.textContent = msg || "";
-  UI.authMsg.style.color = (kind === "error") ? "#b42318" : (kind === "warn") ? "#b54708" : "#344054";
-}
+      dlg: document.getElementById("dlgLogin"),
+      btnCloseDlg: document.getElementById("btnCloseDlg"),
+      loginForm: document.getElementById("loginForm"),
+      email: document.getElementById("email"),
+      password: document.getElementById("password"),
+      btnDoLogout: document.getElementById("btnDoLogout"),
+      authOut: document.getElementById("authOut"),
 
-function showRoleRpcMsg(msg) {
-  if (!UI.roleRpcMsg) return;
-  UI.roleRpcMsg.textContent = msg || "";
-}
+      btnVisit: document.getElementById("btnVisit"),
+      btnDashboard: document.getElementById("btnDashboard"),
 
-function openAuthModal() {
-  if (!UI.authModal) return;
-  UI.authModal.classList.add("open");
-}
-function closeAuthModal() {
-  if (!UI.authModal) return;
-  UI.authModal.classList.remove("open");
-}
+      btnPayments: document.getElementById("btnPayments"),
+      btnSubs: document.getElementById("btnSubs"),
+      goPayments: document.getElementById("goPayments"),
+      goSubs: document.getElementById("goSubs"),
+    };
 
-async function loadSupabaseLib() {
-      // Enterprise-grade: avoid ESM import edge cases by loading the UMD bundle once.
+    function setStatus(kind, text){
+      UI.statusDot.classList.remove("ok","warn","err");
+      UI.statusDot.classList.add(kind);
+      UI.statusText.textContent = text;
+    }
+
+    async function loadSupabaseLib(){
       if (window.supabase && window.supabase.createClient) return window.supabase;
       if (window.__LP_SUPABASE_LIB_PROMISE) return window.__LP_SUPABASE_LIB_PROMISE;
-
       window.__LP_SUPABASE_LIB_PROMISE = new Promise((resolve, reject) => {
         const existing = document.querySelector('script[data-lp-supabase-umd="1"]');
-        if (existing) {
-          existing.addEventListener('load', () => resolve(window.supabase));
-          existing.addEventListener('error', reject);
-          return;
-        }
-        const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+        if (existing) return resolve(window.supabase);
+        const s = document.createElement("script");
+        s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
         s.async = true;
         s.defer = true;
-        s.setAttribute('data-lp-supabase-umd', '1');
-        s.onload = () => {
-          if (window.supabase && window.supabase.createClient) resolve(window.supabase);
-          else reject(new Error('supabase_umd_load_failed'));
-        };
-        s.onerror = () => reject(new Error('supabase_umd_load_failed'));
+        s.setAttribute("data-lp-supabase-umd","1");
+        s.onload = () => (window.supabase && window.supabase.createClient) ? resolve(window.supabase) : reject(new Error("supabase_umd_load_failed"));
+        s.onerror = () => reject(new Error("supabase_umd_load_failed"));
         document.head.appendChild(s);
       });
-
       return window.__LP_SUPABASE_LIB_PROMISE;
     }
 
-async function fetchEnv() {
-  const res = await fetch("/api/env", { cache: "no-store" });
-  if (!res.ok) throw new Error(`env_fetch_failed_${res.status}`);
-  const env = await res.json();
-  if (!env?.SUPABASE_URL || !env?.SUPABASE_ANON_KEY) throw new Error("env_missing_supabase");
-  return env;
-}
+    async function getEnv(){
+      if (window.__LP_ENV && (window.__LP_ENV.SUPABASE_URL || window.__LP_ENV.supabase_url)) return window.__LP_ENV;
+      const res = await fetch("/api/env", { cache: "no-store" });
+      if (!res.ok) throw new Error("env_fetch_failed_" + res.status);
+      const env = await res.json();
+      window.__LP_ENV = env;
+      return env;
+    }
 
-/**
- * Single Supabase client per page.
- * IMPORTANT: Do not create multiple clients (prevents GoTrue lock errors).
- */
-async function getSupabase() {
-      // Singleton Supabase client per page (prevents GoTrue lock/timeouts)
-      if (window.__LP_SUPABASE_ADMIN_CLIENT) return window.__LP_SUPABASE_ADMIN_CLIENT;
-
+    async function getSupabase(){
+      if (window.__LP_ADMIN_SB) return window.__LP_ADMIN_SB;
       const env = await getEnv();
       const url = env.supabase_url || env.SUPABASE_URL;
-      const anonKey = env.supabase_anon_key || env.SUPABASE_ANON_KEY;
-      if (!url || !anonKey) throw new Error("supabase_env_missing");
-
+      const anon = env.supabase_anon_key || env.SUPABASE_ANON_KEY;
+      if (!url || !anon) throw new Error("env_missing_supabase");
       const lib = await loadSupabaseLib();
-      const client = lib.createClient(url, anonKey, {
+
+      // IMPORTANT: reduce GoTrue lock contention by disabling auto refresh in admin UIs
+      const sb = lib.createClient(url, anon, {
         auth: {
           storageKey: "lp_admin_auth",
           persistSession: true,
-          autoRefreshToken: true,
+          autoRefreshToken: false,
           detectSessionInUrl: false
         }
       });
 
-      window.__LP_SUPABASE_ADMIN_CLIENT = client;
-      return client;
+      window.__LP_ADMIN_SB = sb;
+      return sb;
     }
 
-async function safeGetRole(supabase) {
-  const tried = [];
-  const candidates = [
-    "get_my_role",
-    "admin_get_role, rp_get_my_role",
-    "rp_admin_get_role, rp_get_my_role",
-    "", // if you created this RPC (not Postgres builtin)
-    "get_current_role",
-  ];
+    function isAdminRole(role){
+      return ADMIN_ROLES.has(String(role||"").trim());
+    }
 
-  for (const fn of candidates) {
-    tried.push(fn);
-    try {
-      const { data, error } = await supabase.rpc(fn);
-      if (!error) {
-        // normalize to string
-        const role = (typeof data === "string") ? data : (data?.role ?? data?.?? data?.name ?? null);
-        if (role) {
-          showRoleRpcMsg(`Role RPC autodetect: ${fn}()`);
-          return String(role);
+    async function resolveRole(sb){
+      // Your DB shows get_my_role exists (and many rp_* helpers), so try a safe list.
+      const candidates = [
+        "get_my_role",
+        "rp_get_my_role",
+        "admin_get_role",
+        "rp_admin_get_user_role",
+        "get_current_user_role",
+        "current_role" // ONLY if you created it (not postgres builtin)
+      ];
+
+      for (const fn of candidates){
+        try{
+          const { data, error } = await sb.rpc(fn);
+          if (!error){
+            if (typeof data === "string") return data;
+            if (data && typeof data === "object"){
+              return String(data.role || data.current_role || data.name || "no_role");
+            }
+            return "no_role";
+          }
+        }catch(_e){}
+      }
+      return "no_role";
+    }
+
+    function lockWorkspace(message){
+      UI.gateOverlay.classList.add("active");
+      UI.gateMsg.textContent = message || "Admin workspace locked.";
+      UI.logoutWarn.style.display = "block";
+      UI.btnTopLogout.style.display = "none";
+      UI.btnAuth.style.display = "inline-flex";
+    }
+
+    function unlockWorkspace(){
+      UI.gateOverlay.classList.remove("active");
+      UI.logoutWarn.style.display = "none";
+      UI.btnTopLogout.style.display = "inline-flex";
+      UI.btnAuth.style.display = "none";
+    }
+
+    function openLogin(){
+      UI.dlg.showModal();
+    }
+    function closeLogin(){
+      try{ UI.dlg.close(); }catch(_e){}
+    }
+
+    async function refresh(){
+      const sb = await getSupabase();
+      const { data: { session } } = await sb.auth.getSession();
+
+      UI.kvAuth.textContent = session ? "authenticated" : "signed_out";
+      UI.kvUser.textContent = session?.user?.email || "—";
+
+      if (!session){
+        UI.kvRole.textContent = "no_role";
+        setStatus("warn","Sign-in required");
+        lockWorkspace("You are signed out. Please sign in.");
+        UI.btnDoLogout.style.display = "none";
+        UI.authOut.textContent = "Please sign in with an admin account.";
+        openLogin();
+        return;
+      }
+
+      const role = await resolveRole(sb);
+      UI.kvRole.textContent = role || "no_role";
+
+      if (!isAdminRole(role)){
+        // Enterprise rule: non-admins cannot stay signed-in on admin surfaces
+        try{ await sb.auth.signOut(); }catch(_e){}
+        setStatus("err","Access denied (admin only)");
+        lockWorkspace("Access denied: your account is not an admin. You were signed out.");
+        UI.authOut.textContent = "Not an admin account. You have been signed out.";
+        openLogin();
+        return;
+      }
+
+      // OK
+      setStatus("ok","Ready");
+      unlockWorkspace();
+      UI.btnDoLogout.style.display = "inline-flex";
+      UI.authOut.textContent = "Signed in as admin. Role: " + role;
+      closeLogin();
+    }
+
+    async function signIn(email, password){
+      const sb = await getSupabase();
+      setStatus("warn","Signing in…");
+      UI.authOut.textContent = "Signing in…";
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error){
+        setStatus("err","Sign in failed");
+        UI.authOut.textContent = error.message || "Sign in failed.";
+        return;
+      }
+      // Immediately enforce admin-only
+      await refresh();
+    }
+
+    async function signOut(){
+      const sb = await getSupabase();
+      setStatus("warn","Signing out…");
+      try{ await sb.auth.signOut(); }catch(_e){}
+      await refresh();
+    }
+
+    function wireTabs(){
+      const tabs = Array.from(document.querySelectorAll(".tab"));
+      const panels = {
+        overview: document.getElementById("tab-overview"),
+        content: document.getElementById("tab-content"),
+        monetization: document.getElementById("tab-monetization"),
+        access: document.getElementById("tab-access"),
+      };
+      tabs.forEach(t => t.addEventListener("click", () => {
+        tabs.forEach(x => x.classList.remove("active"));
+        t.classList.add("active");
+        Object.values(panels).forEach(p => p.classList.remove("active"));
+        const key = t.getAttribute("data-tab");
+        if (panels[key]) panels[key].classList.add("active");
+      }));
+    }
+
+    async function bootstrap(){
+      try{
+        setStatus("warn","Loading…");
+        wireTabs();
+
+        UI.btnVisit.addEventListener("click", () => location.href = "/");
+        UI.btnDashboard.addEventListener("click", () => location.href = "/dashboard.html");
+        UI.btnAuth.addEventListener("click", () => openLogin());
+        UI.btnTopLogout.addEventListener("click", () => signOut());
+        UI.btnDoLogout.addEventListener("click", () => signOut());
+
+        UI.btnCloseDlg.addEventListener("click", () => closeLogin());
+        UI.btnGateSignIn.addEventListener("click", () => openLogin());
+        UI.btnGateReload.addEventListener("click", () => location.reload());
+
+        UI.btnPayments.addEventListener("click", () => location.href = "/admin/admin-payments.html");
+        UI.btnSubs.addEventListener("click", () => location.href = "/admin/admin-subscriptions.html");
+        UI.goPayments.addEventListener("click", () => location.href = "/admin/admin-payments.html");
+        UI.goSubs.addEventListener("click", () => location.href = "/admin/admin-subscriptions.html");
+
+        UI.loginForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          signIn((UI.email.value||"").trim(), UI.password.value||"");
+        });
+
+        const sb = await getSupabase();
+        if (!window.__LP_ADMIN_AUTH_SUB){
+          window.__LP_ADMIN_AUTH_SUB = sb.auth.onAuthStateChange(() => {
+            // schedule refresh; never block handler
+            setTimeout(() => refresh().catch(()=>{}), 0);
+          });
         }
+
+        await refresh();
+      }catch(e){
+        setStatus("err","Boot error");
+        UI.authOut.textContent = String(e?.message || e);
+        lockWorkspace("Boot error. Open Sign in and check message.");
+        openLogin();
       }
-      // if function doesn't exist, continue; otherwise surface error
-      const msg = error?.message || "";
-      if (msg && !/does not exist|404|not found/i.test(msg)) {
-        showRoleRpcMsg(`Role RPC ${fn}() error: ${msg}`);
-      }
-    } catch (e) {
-      // ignore and continue
-    }
-  }
-  showRoleRpcMsg(`Role RPC autodetect tries: ${tried.join(", ")} (none available)`);
-  return "no_role";
-}
-
-function isAdminRole(role) {
-  return ADMIN_ROLES.has(String(role || "").trim());
-}
-
-async function hardGateAdmin(supabase, session, role) {
-  if (!session) {
-    UI.lockOverlay.style.display = "flex";
-    UI.lockOverlayMsg.textContent = "Admin workspace locked. Please sign in.";
-    return { ok: false };
-  }
-  if (!isAdminRole(role)) {
-    // enterprise rule: never allow non-admin accounts to remain signed-in on admin surfaces
-    try { await supabase.auth.signOut(); } catch {}
-    UI.lockOverlay.style.display = "flex";
-    UI.lockOverlayMsg.textContent = "Access denied: your account is not an admin. You have been signed out.";
-    openAuthModal();
-    return { ok: false };
-  }
-  UI.lockOverlay.style.display = "none";
-  return { ok: true };
-}
-
-async function refreshUI() {
-  const supabase = await getSupabase();
-  const { data: { session } } = await supabase.auth.getSession();
-  const userEmail = session?.user?.email || "—";
-
-  UI.kvAuth.textContent = session ? "authenticated" : "signed_out";
-  UI.kvUser.textContent = session ? userEmail : "—";
-
-  let role = "no_role";
-  if (session) role = await safeGetRole(supabase);
-  UI.kvRole.textContent = role;
-
-  // Buttons
-  UI.btnSignOut.style.display = session ? "inline-flex" : "none";
-  UI.btnAuth.style.display = session ? "none" : "inline-flex";
-  UI.btnDoLogout.style.display = session ? "inline-flex" : "none";
-
-  // Hard gate
-  await hardGateAdmin(supabase, session, role);
-
-  // If signed out, auto-open the modal (matches your previous behavior)
-  if (!session) openAuthModal();
-}
-
-async function doSignIn() {
-  const supabase = await getSupabase();
-  const email = (UI.email.value || "").trim();
-  const password = UI.password.value || "";
-  if (!email || !password) {
-    showAuthMsg("Email + password are required.", "warn");
-    return;
-  }
-  showAuthMsg("Signing in…");
-  setBoot("Loading", "Signing in…");
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    showAuthMsg(error.message || "Sign in failed.", "error");
-    setBoot("Boot error", error.message || "Sign in failed.", true);
-    return;
-  }
-
-  // Immediately verify role and enforce admin-only
-  const role = await safeGetRole(supabase);
-  const ok = await hardGateAdmin(supabase, data?.session, role);
-  if (!ok.ok) {
-    showAuthMsg("Not an admin account. Signed out.", "error");
-    setBoot("Ready", "Ready");
-    return;
-  }
-
-  showAuthMsg("Signed in.", "info");
-  setBoot("Ready", "Ready");
-  closeAuthModal();
-  await refreshUI();
-}
-
-async function doSignOut() {
-  const supabase = await getSupabase();
-  setBoot("Loading", "Signing out…");
-  try { await supabase.auth.signOut(); } catch {}
-  showAuthMsg("Signed out.", "info");
-  setBoot("Ready", "Ready");
-  await refreshUI();
-}
-
-async function bootstrap() {
-  try {
-    setBoot("Loading", "Loading…");
-    const supabase = await getSupabase();
-
-    // Single auth listener
-    if (!window.__lp_admin_auth_listener) {
-      window.__lp_admin_auth_listener = supabase.auth.onAuthStateChange((_event, _session) => {
-        // do not await in listener; schedule
-        window.setTimeout(() => { refreshUI().catch(()=>{}); }, 0);
-      });
     }
 
-    // Wire buttons
-    UI.btnAuth?.addEventListener("click", openAuthModal);
-    UI.btnAuthClose?.addEventListener("click", closeAuthModal);
-    UI.btnDoLogin?.addEventListener("click", (e) => { e.preventDefault(); doSignIn(); });
-    UI.btnDoLogout?.addEventListener("click", (e) => { e.preventDefault(); doSignOut(); });
-    UI.btnSignOut?.addEventListener("click", (e) => { e.preventDefault(); doSignOut(); });
-
-    // Overlay buttons inside locked state
-    document.getElementById("lockSignInBtn")?.addEventListener("click", openAuthModal);
-    document.getElementById("lockReloadBtn")?.addEventListener("click", () => location.reload());
-
-    // ENTER key submits login
-    UI.password?.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") doSignIn();
-    });
-
-    setBoot("Ready", "Ready");
-    await refreshUI();
-  } catch (e) {
-    const msg = (e && e.message) ? e.message : String(e);
-    setBoot("Boot error", msg, true);
-    // still allow modal open so user can see what is wrong
-    openAuthModal();
-  }
-}
-
-bootstrap();
-</script>
+    bootstrap();
+  })();
+  </script>
 </body>
 </html>
