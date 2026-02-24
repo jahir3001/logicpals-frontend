@@ -1,198 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login - LogicPals</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - LogicPals</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563EB">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/brain--v1.png">
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js');
+            });
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
 
-  <style>
-    :root { --primary:#2563EB; --bg:#EFF6FF; --text:#111827; --muted:#6B7280; --border:#D1D5DB; }
-    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:20px;}
-    .card{background:#fff;padding:34px;border-radius:16px;box-shadow:0 6px 28px rgba(0,0,0,.06);width:100%;max-width:420px;border:1px solid rgba(0,0,0,.04);}
-    h1{margin:0 0 6px 0;text-align:center;color:var(--text);font-size:22px}
-    .subtitle{text-align:center;color:var(--muted);margin:0 0 20px 0;font-size:14px;line-height:1.4}
-    .form-group{margin-bottom:16px;}
-    label{display:block;font-weight:600;margin-bottom:8px;font-size:13px;color:#374151;}
-    input{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:15px;transition:.2s;}
-    input:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.15);}
-    .btn{width:100%;background:var(--primary);color:#fff;padding:13px;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;}
-    .btn:hover{background:#1D4ED8;}
-    .btn:disabled{opacity:.7;cursor:not-allowed;}
-    .btn.secondary{background:#fff;color:var(--text);border:1px solid var(--border);margin-top:10px;}
-    .btn.secondary:hover{background:#F9FAFB;}
-    .row{display:flex;gap:10px;margin-top:10px}
-    .row .btn{width:100%}
-    .error{color:#B91C1C;font-size:13px;text-align:center;margin-top:12px;display:none;background:#FEF2F2;padding:10px;border-radius:10px;border:1px solid rgba(185,28,28,.18);}
-    .info{color:#0F172A;font-size:13px;margin-top:10px;display:none;background:#EEF2FF;padding:10px;border-radius:10px;border:1px solid rgba(79,70,229,.18);}
-    .footer-link{text-align:center;margin-top:14px;font-size:13px;color:var(--muted);}
-    .footer-link a{color:var(--primary);text-decoration:none;font-weight:700;}
-    .hr{height:1px;background:rgba(0,0,0,.06);margin:16px 0;}
-    .small{font-size:12px;color:var(--muted);text-align:center;margin-top:8px}
-    .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(0,0,0,.08);background:#F9FAFB;padding:8px 10px;border-radius:999px;font-size:12px;color:#0f172a}
-    .dot{width:8px;height:8px;border-radius:999px;background:#22c55e}
-  </style>
+    <style>
+        :root { --primary: #2563EB; --bg: #EFF6FF; --text: #111827; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        
+        .card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+        h1 { color: var(--text); text-align: center; margin-bottom: 8px; }
+        .subtitle { text-align: center; color: #6B7280; margin-bottom: 30px; font-size: 14px; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: #374151; }
+        input { width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 16px; transition: 0.2s; }
+        input:focus { border-color: var(--primary); outline: none; ring: 2px solid #BFDBFE; }
+        
+        .btn { width: 100%; background: var(--primary); color: white; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .btn:hover { background: #1D4ED8; }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        .footer-link { text-align: center; margin-top: 20px; font-size: 14px; color: #6B7280; }
+        .footer-link a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        
+        .error { color: #EF4444; font-size: 14px; text-align: center; margin-top: 15px; display: none; background: #FEF2F2; padding: 10px; border-radius: 6px; }
+    </style>  <script src="/assets/js/env-loader.js"></script>
 </head>
 <body>
-  <div class="card">
-    <h1>Welcome Back 👋</h1>
-    <p class="subtitle">Log in to continue your learning journey.</p>
 
-    <div id="sessionBox" class="info"></div>
+    <div class="card">
+        <h1>Welcome Back 👋</h1>
+        <p class="subtitle">Log in to continue your learning journey.</p>
 
-    <form id="loginForm">
-      <div class="form-group">
-        <label>Email Address</label>
-        <input type="email" id="email" required placeholder="parent@example.com" autocomplete="email">
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password">
-      </div>
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" required placeholder="parent@example.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" required placeholder="******">
+            </div>
 
-      <button type="submit" id="submitBtn" class="btn">Log In</button>
-      <div class="error" id="errorMessage"></div>
+            <button type="submit" id="submitBtn" class="btn">Log In</button>
+            <div class="error" id="errorMessage"></div>
 
-      <div class="footer-link">Don't have an account? <a href="signup.html">Sign Up Free</a></div>
-      <div class="footer-link" style="margin-top:8px;"><a href="index.html">← Back to Home</a></div>
-    </form>
+            <div class="footer-link">
+                Don't have an account? <a href="signup.html">Sign Up Free</a>
+            </div>
+            <div class="footer-link" style="margin-top: 10px;">
+                <a href="index.html">← Back to Home</a>
+            </div>
+        </form>
+    </div>
 
-    <div class="hr"></div>
-    <div class="small">Enterprise rule: we never “auto-login silently”. If a session exists, you choose to continue or switch account.</div>
-  </div>
+    <script>
+        (async () => {
+          const errBox = document.getElementById('errorMessage');
+          const btn = document.getElementById('submitBtn');
 
-<script>
-(function(){
-  'use strict';
+          // Wait for env-loader (if present). No top-level await (browser-safe).
+          try {
+            await (window.__LP_ENV_READY || Promise.resolve());
+          } catch (_) {}
 
-  const STORAGE_KEY = 'logicpals.auth';
-  const ENV_ENDPOINT = '/api/env';
+          const env = (window.__LP_ENV || {});
+          const supabaseUrl = env.SUPABASE_URL || env.supabaseUrl || env.url;
+          const supabaseAnonKey = env.SUPABASE_ANON_KEY || env.supabaseAnonKey || env.anonKey;
 
-  const qs = new URLSearchParams(location.search);
-  const next = qs.get('next') || 'dashboard.html';
+          if (!supabaseUrl || !supabaseAnonKey) {
+            const msg = 'Missing Supabase config. Ensure /api/env is deployed and reachable.';
+            console.error(msg, env);
+            if (errBox) { errBox.innerText = msg; errBox.style.display = 'block'; }
+            if (btn) { btn.disabled = true; btn.innerText = 'Config missing'; }
+            return;
+          }
 
-  const form = document.getElementById('loginForm');
-  const errBox = document.getElementById('errorMessage');
-  const sessionBox = document.getElementById('sessionBox');
-  const btn = document.getElementById('submitBtn');
+          const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey, {
+            auth: {
+              persistSession: true,
+              autoRefreshToken: true,
+              detectSessionInUrl: true,
+              storageKey: 'logicpals.auth'
+            }
+          });
 
-  let sb = null;
+          window.supabaseClient = supabaseClient;
 
-  function showError(msg){
-    errBox.textContent = msg;
-    errBox.style.display = 'block';
-  }
-  function clearError(){ errBox.style.display = 'none'; errBox.textContent = ''; }
+          // If already signed in, go straight to dashboard.
+          try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session?.user) {
+              window.location.replace('dashboard.html');
+              return;
+            }
+          } catch (e) {
+            console.warn('getSession failed:', e);
+          }
 
-  function hardClearAuthStorage(){
-    try{
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(STORAGE_KEY + '-code-verifier');
-      localStorage.removeItem(STORAGE_KEY + '-provider-token');
-      localStorage.removeItem(STORAGE_KEY + '-provider-refresh-token');
-    }catch(_){}
-  }
+          // Expose handler for inline onsubmit="handleLogin(event)"
+          window.handleLogin = async function handleLogin(e) {
+            e.preventDefault();
 
-  async function fetchEnv(){
-    const res = await fetch(ENV_ENDPOINT, { cache: 'no-store' });
-    if(!res.ok) throw new Error('ENV_ENDPOINT failed: ' + res.status);
-    const data = await res.json();
-    const supabaseUrl = data.supabaseUrl || data.SUPABASE_URL || data.url;
-    const supabaseAnonKey = data.supabaseAnonKey || data.SUPABASE_ANON_KEY || data.anonKey;
-    if(!supabaseUrl || !supabaseAnonKey) throw new Error('Missing Supabase config from ' + ENV_ENDPOINT);
-    return { supabaseUrl, supabaseAnonKey };
-  }
+            const btn = document.getElementById('submitBtn');
+            const err = document.getElementById('errorMessage');
 
-  async function init(){
-    clearError();
-    btn.disabled = true;
-    btn.textContent = 'Booting…';
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
 
-    let env;
-    try{
-      env = await fetchEnv();
-    }catch(e){
-      showError('Missing Supabase config. Fix /api/env in Vercel. Technical: ' + (e && e.message ? e.message : String(e)));
-      btn.textContent = 'Config missing';
-      return;
-    }
+            btn.innerText = 'Logging in...';
+            btn.disabled = true;
+            err.style.display = 'none';
 
-    sb = window.supabase.createClient(env.supabaseUrl, env.supabaseAnonKey, {
-      auth: {
-        storageKey: STORAGE_KEY,
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
-      }
-    });
+            try {
+              const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+              if (error) throw error;
 
-    // If session exists, do NOT auto-redirect. Show explicit choice.
-    try{
-      const { data:{ session } } = await sb.auth.getSession();
-      if(session && session.user){
-        sessionBox.style.display = 'block';
-        const email = session.user.email || 'your account';
-        sessionBox.innerHTML =
-          '<span class="pill"><span class="dot"></span> Signed in as <b>' + email + '</b></span>' +
-          '<div class="row">' +
-            '<button type="button" class="btn" id="btnContinue">Continue</button>' +
-            '<button type="button" class="btn secondary" id="btnSwitch">Use another account</button>' +
-          '</div>';
-
-        document.getElementById('btnContinue').addEventListener('click', ()=>{
-          location.replace(next);
-        });
-
-        document.getElementById('btnSwitch').addEventListener('click', async ()=>{
-          try{ await sb.auth.signOut({ scope: 'global' }); }catch(_){}
-          hardClearAuthStorage();
-          location.reload();
-        });
-      }
-    }catch(e){
-      console.warn('getSession failed:', e);
-    }
-
-    btn.disabled = false;
-    btn.textContent = 'Log In';
-  }
-
-  form.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    clearError();
-
-    if(!sb){
-      showError('Client not ready. Reload and try again.');
-      return;
-    }
-
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-
-    btn.disabled = true;
-    btn.textContent = 'Logging in…';
-
-    try{
-      const { error } = await sb.auth.signInWithPassword({ email, password });
-      if(error) throw error;
-
-      location.replace(next);
-    }catch(err){
-      showError('Login Failed: ' + (err && err.message ? err.message : String(err)));
-      btn.disabled = false;
-      btn.textContent = 'Log In';
-    }
-  });
-
-  // BFCache reliability
-  window.addEventListener('pageshow', (e)=>{
-    if(e.persisted) location.reload();
-  });
-
-  init();
-})();
-</script>
+              window.location.href = 'dashboard.html';
+            } catch (error) {
+              console.error(error);
+              err.innerText = 'Login Failed: ' + (error?.message || String(error));
+              err.style.display = 'block';
+              btn.innerText = 'Log In';
+              btn.disabled = false;
+            }
+          };
+        })();
+    </script>
 </body>
 </html>
