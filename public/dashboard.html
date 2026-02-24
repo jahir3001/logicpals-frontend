@@ -4,118 +4,210 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>LogicPals — Student Dashboard</title>
-
-  <!-- Keep your existing CSS as-is if you had it -->
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{
+      --bg:#070a18; --card:#0b1026; --card2:#0d1430;
+      --text:#eaf0ff; --muted:rgba(234,240,255,.65);
+      --pri:#7c3aed; --pri2:#6d28d9; --border:rgba(234,240,255,.14);
+      --ok:#22c55e; --warn:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(900px 500px at 20% 0%, rgba(124,58,237,.20) 0%, transparent 55%),
+                  radial-gradient(900px 500px at 85% 10%, rgba(34,197,94,.15) 0%, transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    header{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:16px 18px; border-bottom:1px solid var(--border);
+      background:rgba(7,10,24,.55);
+      backdrop-filter: blur(10px);
+    }
+    .brand{display:flex; align-items:center; gap:10px; font-weight:800}
+    .logo{
+      width:36px; height:36px; border-radius:12px;
+      background: linear-gradient(135deg, #7c3aed, #22c55e);
+      display:grid; place-items:center; font-weight:900;
+    }
+    .nav{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .btn{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.06);
+      padding:10px 14px; border-radius:999px;
+      cursor:pointer; color:var(--text); text-decoration:none;
+      font-weight:650; font-size:14px;
+    }
+    .btn.primary{background:var(--pri); border-color:var(--pri)}
+    .btn.primary:hover{background:var(--pri2)}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      border:1px solid var(--border);
+      padding:8px 12px; border-radius:999px;
+      color:var(--muted); font-size:13px;
+      background:rgba(255,255,255,.06);
+    }
+    .dot{width:8px; height:8px; border-radius:50%; background:var(--warn)}
+    main{max-width:1100px; margin:0 auto; padding:22px 18px 60px;}
+    .card{
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius:18px;
+      box-shadow: 0 14px 40px rgba(0,0,0,.35);
+      padding:18px;
+    }
+    h2{margin:0 0 8px 0}
+    p{margin:0; color:var(--muted); line-height:1.5}
+    .space{height:12px}
+    .cta{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+    .hide{display:none !important}
+    code{background:rgba(255,255,255,.08); padding:2px 6px; border-radius:8px}
+  </style>
 </head>
 
 <body>
-  <!-- Keep your existing dashboard HTML layout as-is.
-       This patch focuses on auth/session + fixing the missing script dependency. -->
+  <header>
+    <div class="brand">
+      <div class="logo">LP</div>
+      <div>
+        <div>LogicPals</div>
+        <div style="font-size:12px;color:var(--muted);font-weight:650">Student Dashboard</div>
+      </div>
+    </div>
 
-  <!-- If you already have header buttons, this "Back to Admin" will appear only for admin accounts -->
-  <a id="backToAdmin" href="/admin.html" style="display:none; position:fixed; top:12px; right:12px; z-index:9999; padding:10px 14px; border-radius:10px; background:#ffffffcc; border:1px solid #ddd; font-weight:600; text-decoration:none;">
-    Back to Admin
-  </a>
+    <div class="nav">
+      <span class="pill"><span class="dot" id="dot"></span><span id="status">Booting…</span></span>
+      <a class="btn" href="/index.html">Home</a>
+      <a class="btn" href="/learn.html">Learn</a>
+      <a class="btn" href="/login.html">Login</a>
+      <a class="btn" href="/admin.html">Admin</a>
+      <a id="backToAdmin" class="btn hide" href="/admin.html">← Back to Admin</a>
+      <button id="btnSignOut" class="btn">Sign out</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="card" id="signedOutCard">
+      <h2>Sign-in required.</h2>
+      <p>We couldn’t find your session. Please sign in to continue.</p>
+      <div class="cta">
+        <a class="btn primary" href="/login.html">Go to Login</a>
+        <a class="btn" href="/index.html?from=dashboard=1">Back to Home</a>
+      </div>
+      <div class="space"></div>
+      <p style="font-size:13px">
+        Enterprise note: this dashboard uses the <b>same Supabase session storage</b> as <code>/login.html</code>.
+        If you recently changed storage keys, sessions won’t match.
+      </p>
+    </div>
+
+    <div class="card hide" id="signedInCard">
+      <h2>Welcome.</h2>
+      <p>Signed in as <b id="userEmail">—</b></p>
+      <div class="space"></div>
+      <p id="planLine">Plan: <span style="color:var(--muted)">Loading…</span></p>
+      <div class="space"></div>
+      <div class="cta">
+        <a class="btn primary" href="/learn.html">Start Learning</a>
+        <a class="btn" href="/dashboard.html">Refresh</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Supabase (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
+    // Back-to-admin visibility
     (function () {
-      let sb = null;
+      const backBtn = document.getElementById('backToAdmin');
+      const params = new URLSearchParams(location.search);
+      const fromAdmin = params.get('from') === 'admin' || params.get('fromAdmin') === '1' || (document.referrer || '').includes('/admin');
+      if (fromAdmin) backBtn.classList.remove('hide');
+    })();
 
-      async function getEnv() {
+    const statusEl = document.getElementById('status');
+    const dotEl = document.getElementById('dot');
+    const signedOutCard = document.getElementById('signedOutCard');
+    const signedInCard  = document.getElementById('signedInCard');
+    const userEmailEl   = document.getElementById('userEmail');
+    const planLine      = document.getElementById('planLine');
+    const btnSignOut    = document.getElementById('btnSignOut');
+
+    function setStatus(label, ok) {
+      statusEl.textContent = label;
+      dotEl.style.background = ok ? getComputedStyle(document.documentElement).getPropertyValue('--ok') : getComputedStyle(document.documentElement).getPropertyValue('--warn');
+    }
+
+    async function getEnvSafe() {
+      // Non-fatal env fetch
+      try {
+        const res = await fetch('/api/env', { cache: 'no-store' });
+        if (!res.ok) throw new Error('env_http_' + res.status);
+        const data = await res.json();
+        if (data?.SUPABASE_URL && data?.SUPABASE_ANON_KEY) return data;
+      } catch (e) {}
+      return null;
+    }
+
+    async function boot() {
+      setStatus('Loading…', false);
+
+      const env = await getEnvSafe();
+      if (!env) {
+        setStatus('Missing /api/env', false);
+        // Still show signed-out UI (don’t white-screen)
+        signedOutCard.classList.remove('hide');
+        signedInCard.classList.add('hide');
+        return;
+      }
+
+      // IMPORTANT:
+      // Do NOT set storageKey here. Must match login.html default storage.
+      const supabase = window.supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+      });
+
+      window.__lp_supabase = supabase; // helpful for debugging in console
+
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session || !session.user) {
+        setStatus('Signed out', false);
+        signedOutCard.classList.remove('hide');
+        signedInCard.classList.add('hide');
+        return;
+      }
+
+      // Signed in
+      setStatus('Ready', true);
+      signedOutCard.classList.add('hide');
+      signedInCard.classList.remove('hide');
+      userEmailEl.textContent = session.user.email || '—';
+
+      // Optional: plan/subscription line (safe, non-blocking)
+      // Replace this later with your real subscription RPC (Step 8/Monetization)
+      planLine.innerHTML = 'Plan: <span style="color:var(--muted)">Active session</span>';
+
+      // Sign out
+      btnSignOut.onclick = async () => {
         try {
-          const res = await fetch('/api/env?ts=' + Date.now(), { cache: 'no-store' });
-          if (!res.ok) throw new Error('env_http_' + res.status);
-          return await res.json();
-        } catch (e) {
-          return null;
-        }
-      }
-
-      async function initSupabase() {
-        const env = await getEnv();
-        if (!env || !env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
-          console.error('Missing Supabase config. Ensure /api/env is deployed and reachable.');
-          return null;
-        }
-        const SB_URL = env.SUPABASE_URL;
-        const SB_KEY = env.SUPABASE_ANON_KEY;
-
-        // Standard client config (shared across pages)
-        sb = supabase.createClient(
-          SB_URL,
-          SB_KEY,
-          { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
-        );
-        return sb;
-      }
-
-      // LP_SESSION_MIGRATION (enterprise): accept sessions stored under legacy keys and/or other pages.
-      async function maybeMigrateLegacySession(legacyKey){
-        try{
-          const raw = localStorage.getItem(legacyKey);
-          if(!raw) return false;
-          const data = JSON.parse(raw);
-          if(!data?.access_token || !data?.refresh_token) return false;
-          await sb.auth.setSession({ access_token: data.access_token, refresh_token: data.refresh_token });
-          // Remove legacy key to avoid split-brain sessions.
-          localStorage.removeItem(legacyKey);
-          return true;
-        }catch(e){ return false; }
-      }
-
-      // Minimal guard (replaces external /subscription-guard.js to avoid 404 + broken auth).
-      // Contract: returns true if logged in, else false (does NOT silently auto-login).
-      const SubscriptionGuard = {
-        async requireLogin(){
-          const s = (await sb.auth.getSession()).data.session;
-          if(s) return true;
-
-          // Migrate legacy keys used by older builds/pages
-          await maybeMigrateLegacySession('lp_auth');
-          await maybeMigrateLegacySession('lp_admin_auth');
-
-          const s2 = (await sb.auth.getSession()).data.session;
-          return !!s2;
+          btnSignOut.disabled = true;
+          btnSignOut.textContent = 'Signing out…';
+          await supabase.auth.signOut();
+        } finally {
+          location.href = '/login.html?from=dashboard';
         }
       };
+    }
 
-      async function showAdminLinkIfAdmin() {
-        try{
-          const { data: roleVal } = await sb.rpc('get_my_role');
-          const r = (roleVal || '').toString();
-          if(r.includes('admin') || r === 'super_admin'){
-            const el = document.getElementById('backToAdmin');
-            if(el) el.style.display = 'inline-block';
-          }
-        }catch(e){}
-      }
-
-      async function boot() {
-        await initSupabase();
-        if (!sb) return;
-
-        // Require login (but do not silently auto-login)
-        const ok = await SubscriptionGuard.requireLogin();
-        if (!ok) {
-          // Keep your current “Go to Login” UX.
-          // If your existing HTML already shows that state, do nothing.
-          // If not, you can redirect:
-          // window.location.href = '/login.html';
-          return;
-        }
-
-        // If logged in, show admin link for admin users.
-        await showAdminLinkIfAdmin();
-
-        // Continue with your existing dashboard initialization logic below.
-        // If your current dashboard already has its own boot code, keep it.
-        // This patch only ensures session exists.
-      }
-
-      boot();
-    })();
+    boot().catch(() => {
+      // Never white-screen
+      setStatus('Boot error', false);
+      signedOutCard.classList.remove('hide');
+      signedInCard.classList.add('hide');
+    });
   </script>
 </body>
 </html>
