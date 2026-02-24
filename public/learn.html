@@ -78,6 +78,38 @@
   <script src="/assets/js/env-loader.js"></script>
 </head>
 <body>
+
+  <script>
+  // LP_ENV_LOADER_V1 — enterprise-safe env bootstrap (no hard crash on missing env)
+  (function(){
+    const CACHE_KEY = "LP_ENV_CACHE_V1";
+    async function fetchEnv(){
+      try{
+        const r = await fetch("/api/env", { credentials: "same-origin" });
+        if(!r.ok) throw new Error("env_http_"+r.status);
+        const j = await r.json();
+        if(j && (j.SUPABASE_URL || j.SUPABASE_ANON_KEY)){
+          localStorage.setItem(CACHE_KEY, JSON.stringify(j));
+          return j;
+        }
+        throw new Error("env_missing_fields");
+      }catch(e){
+        try{
+          const cached = localStorage.getItem(CACHE_KEY);
+          if(cached) return JSON.parse(cached);
+        }catch(_){}
+        return null;
+      }
+    }
+    window.__lpGetEnv = async function(){
+      if(window.__LP_ENV) return window.__LP_ENV;
+      const env = await fetchEnv();
+      window.__LP_ENV = env || {};
+      return window.__LP_ENV;
+    };
+  })();
+  </script>
+
     <div class="subscription-banner" id="subscriptionBanner">
         <span id="bannerText"></span>
         <span class="banner-link" onclick="handleBannerClick()">Take Action →</span>
@@ -134,7 +166,8 @@
         // (All existing learn.html JavaScript code stays the same)
         // Just adding subscription checking at the beginning
         // Runtime config injected by Vercel (public values only)
-        const { SUPABASE_URL: SB_URL, SUPABASE_ANON_KEY: SB_KEY } = window.__LP_ENV || {};
+        let SB_URL, SB_KEY;
+    function readEnv(){ const e = window.__LP_ENV || {}; SB_URL = e.SUPABASE_URL; SB_KEY = e.SUPABASE_ANON_KEY; }
         if (!SB_URL || !SB_KEY) {
             alert("Missing Supabase config. Set SUPABASE_URL and SUPABASE_ANON_KEY in Vercel Environment Variables.");
         }
@@ -159,7 +192,7 @@
         ];
 
         window.onload = async () => {
-            sb = supabase.createClient(SB_URL, SB_KEY, { auth: { storageKey: 'lp_auth', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+            sb = supabase.createClient(SB_URL, SB_KEY);
             
             // CHECK SUBSCRIPTION FIRST
             const loggedIn = await SubscriptionGuard.requireLogin();
