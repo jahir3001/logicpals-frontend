@@ -4,105 +4,184 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>LogicPals</title>
-
-  <!-- Keep your existing CSS links as-is if you already have them -->
+  <meta name="description" content="LogicPals — AI-powered critical thinking & Olympiad prep." />
   <style>
-    /* Minimal safe styling only (doesn't break your layout) */
-    #lpEnvError { display:none; padding:12px; border:1px solid #f1c40f; background:#fff7db; color:#5a4b00; border-radius:10px; margin:12px 0; }
+    :root{
+      --bg:#f6f8ff; --card:#ffffff; --text:#0f172a; --muted:#64748b;
+      --pri:#2563eb; --pri2:#1d4ed8; --ring:rgba(37,99,235,.18);
+      --border:rgba(15,23,42,.12);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--text);
+      background: radial-gradient(900px 500px at 20% 0%, #e8edff 0%, transparent 55%),
+                  radial-gradient(900px 500px at 85% 10%, #eafff7 0%, transparent 55%),
+                  var(--bg);
+    }
+    .topbar{
+      position:sticky; top:0; z-index:10;
+      background:rgba(255,255,255,.7);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--border);
+    }
+    .wrap{max-width:1100px; margin:0 auto; padding:14px 18px;}
+    .row{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+    .brand{display:flex; align-items:center; gap:10px; font-weight:800}
+    .logo{
+      width:40px; height:40px; border-radius:12px;
+      background: linear-gradient(135deg, #4f46e5, #22c55e);
+      display:grid; place-items:center; color:#fff; font-weight:900;
+      box-shadow: 0 8px 30px rgba(79,70,229,.25);
+      user-select:none;
+    }
+    .nav{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      padding:10px 14px; border-radius:999px;
+      cursor:pointer; text-decoration:none; color:var(--text);
+      font-weight:600; font-size:14px;
+    }
+    .btn:hover{box-shadow:0 0 0 6px var(--ring)}
+    .btn.primary{background:var(--pri); border-color:var(--pri); color:#fff;}
+    .btn.primary:hover{background:var(--pri2)}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.8);
+      padding:8px 12px; border-radius:999px;
+      font-size:13px; color:var(--muted);
+    }
+    .dot{width:8px; height:8px; border-radius:50%; background:#f59e0b}
+    main{padding:42px 18px;}
+    .hero{
+      max-width:1100px; margin:0 auto;
+      display:grid; grid-template-columns: 1.1fr .9fr; gap:18px;
+    }
+    @media (max-width:900px){.hero{grid-template-columns:1fr}}
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow: 0 12px 40px rgba(15,23,42,.08);
+      padding:22px;
+    }
+    h1{margin:0 0 10px 0; font-size:44px; line-height:1.06}
+    @media(max-width:520px){h1{font-size:34px}}
+    p{margin:0 0 16px 0; color:var(--muted); font-size:16px; line-height:1.55}
+    .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+    @media(max-width:520px){.grid2{grid-template-columns:1fr}}
+    .mini{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:14px;
+      background:rgba(255,255,255,.7);
+    }
+    .mini b{display:block; margin-bottom:6px}
+    .footer{color:var(--muted); font-size:13px; padding:14px 0 0}
+    .hide{display:none !important}
   </style>
-
-  <!-- Supabase JS (keep) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
-  <!-- Your existing page HTML stays the same below.
-       I’m not rewriting your page layout—only patching auth/env boot. -->
+  <div class="topbar">
+    <div class="wrap">
+      <div class="row">
+        <div class="brand">
+          <div class="logo">LP</div>
+          <div>
+            <div>LogicPals</div>
+            <div style="font-size:12px;color:var(--muted);font-weight:600">AI Critical Thinking Platform</div>
+          </div>
+        </div>
 
-  <!-- OPTIONAL: if you already have a nav login link, this will attach next to it -->
-  <!-- If you do NOT have a /login.html link, search "href=\"/login.html\"" and keep it -->
-  <!-- Admin link is hidden unless user role is admin -->
-  <div id="lpEnvError"></div>
+        <div class="nav">
+          <span id="envPill" class="pill"><span class="dot"></span><span id="envText">Booting…</span></span>
+          <a class="btn" href="/login.html">Login</a>
+          <a class="btn" href="/dashboard.html">Dashboard</a>
+          <a class="btn" href="/admin.html">Admin</a>
+          <a id="backToAdmin" class="btn hide" href="/admin.html">← Back to Admin</a>
+          <a class="btn primary" href="/pricing.html">Try Free for 7 Days</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <div class="hero">
+      <div class="card">
+        <h1>Your child can solve problems they’ve never seen before.</h1>
+        <p>
+          LogicPals builds real reasoning skills (not memorization), with strict separation between
+          Regular learning and Olympiad training.
+        </p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <a class="btn primary" href="/login.html">Get Started</a>
+          <a class="btn" href="/how-it-works.html">How it works</a>
+          <a class="btn" href="/dashboard.html?from=home=1">Open Dashboard</a>
+        </div>
+
+        <div class="footer">
+          Enterprise rule: UI must never crash if optional resources are missing. Boot failures show a safe status instead.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="grid2">
+          <div class="mini">
+            <b>Regular Practice</b>
+            <div style="color:var(--muted); font-size:14px">Daily skills, structured progress, mastery building.</div>
+          </div>
+          <div class="mini">
+            <b>Olympiad Track</b>
+            <div style="color:var(--muted); font-size:14px">Competition-style problems, strict gating & reviews.</div>
+          </div>
+          <div class="mini">
+            <b>Trust Layer</b>
+            <div style="color:var(--muted); font-size:14px">Audit events + explainability built in.</div>
+          </div>
+          <div class="mini">
+            <b>A/B Layer</b>
+            <div style="color:var(--muted); font-size:14px">Idempotent exposure + metric logging.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
 
   <script>
+    // Back-to-admin visibility: show if coming from admin OR explicit query
     (function () {
-      // Service worker disabled (service-worker.js not shipped in this static build)
+      const backBtn = document.getElementById('backToAdmin');
+      const params = new URLSearchParams(location.search);
+      const fromAdmin = params.get('from') === 'admin' || params.get('fromAdmin') === '1' || (document.referrer || '').includes('/admin');
+      if (fromAdmin) backBtn.classList.remove('hide');
+    })();
 
-      function showEnvError(msg) {
-        const el = document.getElementById('lpEnvError');
-        if (!el) return;
-        el.style.display = 'block';
-        el.textContent = msg;
+    // Env boot (non-fatal)
+    (async function bootEnv() {
+      const envText = document.getElementById('envText');
+      const dot = document.querySelector('#envPill .dot');
+
+      function setStatus(label, ok) {
+        envText.textContent = label;
+        dot.style.background = ok ? '#22c55e' : '#f59e0b';
       }
 
-      async function getEnv() {
-        try {
-          // Cache-bust + no-store to prevent stale edge caches
-          const res = await fetch('/api/env?ts=' + Date.now(), { cache: 'no-store' });
-          if (!res.ok) throw new Error('env_http_' + res.status);
-          return await res.json();
-        } catch (e) {
-          return null;
-        }
-      }
-
-      async function boot() {
-        const env = await getEnv();
-        if (!env || !env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
-          // Don’t hard-fail the landing page, but show a clear warning.
-          showEnvError('Missing Supabase config. Ensure /api/env is deployed and reachable.');
+      try {
+        const res = await fetch('/api/env', { cache: 'no-store' });
+        if (!res.ok) throw new Error('env_http_' + res.status);
+        const data = await res.json();
+        if (!data || !data.SUPABASE_URL || !data.SUPABASE_ANON_KEY) {
+          setStatus('Env missing (check /api/env)', false);
           return;
         }
-
-        const SB_URL = env.SUPABASE_URL;
-        const SB_KEY = env.SUPABASE_ANON_KEY;
-
-        // IMPORTANT: Use standard Supabase auth behavior (persist session)
-        const supabaseClient = supabase.createClient(
-          SB_URL,
-          SB_KEY,
-          { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
-        );
-
-        // If current user is admin/super_admin, show Admin link.
-        (async () => {
-          try {
-            const session = (await supabaseClient.auth.getSession()).data.session;
-            if (!session) return;
-            const { data: roleVal } = await supabaseClient.rpc('get_my_role');
-            const r = (roleVal || '').toString();
-            if (r.includes('admin') || r === 'super_admin') {
-              // Try to find an existing login link and attach admin next to it.
-              // If you already have an Admin link, nothing breaks.
-              let adminLink = document.getElementById('navAdmin');
-              if (!adminLink) {
-                adminLink = document.createElement('a');
-                adminLink.id = 'navAdmin';
-                adminLink.href = '/admin.html';
-                adminLink.textContent = 'Admin';
-                adminLink.style.display = 'inline-block';
-                adminLink.style.marginLeft = '16px';
-                adminLink.style.fontWeight = '600';
-
-                // Best-effort insert near header/login area
-                const loginAnchor = document.querySelector('a[href="/login.html"], a[href="login.html"]');
-                if (loginAnchor && loginAnchor.parentElement) {
-                  loginAnchor.parentElement.insertBefore(adminLink, loginAnchor.nextSibling);
-                } else {
-                  document.body.insertBefore(adminLink, document.body.firstChild);
-                }
-              } else {
-                adminLink.style.display = 'inline-block';
-              }
-            }
-          } catch (e) {}
-        })();
-
-        // No more auth logic needed for index page.
-        // Landing page should remain usable for signed-out visitors.
+        setStatus('Ready', true);
+      } catch (e) {
+        // Show safe status (never crash index)
+        setStatus('Env not reachable (site still loads)', false);
       }
-
-      boot();
     })();
   </script>
 </body>
