@@ -659,38 +659,6 @@
 	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
 <body>
-
-  <script>
-  // LP_ENV_LOADER_V1 — enterprise-safe env bootstrap (no hard crash on missing env)
-  (function(){
-    const CACHE_KEY = "LP_ENV_CACHE_V1";
-    async function fetchEnv(){
-      try{
-        const r = await fetch("/api/env", { credentials: "same-origin" });
-        if(!r.ok) throw new Error("env_http_"+r.status);
-        const j = await r.json();
-        if(j && (j.SUPABASE_URL || j.SUPABASE_ANON_KEY)){
-          localStorage.setItem(CACHE_KEY, JSON.stringify(j));
-          return j;
-        }
-        throw new Error("env_missing_fields");
-      }catch(e){
-        try{
-          const cached = localStorage.getItem(CACHE_KEY);
-          if(cached) return JSON.parse(cached);
-        }catch(_){}
-        return null;
-      }
-    }
-    window.__lpGetEnv = async function(){
-      if(window.__LP_ENV) return window.__LP_ENV;
-      const env = await fetchEnv();
-      window.__LP_ENV = env || {};
-      return window.__LP_ENV;
-    };
-  })();
-  </script>
-
     <header>
         <div class="container nav-container">
             <div class="logo">
@@ -1175,7 +1143,7 @@
         const { createClient } = supabase;
         const { SUPABASE_URL: supabaseUrl, SUPABASE_ANON_KEY: supabaseAnonKey } = window.__LP_ENV || {};
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.warn('Missing Supabase config; continuing in marketing-only mode.');
+      throw new Error('Missing Supabase config. Ensure /api/env is deployed and reachable.');
     }
         
         const sb = createClient(supabaseUrl, supabaseAnonKey);
@@ -1220,17 +1188,51 @@
         fetchLiveRankings();
     </script>
 
-  <script>
-  // LP_SW_GUARD_V1 — only register if asset exists (prevents 404 noise)
-  (async function(){
-    try{
-      if(!('serviceWorker' in navigator)) return;
-      const r = await fetch('/service-worker.js', { method:'HEAD', cache:'no-store' });
-      if(r.ok){
-        await navigator.serviceWorker.register('/service-worker.js');
+<script>
+/* LP_BACK_TO_ADMIN v1
+   Shows "Back to Admin" link when arriving from admin console.
+   Also keeps an "Admin Console" link in the top nav for convenience.
+*/
+(function(){
+  try{
+    const params = new URLSearchParams(location.search);
+    const fromAdmin = params.get('from') === 'admin' || params.get('from') === 'console';
+    const adminHref = '/admin.html';
+    // 1) Add top-right "Admin Console" link if a nav exists and link not already present
+    const existing = Array.from(document.querySelectorAll('a')).some(a => (a.getAttribute('href')||'').includes('admin.html'));
+    if(!existing){
+      const nav = document.querySelector('nav') || document.querySelector('header') || document.body;
+      const a = document.createElement('a');
+      a.href = adminHref;
+      a.textContent = 'Admin Console';
+      a.style.cssText = 'margin-left:14px; padding:10px 14px; border-radius:999px; border:1px solid rgba(0,0,0,0.12); text-decoration:none; font-weight:600;';
+      // try to place near existing login button
+      const loginLink = Array.from(nav.querySelectorAll('a,button')).find(el => /login/i.test(el.textContent||''));
+      if(loginLink && loginLink.parentElement){
+        loginLink.parentElement.insertBefore(a, loginLink.nextSibling);
+      } else {
+        nav.appendChild(a);
       }
-    }catch(e){}
-  })();
-  </script>
+    }
+    // 2) Show "Back to Admin" banner if coming from admin
+    if(fromAdmin){
+      const bar = document.createElement('div');
+      bar.setAttribute('role','region');
+      bar.style.cssText = 'position:fixed; top:12px; right:12px; z-index:9999; background:rgba(255,255,255,0.96); border:1px solid rgba(0,0,0,0.12); border-radius:999px; padding:10px 12px; box-shadow:0 8px 24px rgba(0,0,0,0.08); display:flex; gap:10px; align-items:center;';
+      const badge = document.createElement('span');
+      badge.textContent = 'From Admin';
+      badge.style.cssText = 'font-size:12px; opacity:0.75;';
+      const back = document.createElement('a');
+      back.href = adminHref;
+      back.textContent = 'Back to Admin';
+      back.style.cssText = 'padding:8px 12px; border-radius:999px; background:#6d5efc; color:#fff; text-decoration:none; font-weight:700;';
+      bar.appendChild(badge);
+      bar.appendChild(back);
+      document.body.appendChild(bar);
+    }
+  }catch(e){}
+})();
+</script>
+
 </body>
 </html>
