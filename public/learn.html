@@ -11,34 +11,33 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-  <!-- IMPORTANT:
-       DO NOT load subscription-guard.js here.
-       We will load it only AFTER /api/env is fetched and Supabase is initialized (deterministic boot).
-  -->
-
   <style>
     :root{--primary:#6c5ce7;--success:#00d2a0;--warning:#feca57;--bg:#0c0e1a;--card:rgba(20,24,52,.55);--border:rgba(255,255,255,.06);--text:#f0f0f5;--text2:#9899b3;--muted:#5d5f7e;--bad:#ff6b6b;--as:rgba(108,92,231,.12);--ys:rgba(254,202,87,.10);--glow:rgba(108,92,231,.35);--font:'Plus Jakarta Sans',-apple-system,sans-serif;--font-d:'Outfit',-apple-system,sans-serif;--font-m:'JetBrains Mono',monospace;}
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dvh;display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased;}
 
+    /* Subscription banner */
     .subscription-banner{background:linear-gradient(135deg,rgba(254,202,87,.15),rgba(254,202,87,.08));border-bottom:2px solid rgba(254,202,87,.2);padding:12px 20px;text-align:center;font-weight:700;font-size:13px;color:var(--warning);display:none;animation:slideDown .3s ease;}
     .subscription-banner.show{display:block;}
     @keyframes slideDown{from{transform:translateY(-100%);}to{transform:translateY(0);}}
     .banner-link{color:var(--warning);text-decoration:underline;cursor:pointer;margin-left:8px;font-weight:800;}
 
+    /* Header */
     header{background:rgba(12,14,26,.75);backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);z-index:20;flex-shrink:0;}
     .logo{font-family:var(--font-d);font-weight:800;color:#b8b0f0;font-size:18px;letter-spacing:-.3px;}
     .header-right{display:flex;align-items:center;gap:8px;}
     .timer-badge{background:var(--card);color:var(--text2);font-weight:600;padding:6px 12px;border-radius:100px;font-size:13px;font-family:var(--font-m);border:1px solid var(--border);}
-    .exit-btn{background:rgba(255,255,255,.04);color:var(--text2);padding:6px 12px;border-radius:10px;font-size:12px;font-weight:700;border:1px solid var(--border);cursor:pointer;}
+    .exit-btn{background:rgba(255,255,255,.04);color:var(--text2);padding:6px 12px;border-radius:10px;font-size:12px;font-weight:700;border:1px solid var(--border);cursor:pointer;font-family:var(--font);}
     .exit-btn:hover{background:rgba(255,255,255,.08);color:var(--text);}
     .olympiad-btn{background:var(--ys);color:var(--warning);padding:6px 12px;border-radius:10px;font-size:12px;font-weight:700;border:1px solid rgba(254,202,87,.2);cursor:pointer;text-decoration:none;display:inline-block;}
 
+    /* Status bar */
     .status-bar{background:rgba(12,14,26,.6);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;justify-content:center;gap:15px;flex-shrink:0;z-index:15;}
     .stat-pill{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;}
     .stat-pill.hints{background:var(--ys);color:var(--warning);border:1px solid rgba(254,202,87,.15);}
     .stat-pill.questions{background:var(--as);color:#b8b0f0;border:1px solid rgba(108,92,231,.15);}
 
+    /* Problem area */
     .main-content{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;width:100%;max-width:800px;margin:0 auto;}
     .problem-container{padding:10px 16px;background:var(--bg);flex-shrink:0;}
     .problem-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:15px;backdrop-filter:blur(16px);position:relative;overflow:hidden;transition:all .3s ease;}
@@ -52,6 +51,7 @@
     .problem-card.minimized .problem-text{display:none;}
     .problem-card.minimized{padding:10px;}
 
+    /* Chat */
     .chat-container{flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;}
     .message{max-width:85%;padding:14px 18px;border-radius:18px;font-size:15px;line-height:1.45;font-weight:500;animation:popIn .3s;}
     .message.ai{align-self:flex-start;background:var(--card);color:var(--text);border:1px solid var(--border);border-bottom-left-radius:4px;}
@@ -60,26 +60,45 @@
     .message.system{align-self:center;background:rgba(255,255,255,.03);color:var(--muted);border:1px solid var(--border);font-size:13px;text-align:center;width:90%;}
     @keyframes popIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 
+    /* Input area */
     .input-area{background:rgba(12,14,26,.8);backdrop-filter:blur(16px);padding:10px 16px;border-top:1px solid var(--border);flex-shrink:0;width:100%;z-index:20;padding-bottom:env(safe-area-inset-bottom,10px);}
     .typing-indicator{font-size:12px;color:var(--muted);margin-bottom:5px;opacity:0;transition:.2s;height:15px;}
     .input-wrapper{display:flex;gap:8px;align-items:center;max-width:800px;margin:0 auto;}
-    .round-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--border);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.12s;flex-shrink:0;background:var(--card);}
+    .round-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--border);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.12s;flex-shrink:0;background:var(--card);font-family:var(--font);}
     .round-btn:active{transform:scale(.93);}
+    .round-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
     .hint-btn{background:var(--ys);color:var(--warning);border-color:rgba(254,202,87,.2);}
+    .hint-btn.exhausted{opacity:.4;cursor:not-allowed;}
     .mic-btn{background:rgba(255,255,255,.03);color:var(--text2);}
     .mic-btn.recording{background:rgba(255,107,107,.12);color:var(--bad);border-color:rgba(255,107,107,.2);animation:pulse 1.5s infinite;}
     .send-btn{background:linear-gradient(135deg,var(--primary),#8b7cf6);color:white;border:none;box-shadow:0 2px 12px var(--glow);}
-    input{flex:1;padding:0 20px;border:2px solid var(--border);border-radius:100px;font:500 15px var(--font);outline:none;height:44px;background:rgba(255,255,255,.04);color:var(--text);}
-    input::placeholder{color:var(--muted);}
-    input:focus{border-color:rgba(108,92,231,.3);background:rgba(255,255,255,.06);box-shadow:0 0 0 3px rgba(108,92,231,.08);}
+    input[type="text"]{flex:1;padding:0 20px;border:2px solid var(--border);border-radius:100px;font:500 15px var(--font);outline:none;height:44px;background:rgba(255,255,255,.04);color:var(--text);}
+    input[type="text"]::placeholder{color:var(--muted);}
+    input[type="text"]:focus{border-color:rgba(108,92,231,.3);background:rgba(255,255,255,.06);box-shadow:0 0 0 3px rgba(108,92,231,.08);}
 
+    /* Modals */
     .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(8,10,22,.7);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:1000;}
     .modal-content{background:rgba(20,24,52,.85);backdrop-filter:blur(24px);border:1px solid var(--border);padding:32px 24px;border-radius:20px;width:90%;max-width:400px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.4);animation:popUp .4s;}
     @keyframes popUp{from{transform:scale(.85);opacity:0;}to{transform:scale(1);opacity:1;}}
     .modal-title{font-family:var(--font-d);font-size:28px;font-weight:800;color:var(--success);margin-bottom:10px;}
+    .modal-title.incorrect{color:var(--bad);}
     .insight-box{background:rgba(0,210,160,.08);border:1px solid rgba(0,210,160,.12);padding:16px;border-radius:14px;margin:15px 0;text-align:left;}
     .next-btn{width:100%;background:var(--success);color:#fff;border:none;padding:14px;border-radius:14px;font:800 16px var(--font);margin-top:10px;cursor:pointer;box-shadow:0 4px 16px rgba(0,210,160,.25);}
     .next-btn:hover{box-shadow:0 6px 24px rgba(0,210,160,.35);}
+
+    /* Auth gate overlay */
+    .auth-gate{position:fixed;inset:0;background:rgba(8,10,22,.92);backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center;z-index:2000;flex-direction:column;gap:16px;}
+    .auth-gate.show{display:flex;}
+    .auth-gate h2{font-family:var(--font-d);font-size:22px;font-weight:800;color:var(--text);}
+    .auth-gate p{color:var(--muted);font-size:14px;max-width:320px;text-align:center;line-height:1.5;}
+    .auth-gate .login-btn{background:linear-gradient(135deg,var(--primary),#8b7cf6);color:#fff;border:none;padding:14px 32px;border-radius:14px;font:700 15px var(--font);cursor:pointer;box-shadow:0 4px 20px var(--glow);}
+
+    /* Session summary modal */
+    .summary-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0;}
+    .summary-stat{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;}
+    .summary-stat .val{font-family:var(--font-d);font-size:22px;font-weight:800;color:var(--text);}
+    .summary-stat .lbl{font-size:11px;color:var(--muted);font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:.3px;}
+
     @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,107,107,.4);}70%{box-shadow:0 0 0 12px rgba(255,107,107,0);}100%{box-shadow:0 0 0 0 rgba(255,107,107,0);}}
     @media(max-width:600px){.toggle-btn{display:block;}.problem-container{padding:0 10px;}.problem-card{border-radius:0 0 16px 16px;border-top:none;}.problem-card::before{border-radius:0;}.problem-card.minimized{display:none;}.status-bar{padding:5px;gap:10px;}.chat-container{padding:10px;}.input-area{padding:8px 12px;}}
     @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
@@ -87,26 +106,33 @@
 </head>
 
 <body>
+  <!-- Auth gate (replaces redirect-based login) -->
+  <div class="auth-gate" id="authGate">
+    <h2>&#128274; Sign in required</h2>
+    <p>You need to be signed in to practice. Please log in to continue.</p>
+    <button class="login-btn" id="authLoginBtn">Go to Login</button>
+  </div>
+
   <div class="subscription-banner" id="subscriptionBanner">
     <span id="bannerText"></span>
-    <span class="banner-link" onclick="handleBannerClick()">Take Action →</span>
+    <span class="banner-link" id="bannerLink">Take Action &#8594;</span>
   </div>
 
   <header>
-    <div class="logo">🧠 LogicPals</div>
+    <div class="logo">&#129504; LogicPals</div>
     <div class="header-right">
-      <a href="olympiad.html" class="olympiad-btn">🏆 Olympiad</a>
-      <div class="timer-badge">⏱️ <span id="timeDisplay">00:00</span></div>
-      <button onclick="clearStateAndExit()" class="exit-btn">Exit</button>
+      <a href="olympiad.html" class="olympiad-btn">&#127942; Olympiad</a>
+      <div class="timer-badge">&#9201;&#65039; <span id="timeDisplay">00:00</span></div>
+      <button class="exit-btn" id="exitBtn">Exit</button>
     </div>
   </header>
 
   <div class="status-bar">
-    <div class="stat-pill hints">💡 Hints: <span id="hintCount">0/3</span></div>
-    <div class="stat-pill questions">❓ Asked: <span id="questionCount">0</span></div>
+    <div class="stat-pill hints">&#128161; Hints: <span id="hintCount">0/3</span></div>
+    <div class="stat-pill questions">&#10067; Asked: <span id="questionCount">0</span></div>
   </div>
 
-  <button class="toggle-btn" id="toggleBtn" onclick="toggleProblem()">Show Mystery Question 🔽</button>
+  <button class="toggle-btn" id="toggleBtn">Show Mystery Question &#128317;</button>
 
   <div class="main-content">
     <div class="problem-container">
@@ -125,501 +151,612 @@
     </div>
 
     <div class="chat-container" id="chatContainer">
-      <div class="message system">Hi! Ready to solve this mystery? Read the problem above! 👆</div>
+      <div class="message system">Hi! Ready to solve this mystery? Read the problem above! &#128070;</div>
     </div>
   </div>
 
   <div class="input-area">
     <div class="typing-indicator" id="typing">LogicPals is thinking...</div>
     <div class="input-wrapper">
-      <button class="round-btn hint-btn" onclick="useHint()" title="Hint">💡</button>
-      <input type="text" id="textInput" placeholder="Type here..." autocomplete="off" />
-      <button class="round-btn mic-btn" id="micBtn" onclick="toggleRecording()" title="Voice">🎤</button>
-      <button class="round-btn send-btn" id="sendBtn" onclick="sendText()" title="Send">➤</button>
+      <button class="round-btn hint-btn" id="hintBtn" title="Hint">&#128161;</button>
+      <input type="text" id="textInput" placeholder="Type your answer..." autocomplete="off" />
+      <button class="round-btn mic-btn" id="micBtn" title="Voice">&#127908;</button>
+      <button class="round-btn send-btn" id="sendBtn" title="Send">&#10148;</button>
     </div>
   </div>
 
+  <!-- Success Modal -->
   <div class="modal-overlay" id="successModal">
     <div class="modal-content">
-      <div style="font-size:50px;margin-bottom:10px;">🎉</div>
-      <div class="modal-title">YOU DID IT!</div>
+      <div style="font-size:50px;margin-bottom:10px;">&#127881;</div>
+      <div class="modal-title" id="modalTitle">YOU DID IT!</div>
       <div style="color:var(--text2);font-weight:600;margin-bottom:15px;">
-        Time: <span id="finalTime">0:00</span> • Hints: <span id="finalHints">0</span>
+        Time: <span id="finalTime">0:00</span> &#8226; Hints: <span id="finalHints">0</span>
       </div>
-      <div class="insight-box">
-        <div style="color:var(--success);font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.4px;">🧠 What you just learned</div>
+      <div class="insight-box" id="insightBox">
+        <div style="color:var(--success);font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.4px;">&#129504; What you just learned</div>
         <div style="color:var(--success);font-size:14px;line-height:1.4;margin-top:5px;" id="learningInsight">You practiced <b>Lateral Thinking</b>!</div>
       </div>
-      <button class="next-btn" onclick="loadNextPuzzle(true)">Next Mystery 🚀</button>
+      <div class="summary-stats" id="summaryStats">
+        <div class="summary-stat"><div class="val" id="sessionSolved">0</div><div class="lbl">Solved</div></div>
+        <div class="summary-stat"><div class="val" id="sessionAccuracy">0%</div><div class="lbl">Session accuracy</div></div>
+      </div>
+      <button class="next-btn" id="nextBtn">Next Mystery &#128640;</button>
     </div>
   </div>
 
-  <script>
-    // -----------------------------
-    // Enterprise-grade deterministic bootstrap
-    // -----------------------------
-    async function LP_getEnv() {
-      // prefer cached
-      if (window.__LP_ENV && window.__LP_ENV.SUPABASE_URL && window.__LP_ENV.SUPABASE_ANON_KEY) return window.__LP_ENV;
+<script>
+(function(){
+  'use strict';
 
-      const url = '/api/env';
-      const r = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
-      if (!r.ok) throw new Error('GET /api/env failed: ' + r.status);
-      const env = await r.json();
-      window.__LP_ENV = env;
-      return env;
+  /* ═══════════════════════════════════════
+     DETERMINISTIC BOOT SEQUENCE
+     ═══════════════════════════════════════ */
+
+  // Env loader — try window.__LP_ENV (from env-loader.js), then /api/env
+  async function LP_getEnv(){
+    if(window.__LP_ENV && window.__LP_ENV.SUPABASE_URL && window.__LP_ENV.SUPABASE_ANON_KEY){
+      return window.__LP_ENV;
     }
-
-    function LP_showFatal(msg) {
-      console.error(msg);
-      alert(msg);
-      // keep UI stable
-      document.getElementById('problemText').innerText = '⚠️ ' + msg;
-      document.getElementById('typing').style.opacity = 0;
-    }
-
-    function LP_getTrack() {
-      const p = new URLSearchParams(location.search);
-      const t = (p.get('track') || 'regular').toLowerCase();
-      return (t === 'olympiad') ? 'olympiad' : 'regular';
-    }
-
-    async function LP_loadScript(src) {
-      await new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = src;
-        s.async = true;
-        s.onload = resolve;
-        s.onerror = () => reject(new Error('Failed to load script: ' + src));
-        document.head.appendChild(s);
-      });
-    }
-
-    // -----------------------------
-    // App state
-    // -----------------------------
-    let SB_URL = null;
-    let SB_KEY = null;
-    let sb = null;
-
-    let currentProblem = null;
-    let currentChildId = null;
-    let hintsUsed = 0;
-    let chatLog = [];
-    let startTime = null;
-    let timerInt = null;
-    let isProcessing = false;
-    let questionsAsked = 0;
-    let userSubscription = null;
-
-    const TRACK = LP_getTrack(); // "regular" | "olympiad"
-
-    const learningInsights = {
-      'logic': 'LATERAL THINKING - looking at problems in creative ways!',
-      'arithmetic': 'NUMBER SENSE - understanding how numbers work together!',
-      'word-problem': 'COMPREHENSION - understanding what the question really asks!',
-      'pattern': 'PATTERN RECOGNITION - spotting what comes next!',
-      'algebra': 'ABSTRACT THINKING - working with unknown values!'
+    const r = await fetch('/api/env', { cache:'no-store', credentials:'same-origin' });
+    if(!r.ok) throw new Error('GET /api/env failed: ' + r.status);
+    const env = await r.json();
+    // Normalize key names
+    const result = {
+      SUPABASE_URL: env.SUPABASE_URL || env.supabaseUrl || env.url,
+      SUPABASE_ANON_KEY: env.SUPABASE_ANON_KEY || env.supabaseAnonKey || env.anonKey
     };
+    window.__LP_ENV = result;
+    return result;
+  }
 
-    const localPuzzles = [
-      { id: "999", problem_text: "A farmer has 17 sheep and all but 9 die. How many are left?", solution_explanation: "9", category: "logic", difficulty: "medium", hints: ["Read carefully!", "It says 'all but 9'"] }
-    ];
+  function LP_showFatal(msg){
+    console.error('[LogicPals FATAL]', msg);
+    document.getElementById('problemText').innerText = '\u26A0\uFE0F ' + msg;
+    document.getElementById('typing').style.opacity = 0;
+  }
 
-    // -----------------------------
-    // Subscription banner helpers
-    // -----------------------------
-    function showSubscriptionBanner(type, daysRemaining = 0) {
-      const banner = document.getElementById('subscriptionBanner');
-      const bannerText = document.getElementById('bannerText');
+  function LP_getTrack(){
+    const p = new URLSearchParams(location.search);
+    const t = (p.get('track') || 'regular').toLowerCase();
+    return t === 'olympiad' ? 'olympiad' : 'regular';
+  }
 
-      if (type === 'expired') {
-        bannerText.textContent = '⚠️ Your free trial has ended!';
-        banner.dataset.action = 'upgrade';
-      } else if (type === 'trial_ending') {
-        bannerText.textContent = `⏰ Only ${daysRemaining} days left in your free trial!`;
-        banner.dataset.action = 'upgrade';
-      } else if (type === 'error') {
-        bannerText.textContent = '⚠️ Subscription check unavailable. Limited mode.';
-        banner.dataset.action = '';
-      }
+  async function LP_loadScript(src){
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.async = true;
+      s.onload = resolve;
+      s.onerror = () => reject(new Error('Failed to load: ' + src));
+      document.head.appendChild(s);
+    });
+  }
 
-      banner.classList.add('show');
+  /* ═══════════════════════════════════════
+     APP STATE
+     ═══════════════════════════════════════ */
+  const STORAGE_KEY = 'logicpals.auth';
+  const TRACK = LP_getTrack();
+  const LOGIN_URL = '/login.html?next=' + encodeURIComponent(location.pathname + location.search);
+
+  let sb = null;
+  let currentProblem = null;
+  let currentChildId = null;
+  let hintsUsed = 0;
+  let chatLog = [];
+  let startTime = null;
+  let timerInt = null;
+  let isProcessing = false;
+  let questionsAsked = 0;
+  let userSubscription = null;
+  let problemCount = 0;      // problems seen this session
+  let sessionCorrect = 0;    // correct this session
+  let sessionTotal = 0;       // total attempts this session
+
+  // Fallback puzzles if DB is unavailable
+  const localPuzzles = [
+    { id:'999', problem_text:'A farmer has 17 sheep and all but 9 die. How many are left?', solution_explanation:'9', answer_key:'9', category:'logic', difficulty:'medium', hints:['Read carefully!','It says "all but 9"','The answer is in the question itself.'] },
+    { id:'998', problem_text:'If you have 3 apples and take away 2, how many do YOU have?', solution_explanation:'2', answer_key:'2', category:'logic', difficulty:'easy', hints:['You took them!','How many did you take?','You have the 2 you took.'] },
+    { id:'997', problem_text:'What is half of 2+2?', solution_explanation:'2', answer_key:'2', category:'arithmetic', difficulty:'easy', hints:['Do the addition first.','2+2=4. Now find half.','Half of 4 is 2.'] }
+  ];
+
+  const learningInsights = {
+    'logic': 'LATERAL THINKING — looking at problems in creative ways!',
+    'arithmetic': 'NUMBER SENSE — understanding how numbers work together!',
+    'word-problem': 'COMPREHENSION — understanding what the question really asks!',
+    'pattern': 'PATTERN RECOGNITION — spotting what comes next!',
+    'algebra': 'ABSTRACT THINKING — working with unknown values!',
+    'geometry': 'SPATIAL REASONING — visualizing shapes and spaces!'
+  };
+
+  /* ═══════════════════════════════════════
+     DOM REFS (cached for performance)
+     ═══════════════════════════════════════ */
+  const $ = (id) => document.getElementById(id);
+  const dom = {};
+  function cacheDom(){
+    ['problemText','diffBadge','catBadge','probNum','problemCard','toggleBtn',
+     'chatContainer','textInput','sendBtn','hintBtn','micBtn','typing',
+     'hintCount','questionCount','timeDisplay',
+     'successModal','modalTitle','finalTime','finalHints','learningInsight','insightBox',
+     'nextBtn','summaryStats','sessionSolved','sessionAccuracy',
+     'subscriptionBanner','bannerText','bannerLink',
+     'authGate','authLoginBtn','exitBtn'
+    ].forEach(id => { dom[id] = $(id); });
+  }
+
+  /* ═══════════════════════════════════════
+     SUBSCRIPTION BANNER
+     ═══════════════════════════════════════ */
+  function showSubscriptionBanner(type, daysRemaining){
+    if(!dom.subscriptionBanner) return;
+    const txt = dom.bannerText;
+    const link = dom.bannerLink;
+
+    if(type === 'expired'){
+      txt.textContent = '\u26A0\uFE0F Your free trial has ended!';
+      link.onclick = () => location.href = 'upgrade.html';
+    } else if(type === 'trial_ending'){
+      txt.textContent = '\u23F0 Only ' + daysRemaining + ' days left in your free trial!';
+      link.onclick = () => location.href = 'upgrade.html';
+    } else if(type === 'error'){
+      txt.textContent = '\u26A0\uFE0F Subscription check unavailable. Limited mode.';
+      link.style.display = 'none';
     }
 
-    function handleBannerClick() {
-      const banner = document.getElementById('subscriptionBanner');
-      const action = banner.dataset.action;
-      if (action === 'upgrade') window.location.href = 'upgrade.html';
+    dom.subscriptionBanner.classList.add('show');
+  }
+
+  /* ═══════════════════════════════════════
+     UI HELPERS
+     ═══════════════════════════════════════ */
+  function addMessage(role, text, animate){
+    if(animate === undefined) animate = true;
+    const div = document.createElement('div');
+    div.className = 'message ' + role;
+    div.innerText = text;
+    if(!animate) div.style.animation = 'none';
+    dom.chatContainer.appendChild(div);
+    dom.chatContainer.scrollTop = dom.chatContainer.scrollHeight;
+  }
+
+  function updateStats(){
+    dom.hintCount.innerText = hintsUsed + '/3';
+    dom.questionCount.innerText = String(questionsAsked);
+
+    // Visual feedback on hint button
+    if(hintsUsed >= 3){
+      dom.hintBtn.classList.add('exhausted');
+      dom.hintBtn.title = 'No hints left';
+    } else {
+      dom.hintBtn.classList.remove('exhausted');
+      dom.hintBtn.title = 'Hint (' + (3 - hintsUsed) + ' left)';
+    }
+  }
+
+  function renderProblem(){
+    if(!currentProblem) return;
+    dom.problemText.innerText = currentProblem.problem_text || 'Mystery question loading...';
+    dom.diffBadge.innerText = (currentProblem.difficulty || 'MEDIUM').toUpperCase();
+    dom.catBadge.innerText = (currentProblem.category || 'LOGIC').toUpperCase();
+    dom.probNum.innerText = String(problemCount || 1);
+
+    if(window.innerWidth <= 600){
+      dom.problemCard.classList.remove('minimized');
+      dom.toggleBtn.innerText = 'Hide Mystery \uD83D\uDD3C';
+    }
+  }
+
+  function toggleProblem(){
+    const isHidden = dom.problemCard.classList.contains('minimized');
+    if(isHidden){
+      dom.problemCard.classList.remove('minimized');
+      dom.toggleBtn.innerText = 'Hide Mystery \uD83D\uDD3C';
+    } else {
+      dom.problemCard.classList.add('minimized');
+      dom.toggleBtn.innerText = 'Show Mystery \uD83D\uDD3D';
+    }
+  }
+
+  function startTimer(){
+    if(timerInt) clearInterval(timerInt);
+    timerInt = setInterval(() => {
+      if(!startTime) return;
+      const diff = Math.floor((Date.now() - startTime) / 1000);
+      const m = Math.floor(diff / 60).toString().padStart(2, '0');
+      const s = (diff % 60).toString().padStart(2, '0');
+      dom.timeDisplay.innerText = m + ':' + s;
+    }, 1000);
+  }
+
+  /* ═══════════════════════════════════════
+     STATE PERSISTENCE
+     ═══════════════════════════════════════ */
+  function saveState(){
+    try {
+      localStorage.setItem('lp_state', JSON.stringify({
+        problem: currentProblem, hints: hintsUsed, questions: questionsAsked,
+        chat: chatLog, timeStart: startTime, track: TRACK,
+        problemCount: problemCount, sessionCorrect: sessionCorrect, sessionTotal: sessionTotal
+      }));
+    } catch(_){}
+  }
+
+  function restoreState(state){
+    currentProblem = state.problem;
+    hintsUsed = state.hints || 0;
+    questionsAsked = state.questions || 0;
+    chatLog = state.chat || [];
+    startTime = state.timeStart || Date.now();
+    problemCount = state.problemCount || 1;
+    sessionCorrect = state.sessionCorrect || 0;
+    sessionTotal = state.sessionTotal || 0;
+
+    renderProblem();
+    updateStats();
+
+    dom.chatContainer.innerHTML = '<div class="message system">Welcome back! I remembered where we left off. \uD83E\uDDE0</div>';
+    chatLog.forEach(msg => {
+      if(msg.role !== 'system') addMessage(msg.role === 'assistant' ? 'ai' : 'user', msg.content, false);
+    });
+
+    startTimer();
+  }
+
+  function clearStateAndExit(){
+    localStorage.removeItem('lp_state');
+    location.href = 'dashboard.html';
+  }
+
+  /* ═══════════════════════════════════════
+     CORE ACTIONS
+     ═══════════════════════════════════════ */
+  async function loadNextPuzzle(clearMemory){
+    // Subscription gate
+    if(userSubscription && userSubscription.expired && window.SubscriptionGuard && SubscriptionGuard.showUpgradeModal){
+      SubscriptionGuard.showUpgradeModal('Your free trial has ended! Upgrade to continue solving unlimited problems.', 'champion');
+      return;
     }
 
-    // -----------------------------
-    // UI helpers
-    // -----------------------------
-    function addMessage(role, text, animate = true) {
-      const div = document.createElement('div');
-      div.className = `message ${role}`;
-      div.innerText = text;
-      if (!animate) div.style.animation = 'none';
-      const container = document.getElementById('chatContainer');
-      container.appendChild(div);
-      container.scrollTop = container.scrollHeight;
-    }
+    if(clearMemory) localStorage.removeItem('lp_state');
 
-    function updateStats() {
-      document.getElementById('hintCount').innerText = `${hintsUsed}/3`;
-      document.getElementById('questionCount').innerText = String(questionsAsked);
-    }
+    dom.successModal.style.display = 'none';
+    dom.chatContainer.innerHTML = '<div class="message system">Hi! Ready to solve this? Read the mystery above! \uD83D\uDC46</div>';
+    dom.textInput.value = '';
+    hintsUsed = 0;
+    questionsAsked = 0;
+    chatLog = [];
+    problemCount++;
+    updateStats();
 
-    function renderProblem() {
-      if (!currentProblem) return;
-      document.getElementById('problemText').innerText = currentProblem.problem_text || 'Mystery missing problem_text';
-      document.getElementById('diffBadge').innerText = (currentProblem.difficulty || 'MEDIUM').toUpperCase();
-      document.getElementById('catBadge').innerText = (currentProblem.category || 'LOGIC').toUpperCase();
-      document.getElementById('probNum').innerText = '1';
+    // Fetch puzzle from database
+    let puzzle = localPuzzles[Math.floor(Math.random() * localPuzzles.length)];
 
-      if (window.innerWidth <= 600) {
-        document.getElementById('problemCard').classList.remove('minimized');
-        document.getElementById('toggleBtn').innerText = "Hide Mystery 🔼";
-      }
-    }
-
-    function toggleProblem() {
-      const card = document.getElementById('problemCard');
-      const btn = document.getElementById('toggleBtn');
-      const isHidden = card.classList.contains('minimized');
-
-      if (isHidden) {
-        card.classList.remove('minimized');
-        btn.innerText = "Hide Mystery 🔼";
-      } else {
-        card.classList.add('minimized');
-        btn.innerText = "Show Mystery 🔽";
-      }
-    }
-
-    function startTimer() {
-      if (timerInt) clearInterval(timerInt);
-      timerInt = setInterval(() => {
-        const diff = Math.floor((Date.now() - startTime) / 1000);
-        const m = Math.floor(diff / 60).toString().padStart(2,'0');
-        const s = (diff % 60).toString().padStart(2,'0');
-        document.getElementById('timeDisplay').innerText = `${m}:${s}`;
-      }, 1000);
-    }
-
-    function saveState() {
-      const state = {
-        problem: currentProblem,
-        hints: hintsUsed,
-        questions: questionsAsked,
-        chat: chatLog,
-        timeStart: startTime,
-        track: TRACK
-      };
-      localStorage.setItem('lp_state', JSON.stringify(state));
-    }
-
-    function restoreState(state) {
-      currentProblem = state.problem;
-      hintsUsed = state.hints || 0;
-      questionsAsked = state.questions || 0;
-      chatLog = state.chat || [];
-      startTime = state.timeStart || Date.now();
-
-      renderProblem();
-      updateStats();
-
-      document.getElementById('chatContainer').innerHTML = '<div class="message system">Welcome back! I remembered where we left off. 🧠</div>';
-      chatLog.forEach(msg => {
-        if (msg.role !== 'system') addMessage(msg.role === 'assistant' ? 'ai' : 'user', msg.content, false);
-      });
-
-      startTimer();
-    }
-
-    function clearStateAndExit() {
-      localStorage.removeItem('lp_state');
-      location.href = 'dashboard.html';
-    }
-
-    // -----------------------------
-    // Core actions
-    // -----------------------------
-    async function loadNextPuzzle(clearMemory) {
-      // subscription gate (if available)
-      if (userSubscription && userSubscription.expired && window.SubscriptionGuard?.showUpgradeModal) {
-        SubscriptionGuard.showUpgradeModal(
-          'Your free trial has ended! Upgrade to continue solving unlimited problems.',
-          'champion'
-        );
-        return;
-      }
-
-      if (clearMemory) localStorage.removeItem('lp_state');
-
-      document.getElementById('successModal').style.display = 'none';
-      document.getElementById('chatContainer').innerHTML = '<div class="message system">Hi! Ready to solve this? Read the mystery above! 👆</div>';
-      document.getElementById('textInput').value = '';
-      hintsUsed = 0;
-      questionsAsked = 0;
-      chatLog = [];
-      updateStats();
-
-      let puzzle = localPuzzles[0];
-
-      // DB puzzle (best-effort). Enterprise: do not crash learn if DB query fails.
-      try {
-        const level = (TRACK === 'olympiad') ? 'olympiad' : 'regular';
-
-        // NOTE: your schema may use different filter columns. This keeps your previous intent:
-        // eq('is_active', true) and eq('olympiad_level', level)
+    try {
+      if(sb){
+        const level = TRACK === 'olympiad' ? 'olympiad' : 'regular';
         const { data, error } = await sb
           .from('problems')
           .select('*')
           .eq('is_active', true)
           .eq('olympiad_level', level);
 
-        if (!error && data && data.length > 0) {
+        if(!error && data && data.length > 0){
           puzzle = data[Math.floor(Math.random() * data.length)];
         }
-      } catch (e) {
-        console.warn('Problems fetch failed, using local puzzle:', e);
       }
-
-      currentProblem = puzzle;
-      startTime = Date.now();
-
-      saveState();
-      renderProblem();
-      startTimer();
+    } catch(e){
+      console.warn('[Learn] Problem fetch failed, using local:', e);
     }
 
-    async function sendText() {
-      const input = document.getElementById('textInput');
-      const text = input.value.trim();
-      if (!text || isProcessing) return;
+    currentProblem = puzzle;
+    startTime = Date.now();
 
-      isProcessing = true;
-      questionsAsked++;
-      updateStats();
+    saveState();
+    renderProblem();
+    startTimer();
+    dom.textInput.focus();
+  }
 
-      document.getElementById('sendBtn').disabled = true;
-      document.getElementById('typing').style.opacity = 1;
+  async function sendText(){
+    const text = dom.textInput.value.trim();
+    if(!text || isProcessing) return;
 
-      addMessage('user', text);
-      input.value = '';
-      chatLog.push({ role: 'user', content: text });
+    isProcessing = true;
+    questionsAsked++;
+    updateStats();
+
+    dom.sendBtn.disabled = true;
+    dom.typing.style.opacity = 1;
+
+    addMessage('user', text);
+    dom.textInput.value = '';
+    chatLog.push({ role: 'user', content: text });
+    saveState();
+
+    // Check answer locally
+    const cleanInput = text.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const answerSources = [
+      currentProblem?.answer_key,
+      currentProblem?.solution_explanation
+    ].filter(Boolean);
+
+    let isCorrect = false;
+    for(const src of answerSources){
+      const answers = src.toLowerCase().split('|');
+      for(const a of answers){
+        const cleanAns = a.replace(/[^a-z0-9]/g, '');
+        if(cleanAns.length > 0 && cleanInput.includes(cleanAns)){
+          isCorrect = true;
+          break;
+        }
+      }
+      if(isCorrect) break;
+    }
+
+    if(isCorrect){
+      await logAttempt(true);
+      finishPuzzle(true);
+      isProcessing = false;
+      dom.sendBtn.disabled = false;
+      dom.typing.style.opacity = 0;
+      return;
+    }
+
+    // Not correct locally — ask tutor API
+    try {
+      const res = await fetch('/api/tutor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          problem_text: currentProblem?.problem_text,
+          solution_explanation: currentProblem?.solution_explanation,
+          chatLog: chatLog,
+          track: TRACK
+        })
+      });
+
+      let data = null;
+      try { data = await res.json(); } catch(_){}
+      const reply = (data && data.reply) ? data.reply : "Hmm, that's not quite right. Think about it from a different angle!";
+
+      addMessage('ai', reply);
+      chatLog.push({ role: 'assistant', content: reply });
       saveState();
 
-      const cleanInput = text.toLowerCase().replace(/[^a-z0-9]/g, '');
-      const answers = (currentProblem?.answer_key || currentProblem?.solution_explanation || "").toLowerCase().split('|');
-      let isCorrect = false;
+      // Check if tutor confirmed correct
+      const replyLower = reply.toLowerCase();
+      if((replyLower.includes('correct') || replyLower.includes('\uD83C\uDF89')) && cleanInput.length > 1){
+        await logAttempt(true);
+        finishPuzzle(true);
+      } else {
+        // Log wrong attempt
+        await logAttempt(false);
+      }
+    } catch(e){
+      console.error('[Learn] Tutor API error:', e);
+      addMessage('ai', "Hmm, that doesn't seem right. Try again! (Network issue — working offline)");
+      await logAttempt(false);
+    }
 
-      if (cleanInput.length >= 1) {
-        answers.forEach(a => {
-          const cleanAns = a.toLowerCase().replace(/[^a-z0-9]/g, '');
-          if (cleanAns.length > 0 && cleanInput.includes(cleanAns)) isCorrect = true;
-        });
+    isProcessing = false;
+    dom.sendBtn.disabled = false;
+    dom.typing.style.opacity = 0;
+    dom.textInput.focus();
+  }
+
+  function finishPuzzle(correct){
+    localStorage.removeItem('lp_state');
+    sessionCorrect++;
+    sessionTotal++;
+
+    addMessage('ai', 'Correct! \uD83C\uDF89 Amazing job!');
+    try { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); } catch(_){}
+
+    // Timer
+    dom.finalTime.innerText = dom.timeDisplay.innerText;
+    dom.finalHints.innerText = String(hintsUsed);
+
+    // Learning insight
+    const cat = (currentProblem?.category || 'logic').toLowerCase();
+    dom.learningInsight.innerHTML = 'You practiced <b>' + (learningInsights[cat] || 'Critical Thinking') + '</b>';
+
+    // Session stats
+    dom.sessionSolved.innerText = String(sessionCorrect);
+    const acc = sessionTotal > 0 ? Math.round((sessionCorrect / sessionTotal) * 100) : 0;
+    dom.sessionAccuracy.innerText = acc + '%';
+
+    setTimeout(() => { dom.successModal.style.display = 'flex'; }, 700);
+  }
+
+  // Log attempt to Supabase (both correct AND incorrect)
+  async function logAttempt(solvedCorrectly){
+    if(!currentChildId || !sb) return;
+
+    try {
+      await sb.from('attempts').insert([{
+        child_id: currentChildId,
+        problem_id: currentProblem?.id,
+        solved_correctly: solvedCorrectly,
+        is_correct: solvedCorrectly,         // Support both column names
+        hints_used: hintsUsed
+      }]);
+    } catch(e){
+      console.warn('[Learn] Attempt logging failed:', e);
+    }
+
+    if(!solvedCorrectly) sessionTotal++;
+  }
+
+  function useHint(){
+    if(hintsUsed >= 3) return;
+
+    let hints = currentProblem?.hints;
+    if(!hints || !Array.isArray(hints) || hints.length === 0){
+      hints = ['Think carefully about the wording!', 'Read the problem one more time.', 'The answer might be simpler than you think.'];
+    }
+
+    const hint = hints[Math.min(hintsUsed, hints.length - 1)];
+    addMessage('hint', '\uD83D\uDCA1 HINT: ' + hint);
+    hintsUsed++;
+    updateStats();
+    saveState();
+  }
+
+  /* ═══════════════════════════════════════
+     VOICE INPUT
+     ═══════════════════════════════════════ */
+  let recognition = null;
+  let isRecording = false;
+
+  function ensureRecognizer(){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR) return null;
+
+    const r = new SR();
+    r.lang = 'en-US';
+    r.interimResults = false;
+    r.maxAlternatives = 1;
+
+    r.onstart = () => {
+      isRecording = true;
+      dom.micBtn.classList.add('recording');
+    };
+    r.onend = () => {
+      isRecording = false;
+      dom.micBtn.classList.remove('recording');
+    };
+    r.onerror = (e) => {
+      console.warn('[Voice] Error:', e.error);
+      isRecording = false;
+      dom.micBtn.classList.remove('recording');
+      if(e.error === 'not-allowed'){
+        addMessage('system', 'Microphone access denied. Please allow mic permission in your browser.');
+      }
+    };
+    r.onresult = (e) => {
+      const transcript = e.results?.[0]?.[0]?.transcript || '';
+      if(transcript.trim()){
+        dom.textInput.value = transcript.trim();
+        sendText();
+      }
+    };
+    return r;
+  }
+
+  function toggleRecording(){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){
+      addMessage('system', 'Voice input requires a browser that supports SpeechRecognition (Chrome, Edge, Safari).');
+      return;
+    }
+
+    if(!recognition) recognition = ensureRecognizer();
+    if(!recognition) return;
+
+    try {
+      if(isRecording) recognition.stop();
+      else recognition.start();
+    } catch(e){
+      console.warn('[Voice] Toggle error:', e);
+      isRecording = false;
+      dom.micBtn.classList.remove('recording');
+    }
+  }
+
+  /* ═══════════════════════════════════════
+     BOOT SEQUENCE
+     ═══════════════════════════════════════ */
+  window.addEventListener('load', async () => {
+    cacheDom();
+
+    // Wire up event listeners
+    dom.exitBtn.addEventListener('click', clearStateAndExit);
+    dom.toggleBtn.addEventListener('click', toggleProblem);
+    dom.hintBtn.addEventListener('click', useHint);
+    dom.sendBtn.addEventListener('click', sendText);
+    dom.micBtn.addEventListener('click', toggleRecording);
+    dom.nextBtn.addEventListener('click', () => loadNextPuzzle(true));
+    dom.textInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendText(); });
+    dom.authLoginBtn.addEventListener('click', () => location.assign(LOGIN_URL));
+
+    try {
+      // 1) ENV — get Supabase config
+      const env = await LP_getEnv();
+      if(!env?.SUPABASE_URL || !env?.SUPABASE_ANON_KEY){
+        return LP_showFatal('Missing Supabase config. Ensure /api/env returns SUPABASE_URL & SUPABASE_ANON_KEY.');
       }
 
-      if (isCorrect) {
-        finishPuzzle();
-        isProcessing = false;
-        document.getElementById('sendBtn').disabled = false;
-        document.getElementById('typing').style.opacity = 0;
+      // 2) Create Supabase client
+      sb = supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
+        auth: { storageKey: STORAGE_KEY, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+      });
+
+      // 3) Authentication — NO REDIRECT, use overlay instead
+      let user = null;
+
+      try {
+        const { data: sessionData } = await sb.auth.getSession();
+        if(sessionData?.session?.user) user = sessionData.session.user;
+      } catch(_){}
+
+      if(!user){
+        try {
+          const { data: userData } = await sb.auth.getUser();
+          if(userData?.user) user = userData.user;
+        } catch(_){}
+      }
+
+      if(!user){
+        // Show auth gate overlay instead of redirecting (prevents loop)
+        dom.authGate.classList.add('show');
         return;
       }
 
+      // 4) Load subscription guard AFTER Supabase is ready
       try {
-        const res = await fetch('/api/tutor', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            problem_text: currentProblem?.problem_text,
-            solution_explanation: currentProblem?.solution_explanation,
-            chatLog,
-            track: TRACK
-          })
-        });
-
-        let data = null;
-        try { data = await res.json(); } catch {}
-        const reply = (data && data.reply) ? data.reply : 'Sorry, something went wrong.';
-        addMessage('ai', reply);
-        chatLog.push({ role: 'assistant', content: reply });
-        saveState();
-
-        if ((reply.toLowerCase().includes('correct') || reply.includes('🎉')) && cleanInput.length > 1) {
-          finishPuzzle();
-        }
-      } catch(e) {
-        console.error(e);
-        addMessage('ai', 'Network error. Please try again.');
+        await LP_loadScript('/assets/js/subscription-guard.js');
+      } catch(e){
+        console.warn('[Learn] subscription-guard.js load failed:', e);
       }
 
-      isProcessing = false;
-      document.getElementById('sendBtn').disabled = false;
-      document.getElementById('typing').style.opacity = 0;
-      input.focus();
-    }
-
-    function finishPuzzle() {
-      localStorage.removeItem('lp_state');
-      addMessage('ai', "Correct! 🎉 Amazing job!");
-      try { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); } catch {}
-
-      document.getElementById('finalTime').innerText = document.getElementById('timeDisplay').innerText;
-      document.getElementById('finalHints').innerText = hintsUsed;
-
-      const cat = (currentProblem?.category || 'logic').toLowerCase();
-      document.getElementById('learningInsight').innerHTML = `You practiced <b>${learningInsights[cat] || 'Critical Thinking'}</b>`;
-
-      // Best-effort attempts logging
-      if (currentChildId) {
-        sb.from('attempts').insert([{
-          child_id: currentChildId,
-          problem_id: currentProblem?.id,
-          solved_correctly: true,
-          hints_used: hintsUsed
-        }]).then(() => {}).catch(() => {});
-      }
-
-      setTimeout(() => { document.getElementById('successModal').style.display = 'flex'; }, 700);
-    }
-
-    function useHint() {
-      if (hintsUsed >= 3) return;
-
-      let hints = currentProblem?.hints;
-      if (!hints || hints.length === 0) hints = ["Think carefully!", "Read the problem again."];
-
-      const hint = hints[Math.min(hintsUsed, hints.length - 1)];
-      addMessage('hint', `💡 HINT: ${hint}`);
-      hintsUsed++;
-      updateStats();
-      saveState();
-    }
-
-    // -----------------------------
-    // Microphone (speech) – real toggle
-    // -----------------------------
-    let recognition = null;
-    let isRecording = false;
-
-    function ensureRecognizer() {
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) return null;
-
-      const r = new SR();
-      r.lang = 'en-US';
-      r.interimResults = false;
-      r.maxAlternatives = 1;
-
-      r.onstart = () => {
-        isRecording = true;
-        document.getElementById('micBtn').classList.add('recording');
-      };
-      r.onend = () => {
-        isRecording = false;
-        document.getElementById('micBtn').classList.remove('recording');
-      };
-      r.onerror = (e) => {
-        console.warn('Speech error:', e);
-        isRecording = false;
-        document.getElementById('micBtn').classList.remove('recording');
-      };
-      r.onresult = (e) => {
-        const transcript = e.results?.[0]?.[0]?.transcript || '';
-        if (transcript.trim()) {
-          document.getElementById('textInput').value = transcript.trim();
-          sendText();
-        }
-      };
-      return r;
-    }
-
-    function toggleRecording() {
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) return alert("Voice input requires Chrome (SpeechRecognition).");
-
-      if (!recognition) recognition = ensureRecognizer();
-      if (!recognition) return alert("Voice input not supported on this device/browser.");
-
+      // 5) Subscription check (graceful — never blocks learning)
       try {
-        if (isRecording) recognition.stop();
-        else recognition.start();
-      } catch (e) {
-        console.warn('toggleRecording error:', e);
-      }
-    }
-
-    // -----------------------------
-    // Startup
-    // -----------------------------
-    window.addEventListener('load', async () => {
-      try {
-        // 1) ENV
-        const env = await LP_getEnv();
-        if (!env?.SUPABASE_URL || !env?.SUPABASE_ANON_KEY) {
-          return LP_showFatal('Missing Supabase config. Ensure /api/env returns SUPABASE_URL & SUPABASE_ANON_KEY.');
-        }
-        SB_URL = env.SUPABASE_URL;
-        SB_KEY = env.SUPABASE_ANON_KEY;
-
-        // 2) Supabase client
-        sb = supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true } });
-
-        // 3) Load subscription guard AFTER Supabase exists
-        try {
-          await LP_loadScript('/assets/js/subscription-guard.js');
-        } catch (e) {
-          console.warn(e);
-          showSubscriptionBanner('error');
-        }
-
-        // 4) Login gate (if guard exists)
-        if (window.SubscriptionGuard?.requireLogin) {
-          const loggedIn = await SubscriptionGuard.requireLogin();
-          if (!loggedIn) return;
-
-          // optional subscription state
-          try {
-            userSubscription = await SubscriptionGuard.getUserSubscription();
-            if (userSubscription?.expired) {
-              showSubscriptionBanner('expired');
-            } else if (userSubscription?.tier === 'free_trial' && SubscriptionGuard.getUserTierInfo) {
-              const tierInfo = await SubscriptionGuard.getUserTierInfo();
-              if (tierInfo?.daysRemaining <= 3) showSubscriptionBanner('trial_ending', tierInfo.daysRemaining);
-            }
-          } catch (e) {
-            console.warn('Subscription lookup failed:', e);
-            showSubscriptionBanner('error');
+        if(window.SubscriptionGuard?.getUserSubscription){
+          userSubscription = await SubscriptionGuard.getUserSubscription();
+          if(userSubscription?.expired){
+            showSubscriptionBanner('expired');
+          } else if(userSubscription?.tier === 'free_trial' && SubscriptionGuard.getUserTierInfo){
+            const tierInfo = await SubscriptionGuard.getUserTierInfo();
+            if(tierInfo?.daysRemaining <= 3) showSubscriptionBanner('trial_ending', tierInfo.daysRemaining);
           }
         }
+      } catch(e){
+        console.warn('[Learn] Subscription check failed:', e);
+      }
 
-        // 5) child_id best-effort
-        try {
-          const { data: { session } } = await sb.auth.getSession();
-          if (session?.user?.id) {
-            const { data: child } = await sb.from('children').select('id').eq('parent_id', session.user.id).single();
-            if (child?.id) currentChildId = child.id;
-          }
-        } catch {}
+      // 6) Get child_id
+      try {
+        const { data: child } = await sb.from('children').select('id').eq('parent_id', user.id).single();
+        if(child?.id) currentChildId = child.id;
+      } catch(e){
+        console.warn('[Learn] Child lookup failed:', e);
+      }
 
-        // 6) responsive UI
-        if (window.innerWidth > 600) {
-          document.getElementById('toggleBtn').style.display = 'none';
-        } else {
-          document.getElementById('problemCard').classList.add('minimized');
-        }
+      // 7) Responsive UI
+      if(window.innerWidth > 600){
+        dom.toggleBtn.style.display = 'none';
+      } else {
+        dom.problemCard.classList.add('minimized');
+      }
 
-        // 7) state restore
-        const savedStateRaw = localStorage.getItem('lp_state');
-        if (savedStateRaw) {
-          const parsed = JSON.parse(savedStateRaw);
-          // if track changed, ignore old state
-          if (parsed?.track && parsed.track !== TRACK) {
+      // 8) State restore or fresh puzzle
+      try {
+        const savedRaw = localStorage.getItem('lp_state');
+        if(savedRaw){
+          const parsed = JSON.parse(savedRaw);
+          if(parsed?.track && parsed.track !== TRACK){
             localStorage.removeItem('lp_state');
             await loadNextPuzzle(false);
           } else {
@@ -628,17 +765,21 @@
         } else {
           await loadNextPuzzle(false);
         }
-
-        // 8) enter-to-send
-        document.getElementById('textInput').addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') sendText();
-        });
-
-      } catch (e) {
-        console.error(e);
-        LP_showFatal('Learn failed to start: ' + (e?.message || String(e)));
+      } catch(e){
+        console.warn('[Learn] State restore failed:', e);
+        await loadNextPuzzle(false);
       }
-    });
-  </script>
+
+      // Focus input
+      dom.textInput.focus();
+
+    } catch(e){
+      console.error('[Learn] Boot failed:', e);
+      LP_showFatal('Learn failed to start: ' + (e?.message || String(e)));
+    }
+  });
+
+})();
+</script>
 </body>
 </html>
