@@ -3,9 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LogicPals — A/B Dashboard</title>
+  <title>LogicPals — A/B Dashboard (Enterprise)</title>
 
-  <!-- Enterprise: always revalidate on back/forward -->
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -33,6 +32,7 @@
         radial-gradient(900px 600px at 85% 18%, rgba(6,182,212,.12), transparent 60%),
         var(--bg);
     }
+    code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
     a{color:inherit; text-decoration:none}
     .shell{max-width:1180px;margin:20px auto;padding:0 18px;}
     .top{
@@ -64,6 +64,7 @@
       font-weight:800; cursor:pointer;
     }
     .btn.primary{background:rgba(139,92,246,.18); border-color:rgba(139,92,246,.35)}
+    .btn.alt{background:rgba(6,182,212,.14); border-color:rgba(6,182,212,.28)}
     .btn.danger{background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.28)}
     .btn:disabled{opacity:.55;cursor:not-allowed}
     .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
@@ -77,7 +78,7 @@
     .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
     label{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:12px;font-weight:800}
     input,select{
-      min-width:220px;
+      min-width:240px;
       border:1px solid var(--line);
       background:rgba(255,255,255,.05);
       color:var(--text);
@@ -86,6 +87,10 @@
       font-weight:700;
     }
     input[type="number"]{min-width:120px;width:120px}
+    .muted{color:var(--muted)}
+    .err{color:#fecaca}
+    .ok{color:#bbf7d0}
+
     .cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:12px}
     @media (max-width: 980px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media (max-width: 560px){.cards{grid-template-columns:1fr}}
@@ -97,6 +102,20 @@
     }
     .mini .k{font-size:12px;color:var(--muted);font-weight:800}
     .mini .v{font-size:22px;font-weight:900;margin-top:6px}
+
+    table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden}
+    th,td{padding:10px 10px;border-bottom:1px solid rgba(148,163,184,.14);font-size:13px}
+    th{color:var(--muted);text-align:left;font-weight:900}
+    tr:hover td{background:rgba(255,255,255,.03)}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:6px 10px;border-radius:999px;border:1px solid var(--line);
+      background:rgba(255,255,255,.03); font-size:12px; font-weight:900;
+    }
+    .pill.good{border-color:rgba(34,197,94,.28); background:rgba(34,197,94,.10); color:#bbf7d0}
+    .pill.warn{border-color:rgba(245,158,11,.28); background:rgba(245,158,11,.10); color:#fde68a}
+    .pill.bad{border-color:rgba(239,68,68,.28); background:rgba(239,68,68,.10); color:#fecaca}
+
     pre{
       margin:0;
       border:1px solid var(--line);
@@ -106,11 +125,10 @@
       border-radius:16px;
       overflow:auto;
       font-size:12px;
-      min-height:160px;
+      min-height:200px;
     }
-    .err{color:#fecaca}
-    .ok{color:#bbf7d0}
-    .muted{color:var(--muted)}
+
+    dialog{border:none;border-radius:16px;max-width:420px;width:calc(100% - 24px);padding:0;box-shadow:0 25px 90px rgba(2,6,23,.65)}
   </style>
 </head>
 
@@ -121,7 +139,7 @@
         <div class="logo">LP</div>
         <div>
           <div class="title">A/B Dashboard</div>
-          <div class="sub">Admin-only aggregates via Vercel → RPC (Step 8.6.C)</div>
+          <div class="sub">Enterprise admin aggregates via Vercel → Supabase RPC (Step 8)</div>
         </div>
       </div>
 
@@ -136,12 +154,13 @@
     <section class="card">
       <div class="row">
         <label>Experiment key
-          <input id="experimentKey" value="reg_home_tutor_hint_v1" />
+          <input id="experimentKey" value="lp_hint_cards_v1" />
         </label>
 
         <label>Track
           <select id="track">
-            <option value="regular" selected>regular</option>
+            <option value="both" selected>both (regular + olympiad)</option>
+            <option value="regular">regular</option>
             <option value="olympiad">olympiad</option>
           </select>
         </label>
@@ -151,6 +170,7 @@
         </label>
 
         <button class="btn primary" id="btnRefresh">Refresh</button>
+        <button class="btn alt" id="btnRefreshDb" title="Calls /api/ab/refresh-dashboards (admin-only)">Refresh DB dashboards</button>
       </div>
 
       <div class="muted" style="margin-top:10px" id="who">—</div>
@@ -160,26 +180,41 @@
 
     <section class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <div style="font-weight:900">Variant summary</div>
-        <div class="muted">Raw JSON returned by <code>/api/ab/admin-bundle</code></div>
+        <div style="font-weight:900">Variant table</div>
+        <div class="muted">Derived summary from API result (read-only)</div>
       </div>
-      <div style="margin-top:10px">
-        <pre id="summary">[]</pre>
+
+      <div style="margin-top:10px;overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Track</th>
+              <th>Variant</th>
+              <th>Exposed users</th>
+              <th>Metric users</th>
+              <th>Events</th>
+              <th>Conversion</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="6" class="muted">No data yet.</td></tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
     <section class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <div style="font-weight:900">Lift</div>
-        <div class="muted">Depends on your lift RPC inside the bundle</div>
+        <div style="font-weight:900">Raw JSON (audit)</div>
+        <div class="muted">Exact payload returned by the API endpoint</div>
       </div>
       <div style="margin-top:10px">
-        <pre id="lift">[]</pre>
+        <pre id="raw">{}</pre>
       </div>
     </section>
   </div>
 
-  <dialog id="dlg" style="border:none;border-radius:16px;max-width:420px;width:calc(100% - 24px);padding:0;box-shadow:0 25px 90px rgba(2,6,23,.65)">
+  <dialog id="dlg">
     <form method="dialog" style="padding:16px 16px 14px;background:#0b1220;border:1px solid rgba(148,163,184,.22);border-radius:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
         <div style="font-weight:900">Admin sign-in</div>
@@ -203,20 +238,33 @@
   </dialog>
 
 <script>
-(function(){
+(() => {
   'use strict';
 
-  const STORAGE_KEY = 'logicpals.auth';   // must match admin/login/dashboard
+  const STORAGE_KEY = 'logicpals.auth';
   const ENV_ENDPOINT = '/api/env';
 
-  const $ = (id)=>document.getElementById(id);
-  const setStatus = (kind, msg)=>{
+  const $ = (id) => document.getElementById(id);
+
+  function setStatus(kind, msg){
     $('status').textContent = msg;
-    $('dot').style.background = kind==='good' ? 'var(--good)' : kind==='bad' ? 'var(--bad)' : kind==='warn' ? 'var(--warn)' : '#64748b';
-  };
+    $('dot').style.background =
+      kind === 'good' ? 'var(--good)' :
+      kind === 'bad' ? 'var(--bad)' :
+      kind === 'warn' ? 'var(--warn)' : '#64748b';
+  }
+
+  function escapeHtml(s){
+    return String(s)
+      .replaceAll('&','&amp;')
+      .replaceAll('<','&lt;')
+      .replaceAll('>','&gt;')
+      .replaceAll('"','&quot;')
+      .replaceAll("'","&#039;");
+  }
 
   async function fetchEnv(){
-    const res = await fetch(ENV_ENDPOINT, { cache:'no-store' });
+    const res = await fetch(ENV_ENDPOINT, { cache: 'no-store' });
     if(!res.ok) throw new Error('ENV_ENDPOINT failed: ' + res.status);
     const data = await res.json();
     const supabaseUrl = data.supabaseUrl || data.SUPABASE_URL || data.url;
@@ -228,7 +276,7 @@
   let sb = null;
 
   async function getRoleFailClosed(){
-    // Align with admin.html: prefer rpc_lp_my_role if present.
+    // Prefer rpc_lp_my_role (your metrics-summary expects this) :contentReference[oaicite:6]{index=6}
     const fns = ['rpc_lp_my_role','get_my_role','my_role','get_current_role'];
     for(const fn of fns){
       try{
@@ -237,45 +285,6 @@
       }catch(_){}
     }
     return null;
-  }
-
-  function renderCards(summary){
-    const cards = $('cards');
-    cards.innerHTML = '';
-
-    // Best-effort normalize: accept either array rows or object with fields
-    const r0 = Array.isArray(summary) && summary.length ? summary[0] : (summary && typeof summary === 'object' ? summary : {});
-    const exposures = r0.exposures ?? r0.events_exposure ?? r0.exposure_count ?? 0;
-    const conversions = r0.conversions ?? r0.events_conversion ?? r0.conversion_count ?? 0;
-    const users = r0.unique_users ?? r0.assigned_users ?? r0.users ?? 0;
-    const topVariant = r0.variant_key ?? r0.variant ?? r0.top_variant ?? '—';
-    const rate = exposures ? ((Number(conversions) / Number(exposures)) * 100).toFixed(2) + '%' : '—';
-
-    const items = [
-      ['Top variant', topVariant],
-      ['Exposures', exposures],
-      ['Conversions', conversions],
-      ['Conversion rate', rate],
-      ['Users', users],
-    ];
-
-    // show 4 cards; keep it clean
-    const pick = [items[0], items[1], items[2], items[3]];
-    for(const [k,v] of pick){
-      const d = document.createElement('div');
-      d.className = 'mini';
-      d.innerHTML = '<div class="k">'+escapeHtml(k)+'</div><div class="v">'+escapeHtml(String(v))+'</div>';
-      cards.appendChild(d);
-    }
-  }
-
-  function escapeHtml(s){
-    return String(s)
-      .replaceAll('&','&amp;')
-      .replaceAll('<','&lt;')
-      .replaceAll('>','&gt;')
-      .replaceAll('"','&quot;')
-      .replaceAll("'","&#039;");
   }
 
   function openDlg(){ $('dlg').showModal(); }
@@ -289,17 +298,15 @@
     $('btnSignOut').style.display = signedIn ? 'inline-flex' : 'none';
 
     if(!signedIn){
-      $('who').innerHTML = '<span class="err">Sign-in required.</span> This dashboard is admin-only.';
+      $('who').innerHTML = '<span class="err">Sign-in required.</span> Admin-only dashboard.';
       setStatus('warn','Sign in required');
       return { session:null, role:null };
     }
 
-    $('who').textContent = `Signed in: ${session.user.email || session.user.id}`;
     setStatus('warn','Verifying access…');
-
     const role = await getRoleFailClosed();
     if(!role){
-      $('who').innerHTML = `<span class="err">Locked:</span> role RPC missing. Expected <code>rpc_lp_my_role</code> (preferred) or <code>get_my_role</code>.`;
+      $('who').innerHTML = `<span class="err">Locked:</span> role RPC missing. Expected <code>rpc_lp_my_role</code>.`;
       setStatus('bad','Locked');
       return { session, role:null };
     }
@@ -316,6 +323,117 @@
     return { session, role };
   }
 
+  function setCards(payload){
+    const cards = $('cards');
+    cards.innerHTML = '';
+
+    const expKey = $('experimentKey').value.trim();
+    const track = $('track').value;
+    const days = Number($('days').value || 14);
+
+    let status = '—';
+    let killswitched = '—';
+    let variants = 0;
+    let rows = 0;
+
+    // Try to infer from metrics-summary format (rows[]) if present
+    if (payload && payload.ok && Array.isArray(payload.rows)) {
+      rows = payload.rows.length;
+      variants = rows;
+      status = payload.status ?? '—';
+      killswitched = String(!!payload.is_killswitched);
+    }
+
+    // Try to infer from admin-bundle "result" object if present
+    if (payload && payload.ok && payload.result) {
+      // If "both tracks", payload.result.tracks.{regular,olympiad} is likely
+      if (payload.result.tracks) {
+        const r = payload.result.tracks.regular;
+        const o = payload.result.tracks.olympiad;
+        variants = (Array.isArray(r?.rows) ? r.rows.length : 0) + (Array.isArray(o?.rows) ? o.rows.length : 0);
+        status = (r?.status || o?.status || status);
+        killswitched = String(!!(r?.is_killswitched || o?.is_killswitched));
+        rows = variants;
+      }
+    }
+
+    const items = [
+      ['Experiment', expKey],
+      ['Track', track],
+      ['Window (days)', String(days)],
+      ['Variants/Rows', String(rows)],
+    ];
+
+    for(const [k,v] of items){
+      const d = document.createElement('div');
+      d.className = 'mini';
+      d.innerHTML = '<div class="k">'+escapeHtml(k)+'</div><div class="v">'+escapeHtml(String(v))+'</div>';
+      cards.appendChild(d);
+    }
+
+    // Status pill appended to who line
+    const pill = document.createElement('span');
+    pill.className = 'pill ' + (status === 'running' ? 'good' : (status === 'paused' ? 'warn' : 'bad'));
+    pill.textContent = `status: ${status} • killswitched: ${killswitched}`;
+    $('who').appendChild(document.createElement('br'));
+    $('who').appendChild(pill);
+  }
+
+  function renderTableFromRows(trackLabel, rows){
+    const tbody = $('tbody');
+    if (!rows || !rows.length) return;
+
+    for (const r of rows) {
+      const tr = document.createElement('tr');
+      const conv = (r.conversion === null || r.conversion === undefined)
+        ? '—'
+        : (Number(r.conversion) * 100).toFixed(2) + '%';
+
+      tr.innerHTML = `
+        <td>${escapeHtml(trackLabel)}</td>
+        <td><b>${escapeHtml(r.variant_key || '—')}</b></td>
+        <td>${escapeHtml(String(r.exposed_users ?? 0))}</td>
+        <td>${escapeHtml(String(r.metric_users ?? 0))}</td>
+        <td>${escapeHtml(String(r.events ?? 0))}</td>
+        <td>${escapeHtml(conv)}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+  }
+
+  function clearTable(){
+    $('tbody').innerHTML = '<tr><td colspan="6" class="muted">No data yet.</td></tr>';
+  }
+
+  async function callAdminBundle(jwt, experiment_key, track, days){
+    // admin-bundle is POST-only and requires Bearer JWT (admin gate in function) :contentReference[oaicite:7]{index=7}
+    const res = await fetch('/api/ab/admin-bundle', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + jwt },
+      body: JSON.stringify({
+        experiment_key,
+        // NOTE: per admin-bundle.js, omitting track returns both tracks.
+        ...(track === 'both' ? {} : { track }),
+        days
+      })
+    });
+
+    const json = await res.json().catch(()=> ({}));
+    return { ok: res.ok, status: res.status, json };
+  }
+
+  async function callMetricsSummary(jwt, experiment_key, track, days){
+    // metrics-summary expects { experiment_key, track, window_days } POST + Bearer JWT :contentReference[oaicite:8]{index=8}
+    const res = await fetch('/api/ab/metrics-summary', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + jwt },
+      body: JSON.stringify({ experiment_key, track, window_days: days })
+    });
+
+    const json = await res.json().catch(()=> ({}));
+    return { ok: res.ok, status: res.status, json };
+  }
+
   async function load(){
     const auth = await refreshAuthUI();
     if(!auth.session) return;
@@ -324,42 +442,98 @@
 
     const experiment_key = $('experimentKey').value.trim();
     const track = $('track').value;
-    const days = Number($('days').value || 14);
+    const days = Math.max(1, Math.min(90, Number($('days').value || 14)));
 
-    // Use the current access token (enterprise: no extra localStorage token plumbing).
     const jwt = auth.session.access_token;
 
-    const res = await fetch('/api/ab/admin-bundle', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization': 'Bearer ' + jwt },
-      body: JSON.stringify({ experiment_key, track, days })
-    });
+    clearTable();
 
-    const json = await res.json().catch(()=> ({}));
-    if(!res.ok){
-      $('summary').textContent = JSON.stringify(json, null, 2);
-      $('lift').textContent = '[]';
-      $('cards').innerHTML = '';
-      setStatus('bad','Error');
-      $('who').innerHTML = $('who').innerHTML + `<br/><span class="err">admin-bundle error:</span> ${escapeHtml(json?.details || json?.detail || json?.error || ('HTTP '+res.status))}`;
+    // Strategy:
+    // 1) Try admin-bundle (best, supports both tracks + your Step 8 admin RPC bundle)
+    // 2) If admin-bundle fails or not deployed, fall back to metrics-summary (single track only)
+    let payload = null;
+
+    const b = await callAdminBundle(jwt, experiment_key, track, days);
+    if (b.ok) {
+      payload = b.json;
+      $('raw').textContent = JSON.stringify(payload, null, 2);
+
+      // Fill table if the bundle includes track rows
+      $('tbody').innerHTML = '';
+      if (track === 'both') {
+        const reg = payload?.result?.tracks?.regular;
+        const oly = payload?.result?.tracks?.olympiad;
+        renderTableFromRows('regular', reg?.rows || []);
+        renderTableFromRows('olympiad', oly?.rows || []);
+      } else {
+        const one = payload?.result;
+        renderTableFromRows(track, one?.rows || []);
+      }
+
+      setCards(payload);
+      setStatus('good','Ready');
       return;
     }
 
-    renderCards(json.summary || []);
-    $('summary').textContent = JSON.stringify(json.summary || [], null, 2);
-    $('lift').textContent = JSON.stringify(json.lift || [], null, 2);
-    setStatus('good','Ready');
+    // Fallback: metrics-summary
+    if (track !== 'both') {
+      const m = await callMetricsSummary(jwt, experiment_key, track, days);
+      payload = m.json;
+      $('raw').textContent = JSON.stringify({ admin_bundle_error: b.json, metrics_summary: payload }, null, 2);
+
+      if (!m.ok) {
+        setStatus('bad','Error');
+        $('who').innerHTML = $('who').innerHTML + `<br/><span class="err">metrics-summary error:</span> ${escapeHtml(payload?.detail || payload?.error || ('HTTP '+m.status))}`;
+        return;
+      }
+
+      $('tbody').innerHTML = '';
+      renderTableFromRows(track, payload.rows || []);
+      setCards(payload);
+      setStatus('good','Ready (fallback)');
+      return;
+    }
+
+    // Both failed
+    setStatus('bad','Error');
+    $('raw').textContent = JSON.stringify(b.json, null, 2);
+    $('who').innerHTML = $('who').innerHTML + `<br/><span class="err">admin-bundle error:</span> ${escapeHtml(b.json?.details || b.json?.detail || b.json?.error || ('HTTP '+b.status))}`;
+  }
+
+  async function refreshDashboards(){
+    const auth = await refreshAuthUI();
+    if(!auth.session) return;
+
+    setStatus('warn','Refreshing DB dashboards…');
+    const jwt = auth.session.access_token;
+
+    const res = await fetch('/api/ab/refresh-dashboards', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + jwt },
+      body: JSON.stringify({})
+    });
+
+    const json = await res.json().catch(()=> ({}));
+    $('raw').textContent = JSON.stringify(json, null, 2);
+
+    if (!res.ok) {
+      setStatus('bad','Refresh failed');
+      $('who').innerHTML = $('who').innerHTML + `<br/><span class="err">refresh-dashboards error:</span> ${escapeHtml(json?.details || json?.detail || json?.error || ('HTTP '+res.status))}`;
+      return;
+    }
+
+    setStatus('good','DB dashboards refreshed');
   }
 
   async function init(){
     setStatus('', 'Booting…');
 
     let env;
-    try{
-      env = await fetchEnv();
-    }catch(e){
+    try { env = await fetchEnv(); }
+    catch(e){
       setStatus('bad','Missing env');
-      $('who').innerHTML = '<span class="err">Missing Supabase config from /api/env.</span> Fix /api/env and redeploy.';
+      $('who').innerHTML = '<span class="err">Missing Supabase config from /api/env.</span>';
+      $('raw').textContent = JSON.stringify({ error: String(e?.message || e) }, null, 2);
       return;
     }
 
@@ -387,6 +561,7 @@
     };
 
     $('btnRefresh').onclick = load;
+    $('btnRefreshDb').onclick = refreshDashboards;
 
     // BFCache hardening
     window.addEventListener('pageshow', (e)=>{ if(e.persisted) location.reload(); });
@@ -394,7 +569,6 @@
     sb.auth.onAuthStateChange(()=> refreshAuthUI());
 
     await refreshAuthUI();
-    // Optionally auto-load if already signed in
     const { data:{ session } } = await sb.auth.getSession();
     if(session) await load();
   }
