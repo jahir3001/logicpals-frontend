@@ -1,88 +1,68 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>LogicPals — Regular Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-
   <style>
-    :root{
-      --primary:#6c5ce7; --accent:#feca57;
-      --text:#f0f0f5; --muted:#5d5f7e; --text2:#9899b3;
-      --bg:#0c0e1a; --card:rgba(20,24,52,.55); --border:rgba(255,255,255,.06);
-      --good:#00d2a0; --bad:#ff6b6b;
-      --shadow: 0 8px 40px rgba(0,0,0,.2);
-      --radius:20px; --radius2:14px; --max:1100px; --tap:44px;
-      --font:'Plus Jakarta Sans',-apple-system,sans-serif;
-      --font-d:'Outfit',-apple-system,sans-serif;
-      --glow:rgba(108,92,231,.35); --glow2:rgba(0,210,160,.25);
-      --as:rgba(108,92,231,.12); --ys:rgba(254,202,87,.10);
-    }
+    :root{--primary:#6c5ce7;--accent:#feca57;--text:#f0f0f5;--muted:#5d5f7e;--text2:#9899b3;--bg:#0c0e1a;--card:rgba(20,24,52,.55);--border:rgba(255,255,255,.06);--good:#00d2a0;--bad:#ff6b6b;--radius:20px;--radius2:14px;--max:1100px;--tap:44px;--font:'Plus Jakarta Sans',-apple-system,sans-serif;--font-d:'Outfit',-apple-system,sans-serif;--glow:rgba(108,92,231,.35);--glow2:rgba(0,210,160,.25);--as:rgba(108,92,231,.12);--ys:rgba(254,202,87,.10);}
     *{box-sizing:border-box;}html,body{height:100%;}
     body{margin:0;font-family:var(--font);color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;}
     body::before{content:'';position:fixed;top:-200px;left:-100px;width:600px;height:600px;background:radial-gradient(circle,var(--glow) 0%,transparent 70%);pointer-events:none;z-index:0;animation:drift 20s ease-in-out infinite alternate;}
     body::after{content:'';position:fixed;bottom:-200px;right:-100px;width:500px;height:500px;background:radial-gradient(circle,var(--glow2) 0%,transparent 70%);pointer-events:none;z-index:0;animation:drift 25s ease-in-out infinite alternate-reverse;}
     @keyframes drift{0%{transform:translate(0,0);}100%{transform:translate(60px,40px);}}
     a{color:inherit;text-decoration:none;}button{font:inherit;}
-
     .wrap{max-width:var(--max);margin:0 auto;padding:88px 16px 40px;position:relative;z-index:1;}
     .topbar{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(12,14,26,.75);backdrop-filter:blur(24px) saturate(1.6);border-bottom:1px solid var(--border);}
     .topbar-inner{max-width:var(--max);margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px;}
-    .brand{display:flex;align-items:center;gap:10px;min-width:140px;}
+    .brand{display:flex;align-items:center;gap:10px;min-width:120px;}
     .logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#a29bfe);box-shadow:0 4px 20px var(--glow);display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;}
     .brand-title{line-height:1.1;}.brand-title b{display:block;font-size:15px;font-weight:800;}.brand-title span{display:block;font-size:11px;color:var(--muted);font-weight:500;margin-top:1px;}
     .center-pill{flex:1;display:flex;justify-content:center;}
     .track-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:100px;background:var(--as);border:1px solid rgba(108,92,231,.2);color:#b8b0f0;font-weight:700;font-size:12px;}
     .track-dot{width:8px;height:8px;border-radius:50%;background:var(--primary);box-shadow:0 0 8px var(--glow);animation:pdot 2s ease-in-out infinite;}
     @keyframes pdot{0%,100%{box-shadow:0 0 4px var(--glow);}50%{box-shadow:0 0 14px var(--glow);}}
-    .actions{display:flex;gap:8px;align-items:center;min-width:140px;justify-content:flex-end;}
-
+    .actions{display:flex;gap:8px;align-items:center;min-width:120px;justify-content:flex-end;}
     .btn{height:var(--tap);border-radius:10px;border:1px solid var(--border);background:var(--card);backdrop-filter:blur(8px);padding:0 14px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;color:var(--text2);font-weight:600;font-size:13px;transition:all .15s ease;}
     .btn:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);color:var(--text);}
     .btn:active{transform:scale(.97);}
     .btn-primary{background:linear-gradient(135deg,var(--primary),#8b7cf6);border:none;color:#fff;font-weight:700;box-shadow:0 4px 20px var(--glow),inset 0 1px 0 rgba(255,255,255,.15);}
     .btn-primary:hover{box-shadow:0 6px 28px var(--glow);transform:translateY(-1px);}
     .btn-accent{background:var(--ys);border:1px solid rgba(254,202,87,.2);color:var(--accent);font-weight:700;}
-    .btn-accent:hover{background:rgba(254,202,87,.16);}
     .btn-ghost{background:transparent;border:1px solid transparent;color:var(--muted);}
     .btn-ghost:hover{color:var(--text2);background:rgba(255,255,255,.04);}
     .btn-wide{padding:0 20px;height:48px;border-radius:var(--radius2);font-size:14px;}
     .btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
-
-    .status-strip{max-width:var(--max);margin:0 auto;padding:0 16px 8px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:12px;color:var(--text2);}
+    .status-strip{max-width:var(--max);margin:0 auto;padding:0 16px 8px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:12px;}
     .badge{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:100px;background:var(--card);border:1px solid var(--border);color:var(--text2);font-size:11px;font-weight:600;}
     .badge b{color:var(--muted);font-weight:600;font-size:11px;}
     .chip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
     .dot-good{background:var(--good);box-shadow:0 0 8px var(--glow2);}
-    .dot-warn{background:var(--accent);box-shadow:0 0 8px rgba(254,202,87,.25);}
-    .dot-bad{background:var(--bad);box-shadow:0 0 10px rgba(255,107,107,.35);}
-
+    .dot-warn{background:var(--accent);}
+    .dot-bad{background:var(--bad);}
     .grid{display:grid;grid-template-columns:1fr;gap:16px;}
-    @media(min-width:860px){.grid{grid-template-columns:1.3fr .7fr;align-items:start;}}
+    @media(min-width:860px){.grid{grid-template-columns:1fr 1fr;align-items:start;}.grid.hero-grid{grid-template-columns:1.3fr .7fr;}}
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);backdrop-filter:blur(16px);overflow:hidden;}
-    .hero{padding:28px 24px 24px;position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(108,92,231,.08),rgba(0,210,160,.04));}
+    .hero{padding:28px 24px 24px;position:relative;background:linear-gradient(145deg,rgba(108,92,231,.08),rgba(0,210,160,.04));}
     .hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;position:relative;z-index:1;}
     .hello{font-size:14px;color:var(--muted);font-weight:600;}
     .hero-head{margin-top:6px;font-family:var(--font-d);font-size:24px;font-weight:800;letter-spacing:-.5px;line-height:1.2;background:linear-gradient(135deg,var(--text) 40%,#b8b0f0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
     .hero-focus{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;position:relative;z-index:1;}
     .pill{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:100px;background:var(--card);border:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text2);}
     .pill strong{color:var(--primary);font-weight:700;}
-    .ring{width:68px;height:68px;border-radius:999px;display:grid;place-items:center;background:conic-gradient(var(--primary) var(--p,0%),rgba(255,255,255,.06) 0);box-shadow:0 0 20px var(--glow);position:relative;z-index:1;}
-    .ring > div{width:54px;height:54px;border-radius:999px;background:rgba(12,14,26,.9);display:grid;place-items:center;font-family:var(--font-d);font-weight:800;font-size:14px;color:#b8b0f0;border:1px solid var(--border);}
+    .ring{width:68px;height:68px;border-radius:999px;display:grid;place-items:center;background:conic-gradient(var(--primary) var(--p,0%),rgba(255,255,255,.06) 0);box-shadow:0 0 20px var(--glow);position:relative;z-index:1;flex-shrink:0;}
+    .ring>div{width:54px;height:54px;border-radius:999px;background:rgba(12,14,26,.9);display:grid;place-items:center;font-family:var(--font-d);font-weight:800;font-size:14px;color:#b8b0f0;border:1px solid var(--border);}
     .hero-actions{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;position:relative;z-index:1;}
-
-    .tiles{padding:16px 22px 22px;}
-    .tile-row{display:flex;gap:10px;overflow:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:4px;}
-    .tile-row::-webkit-scrollbar{display:none;}
-    @media(min-width:860px){.tile-row{display:grid;grid-template-columns:repeat(3,1fr);overflow:visible;}}
-    .tile{min-width:150px;flex:0 0 auto;scroll-snap-align:start;padding:16px;border-radius:var(--radius2);background:rgba(255,255,255,.03);border:1px solid var(--border);}
-    .tile .k{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
-    .tile .v{margin-top:8px;font-family:var(--font-d);font-size:28px;font-weight:800;letter-spacing:-.5px;}
-    .tile .d{margin-top:8px;font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;}
-    .mini{width:20px;height:20px;border-radius:7px;display:grid;place-items:center;font-size:11px;background:var(--ys);border:1px solid rgba(254,202,87,.15);}
-
+    /* KPI tiles — always show all 4 */
+    .kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:16px 22px 22px;}
+    .tile{padding:14px;border-radius:var(--radius2);background:rgba(255,255,255,.03);border:1px solid var(--border);}
+    .tile .k{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+    .tile .v{margin-top:6px;font-family:var(--font-d);font-size:24px;font-weight:800;letter-spacing:-.5px;}
+    .tile .d{margin-top:6px;font-size:11px;color:var(--muted);display:flex;gap:5px;align-items:center;}
+    .mini{width:18px;height:18px;border-radius:6px;display:grid;place-items:center;font-size:10px;background:var(--ys);border:1px solid rgba(254,202,87,.15);}
+    /* Chart */
     .chart-card{padding:22px;}
     .chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap;}
     .chart-title{font-family:var(--font-d);font-size:16px;font-weight:700;}
@@ -91,42 +71,65 @@
     .chart-tab.active,.chart-tab:hover{background:var(--as);border-color:rgba(108,92,231,.2);color:#b8b0f0;}
     .chart-area{width:100%;height:160px;}
     .chart-insight{margin-top:12px;font-size:12px;color:var(--text2);line-height:1.5;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);}
-
-    .skills-card{padding:22px;}
-    .skills-title{font-family:var(--font-d);font-size:16px;font-weight:700;margin-bottom:16px;}
+    /* Skills */
+    .section-title{font-family:var(--font-d);font-size:16px;font-weight:700;margin-bottom:16px;}
+    .skills-card,.activity-card,.insights-card,.leaderboard-card{padding:22px;}
     .skill-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
     .skill-item:last-child{border-bottom:none;}
     .skill-icon{width:36px;height:36px;border-radius:10px;background:var(--as);border:1px solid rgba(108,92,231,.15);display:grid;place-items:center;font-size:16px;flex-shrink:0;}
     .skill-info{flex:1;min-width:0;}
-    .skill-name{font-size:13px;font-weight:700;color:var(--text);}
+    .skill-name{font-size:13px;font-weight:700;}
     .skill-detail{font-size:11px;color:var(--muted);margin-top:2px;}
     .skill-bar{width:100%;height:4px;border-radius:4px;background:rgba(255,255,255,.06);margin-top:6px;overflow:hidden;}
     .skill-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--primary),#a29bfe);transition:width .5s ease;}
     .skill-pct{font-family:var(--font-d);font-size:14px;font-weight:800;color:#b8b0f0;flex-shrink:0;}
-    .skill-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;margin-left:8px;}
+    .skill-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;margin-left:6px;}
     .skill-badge.solid{background:rgba(0,210,160,.12);color:var(--good);border:1px solid rgba(0,210,160,.2);}
     .skill-badge.practicing{background:var(--ys);color:var(--accent);border:1px solid rgba(254,202,87,.2);}
-    .skill-action{padding:4px 10px;border-radius:8px;background:var(--as);border:1px solid rgba(108,92,231,.15);color:#b8b0f0;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .15s;}
-    .skill-action:hover{background:rgba(108,92,231,.2);}
-
-    .activity-card{padding:22px;}
-    .activity-title{font-family:var(--font-d);font-size:16px;font-weight:700;margin-bottom:16px;}
+    .skill-action{padding:4px 10px;border-radius:8px;background:var(--as);border:1px solid rgba(108,92,231,.15);color:#b8b0f0;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;}
+    /* Activity */
     .activity-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
     .activity-item:last-child{border-bottom:none;}
-    .activity-icon{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:13px;flex-shrink:0;}
-    .activity-icon.solved{background:rgba(0,210,160,.12);color:var(--good);border:1px solid rgba(0,210,160,.15);}
-    .activity-icon.wrong{background:rgba(255,107,107,.1);color:var(--bad);border:1px solid rgba(255,107,107,.15);}
-    .activity-info{flex:1;min-width:0;}
-    .activity-label{font-size:12px;font-weight:700;color:var(--text);}
-    .activity-sub{font-size:11px;color:var(--muted);margin-top:1px;}
-    .activity-time{font-size:11px;color:var(--muted);flex-shrink:0;}
+    .act-icon{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:13px;flex-shrink:0;}
+    .act-icon.ok{background:rgba(0,210,160,.12);color:var(--good);border:1px solid rgba(0,210,160,.15);}
+    .act-icon.no{background:rgba(255,107,107,.1);color:var(--bad);border:1px solid rgba(255,107,107,.15);}
+    .act-info{flex:1;min-width:0;}
+    .act-label{font-size:12px;font-weight:700;}
+    .act-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+    .act-time{font-size:11px;color:var(--muted);flex-shrink:0;}
+    /* Insights */
+    .insight-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+    @media(min-width:600px){.insight-row{grid-template-columns:repeat(4,1fr);}}
+    .insight-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--radius2);padding:14px;text-align:center;}
+    .insight-val{font-family:var(--font-d);font-size:22px;font-weight:800;margin-top:4px;}
+    .insight-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+    .insight-trend{font-size:11px;margin-top:6px;font-weight:700;}
+    .trend-up{color:var(--good);}
+    .trend-down{color:var(--bad);}
+    .trend-flat{color:var(--muted);}
+    .insight-desc{font-size:12px;color:var(--text2);line-height:1.5;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);}
+    /* Leaderboard */
+    .lb-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+    .lb-item:last-child{border-bottom:none;}
+    .lb-rank{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-family:var(--font-d);font-size:13px;font-weight:800;background:var(--as);color:#b8b0f0;border:1px solid rgba(108,92,231,.15);flex-shrink:0;}
+    .lb-rank.gold{background:rgba(254,202,87,.12);color:var(--accent);border-color:rgba(254,202,87,.2);}
+    .lb-rank.silver{background:rgba(192,192,192,.1);color:#c0c0c0;border-color:rgba(192,192,192,.15);}
+    .lb-rank.bronze{background:rgba(205,127,50,.1);color:#cd7f32;border-color:rgba(205,127,50,.15);}
+    .lb-name{flex:1;font-size:13px;font-weight:700;}
+    .lb-name.you{color:#b8b0f0;}
+    .lb-score{font-family:var(--font-d);font-size:14px;font-weight:800;color:var(--text2);}
+    .lb-empty{text-align:center;padding:20px;color:var(--muted);font-size:12px;}
 
     .notice{padding:20px 22px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);font-size:14px;color:var(--muted);line-height:1.5;}
     .notice b{color:var(--text);display:block;margin-bottom:6px;}
-    .empty-state{text-align:center;padding:32px 20px;color:var(--muted);font-size:13px;line-height:1.6;}
-    .empty-state .emoji{font-size:32px;margin-bottom:12px;}
+    .empty-state{text-align:center;padding:28px 20px;color:var(--muted);font-size:13px;line-height:1.6;}
+    .empty-state .emoji{font-size:28px;margin-bottom:10px;}
     .foot{margin-top:24px;color:var(--muted);font-size:11px;text-align:center;padding:12px;}
-
+    .full-width{grid-column:1/-1;}
+    .section-gap{margin-top:16px;}
+    .loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:10px;color:var(--muted);font-size:13px;}
+    .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
     .modal-backdrop{position:fixed;inset:0;background:rgba(8,10,22,.7);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;z-index:100;}
     .modal{width:min(520px,96vw);border-radius:var(--radius);background:rgba(20,24,52,.85);backdrop-filter:blur(24px);border:1px solid var(--border);box-shadow:0 24px 64px rgba(0,0,0,.4);overflow:hidden;}
     .modal-h{padding:22px 22px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
@@ -134,22 +137,7 @@
     .modal-h button{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer;font-weight:700;display:grid;place-items:center;}
     .modal-b{padding:14px 22px 22px;color:var(--muted);font-size:14px;line-height:1.5;}
     .modal-actions{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;}
-
-    .full-width{grid-column:1/-1;}
-    .section-gap{margin-top:16px;}
-
-    .loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:10px;color:var(--muted);font-size:13px;}
-    .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg);}}
-
-    .error-banner{padding:14px 20px;border-radius:var(--radius2);background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.2);color:var(--bad);font-size:13px;margin-bottom:16px;display:none;}
-    .error-banner.show{display:block;}
-
-    @media(max-width:600px){
-      .hero-head{font-size:20px;}
-      .tile .v{font-size:22px;}
-      .chart-area{height:120px;}
-    }
+    @media(max-width:600px){.hero-head{font-size:20px;}.tile .v{font-size:20px;}.chart-area{height:120px;}.insight-val{font-size:18px;}}
   </style>
 </head>
 <body>
@@ -167,280 +155,323 @@
       <div><span class="badge"><b>Updated:</b> <span id="updatedText">—</span></span></div>
     </div>
   </div>
-
   <main class="wrap">
-    <div id="authNotice" class="notice" style="display:none;">
-      <b>Sign-in required.</b> We couldn't find your session.
-      <div style="margin-top:12px;"><button class="btn btn-primary btn-wide" id="btnGoLogin" type="button">Go to Login</button></div>
-    </div>
-    <div id="errorBanner" class="error-banner"></div>
+    <div id="authNotice" class="notice" style="display:none;"><b>Sign-in required.</b>We couldn't find your session.<div style="margin-top:12px;"><button class="btn btn-primary btn-wide" id="btnGoLogin" type="button">Go to Login</button></div></div>
     <div id="loadingState" class="loading"><div class="spinner"></div><span>Loading dashboard…</span></div>
-
     <div id="content" style="display:none;">
-      <div class="grid">
-        <section class="card">
-          <div class="hero">
-            <div class="hero-top">
-              <div>
-                <div class="hello" id="helloText">Hi &#128075;</div>
-                <div class="hero-head" id="heroHeadline">Continue your Regular Practice</div>
-                <div class="hero-focus">
-                  <span class="pill"><strong>Next:</strong> <span id="heroMinutes">10</span> min</span>
-                  <span class="pill">Focus: <span id="heroFocusLabel">General</span></span>
-                </div>
+      <!-- Hero + KPIs -->
+      <div class="grid hero-grid">
+        <section class="card"><div class="hero">
+          <div class="hero-top">
+            <div>
+              <div class="hello" id="helloText">Hi &#128075;</div>
+              <div class="hero-head" id="heroHeadline">Continue your Regular Practice</div>
+              <div class="hero-focus">
+                <span class="pill"><strong>Next:</strong> <span id="heroMinutes">10</span> min</span>
+                <span class="pill">Focus: <span id="heroFocusLabel">General</span></span>
               </div>
-              <div class="ring" id="goalRing" style="--p:0%;"><div><span id="goalPct">0%</span></div></div>
             </div>
-            <div class="hero-actions">
-              <button id="btnStart" class="btn btn-primary btn-wide" type="button">Start now</button>
-            </div>
+            <div class="ring" id="goalRing" style="--p:0%;"><div><span id="goalPct">0%</span></div></div>
           </div>
-        </section>
+          <div class="hero-actions"><button id="btnStart" class="btn btn-primary btn-wide" type="button">Start now</button></div>
+        </div></section>
         <section class="card">
-          <div class="tiles"><div class="tile-row">
-            <div class="tile"><div class="k">Problems solved</div><div class="v" id="kpiSolved">—</div><div class="d"><span class="mini">&#128293;</span> Total</div></div>
-            <div class="tile"><div class="k">Accuracy</div><div class="v" id="kpiAccuracy">—</div><div class="d"><span class="mini">&#10003;</span> Overall</div></div>
-            <div class="tile"><div class="k">Hints used</div><div class="v" id="kpiHints">—</div><div class="d"><span class="mini">&#128161;</span> Avg per problem</div></div>
-          </div></div>
-        </section>
-      </div>
-
-      <div class="section-gap">
-        <section class="card chart-card full-width">
-          <div class="chart-header">
-            <div class="chart-title">Accuracy over time</div>
-            <div class="chart-tabs">
-              <button class="chart-tab active" data-range="7">7 days</button>
-              <button class="chart-tab" data-range="30">30 days</button>
-              <button class="chart-tab" data-range="0">All time</button>
-            </div>
+          <div class="kpi-grid">
+            <div class="tile"><div class="k">Problems solved</div><div class="v" id="kpiSolved">—</div><div class="d"><span class="mini">&#9989;</span> Unique</div></div>
+            <div class="tile"><div class="k">Accuracy</div><div class="v" id="kpiAccuracy">—</div><div class="d"><span class="mini">&#127919;</span> Overall</div></div>
+            <div class="tile"><div class="k">Avg time</div><div class="v" id="kpiSpeed">—</div><div class="d"><span class="mini">&#9201;</span> Per problem</div></div>
+            <div class="tile"><div class="k">Streak</div><div class="v" id="kpiStreak">—</div><div class="d"><span class="mini">&#128293;</span> Days</div></div>
           </div>
-          <svg class="chart-area" id="chartSvg"></svg>
-          <div class="chart-insight" id="chartInsight">Loading…</div>
         </section>
       </div>
-
+      <!-- Chart -->
+      <div class="section-gap"><section class="card chart-card full-width">
+        <div class="chart-header"><div class="chart-title">Accuracy over time</div><div class="chart-tabs"><button class="chart-tab active" data-range="7">7 days</button><button class="chart-tab" data-range="30">30 days</button><button class="chart-tab" data-range="0">All time</button></div></div>
+        <svg class="chart-area" id="chartSvg"></svg>
+        <div class="chart-insight" id="chartInsight">Loading…</div>
+      </section></div>
+      <!-- Parent Cognitive Insights -->
+      <div class="section-gap"><section class="card insights-card full-width">
+        <div class="section-title">&#129504; Parent Insights — Cognitive Development</div>
+        <div class="insight-row" id="insightRow"></div>
+        <div class="insight-desc" id="insightDesc">Loading cognitive analysis…</div>
+      </section></div>
+      <!-- Skills + Activity -->
       <div class="grid section-gap">
-        <section class="card skills-card">
-          <div class="skills-title">Skills breakdown</div>
-          <div id="skillsList"><div class="loading"><div class="spinner"></div><span>Loading…</span></div></div>
-        </section>
-        <section class="card activity-card">
-          <div class="activity-title">Recent activity</div>
-          <div id="activityList"><div class="loading"><div class="spinner"></div><span>Loading…</span></div></div>
-        </section>
+        <section class="card skills-card"><div class="section-title">Skills breakdown</div><div id="skillsList"><div class="loading"><div class="spinner"></div></div></div></section>
+        <section class="card activity-card"><div class="section-title">Recent activity</div><div id="activityList"><div class="loading"><div class="spinner"></div></div></div></section>
       </div>
-      <div class="foot">Regular dashboard · Track boundary enforced</div>
+      <!-- Leaderboard -->
+      <div class="section-gap"><section class="card leaderboard-card full-width">
+        <div class="section-title">&#127942; School Leaderboard</div>
+        <div id="leaderboardList"><div class="loading"><div class="spinner"></div></div></div>
+      </section></div>
+      <div class="foot">Regular Practice Dashboard · LogicPals</div>
     </div>
   </main>
-
-  <div class="modal-backdrop" id="olymModal">
-    <div class="modal">
-      <div class="modal-h"><div><b>Olympiad Track</b><div style="font-size:12px;color:var(--muted);margin-top:4px;">A separate advanced track.</div></div><button type="button" id="closeOlymp">&#10005;</button></div>
-      <div class="modal-b"><p>Olympiad is a separate advanced track. Upgrade to unlock it.</p><div class="modal-actions"><a class="btn btn-primary btn-wide" href="subscriptions.html">View plans</a><button class="btn btn-ghost btn-wide" id="olymCancelBtn" type="button">Not now</button></div></div>
-    </div>
-  </div>
-
+  <div class="modal-backdrop" id="olymModal"><div class="modal"><div class="modal-h"><div><b>Olympiad Track</b><div style="font-size:12px;color:var(--muted);margin-top:4px;">A separate advanced track.</div></div><button type="button" id="closeOlymp">&#10005;</button></div><div class="modal-b"><p>Olympiad is a separate advanced track. Upgrade to unlock it.</p><div class="modal-actions"><a class="btn btn-primary btn-wide" href="subscriptions.html">View plans</a><button class="btn btn-ghost btn-wide" id="olymCancelBtn" type="button">Not now</button></div></div></div></div>
 <script>
 (function(){
   'use strict';
+  const $=id=>document.getElementById(id);
+  const safe=(el,t)=>{if(el)el.textContent=(t!=null&&t!=='')?t:'\u2014';};
+  const STORAGE_KEY='logicpals.auth';
+  const LOGIN_URL='/login.html?next='+encodeURIComponent('/dashboard.html');
 
-  const $ = (id) => document.getElementById(id);
-  const safe = (el, t) => { if(el) el.textContent = (t != null && t !== '') ? t : '\u2014'; };
-  const STORAGE_KEY = 'logicpals.auth';
-  const LOGIN_URL = '/login.html?next=' + encodeURIComponent('/dashboard.html');
+  function setStatus(s,m){safe($('planText'),m);$('planDot').classList.remove('dot-good','dot-warn','dot-bad');$('planDot').classList.add(s==='good'?'dot-good':s==='bad'?'dot-bad':'dot-warn');}
+  function showAuth(){$('loadingState').style.display='none';$('authNotice').style.display='block';$('content').style.display='none';}
+  function showContent(){$('loadingState').style.display='none';$('authNotice').style.display='none';$('content').style.display='block';}
+  function fmtAgo(iso){if(!iso)return'';const d=(Date.now()-new Date(iso).getTime())/1000;if(d<60)return'just now';if(d<3600)return Math.floor(d/60)+' min ago';if(d<86400)return Math.floor(d/3600)+' hr ago';return Math.floor(d/86400)+' days ago';}
+  function wasSolved(a){return!!(a.solved_correctly||a.is_correct);}
 
-  function setStatus(s, m){
-    safe($('planText'), m);
-    $('planDot').classList.remove('dot-good','dot-warn','dot-bad');
-    $('planDot').classList.add(s==='good'?'dot-good':s==='bad'?'dot-bad':'dot-warn');
-  }
-  function showAuth(){ $('loadingState').style.display='none'; $('authNotice').style.display='block'; $('content').style.display='none'; }
-  function showContent(){ $('loadingState').style.display='none'; $('authNotice').style.display='none'; $('content').style.display='block'; }
-  function showError(m){ const e=$('errorBanner'); e.textContent=m; e.classList.add('show'); }
-  function fmtAgo(iso){ if(!iso) return ''; const d=(Date.now()-new Date(iso).getTime())/1000; if(d<60) return 'just now'; if(d<3600) return Math.floor(d/60)+' min ago'; if(d<86400) return Math.floor(d/3600)+' hr ago'; return Math.floor(d/86400)+' days ago'; }
+  const CAT_ICONS={logic:'\uD83E\uDDE0',arithmetic:'\uD83D\uDD22','word-problem':'\uD83D\uDCDD',pattern:'\uD83D\uDCC8',algebra:'\uD83D\uDD2E',geometry:'\uD83D\uDFE3'};
+  const CAT_LABELS={logic:'Logic & Reasoning',arithmetic:'Arithmetic','word-problem':'Word Problems',pattern:'Pattern Recognition',algebra:'Algebra',geometry:'Geometry'};
 
-  const CAT_ICONS = { logic:'\uD83E\uDDE0', arithmetic:'\uD83D\uDD22', 'word-problem':'\uD83D\uDCDD', pattern:'\uD83D\uDCC8', algebra:'\uD83D\uDD2E', geometry:'\uD83D\uDFE3' };
-  const CAT_LABELS = { logic:'Logic & Reasoning', arithmetic:'Arithmetic', 'word-problem':'Word Problems', pattern:'Pattern Recognition', algebra:'Algebra', geometry:'Geometry' };
-
-  // Check if attempt was solved — support both column names
-  function wasSolved(a){ return !!(a.solved_correctly || a.is_correct); }
-
-  /* ── Env loader (same as learn.html) ── */
   async function getEnv(){
-    if(window.__LP_ENV && window.__LP_ENV.SUPABASE_URL) return window.__LP_ENV;
-    const r = await fetch('/api/env', { cache:'no-store', credentials:'same-origin' });
-    if(!r.ok) throw new Error('/api/env failed: ' + r.status);
-    const d = await r.json();
-    const env = { SUPABASE_URL: d.SUPABASE_URL||d.supabaseUrl||d.url, SUPABASE_ANON_KEY: d.SUPABASE_ANON_KEY||d.supabaseAnonKey||d.anonKey };
-    window.__LP_ENV = env;
-    return env;
+    if(window.__LP_ENV?.SUPABASE_URL)return window.__LP_ENV;
+    const r=await fetch('/api/env',{cache:'no-store',credentials:'same-origin'});
+    if(!r.ok)throw new Error('/api/env: '+r.status);
+    const d=await r.json();
+    const env={SUPABASE_URL:d.SUPABASE_URL||d.supabaseUrl||d.url,SUPABASE_ANON_KEY:d.SUPABASE_ANON_KEY||d.supabaseAnonKey||d.anonKey};
+    window.__LP_ENV=env;return env;
   }
 
-  /* ── Main ── */
   async function init(){
     setStatus('warn','Checking session…');
+    let env;try{env=await getEnv();}catch(e){setStatus('bad','Config missing');showAuth();return;}
+    if(!env.SUPABASE_URL||!env.SUPABASE_ANON_KEY){setStatus('bad','Config missing');showAuth();return;}
 
-    let env;
-    try{ env = await getEnv(); } catch(e){
-      console.error('[Dashboard] Env load failed:', e);
-      setStatus('bad','Config missing');
-      showError('Could not load config from /api/env. Check your deployment.');
-      showAuth();
-      return;
-    }
-    if(!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY){
-      setStatus('bad','Config missing');
-      showAuth();
-      return;
-    }
+    const sb=supabase.createClient(env.SUPABASE_URL,env.SUPABASE_ANON_KEY,{auth:{storageKey:STORAGE_KEY,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 
-    const sb = supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
-      auth:{ storageKey:STORAGE_KEY, persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
-    });
+    let user=null;
+    try{const{data}=await sb.auth.getSession();if(data?.session?.user)user=data.session.user;}catch(_){}
+    if(!user){try{const{data}=await sb.auth.getUser();if(data?.user)user=data.user;}catch(_){}}
+    if(!user){setStatus('bad','Signed out');showAuth();return;}
 
-    // Auth — getSession + getUser fallback
-    let user = null;
-    try{ const{data}=await sb.auth.getSession(); if(data?.session?.user) user=data.session.user; }catch(_){}
-    if(!user){ try{ const{data}=await sb.auth.getUser(); if(data?.user) user=data.user; }catch(_){} }
+    setStatus('good','Signed in');$('btnSignOut').disabled=false;
+    const uname=user.user_metadata?.full_name||user.user_metadata?.name||(user.email?user.email.split('@')[0]:'there');
+    safe($('helloText'),'Hi '+uname+' \uD83D\uDC4B');safe($('updatedText'),'just now');
 
-    if(!user){ setStatus('bad','Signed out'); showAuth(); return; }
+    $('btnSignOut').addEventListener('click',async()=>{$('btnSignOut').disabled=true;setStatus('warn','Signing out…');try{await sb.auth.signOut({scope:'global'});}catch(_){}try{['','-code-verifier','-provider-token','-provider-refresh-token'].forEach(s=>localStorage.removeItem(STORAGE_KEY+s));}catch(_){}location.replace('/index.html');});
 
-    setStatus('good','Signed in');
-    $('btnSignOut').disabled = false;
-    const userName = (user.user_metadata?.full_name || user.user_metadata?.name) || (user.email?user.email.split('@')[0]:'there');
-    safe($('helloText'), 'Hi '+userName+' \uD83D\uDC4B');
-    safe($('updatedText'), 'just now');
-
-    $('btnSignOut').addEventListener('click', async()=>{
-      $('btnSignOut').disabled=true; setStatus('warn','Signing out…');
-      try{await sb.auth.signOut({scope:'global'});}catch(_){}
-      try{['','-code-verifier','-provider-token','-provider-refresh-token'].forEach(s=>localStorage.removeItem(STORAGE_KEY+s));}catch(_){}
-      location.replace('/index.html');
-    });
-
-    // Subscription (graceful)
-    try{
-      await new Promise((res,rej)=>{const s=document.createElement('script');s.src='/assets/js/subscription-guard.js';s.async=true;s.onload=res;s.onerror=()=>rej();document.head.appendChild(s);});
-      if(window.SubscriptionGuard){
-        const sub=await SubscriptionGuard.getUserSubscription();
-        if(sub&&!sub.expired){safe($('planText'),'Active');$('planDot').classList.remove('dot-warn','dot-bad');$('planDot').classList.add('dot-good');}
-        else if(sub?.expired){safe($('planText'),'Expired');$('planDot').classList.remove('dot-good','dot-warn');$('planDot').classList.add('dot-bad');}
-      }
+    // Subscription
+    try{await new Promise((ok,no)=>{const s=document.createElement('script');s.src='/assets/js/subscription-guard.js';s.async=true;s.onload=ok;s.onerror=()=>no();document.head.appendChild(s);});
+      if(window.SubscriptionGuard){const sub=await SubscriptionGuard.getUserSubscription();if(sub&&!sub.expired){safe($('planText'),'Active');$('planDot').classList.remove('dot-warn','dot-bad');$('planDot').classList.add('dot-good');}else if(sub?.expired){safe($('planText'),'Expired');$('planDot').classList.remove('dot-good','dot-warn');$('planDot').classList.add('dot-bad');}}
     }catch(_){}
 
-    // Child ID
-    let childId=null;
-    try{const{data}=await sb.from('children').select('id').eq('parent_id',user.id).single();if(data)childId=data.id;}catch(_){}
+    // Child + school_name
+    let childId=null,childData=null;
+    try{const{data}=await sb.from('children').select('id,name,school_name,age,streak_days,total_problems_solved').eq('parent_id',user.id).single();if(data){childId=data.id;childData=data;}}catch(_){}
 
     if(!childId){
       showContent();
-      safe($('kpiSolved'),'0'); safe($('kpiAccuracy'),'0%'); safe($('kpiHints'),'0');
+      safe($('kpiSolved'),'0');safe($('kpiAccuracy'),'0%');safe($('kpiSpeed'),'\u2014');safe($('kpiStreak'),'0');
       $('heroHeadline').textContent='Start your first practice session!';
       $('heroFocusLabel').textContent='Logic & Patterns';
       $('skillsList').innerHTML='<div class="empty-state"><div class="emoji">\uD83D\uDCDA</div>No data yet. Start practicing!</div>';
       $('activityList').innerHTML='<div class="empty-state"><div class="emoji">\u23F0</div>No activity yet.</div>';
+      $('insightRow').innerHTML='';$('insightDesc').textContent='Start practicing to unlock cognitive insights for parents.';
+      $('leaderboardList').innerHTML='<div class="lb-empty">Complete problems to appear on your school leaderboard.</div>';
       $('chartInsight').textContent='Complete problems to see trends.';
       renderChart($('chartSvg'),[]);
       $('btnStart').addEventListener('click',()=>location.assign('/learn.html?track=regular'));
       return;
     }
 
-    // Fetch attempts
+    // Fetch attempts with problem data
     let attempts=[];
     try{
       const{data,error}=await sb.from('attempts').select('*, problems(category, difficulty)').eq('child_id',childId).order('created_at',{ascending:false}).limit(500);
-      if(error) console.error('[Dashboard] Attempts error:',error.message);
-      if(data) attempts=data;
-    }catch(e){ console.error('[Dashboard] Attempts fetch:',e); showError('Could not load data.'); }
+      if(!error&&data)attempts=data;
+    }catch(_){}
+
+    // Fetch school leaderboard
+    let schoolPeers=[];
+    if(childData?.school_name){
+      try{
+        const{data}=await sb.from('children').select('id,name,total_problems_solved').eq('school_name',childData.school_name).order('total_problems_solved',{ascending:false}).limit(10);
+        if(data)schoolPeers=data;
+      }catch(_){}
+    }
 
     showContent();
-    renderKPIs(attempts);
+    renderKPIs(attempts,childData);
     renderHero(attempts);
     renderChart($('chartSvg'),attempts,7);
     renderSkills(attempts);
     renderActivity(attempts);
+    renderInsights(attempts);
+    renderLeaderboard(schoolPeers,childId,childData);
     setupChartTabs(attempts);
     $('btnStart').addEventListener('click',()=>location.assign('/learn.html?track=regular'));
   }
 
-  function renderKPIs(att){
-    const total=att.length;
-    const correct=att.filter(wasSolved).length;
-    const acc=total>0?Math.round(correct/total*100):0;
-    const avgH=total>0?(att.reduce((s,a)=>s+(a.hints_used||0),0)/total).toFixed(1):'0';
-    safe($('kpiSolved'),String(total));
+  // ═══ KPIs — count UNIQUE solved problems ═══
+  function renderKPIs(att,child){
+    // Unique problems solved (only where solved_correctly/is_correct = true)
+    const solvedSet=new Set();
+    att.forEach(a=>{if(wasSolved(a)&&a.problem_id)solvedSet.add(a.problem_id);});
+    const uniqueSolved=solvedSet.size;
+
+    // Accuracy = unique solved / unique attempted
+    const attemptedSet=new Set();
+    att.forEach(a=>{if(a.problem_id)attemptedSet.add(a.problem_id);});
+    const uniqueAttempted=attemptedSet.size;
+    const acc=uniqueAttempted>0?Math.round(uniqueSolved/uniqueAttempted*100):0;
+
+    // Avg time (from time_spent_seconds on solved attempts)
+    const times=att.filter(a=>wasSolved(a)&&a.time_spent_seconds>0).map(a=>a.time_spent_seconds);
+    const avgTime=times.length>0?Math.round(times.reduce((a,b)=>a+b,0)/times.length):0;
+    const timeStr=avgTime>0?(avgTime>=60?Math.floor(avgTime/60)+'m '+avgTime%60+'s':avgTime+'s'):'\u2014';
+
+    safe($('kpiSolved'),String(uniqueSolved));
     safe($('kpiAccuracy'),acc+'%');
-    safe($('kpiHints'),avgH);
+    safe($('kpiSpeed'),timeStr);
+    safe($('kpiStreak'),String(child?.streak_days||0));
+
     $('goalRing').style.setProperty('--p',acc+'%');
     safe($('goalPct'),acc+'%');
   }
 
   function renderHero(att){
-    if(!att.length){ $('heroHeadline').textContent='Start your first session!'; $('heroFocusLabel').textContent='Logic & Patterns'; return; }
-    const cats={};
-    att.forEach(a=>{const c=(a.problems?.category)||'general';if(!cats[c])cats[c]={t:0,c:0};cats[c].t++;if(wasSolved(a))cats[c].c++;});
-    let w=null,lo=101;
-    Object.entries(cats).forEach(([k,v])=>{const a=v.t>0?v.c/v.t*100:0;if(a<lo){lo=a;w=k;}});
+    if(!att.length){$('heroHeadline').textContent='Start your first session!';$('heroFocusLabel').textContent='Logic & Patterns';return;}
+    const cats={};att.forEach(a=>{const c=a.problems?.category||'general';if(!cats[c])cats[c]={t:0,c:0};cats[c].t++;if(wasSolved(a))cats[c].c++;});
+    let w=null,lo=101;Object.entries(cats).forEach(([k,v])=>{const a=v.t>0?v.c/v.t*100:0;if(a<lo){lo=a;w=k;}});
     $('heroHeadline').textContent='Continue your Regular Practice';
     $('heroFocusLabel').textContent=CAT_LABELS[w]||w||'Logic & Patterns';
     $('heroMinutes').textContent=lo<60?'12':'10';
   }
 
+  // ═══ Chart ═══
   function renderChart(svg,att,days){
-    if(!svg)return; svg.innerHTML='';
-    let f=att;
-    if(days&&days>0){const c=Date.now()-days*864e5;f=att.filter(a=>new Date(a.created_at).getTime()>=c);}
+    if(!svg)return;svg.innerHTML='';
+    let f=att;if(days&&days>0){const c=Date.now()-days*864e5;f=att.filter(a=>new Date(a.created_at).getTime()>=c);}
     if(!f.length){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="#5d5f7e" font-size="13">No data for this period</text>';$('chartInsight').textContent='Complete problems to see trends.';return;}
-
-    const byDay={};
-    f.forEach(a=>{const d=(a.created_at||'').slice(0,10);if(!byDay[d])byDay[d]={t:0,c:0};byDay[d].t++;if(wasSolved(a))byDay[d].c++;});
+    const byDay={};f.forEach(a=>{const d=(a.created_at||'').slice(0,10);if(!byDay[d])byDay[d]={t:new Set(),c:new Set()};byDay[d].t.add(a.problem_id||a.id);if(wasSolved(a))byDay[d].c.add(a.problem_id||a.id);});
     const sorted=Object.keys(byDay).sort();
-    const pts=sorted.map(d=>({l:d,a:Math.round(byDay[d].c/byDay[d].t*100)}));
-
-    const W=svg.clientWidth||svg.getBoundingClientRect().width||600;
-    const H=svg.clientHeight||svg.getBoundingClientRect().height||160;
+    const pts=sorted.map(d=>({l:d,a:byDay[d].t.size>0?Math.round(byDay[d].c.size/byDay[d].t.size*100):0}));
+    const W=svg.clientWidth||svg.getBoundingClientRect().width||600,H=svg.clientHeight||svg.getBoundingClientRect().height||160;
     const p={t:20,r:20,b:30,l:40},cw=W-p.l-p.r,ch=H-p.t-p.b;
-
-    if(pts.length===1){
-      const cx=p.l+cw/2,cy=p.t+ch-(pts[0].a/100)*ch;
-      svg.innerHTML=`<line x1="${p.l}" y1="${p.t+ch}" x2="${p.l+cw}" y2="${p.t+ch}" stroke="rgba(255,255,255,.06)"/><circle cx="${cx}" cy="${cy}" r="5" fill="#6c5ce7"/><text x="${cx}" y="${cy-12}" text-anchor="middle" fill="#b8b0f0" font-size="12" font-weight="700" font-family="Outfit">${pts[0].a}%</text><text x="${cx}" y="${H-6}" text-anchor="middle" fill="#5d5f7e" font-size="10">${pts[0].l.slice(5)}</text>`;
-    } else {
-      const xs=cw/(pts.length-1);
-      const co=pts.map((pt,i)=>({x:p.l+i*xs,y:p.t+ch-(pt.a/100)*ch}));
-      const lp=co.map((c,i)=>(i?'L':'M')+c.x.toFixed(1)+','+c.y.toFixed(1)).join(' ');
-      const ap=lp+` L${co[co.length-1].x.toFixed(1)},${(p.t+ch).toFixed(1)} L${co[0].x.toFixed(1)},${(p.t+ch).toFixed(1)} Z`;
-      let g='';[0,25,50,75,100].forEach(v=>{const y=p.t+ch-(v/100)*ch;g+=`<line x1="${p.l}" y1="${y.toFixed(1)}" x2="${(p.l+cw).toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,.04)"/><text x="${p.l-8}" y="${(y+4).toFixed(1)}" text-anchor="end" fill="#5d5f7e" font-size="9">${v}</text>`;});
-      let xl='';const idx=pts.length<=7?pts.map((_,i)=>i):[0,Math.floor(pts.length/2),pts.length-1];
-      idx.forEach(i=>{xl+=`<text x="${co[i].x.toFixed(1)}" y="${H-6}" text-anchor="middle" fill="#5d5f7e" font-size="10">${pts[i].l.slice(5)}</text>`;});
-      const dots=co.map(c=>`<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="#6c5ce7" stroke="rgba(12,14,26,.9)" stroke-width="2"/>`).join('');
-      svg.innerHTML=`<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6c5ce7" stop-opacity=".25"/><stop offset="100%" stop-color="#6c5ce7" stop-opacity="0"/></linearGradient></defs>${g}<path d="${ap}" fill="url(#ag)"/><path d="${lp}" fill="none" stroke="#6c5ce7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}${xl}`;
-    }
-
-    if(pts.length>=2){const d=pts[pts.length-1].a-pts[0].a;$('chartInsight').textContent=d>5?'\uD83D\uDCC8 Accuracy trending up — great progress!':d<-5?'\uD83D\uDCCB Accuracy dipped. Review categories below.':'\uD83D\uDCAA Steady performance. Keep it up!';}
+    if(pts.length===1){const cx=p.l+cw/2,cy=p.t+ch-(pts[0].a/100)*ch;svg.innerHTML=`<line x1="${p.l}" y1="${p.t+ch}" x2="${p.l+cw}" y2="${p.t+ch}" stroke="rgba(255,255,255,.06)"/><circle cx="${cx}" cy="${cy}" r="5" fill="#6c5ce7"/><text x="${cx}" y="${cy-12}" text-anchor="middle" fill="#b8b0f0" font-size="12" font-weight="700" font-family="Outfit">${pts[0].a}%</text><text x="${cx}" y="${H-6}" text-anchor="middle" fill="#5d5f7e" font-size="10">${pts[0].l.slice(5)}</text>`;}
+    else{const xs=cw/(pts.length-1);const co=pts.map((pt,i)=>({x:p.l+i*xs,y:p.t+ch-(pt.a/100)*ch}));const lp=co.map((c,i)=>(i?'L':'M')+c.x.toFixed(1)+','+c.y.toFixed(1)).join(' ');const ap=lp+` L${co[co.length-1].x.toFixed(1)},${(p.t+ch).toFixed(1)} L${co[0].x.toFixed(1)},${(p.t+ch).toFixed(1)} Z`;let g='';[0,25,50,75,100].forEach(v=>{const y=p.t+ch-(v/100)*ch;g+=`<line x1="${p.l}" y1="${y.toFixed(1)}" x2="${(p.l+cw).toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,.04)"/><text x="${p.l-8}" y="${(y+4).toFixed(1)}" text-anchor="end" fill="#5d5f7e" font-size="9">${v}</text>`;});let xl='';const idx=pts.length<=7?pts.map((_,i)=>i):[0,Math.floor(pts.length/2),pts.length-1];idx.forEach(i=>{xl+=`<text x="${co[i].x.toFixed(1)}" y="${H-6}" text-anchor="middle" fill="#5d5f7e" font-size="10">${pts[i].l.slice(5)}</text>`;});const dots=co.map(c=>`<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="#6c5ce7" stroke="rgba(12,14,26,.9)" stroke-width="2"/>`).join('');svg.innerHTML=`<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6c5ce7" stop-opacity=".25"/><stop offset="100%" stop-color="#6c5ce7" stop-opacity="0"/></linearGradient></defs>${g}<path d="${ap}" fill="url(#ag)"/><path d="${lp}" fill="none" stroke="#6c5ce7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}${xl}`;}
+    if(pts.length>=2){const d=pts[pts.length-1].a-pts[0].a;$('chartInsight').textContent=d>5?'\uD83D\uDCC8 Accuracy trending up — great progress!':d<-5?'\uD83D\uDCCB Accuracy dipped. Review categories below.':'\uD83D\uDCAA Steady performance. Keep pushing!';}
     else $('chartInsight').textContent='Keep practicing to see trends.';
   }
-
   function setupChartTabs(att){document.querySelectorAll('.chart-tab').forEach(t=>{t.addEventListener('click',()=>{document.querySelectorAll('.chart-tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');renderChart($('chartSvg'),att,parseInt(t.dataset.range,10));});});}
 
+  // ═══ Skills — unique problem accuracy ═══
   function renderSkills(att){
     const el=$('skillsList');
-    if(!att.length){el.innerHTML='<div class="empty-state"><div class="emoji">\uD83D\uDCDA</div>No data yet. Start practicing!</div>';return;}
-    const cats={};att.forEach(a=>{const c=a.problems?.category||'general';if(!cats[c])cats[c]={t:0,c:0};cats[c].t++;if(wasSolved(a))cats[c].c++;});
+    if(!att.length){el.innerHTML='<div class="empty-state"><div class="emoji">\uD83D\uDCDA</div>No data yet.</div>';return;}
+    const cats={};
+    att.forEach(a=>{
+      const c=a.problems?.category||'general';
+      if(!cats[c])cats[c]={solved:new Set(),attempted:new Set()};
+      cats[c].attempted.add(a.problem_id||a.id);
+      if(wasSolved(a))cats[c].solved.add(a.problem_id||a.id);
+    });
     let h='';
-    Object.entries(cats).sort((a,b)=>(a[1].c/a[1].t)-(b[1].c/b[1].t)).forEach(([cat,d])=>{
-      const acc=Math.round(d.c/d.t*100),label=CAT_LABELS[cat]||cat,icon=CAT_ICONS[cat]||'\uD83D\uDD2C',solid=acc>=80;
-      h+=`<div class="skill-item"><div class="skill-icon">${icon}</div><div class="skill-info"><div class="skill-name">${label} <span class="skill-badge ${solid?'solid':'practicing'}">${solid?'Solid':'Practicing'}</span></div><div class="skill-detail">${d.c}/${d.t} correct</div><div class="skill-bar"><div class="skill-fill" style="width:${acc}%"></div></div></div><div class="skill-pct">${acc}%</div><button class="skill-action" onclick="location.assign('/learn.html?track=regular&focus=${encodeURIComponent(cat)}')">Practice</button></div>`;
+    Object.entries(cats).sort((a,b)=>{const aa=a[1].solved.size/a[1].attempted.size,bb=b[1].solved.size/b[1].attempted.size;return aa-bb;}).forEach(([cat,d])=>{
+      const acc=d.attempted.size>0?Math.round(d.solved.size/d.attempted.size*100):0;
+      const label=CAT_LABELS[cat]||cat,icon=CAT_ICONS[cat]||'\uD83D\uDD2C',solid=acc>=80;
+      h+=`<div class="skill-item"><div class="skill-icon">${icon}</div><div class="skill-info"><div class="skill-name">${label}<span class="skill-badge ${solid?'solid':'practicing'}">${solid?'Solid':'Practicing'}</span></div><div class="skill-detail">${d.solved.size}/${d.attempted.size} problems</div><div class="skill-bar"><div class="skill-fill" style="width:${acc}%"></div></div></div><div class="skill-pct">${acc}%</div><button class="skill-action" onclick="location.assign('/learn.html?track=regular&focus=${encodeURIComponent(cat)}')">Practice</button></div>`;
     });
     el.innerHTML=h;
   }
 
+  // ═══ Activity — deduplicated, one per problem ═══
   function renderActivity(att){
     const el=$('activityList');
     if(!att.length){el.innerHTML='<div class="empty-state"><div class="emoji">\u23F0</div>No activity yet.</div>';return;}
-    let h='';att.slice(0,8).forEach(a=>{
-      const s=wasSolved(a),cat=a.problems?.category||'general',label=CAT_LABELS[cat]||cat,hints=a.hints_used||0;
-      h+=`<div class="activity-item"><div class="activity-icon ${s?'solved':'wrong'}">${s?'\u2713':'\u2717'}</div><div class="activity-info"><div class="activity-label">${label} — ${s?'Solved':'Attempted'}</div><div class="activity-sub">${hints} hint${hints!==1?'s':''} used</div></div><div class="activity-time">${fmtAgo(a.created_at)}</div></div>`;
+    // Show latest attempt per unique problem_id
+    const seen=new Set();const unique=[];
+    for(const a of att){
+      const pid=a.problem_id||a.id;
+      if(!seen.has(pid)){seen.add(pid);unique.push(a);}
+      if(unique.length>=8)break;
+    }
+    let h='';
+    unique.forEach(a=>{
+      const s=wasSolved(a),cat=a.problems?.category||'general',label=CAT_LABELS[cat]||cat;
+      const hints=a.hints_used||0,time=a.time_spent_seconds;
+      const meta=[hints+' hint'+(hints!==1?'s':'')];
+      if(time>0)meta.push(time>=60?Math.floor(time/60)+'m '+time%60+'s':time+'s');
+      h+=`<div class="activity-item"><div class="act-icon ${s?'ok':'no'}">${s?'\u2713':'\u2717'}</div><div class="act-info"><div class="act-label">${label} — ${s?'Solved':'Attempted'}</div><div class="act-sub">${meta.join(' · ')}</div></div><div class="act-time">${fmtAgo(a.created_at)}</div></div>`;
+    });
+    el.innerHTML=h;
+  }
+
+  // ═══ Parent Cognitive Insights ═══
+  function renderInsights(att){
+    const row=$('insightRow'),desc=$('insightDesc');
+    if(att.length<3){row.innerHTML='';desc.textContent='Complete at least 3 problems to unlock cognitive insights for parents.';return;}
+
+    // 1. Speed improvement — compare first half vs second half
+    const solved=att.filter(a=>wasSolved(a)&&a.time_spent_seconds>0).reverse(); // oldest first
+    let speedTrend='flat',speedVal='\u2014';
+    if(solved.length>=4){
+      const half=Math.floor(solved.length/2);
+      const early=solved.slice(0,half).reduce((s,a)=>s+a.time_spent_seconds,0)/half;
+      const late=solved.slice(half).reduce((s,a)=>s+a.time_spent_seconds,0)/(solved.length-half);
+      const pct=Math.round((early-late)/early*100);
+      speedVal=Math.abs(pct)+'%';
+      speedTrend=pct>5?'up':pct<-5?'down':'flat';
+    }
+
+    // 2. Persistence — avg questions_asked before solving
+    const withQ=att.filter(a=>wasSolved(a)&&a.questions_asked>0);
+    const avgPersistence=withQ.length>0?(withQ.reduce((s,a)=>s+a.questions_asked,0)/withQ.length).toFixed(1):'—';
+
+    // 3. Focus — avg time_to_first_input
+    const withTTFI=att.filter(a=>a.time_to_first_input_seconds>0);
+    const avgFocus=withTTFI.length>0?Math.round(withTTFI.reduce((s,a)=>s+a.time_to_first_input_seconds,0)/withTTFI.length):0;
+    const focusStr=avgFocus>0?(avgFocus+'s'):'\u2014';
+
+    // 4. Learning style — dominant category
+    const catCounts={};att.forEach(a=>{const c=a.problems?.category||'general';catCounts[c]=(catCounts[c]||0)+1;});
+    const topCat=Object.entries(catCounts).sort((a,b)=>b[1]-a[1])[0];
+    const styleLabel=topCat?CAT_LABELS[topCat[0]]||topCat[0]:'—';
+
+    row.innerHTML=`
+      <div class="insight-card"><div class="insight-lbl">Speed Growth</div><div class="insight-val">${speedVal}</div><div class="insight-trend ${speedTrend==='up'?'trend-up':speedTrend==='down'?'trend-down':'trend-flat'}">${speedTrend==='up'?'\u2191 Faster':speedTrend==='down'?'\u2193 Slower':'\u2194 Steady'}</div></div>
+      <div class="insight-card"><div class="insight-lbl">Persistence</div><div class="insight-val">${avgPersistence}</div><div class="insight-trend trend-flat">Avg attempts/problem</div></div>
+      <div class="insight-card"><div class="insight-lbl">Focus Time</div><div class="insight-val">${focusStr}</div><div class="insight-trend trend-flat">Time to first answer</div></div>
+      <div class="insight-card"><div class="insight-lbl">Learning Style</div><div class="insight-val" style="font-size:14px;">${styleLabel}</div><div class="insight-trend trend-flat">Strongest area</div></div>
+    `;
+
+    // Communication analysis from ai_conversation
+    const convos=att.filter(a=>a.ai_conversation&&Array.isArray(a.ai_conversation));
+    let totalWords=0,totalMsgs=0;
+    convos.forEach(a=>{a.ai_conversation.forEach(m=>{if(m.role==='user'){totalMsgs++;totalWords+=m.content.split(/\s+/).length;}});});
+    const avgWords=totalMsgs>0?Math.round(totalWords/totalMsgs):0;
+
+    let descText='';
+    if(solved.length>=4&&speedTrend==='up') descText+='Your child is getting faster at solving problems, showing improved cognitive processing. ';
+    else if(solved.length>=4&&speedTrend==='down') descText+='Problem-solving speed has slowed — this may indicate tackling harder problems, which is a positive sign of growth. ';
+
+    if(parseFloat(avgPersistence)>3) descText+='High persistence score shows strong grit — your child doesn\'t give up easily! ';
+    else if(parseFloat(avgPersistence)>0) descText+='Your child shows efficient problem-solving, reaching answers quickly. ';
+
+    if(avgWords>8) descText+='Communication analysis shows detailed responses (avg '+avgWords+' words), indicating strong verbal reasoning skills. ';
+    else if(avgWords>0) descText+='Your child tends to give concise answers (avg '+avgWords+' words). Encouraging them to explain their thinking can deepen understanding. ';
+
+    if(!descText) descText='Keep practicing to build a more detailed cognitive profile.';
+    desc.textContent=descText;
+  }
+
+  // ═══ School Leaderboard ═══
+  function renderLeaderboard(peers,childId,childData){
+    const el=$('leaderboardList');
+    if(!childData?.school_name){el.innerHTML='<div class="lb-empty">School not set. Update your profile to see your school leaderboard.</div>';return;}
+    if(!peers.length){el.innerHTML='<div class="lb-empty">No classmates found at '+childData.school_name+' yet.</div>';return;}
+
+    let h='';
+    peers.forEach((p,i)=>{
+      const rank=i+1;
+      const rankClass=rank===1?'gold':rank===2?'silver':rank===3?'bronze':'';
+      const isYou=p.id===childId;
+      const medal=rank===1?'\uD83E\uDD47':rank===2?'\uD83E\uDD48':rank===3?'\uD83E\uDD49':String(rank);
+      h+=`<div class="lb-item"><div class="lb-rank ${rankClass}">${medal}</div><div class="lb-name${isYou?' you':''}">${isYou?p.name+' (You)':p.name}</div><div class="lb-score">${p.total_problems_solved||0} solved</div></div>`;
     });
     el.innerHTML=h;
   }
@@ -453,9 +484,7 @@
   $('olymModal').addEventListener('click',e=>{if(e.target.id==='olymModal')$('olymModal').style.display='none';});
   window.addEventListener('pageshow',e=>{if(e.persisted)location.reload();});
 
-  // Boot
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
-  else init();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
 </body>
