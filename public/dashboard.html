@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>LogicPals — Regular Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/assets/js/env-loader.js"></script>
-<style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <style>
     :root{
       --primary:#6c5ce7; --accent:#feca57;
       --text:#f0f0f5; --muted:#5d5f7e; --text2:#9899b3;
@@ -48,8 +48,6 @@
     .btn-accent:hover{background:rgba(254,202,87,.16);}
     .btn-ghost{background:transparent;border:1px solid transparent;color:var(--muted);}
     .btn-ghost:hover{color:var(--text2);background:rgba(255,255,255,.04);}
-    .btn-secondary{background:var(--as);border:1px solid rgba(108,92,231,.2);color:#b8b0f0;font-weight:700;}
-    .btn-secondary:hover{background:rgba(108,92,231,.18);}
     .btn-wide{padding:0 20px;height:48px;border-radius:var(--radius2);font-size:14px;}
     .btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
 
@@ -144,7 +142,6 @@
     .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg);}}
 
-    /* Error banner */
     .error-banner{padding:14px 20px;border-radius:var(--radius2);background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.2);color:var(--bad);font-size:13px;margin-bottom:16px;display:none;}
     .error-banner.show{display:block;}
 
@@ -154,61 +151,32 @@
       .chart-area{height:120px;}
     }
   </style>
-
-<!-- LP_SUB_GUARD_INLINE v1
-     Replaces legacy /subscription-guard.js (was 404). This guard is intentionally minimal:
-     it only enforces "signed-in required" and leaves entitlement gating to your existing RPC checks.
--->
-<script>
-(function(){
-  window.LP_SubscriptionGuard = {
-    // Placeholder: later wire to rpc_get_my_subscription / dashboard_summary, etc.
-    // For now we only ensure the page doesn't break if old code expected this global.
-    async ensureEntitlement(){ return { ok:true, reason:'stub' }; }
-  };
-})();
-</script>
-
 </head>
 <body>
-  <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-inner">
       <div class="brand"><div class="logo">LP</div><div class="brand-title"><b>LogicPals</b><span>Student Dashboard</span></div></div>
       <div class="center-pill"><div class="track-pill"><span class="track-dot"></span>Regular Practice</div></div>
       <div class="actions">
-        <button id="btnOlympiad" class="btn btn-accent" type="button"><span>Olympiad</span><span id="olympiadState">&#128274;</span></button>
+        <button id="btnOlympiad" class="btn btn-accent" type="button"><span>Olympiad</span><span>&#128274;</span></button>
         <button id="btnSignOut" class="btn btn-ghost" type="button" disabled>Sign out</button>
       </div>
     </div>
     <div class="status-strip">
-      <div class="status-left">
-        <span class="badge" id="planBadge"><span class="chip-dot dot-warn" id="planDot"></span><b>Session:</b> <span id="planText">Booting…</span></span>
-      </div>
-      <div class="status-right"><span class="badge"><b>Updated:</b> <span id="updatedText">—</span></span></div>
+      <div><span class="badge"><span class="chip-dot dot-warn" id="planDot"></span><b>Session:</b> <span id="planText">Booting…</span></span></div>
+      <div><span class="badge"><b>Updated:</b> <span id="updatedText">—</span></span></div>
     </div>
   </div>
 
   <main class="wrap">
-    <!-- Auth notice -->
     <div id="authNotice" class="notice" style="display:none;">
       <b>Sign-in required.</b> We couldn't find your session.
       <div style="margin-top:12px;"><button class="btn btn-primary btn-wide" id="btnGoLogin" type="button">Go to Login</button></div>
     </div>
-
-    <!-- Error banner -->
     <div id="errorBanner" class="error-banner"></div>
+    <div id="loadingState" class="loading"><div class="spinner"></div><span>Loading dashboard…</span></div>
 
-    <!-- Loading state -->
-    <div id="loadingState" class="loading">
-      <div class="spinner"></div>
-      <span>Loading dashboard…</span>
-    </div>
-
-    <!-- Main content -->
     <div id="content" style="display:none;">
-
-      <!-- Row 1: Hero + KPI tiles -->
       <div class="grid">
         <section class="card">
           <div class="hero">
@@ -228,19 +196,15 @@
             </div>
           </div>
         </section>
-
         <section class="card">
-          <div class="tiles">
-            <div class="tile-row">
-              <div class="tile"><div class="k">Problems solved</div><div class="v" id="kpiSolved">—</div><div class="d"><span class="mini">&#128293;</span> Total</div></div>
-              <div class="tile"><div class="k">Accuracy</div><div class="v" id="kpiAccuracy">—</div><div class="d"><span class="mini">&#10003;</span> Overall</div></div>
-              <div class="tile"><div class="k">Hints used</div><div class="v" id="kpiHints">—</div><div class="d"><span class="mini">&#128161;</span> Avg per problem</div></div>
-            </div>
-          </div>
+          <div class="tiles"><div class="tile-row">
+            <div class="tile"><div class="k">Problems solved</div><div class="v" id="kpiSolved">—</div><div class="d"><span class="mini">&#128293;</span> Total</div></div>
+            <div class="tile"><div class="k">Accuracy</div><div class="v" id="kpiAccuracy">—</div><div class="d"><span class="mini">&#10003;</span> Overall</div></div>
+            <div class="tile"><div class="k">Hints used</div><div class="v" id="kpiHints">—</div><div class="d"><span class="mini">&#128161;</span> Avg per problem</div></div>
+          </div></div>
         </section>
       </div>
 
-      <!-- Row 2: Chart -->
       <div class="section-gap">
         <section class="card chart-card full-width">
           <div class="chart-header">
@@ -252,45 +216,28 @@
             </div>
           </div>
           <svg class="chart-area" id="chartSvg"></svg>
-          <div class="chart-insight" id="chartInsight">Loading chart data…</div>
+          <div class="chart-insight" id="chartInsight">Loading…</div>
         </section>
       </div>
 
-      <!-- Row 3: Skills + Activity -->
       <div class="grid section-gap">
         <section class="card skills-card">
           <div class="skills-title">Skills breakdown</div>
-          <div id="skillsList">
-            <div class="loading"><div class="spinner"></div><span>Loading skills…</span></div>
-          </div>
+          <div id="skillsList"><div class="loading"><div class="spinner"></div><span>Loading…</span></div></div>
         </section>
-
         <section class="card activity-card">
           <div class="activity-title">Recent activity</div>
-          <div id="activityList">
-            <div class="loading"><div class="spinner"></div><span>Loading activity…</span></div>
-          </div>
+          <div id="activityList"><div class="loading"><div class="spinner"></div><span>Loading…</span></div></div>
         </section>
       </div>
-
-      <div class="foot">Regular dashboard · Track boundary enforced · No Olympiad data loaded</div>
+      <div class="foot">Regular dashboard · Track boundary enforced</div>
     </div>
   </main>
 
-  <!-- Olympiad Modal -->
   <div class="modal-backdrop" id="olymModal">
     <div class="modal">
-      <div class="modal-h">
-        <div><b>Olympiad Track</b><div style="font-size:12px;color:var(--muted);margin-top:4px;">A separate advanced track.</div></div>
-        <button type="button" id="closeOlymp">&#10005;</button>
-      </div>
-      <div class="modal-b">
-        <p>Olympiad is a separate advanced track. Upgrade to unlock it.</p>
-        <div class="modal-actions">
-          <a class="btn btn-primary btn-wide" href="subscriptions.html">View plans</a>
-          <button class="btn btn-ghost btn-wide" id="olymCancelBtn" type="button">Not now</button>
-        </div>
-      </div>
+      <div class="modal-h"><div><b>Olympiad Track</b><div style="font-size:12px;color:var(--muted);margin-top:4px;">A separate advanced track.</div></div><button type="button" id="closeOlymp">&#10005;</button></div>
+      <div class="modal-b"><p>Olympiad is a separate advanced track. Upgrade to unlock it.</p><div class="modal-actions"><a class="btn btn-primary btn-wide" href="subscriptions.html">View plans</a><button class="btn btn-ghost btn-wide" id="olymCancelBtn" type="button">Not now</button></div></div>
     </div>
   </div>
 
@@ -298,473 +245,217 @@
 (function(){
   'use strict';
 
-  /* ─── Helpers ─── */
   const $ = (id) => document.getElementById(id);
-  const safe = (el, text) => { if(el) el.textContent = (text != null && text !== '') ? text : '—'; };
+  const safe = (el, t) => { if(el) el.textContent = (t != null && t !== '') ? t : '\u2014'; };
   const STORAGE_KEY = 'logicpals.auth';
-  
-// LP_SESSION_RETRY v1
-async function getSessionWithRetry(supabase, attempts=6){
-  let last = null;
-  for(let i=0;i<attempts;i++){
-    try{
-      const { data, error } = await getSessionWithRetry(supabase);
-      if(error) last = error;
-      if(data && data.session) return { session: data.session };
-    }catch(e){ last = e; }
-    await new Promise(r => setTimeout(r, 80));
-  }
-  // try refresh if we have a refresh token stored but session didn't hydrate yet
-  try{
-    const { data } = await supabase.auth.refreshSession();
-    if(data && data.session) return { session: data.session };
-  }catch(e){ last = last || e; }
-  return { session: null, error: last };
-}
-const LOGIN_URL = '/login.html?next=' + encodeURIComponent('/dashboard.html');
+  const LOGIN_URL = '/login.html?next=' + encodeURIComponent('/dashboard.html');
 
-  const planText = $('planText');
-  const planDot  = $('planDot');
-
-  function setStatus(state, msg){
-    safe(planText, msg);
-    planDot.classList.remove('dot-good','dot-warn','dot-bad');
-    planDot.classList.add(state === 'good' ? 'dot-good' : state === 'bad' ? 'dot-bad' : 'dot-warn');
+  function setStatus(s, m){
+    safe($('planText'), m);
+    $('planDot').classList.remove('dot-good','dot-warn','dot-bad');
+    $('planDot').classList.add(s==='good'?'dot-good':s==='bad'?'dot-bad':'dot-warn');
   }
-
-  function showAuth(){
-    $('loadingState').style.display = 'none';
-    $('authNotice').style.display = 'block';
-    $('content').style.display = 'none';
-  }
-
-  function showContent(){
-    $('loadingState').style.display = 'none';
-    $('authNotice').style.display = 'none';
-    $('content').style.display = 'block';
-  }
-
-  function showError(msg){
-    const el = $('errorBanner');
-    el.textContent = msg;
-    el.classList.add('show');
-  }
-
-  function hardClearAuthStorage(){
-    try{
-      ['', '-code-verifier', '-provider-token', '-provider-refresh-token'].forEach(s =>
-        localStorage.removeItem(STORAGE_KEY + s)
-      );
-    }catch(_){}
-  }
-
-  function fmtAgo(iso){
-    if(!iso) return '';
-    const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-    if(diff < 60)   return 'just now';
-    if(diff < 3600)  return Math.floor(diff/60) + ' min ago';
-    if(diff < 86400) return Math.floor(diff/3600) + ' hr ago';
-    return Math.floor(diff/86400) + ' days ago';
-  }
+  function showAuth(){ $('loadingState').style.display='none'; $('authNotice').style.display='block'; $('content').style.display='none'; }
+  function showContent(){ $('loadingState').style.display='none'; $('authNotice').style.display='none'; $('content').style.display='block'; }
+  function showError(m){ const e=$('errorBanner'); e.textContent=m; e.classList.add('show'); }
+  function fmtAgo(iso){ if(!iso) return ''; const d=(Date.now()-new Date(iso).getTime())/1000; if(d<60) return 'just now'; if(d<3600) return Math.floor(d/60)+' min ago'; if(d<86400) return Math.floor(d/3600)+' hr ago'; return Math.floor(d/86400)+' days ago'; }
 
   const CAT_ICONS = { logic:'\uD83E\uDDE0', arithmetic:'\uD83D\uDD22', 'word-problem':'\uD83D\uDCDD', pattern:'\uD83D\uDCC8', algebra:'\uD83D\uDD2E', geometry:'\uD83D\uDFE3' };
   const CAT_LABELS = { logic:'Logic & Reasoning', arithmetic:'Arithmetic', 'word-problem':'Word Problems', pattern:'Pattern Recognition', algebra:'Algebra', geometry:'Geometry' };
 
-  /* ─── Main init ─── */
+  // Check if attempt was solved — support both column names
+  function wasSolved(a){ return !!(a.solved_correctly || a.is_correct); }
+
+  /* ── Env loader (same as learn.html) ── */
+  async function getEnv(){
+    if(window.__LP_ENV && window.__LP_ENV.SUPABASE_URL) return window.__LP_ENV;
+    const r = await fetch('/api/env', { cache:'no-store', credentials:'same-origin' });
+    if(!r.ok) throw new Error('/api/env failed: ' + r.status);
+    const d = await r.json();
+    const env = { SUPABASE_URL: d.SUPABASE_URL||d.supabaseUrl||d.url, SUPABASE_ANON_KEY: d.SUPABASE_ANON_KEY||d.supabaseAnonKey||d.anonKey };
+    window.__LP_ENV = env;
+    return env;
+  }
+
+  /* ── Main ── */
   async function init(){
-    setStatus('warn', 'Checking session…');
+    setStatus('warn','Checking session…');
 
-    // 1) Get Supabase config from env-loader.js (matches learn.html exactly)
-    const env = window.__LP_ENV || {};
-    const SB_URL = env.SUPABASE_URL;
-    const SB_KEY = env.SUPABASE_ANON_KEY;
-
-    if(!SB_URL || !SB_KEY){
-      console.error('[Dashboard] Missing SUPABASE_URL or SUPABASE_ANON_KEY from window.__LP_ENV');
-      setStatus('bad', 'Config missing');
-      showError('Environment config not loaded. Check that /assets/js/env-loader.js is deployed and sets window.__LP_ENV.');
+    let env;
+    try{ env = await getEnv(); } catch(e){
+      console.error('[Dashboard] Env load failed:', e);
+      setStatus('bad','Config missing');
+      showError('Could not load config from /api/env. Check your deployment.');
+      showAuth();
+      return;
+    }
+    if(!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY){
+      setStatus('bad','Config missing');
       showAuth();
       return;
     }
 
-    // 2) Create Supabase client (same storageKey as rest of app)
-    const sb = window.supabase.createClient(SB_URL, SB_KEY, {
-      auth: { storageKey: STORAGE_KEY, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    const sb = supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
+      auth:{ storageKey:STORAGE_KEY, persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
     });
 
-    // 3) Get authenticated user — try getSession first, fallback to getUser
+    // Auth — getSession + getUser fallback
     let user = null;
-    try {
-      const { data: sessionData } = await sb.auth.getSession();
-      if(sessionData && sessionData.session && sessionData.session.user){
-        user = sessionData.session.user;
-      }
-    } catch(e){ console.warn('[Dashboard] getSession failed:', e); }
+    try{ const{data}=await sb.auth.getSession(); if(data?.session?.user) user=data.session.user; }catch(_){}
+    if(!user){ try{ const{data}=await sb.auth.getUser(); if(data?.user) user=data.user; }catch(_){} }
 
-    if(!user){
-      try {
-        const { data: userData } = await sb.auth.getUser();
-        if(userData && userData.user) user = userData.user;
-      } catch(e){ console.warn('[Dashboard] getUser fallback failed:', e); }
-    }
+    if(!user){ setStatus('bad','Signed out'); showAuth(); return; }
 
-    if(!user){
-      setStatus('bad', 'Signed out');
-      showAuth();
-      return;
-    }
-
-    // 4) Signed in — basic UI setup
-    setStatus('good', 'Signed in');
+    setStatus('good','Signed in');
     $('btnSignOut').disabled = false;
-
-    const userName = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name))
-      || (user.email ? user.email.split('@')[0] : 'there');
-    safe($('helloText'), 'Hi ' + userName + ' \uD83D\uDC4B');
+    const userName = (user.user_metadata?.full_name || user.user_metadata?.name) || (user.email?user.email.split('@')[0]:'there');
+    safe($('helloText'), 'Hi '+userName+' \uD83D\uDC4B');
     safe($('updatedText'), 'just now');
 
-    // Sign out
-    $('btnSignOut').addEventListener('click', async () => {
-      $('btnSignOut').disabled = true;
-      setStatus('warn', 'Signing out…');
-      try { await sb.auth.signOut({ scope: 'global' }); } catch(_){}
-      hardClearAuthStorage();
+    $('btnSignOut').addEventListener('click', async()=>{
+      $('btnSignOut').disabled=true; setStatus('warn','Signing out…');
+      try{await sb.auth.signOut({scope:'global'});}catch(_){}
+      try{['','-code-verifier','-provider-token','-provider-refresh-token'].forEach(s=>localStorage.removeItem(STORAGE_KEY+s));}catch(_){}
       location.replace('/index.html');
     });
 
-    sb.auth.onAuthStateChange((evt) => {
-      if(evt === 'SIGNED_OUT'){
-        hardClearAuthStorage();
-        location.replace('/index.html');
-      }
-    });
-
-    // 5) Check subscription (graceful — works even if subscription-guard.js hasn't loaded)
-    try {
+    // Subscription (graceful)
+    try{
+      await new Promise((res,rej)=>{const s=document.createElement('script');s.src='/assets/js/subscription-guard.js';s.async=true;s.onload=res;s.onerror=()=>rej();document.head.appendChild(s);});
       if(window.SubscriptionGuard){
-        const sub = await SubscriptionGuard.getUserSubscription();
-        if(sub && !sub.expired){
-          safe(planText, 'Active');
-          planDot.classList.remove('dot-warn','dot-bad');
-          planDot.classList.add('dot-good');
-        } else if(sub && sub.expired){
-          safe(planText, 'Expired');
-          planDot.classList.remove('dot-good','dot-warn');
-          planDot.classList.add('dot-bad');
-        }
+        const sub=await SubscriptionGuard.getUserSubscription();
+        if(sub&&!sub.expired){safe($('planText'),'Active');$('planDot').classList.remove('dot-warn','dot-bad');$('planDot').classList.add('dot-good');}
+        else if(sub?.expired){safe($('planText'),'Expired');$('planDot').classList.remove('dot-good','dot-warn');$('planDot').classList.add('dot-bad');}
       }
-    } catch(_){}
+    }catch(_){}
 
-    // 6) Get child ID (same query as learn.html line 360)
-    let childId = null;
-    try {
-      const { data: child, error: childErr } = await sb.from('children').select('id').eq('parent_id', user.id).single();
-      if(childErr) console.warn('[Dashboard] children query error:', childErr.message);
-      if(child) childId = child.id;
-    } catch(e){ console.warn('[Dashboard] children query failed:', e); }
+    // Child ID
+    let childId=null;
+    try{const{data}=await sb.from('children').select('id').eq('parent_id',user.id).single();if(data)childId=data.id;}catch(_){}
 
     if(!childId){
-      // No child profile yet — show empty state
       showContent();
-      safe($('kpiSolved'), '0');
-      safe($('kpiAccuracy'), '0%');
-      safe($('kpiHints'), '0');
-      $('heroHeadline').textContent = 'Start your first practice session!';
-      $('heroFocusLabel').textContent = 'Logic & Patterns';
-      $('skillsList').innerHTML = '<div class="empty-state"><div class="emoji">\uD83D\uDCDA</div>No practice data yet.<br>Start a session to see your skills here.</div>';
-      $('activityList').innerHTML = '<div class="empty-state"><div class="emoji">\u23F0</div>No activity yet.<br>Your recent practice will show up here.</div>';
-      $('chartInsight').textContent = 'Complete some problems to see your accuracy trend.';
-      renderChart($('chartSvg'), []);
-      $('btnStart').addEventListener('click', () => location.assign('/learn.html?track=regular'));
+      safe($('kpiSolved'),'0'); safe($('kpiAccuracy'),'0%'); safe($('kpiHints'),'0');
+      $('heroHeadline').textContent='Start your first practice session!';
+      $('heroFocusLabel').textContent='Logic & Patterns';
+      $('skillsList').innerHTML='<div class="empty-state"><div class="emoji">\uD83D\uDCDA</div>No data yet. Start practicing!</div>';
+      $('activityList').innerHTML='<div class="empty-state"><div class="emoji">\u23F0</div>No activity yet.</div>';
+      $('chartInsight').textContent='Complete problems to see trends.';
+      renderChart($('chartSvg'),[]);
+      $('btnStart').addEventListener('click',()=>location.assign('/learn.html?track=regular'));
       return;
     }
 
-    // 7) Fetch attempts with joined problem data
-    let attempts = [];
-    try {
-      const { data, error } = await sb
-        .from('attempts')
-        .select('*, problems(category, difficulty)')
-        .eq('child_id', childId)
-        .order('created_at', { ascending: false })
-        .limit(500);
+    // Fetch attempts
+    let attempts=[];
+    try{
+      const{data,error}=await sb.from('attempts').select('*, problems(category, difficulty)').eq('child_id',childId).order('created_at',{ascending:false}).limit(500);
+      if(error) console.error('[Dashboard] Attempts error:',error.message);
+      if(data) attempts=data;
+    }catch(e){ console.error('[Dashboard] Attempts fetch:',e); showError('Could not load data.'); }
 
-      if(error){
-        console.error('[Dashboard] attempts query error:', error.message);
-        showError('Could not load practice data: ' + error.message);
-      }
-      if(data) attempts = data;
-    } catch(e){
-      console.error('[Dashboard] attempts fetch failed:', e);
-      showError('Could not load practice data. Please try refreshing.');
-    }
-
-    // 8) Render all sections
     showContent();
     renderKPIs(attempts);
     renderHero(attempts);
-    renderChart($('chartSvg'), attempts, 7);
+    renderChart($('chartSvg'),attempts,7);
     renderSkills(attempts);
     renderActivity(attempts);
     setupChartTabs(attempts);
-
-    // Start button
-    $('btnStart').addEventListener('click', () => location.assign('/learn.html?track=regular'));
+    $('btnStart').addEventListener('click',()=>location.assign('/learn.html?track=regular'));
   }
 
-  /* ─── KPIs ─── */
-  function renderKPIs(attempts){
-    const total = attempts.length;
-    const correct = attempts.filter(a => a.is_correct).length;
-    const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
-    const totalHints = attempts.reduce((s, a) => s + (a.hints_used || 0), 0);
-    const avgHints = total > 0 ? (totalHints / total).toFixed(1) : '0';
-
-    safe($('kpiSolved'), String(total));
-    safe($('kpiAccuracy'), accuracy + '%');
-    safe($('kpiHints'), avgHints);
-
-    // Goal ring
-    $('goalRing').style.setProperty('--p', accuracy + '%');
-    safe($('goalPct'), accuracy + '%');
+  function renderKPIs(att){
+    const total=att.length;
+    const correct=att.filter(wasSolved).length;
+    const acc=total>0?Math.round(correct/total*100):0;
+    const avgH=total>0?(att.reduce((s,a)=>s+(a.hints_used||0),0)/total).toFixed(1):'0';
+    safe($('kpiSolved'),String(total));
+    safe($('kpiAccuracy'),acc+'%');
+    safe($('kpiHints'),avgH);
+    $('goalRing').style.setProperty('--p',acc+'%');
+    safe($('goalPct'),acc+'%');
   }
 
-  /* ─── Hero recommendation ─── */
-  function renderHero(attempts){
-    if(attempts.length === 0){
-      $('heroHeadline').textContent = 'Start your first practice session!';
-      $('heroFocusLabel').textContent = 'Logic & Patterns';
-      $('heroMinutes').textContent = '10';
-      return;
-    }
-
-    // Find weakest category
-    const cats = {};
-    attempts.forEach(a => {
-      const cat = (a.problems && a.problems.category) || 'general';
-      if(!cats[cat]) cats[cat] = { total: 0, correct: 0 };
-      cats[cat].total++;
-      if(a.is_correct) cats[cat].correct++;
-    });
-
-    let weakest = null, lowestAcc = 101;
-    Object.entries(cats).forEach(([cat, d]) => {
-      const acc = d.total > 0 ? (d.correct / d.total) * 100 : 0;
-      if(acc < lowestAcc){ lowestAcc = acc; weakest = cat; }
-    });
-
-    const label = CAT_LABELS[weakest] || weakest || 'Logic & Patterns';
-    $('heroHeadline').textContent = 'Continue your Regular Practice';
-    $('heroFocusLabel').textContent = label;
-    $('heroMinutes').textContent = lowestAcc < 60 ? '12' : '10';
+  function renderHero(att){
+    if(!att.length){ $('heroHeadline').textContent='Start your first session!'; $('heroFocusLabel').textContent='Logic & Patterns'; return; }
+    const cats={};
+    att.forEach(a=>{const c=(a.problems?.category)||'general';if(!cats[c])cats[c]={t:0,c:0};cats[c].t++;if(wasSolved(a))cats[c].c++;});
+    let w=null,lo=101;
+    Object.entries(cats).forEach(([k,v])=>{const a=v.t>0?v.c/v.t*100:0;if(a<lo){lo=a;w=k;}});
+    $('heroHeadline').textContent='Continue your Regular Practice';
+    $('heroFocusLabel').textContent=CAT_LABELS[w]||w||'Logic & Patterns';
+    $('heroMinutes').textContent=lo<60?'12':'10';
   }
 
-  /* ─── Chart ─── */
-  function renderChart(svgEl, attempts, days){
-    if(!svgEl) return;
-    svgEl.innerHTML = '';
+  function renderChart(svg,att,days){
+    if(!svg)return; svg.innerHTML='';
+    let f=att;
+    if(days&&days>0){const c=Date.now()-days*864e5;f=att.filter(a=>new Date(a.created_at).getTime()>=c);}
+    if(!f.length){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="#5d5f7e" font-size="13">No data for this period</text>';$('chartInsight').textContent='Complete problems to see trends.';return;}
 
-    let filtered = attempts;
-    if(days && days > 0){
-      const cutoff = Date.now() - days * 86400000;
-      filtered = attempts.filter(a => new Date(a.created_at).getTime() >= cutoff);
-    }
+    const byDay={};
+    f.forEach(a=>{const d=(a.created_at||'').slice(0,10);if(!byDay[d])byDay[d]={t:0,c:0};byDay[d].t++;if(wasSolved(a))byDay[d].c++;});
+    const sorted=Object.keys(byDay).sort();
+    const pts=sorted.map(d=>({l:d,a:Math.round(byDay[d].c/byDay[d].t*100)}));
 
-    if(filtered.length === 0){
-      svgEl.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#5d5f7e" font-size="13" font-family="Plus Jakarta Sans">No data for this period</text>';
-      $('chartInsight').textContent = 'Complete some problems to see your accuracy trend.';
-      return;
-    }
+    const W=svg.clientWidth||svg.getBoundingClientRect().width||600;
+    const H=svg.clientHeight||svg.getBoundingClientRect().height||160;
+    const p={t:20,r:20,b:30,l:40},cw=W-p.l-p.r,ch=H-p.t-p.b;
 
-    // Group by day
-    const byDay = {};
-    filtered.forEach(a => {
-      const day = a.created_at ? a.created_at.slice(0, 10) : 'unknown';
-      if(!byDay[day]) byDay[day] = { total: 0, correct: 0 };
-      byDay[day].total++;
-      if(a.is_correct) byDay[day].correct++;
-    });
-
-    const sortedDays = Object.keys(byDay).sort();
-    const points = sortedDays.map(day => ({
-      label: day,
-      accuracy: Math.round((byDay[day].correct / byDay[day].total) * 100),
-      count: byDay[day].total
-    }));
-
-    const W = svgEl.clientWidth || svgEl.getBoundingClientRect().width || 600;
-    const H = svgEl.clientHeight || svgEl.getBoundingClientRect().height || 160;
-    const pad = { t: 20, r: 20, b: 30, l: 40 };
-    const cw = W - pad.l - pad.r;
-    const ch = H - pad.t - pad.b;
-
-    if(points.length === 1){
-      const cx = pad.l + cw / 2;
-      const cy = pad.t + ch - (points[0].accuracy / 100) * ch;
-      svgEl.innerHTML = `
-        <line x1="${pad.l}" y1="${pad.t+ch}" x2="${pad.l+cw}" y2="${pad.t+ch}" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
-        <circle cx="${cx}" cy="${cy}" r="5" fill="#6c5ce7"/>
-        <text x="${cx}" y="${cy-12}" text-anchor="middle" fill="#b8b0f0" font-size="12" font-weight="700" font-family="Outfit">${points[0].accuracy}%</text>
-        <text x="${cx}" y="${H-6}" text-anchor="middle" fill="#5d5f7e" font-size="10" font-family="Plus Jakarta Sans">${points[0].label.slice(5)}</text>`;
+    if(pts.length===1){
+      const cx=p.l+cw/2,cy=p.t+ch-(pts[0].a/100)*ch;
+      svg.innerHTML=`<line x1="${p.l}" y1="${p.t+ch}" x2="${p.l+cw}" y2="${p.t+ch}" stroke="rgba(255,255,255,.06)"/><circle cx="${cx}" cy="${cy}" r="5" fill="#6c5ce7"/><text x="${cx}" y="${cy-12}" text-anchor="middle" fill="#b8b0f0" font-size="12" font-weight="700" font-family="Outfit">${pts[0].a}%</text><text x="${cx}" y="${H-6}" text-anchor="middle" fill="#5d5f7e" font-size="10">${pts[0].l.slice(5)}</text>`;
     } else {
-      const xStep = cw / (points.length - 1);
-      const coords = points.map((p, i) => ({
-        x: pad.l + i * xStep,
-        y: pad.t + ch - (p.accuracy / 100) * ch
-      }));
-
-      const linePath = coords.map((c, i) => (i === 0 ? 'M' : 'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
-      const areaPath = linePath + ` L${coords[coords.length-1].x.toFixed(1)},${(pad.t+ch).toFixed(1)} L${coords[0].x.toFixed(1)},${(pad.t+ch).toFixed(1)} Z`;
-
-      let gridLines = '';
-      [0, 25, 50, 75, 100].forEach(v => {
-        const y = pad.t + ch - (v / 100) * ch;
-        gridLines += `<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${(pad.l+cw).toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,.04)" stroke-width="1"/>`;
-        gridLines += `<text x="${pad.l-8}" y="${(y+4).toFixed(1)}" text-anchor="end" fill="#5d5f7e" font-size="9" font-family="Plus Jakarta Sans">${v}</text>`;
-      });
-
-      let xLabels = '';
-      const idxs = points.length <= 7 ? points.map((_,i)=>i) : [0, Math.floor(points.length/2), points.length-1];
-      idxs.forEach(i => {
-        xLabels += `<text x="${coords[i].x.toFixed(1)}" y="${H-6}" text-anchor="middle" fill="#5d5f7e" font-size="10" font-family="Plus Jakarta Sans">${points[i].label.slice(5)}</text>`;
-      });
-
-      const dots = coords.map(c => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="#6c5ce7" stroke="rgba(12,14,26,.9)" stroke-width="2"/>`).join('');
-
-      svgEl.innerHTML = `
-        <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#6c5ce7" stop-opacity=".25"/>
-          <stop offset="100%" stop-color="#6c5ce7" stop-opacity="0"/>
-        </linearGradient></defs>
-        ${gridLines}
-        <path d="${areaPath}" fill="url(#ag)"/>
-        <path d="${linePath}" fill="none" stroke="#6c5ce7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        ${dots}${xLabels}`;
+      const xs=cw/(pts.length-1);
+      const co=pts.map((pt,i)=>({x:p.l+i*xs,y:p.t+ch-(pt.a/100)*ch}));
+      const lp=co.map((c,i)=>(i?'L':'M')+c.x.toFixed(1)+','+c.y.toFixed(1)).join(' ');
+      const ap=lp+` L${co[co.length-1].x.toFixed(1)},${(p.t+ch).toFixed(1)} L${co[0].x.toFixed(1)},${(p.t+ch).toFixed(1)} Z`;
+      let g='';[0,25,50,75,100].forEach(v=>{const y=p.t+ch-(v/100)*ch;g+=`<line x1="${p.l}" y1="${y.toFixed(1)}" x2="${(p.l+cw).toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,.04)"/><text x="${p.l-8}" y="${(y+4).toFixed(1)}" text-anchor="end" fill="#5d5f7e" font-size="9">${v}</text>`;});
+      let xl='';const idx=pts.length<=7?pts.map((_,i)=>i):[0,Math.floor(pts.length/2),pts.length-1];
+      idx.forEach(i=>{xl+=`<text x="${co[i].x.toFixed(1)}" y="${H-6}" text-anchor="middle" fill="#5d5f7e" font-size="10">${pts[i].l.slice(5)}</text>`;});
+      const dots=co.map(c=>`<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="#6c5ce7" stroke="rgba(12,14,26,.9)" stroke-width="2"/>`).join('');
+      svg.innerHTML=`<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6c5ce7" stop-opacity=".25"/><stop offset="100%" stop-color="#6c5ce7" stop-opacity="0"/></linearGradient></defs>${g}<path d="${ap}" fill="url(#ag)"/><path d="${lp}" fill="none" stroke="#6c5ce7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}${xl}`;
     }
 
-    // Insight
-    if(points.length >= 2){
-      const first = points[0].accuracy, last = points[points.length-1].accuracy;
-      const diff = last - first;
-      if(diff > 5) $('chartInsight').textContent = '\uD83D\uDCC8 Your accuracy is trending up — great progress!';
-      else if(diff < -5) $('chartInsight').textContent = '\uD83D\uDCCB Accuracy dipped recently. Review the tricky categories below.';
-      else $('chartInsight').textContent = '\uD83D\uDCAA Steady performance. Try harder topics to push even higher.';
-    } else {
-      $('chartInsight').textContent = 'Keep practicing to see your accuracy trend over time.';
-    }
+    if(pts.length>=2){const d=pts[pts.length-1].a-pts[0].a;$('chartInsight').textContent=d>5?'\uD83D\uDCC8 Accuracy trending up — great progress!':d<-5?'\uD83D\uDCCB Accuracy dipped. Review categories below.':'\uD83D\uDCAA Steady performance. Keep it up!';}
+    else $('chartInsight').textContent='Keep practicing to see trends.';
   }
 
-  function setupChartTabs(attempts){
-    document.querySelectorAll('.chart-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        renderChart($('chartSvg'), attempts, parseInt(tab.dataset.range, 10));
-      });
+  function setupChartTabs(att){document.querySelectorAll('.chart-tab').forEach(t=>{t.addEventListener('click',()=>{document.querySelectorAll('.chart-tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');renderChart($('chartSvg'),att,parseInt(t.dataset.range,10));});});}
+
+  function renderSkills(att){
+    const el=$('skillsList');
+    if(!att.length){el.innerHTML='<div class="empty-state"><div class="emoji">\uD83D\uDCDA</div>No data yet. Start practicing!</div>';return;}
+    const cats={};att.forEach(a=>{const c=a.problems?.category||'general';if(!cats[c])cats[c]={t:0,c:0};cats[c].t++;if(wasSolved(a))cats[c].c++;});
+    let h='';
+    Object.entries(cats).sort((a,b)=>(a[1].c/a[1].t)-(b[1].c/b[1].t)).forEach(([cat,d])=>{
+      const acc=Math.round(d.c/d.t*100),label=CAT_LABELS[cat]||cat,icon=CAT_ICONS[cat]||'\uD83D\uDD2C',solid=acc>=80;
+      h+=`<div class="skill-item"><div class="skill-icon">${icon}</div><div class="skill-info"><div class="skill-name">${label} <span class="skill-badge ${solid?'solid':'practicing'}">${solid?'Solid':'Practicing'}</span></div><div class="skill-detail">${d.c}/${d.t} correct</div><div class="skill-bar"><div class="skill-fill" style="width:${acc}%"></div></div></div><div class="skill-pct">${acc}%</div><button class="skill-action" onclick="location.assign('/learn.html?track=regular&focus=${encodeURIComponent(cat)}')">Practice</button></div>`;
     });
+    el.innerHTML=h;
   }
 
-  /* ─── Skills ─── */
-  function renderSkills(attempts){
-    const el = $('skillsList');
-    if(attempts.length === 0){
-      el.innerHTML = '<div class="empty-state"><div class="emoji">\uD83D\uDCDA</div>No practice data yet.<br>Start a session to see your skills here.</div>';
-      return;
-    }
-
-    const cats = {};
-    attempts.forEach(a => {
-      const cat = (a.problems && a.problems.category) || 'general';
-      if(!cats[cat]) cats[cat] = { total:0, correct:0 };
-      cats[cat].total++;
-      if(a.is_correct) cats[cat].correct++;
+  function renderActivity(att){
+    const el=$('activityList');
+    if(!att.length){el.innerHTML='<div class="empty-state"><div class="emoji">\u23F0</div>No activity yet.</div>';return;}
+    let h='';att.slice(0,8).forEach(a=>{
+      const s=wasSolved(a),cat=a.problems?.category||'general',label=CAT_LABELS[cat]||cat,hints=a.hints_used||0;
+      h+=`<div class="activity-item"><div class="activity-icon ${s?'solved':'wrong'}">${s?'\u2713':'\u2717'}</div><div class="activity-info"><div class="activity-label">${label} — ${s?'Solved':'Attempted'}</div><div class="activity-sub">${hints} hint${hints!==1?'s':''} used</div></div><div class="activity-time">${fmtAgo(a.created_at)}</div></div>`;
     });
-
-    let html = '';
-    Object.entries(cats).sort((a,b) => (a[1].correct/a[1].total) - (b[1].correct/b[1].total)).forEach(([cat, d]) => {
-      const acc = Math.round((d.correct / d.total) * 100);
-      const label = CAT_LABELS[cat] || cat;
-      const icon = CAT_ICONS[cat] || '\uD83D\uDD2C';
-      const solid = acc >= 80;
-
-      html += `<div class="skill-item">
-        <div class="skill-icon">${icon}</div>
-        <div class="skill-info">
-          <div class="skill-name">${label} <span class="skill-badge ${solid?'solid':'practicing'}">${solid?'Solid':'Practicing'}</span></div>
-          <div class="skill-detail">${d.correct}/${d.total} correct</div>
-          <div class="skill-bar"><div class="skill-fill" style="width:${acc}%"></div></div>
-        </div>
-        <div class="skill-pct">${acc}%</div>
-        <button class="skill-action" onclick="location.assign('/learn.html?track=regular&focus=${encodeURIComponent(cat)}')">Practice</button>
-      </div>`;
-    });
-
-    el.innerHTML = html;
+    el.innerHTML=h;
   }
 
-  /* ─── Activity ─── */
-  function renderActivity(attempts){
-    const el = $('activityList');
-    if(attempts.length === 0){
-      el.innerHTML = '<div class="empty-state"><div class="emoji">\u23F0</div>No activity yet.<br>Your recent practice will show up here.</div>';
-      return;
-    }
+  // Events
+  $('btnGoLogin').addEventListener('click',()=>location.assign(LOGIN_URL));
+  $('btnOlympiad').addEventListener('click',()=>$('olymModal').style.display='flex');
+  $('closeOlymp').addEventListener('click',()=>$('olymModal').style.display='none');
+  $('olymCancelBtn').addEventListener('click',()=>$('olymModal').style.display='none');
+  $('olymModal').addEventListener('click',e=>{if(e.target.id==='olymModal')$('olymModal').style.display='none';});
+  window.addEventListener('pageshow',e=>{if(e.persisted)location.reload();});
 
-    let html = '';
-    attempts.slice(0, 8).forEach(a => {
-      const solved = a.is_correct;
-      const cat = (a.problems && a.problems.category) || 'general';
-      const label = CAT_LABELS[cat] || cat;
-      const hints = a.hints_used || 0;
-
-      html += `<div class="activity-item">
-        <div class="activity-icon ${solved?'solved':'wrong'}">${solved?'\u2713':'\u2717'}</div>
-        <div class="activity-info">
-          <div class="activity-label">${label} — ${solved?'Solved':'Attempted'}</div>
-          <div class="activity-sub">${hints} hint${hints!==1?'s':''} used</div>
-        </div>
-        <div class="activity-time">${fmtAgo(a.created_at)}</div>
-      </div>`;
-    });
-
-    el.innerHTML = html;
-  }
-
-  /* ─── Static event listeners ─── */
-  $('btnGoLogin').addEventListener('click', () => location.assign(LOGIN_URL));
-  $('btnOlympiad').addEventListener('click', () => $('olymModal').style.display = 'flex');
-  $('closeOlymp').addEventListener('click', () => $('olymModal').style.display = 'none');
-  $('olymCancelBtn').addEventListener('click', () => $('olymModal').style.display = 'none');
-  $('olymModal').addEventListener('click', (e) => { if(e.target.id === 'olymModal') $('olymModal').style.display = 'none'; });
-  window.addEventListener('pageshow', (e) => { if(e.persisted) location.reload(); });
-
-  /* ─── Boot ─── */
-  // Small delay to ensure env-loader.js has populated window.__LP_ENV
-  function boot(){
-    if(window.__LP_ENV && window.__LP_ENV.SUPABASE_URL){
-      init();
-    } else {
-      // Retry up to 10 times (env-loader might be async)
-      let retries = 0;
-      const check = setInterval(() => {
-        retries++;
-        if(window.__LP_ENV && window.__LP_ENV.SUPABASE_URL){
-          clearInterval(check);
-          init();
-        } else if(retries >= 10){
-          clearInterval(check);
-          init(); // Will show "Config missing" error
-        }
-      }, 200);
-    }
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    boot();
-  }
-
+  // Boot
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
+  else init();
 })();
 </script>
 </body>
