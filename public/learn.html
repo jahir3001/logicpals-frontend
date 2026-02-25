@@ -163,13 +163,15 @@
   const TRACK=LP_getTrack();
   const LOGIN_URL='/login.html?next='+encodeURIComponent(location.pathname+location.search);
 
-  let sb=null, currentProblem=null, currentChildId=null;
+  let sb=null, currentProblem=null, currentChildId=null, currentUserId=null;
   let hintsUsed=0, chatLog=[], startTime=null, timerInt=null;
   let isProcessing=false, questionsAsked=0, userSubscription=null;
   let problemCount=0, sessionCorrect=0, sessionTotal=0;
   let firstInputTime=null; // tracks time_to_first_input
   let sessionId=null;       // UUID for this practice session
   let sessionTimes=[];      // track solve times for avg speed
+  const UUID_RE=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  function isValidUUID(v){return typeof v==='string'&&UUID_RE.test(v);}
 
   const localPuzzles=[
     {id:'999',problem_text:'A farmer has 17 sheep and all but 9 die. How many are left?',solution_explanation:'9',answer_key:'9',category:'logic',difficulty:'medium',hints:['Read carefully!','It says "all but 9"','The answer is in the question.']},
@@ -352,16 +354,20 @@
 
   // ═══ LOG ATTEMPT — ONE record per problem ═══
   async function logAttempt(solvedCorrectly,submittedAnswer){
-    if(!currentChildId||!sb)return;
+    if(!sb)return;
+    // Must have at least one identity
+    if(!currentChildId&&!currentUserId){console.warn('[Learn] No identity to log attempt');return;}
+    // Only save DB problems (valid UUIDs), skip local fallback puzzles
+    const pid=currentProblem?.id;
+    if(!isValidUUID(pid)){console.log('[Learn] Local puzzle, skipping DB save. id=',pid);return;}
+
     const now=new Date().toISOString();
     const elapsed=startTime?Math.round((Date.now()-startTime)/1000):null;
     const ttfi=firstInputTime&&startTime?Math.round((firstInputTime-startTime)/1000):null;
-
     if(solvedCorrectly&&elapsed) sessionTimes.push(elapsed);
 
     const row={
-      child_id: currentChildId,
-      problem_id: currentProblem?.id||null,
+      problem_id: pid,
       solved_correctly: solvedCorrectly,
       is_correct: solvedCorrectly,
       hints_used: hintsUsed,
@@ -378,9 +384,21 @@
       difficulty_tier: currentProblem?.difficulty||null,
       attempt_state: solvedCorrectly?'completed':'skipped'
     };
+    if(currentChildId) row.child_id=currentChildId;
+    if(currentUserId) row.user_id=currentUserId;
 
-    try{ await sb.from('attempts').insert([row]); }
-    catch(e){ console.warn('[Learn] Attempt log failed:',e); }
+    try{
+      const{data,error}=await sb.from('attempts').insert([row]).select('id');
+      if(!error&&data?.[0]){console.log('[Learn] Attempt saved:',data[0].id);return;}
+      console.error('[Learn] Full insert error:',error?.message,error?.code);
+      // Fallback: minimal row
+      const min={problem_id:pid,is_correct:solvedCorrectly,solved_correctly:solvedCorrectly,hints_used:hintsUsed,attempt_number:problemCount};
+      if(currentChildId)min.child_id=currentChildId;
+      if(currentUserId)min.user_id=currentUserId;
+      const{error:e2}=await sb.from('attempts').insert([min]);
+      if(!e2){console.log('[Learn] Attempt saved (minimal)');return;}
+      console.error('[Learn] Minimal insert error:',e2?.message);
+    }catch(e){console.error('[Learn] logAttempt exception:',e);}
   }
 
   // ═══ FINISH PUZZLE ═══
@@ -457,6 +475,8 @@
       try{const{data}=await sb.auth.getSession();if(data?.session?.user)user=data.session.user;}catch(_){}
       if(!user){try{const{data}=await sb.auth.getUser();if(data?.user)user=data.user;}catch(_){}}
       if(!user){dom.authGate.classList.add('show');return;}
+      currentUserId=user.id;
+      console.log('[Learn] Auth OK:',user.id,user.email);
 
       // Subscription guard (graceful)
       try{await LP_loadScript('/assets/js/subscription-guard.js');}catch(_){}
@@ -472,7 +492,12 @@
       }catch(_){}
 
       // Child ID
-      try{const{data}=await sb.from('children').select('id').eq('parent_id',user.id).single();if(data?.id)currentChildId=data.id;}catch(_){}
+      try{
+        const{data,error}=await sb.from('children').select('id,name').eq('parent_id',user.id).single();
+        if(data?.id){currentChildId=data.id;console.log('[Learn] Child:',data.id,data.name);}
+        else console.warn('[Learn] No child profile:',error?.message);
+      }catch(_){}
+      if(!currentChildId) console.warn('[Learn] No child_id — will use user_id for attempts');
 
       // Responsive
       if(window.innerWidth>600)dom.toggleBtn.style.display='none';
