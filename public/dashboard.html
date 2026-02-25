@@ -242,6 +242,9 @@
     if(!env.SUPABASE_URL||!env.SUPABASE_ANON_KEY){setStatus('bad','Config missing');showAuth();return;}
 
     const sb=supabase.createClient(env.SUPABASE_URL,env.SUPABASE_ANON_KEY,{auth:{storageKey:STORAGE_KEY,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+    // QC/debug handle (does NOT change security; exposes existing client instance)
+    window.__LP_SB = sb;
+
 
     let user=null;
     try{const{data}=await sb.auth.getSession();if(data?.session?.user)user=data.session.user;}catch(_){}
