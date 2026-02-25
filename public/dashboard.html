@@ -281,12 +281,21 @@
       return;
     }
 
-    // Fetch attempts with problem data
+    // Fetch attempts with problem data — try child_id, fallback to user_id
     let attempts=[];
-    try{
-      const{data,error}=await sb.from('attempts').select('*, problems(category, difficulty)').eq('child_id',childId).order('created_at',{ascending:false}).limit(500);
-      if(!error&&data)attempts=data;
-    }catch(_){}
+    if(childId){
+      try{
+        const{data,error}=await sb.from('attempts').select('*, problems(category, difficulty)').eq('child_id',childId).order('created_at',{ascending:false}).limit(500);
+        if(!error&&data)attempts=data;
+      }catch(_){}
+    }
+    if(!attempts.length){
+      try{
+        const{data}=await sb.from('attempts').select('*, problems(category, difficulty)').eq('user_id',user.id).order('created_at',{ascending:false}).limit(500);
+        if(data&&data.length)attempts=data;
+      }catch(_){}
+    }
+    console.log('[Dashboard] Loaded',attempts.length,'attempts,',attempts.filter(wasSolved).length,'solved');
 
     // Fetch school leaderboard
     let schoolPeers=[];
@@ -468,13 +477,14 @@
     if(!childData?.school_name){el.innerHTML='<div class="lb-empty">School not set. Update your profile to see your school leaderboard.</div>';return;}
     if(!peers.length){el.innerHTML='<div class="lb-empty">No classmates found at '+childData.school_name+' yet.</div>';return;}
 
-    let h='';
+    let h='<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;"><span style="font-size:13px;font-weight:700;color:var(--accent);padding:5px 12px;border-radius:8px;background:var(--ys);border:1px solid rgba(254,202,87,.2);">\uD83C\uDFEB '+childData.school_name+'</span><span style="font-size:11px;color:var(--muted);">'+peers.length+' student'+(peers.length!==1?'s':'')+'</span></div>';
     peers.forEach((p,i)=>{
       const rank=i+1;
       const rankClass=rank===1?'gold':rank===2?'silver':rank===3?'bronze':'';
       const isYou=p.id===childId;
       const medal=rank===1?'\uD83E\uDD47':rank===2?'\uD83E\uDD48':rank===3?'\uD83E\uDD49':String(rank);
-      h+=`<div class="lb-item"><div class="lb-rank ${rankClass}">${medal}</div><div class="lb-name${isYou?' you':''}">${isYou?p.name+' (You)':p.name}</div><div class="lb-score">${p.total_problems_solved||0} solved</div></div>`;
+      const pts=p.total_problems_solved||0;
+      h+=`<div class="lb-item" style="${isYou?'background:rgba(108,92,231,.06);border-radius:10px;padding:10px 12px;margin:0 -12px;':''}"><div class="lb-rank ${rankClass}">${medal}</div><div class="lb-name${isYou?' you':''}">${p.name||'Student'}${isYou?' (You)':''}</div><div class="lb-score">${pts}<span style="font-size:10px;color:var(--muted);font-weight:600;margin-left:4px;">pts</span></div></div>`;
     });
     el.innerHTML=h;
   }
