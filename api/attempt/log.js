@@ -11,6 +11,34 @@
 
 const { createClient } = require('@supabase/supabase-js');
 
+// --- Best-effort in-memory rate limiting (per lambda instance) ---
+// NOTE: Serverless instances can scale horizontally, so this is not a perfect global limiter.
+// It still protects against accidental floods and basic abuse.
+// For strict global rate limiting, back with Redis/Upstash or a DB-based limiter.
+const ATTEMPT_LOG_RATE_LIMIT_PER_MIN = Number.parseInt(process.env.ATTEMPT_LOG_RATE_LIMIT_PER_MIN || "60", 10);
+const _rl = new Map(); // key -> { windowStartMs, count }
+
+function checkRateLimit(key) {
+  if (!Number.isFinite(ATTEMPT_LOG_RATE_LIMIT_PER_MIN) || ATTEMPT_LOG_RATE_LIMIT_PER_MIN <= 0) return { ok: true };
+
+  const now = Date.now();
+  const windowMs = 60_000;
+
+  const cur = _rl.get(key);
+  if (!cur || (now - cur.windowStartMs) >= windowMs) {
+    _rl.set(key, { windowStartMs: now, count: 1 });
+    return { ok: true, remaining: ATTEMPT_LOG_RATE_LIMIT_PER_MIN - 1 };
+  }
+
+  if (cur.count >= ATTEMPT_LOG_RATE_LIMIT_PER_MIN) {
+    const retryAfterSec = Math.max(1, Math.ceil((windowMs - (now - cur.windowStartMs)) / 1000));
+    return { ok: false, retryAfterSec };
+  }
+
+  cur.count += 1;
+  return { ok: true, remaining: Math.max(0, ATTEMPT_LOG_RATE_LIMIT_PER_MIN - cur.count) };
+}
+
 // UUID validation
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function isUUID(v) { return typeof v === 'string' && UUID_RE.test(v); }
@@ -94,12 +122,31 @@ module.exports = async function handler(req, res) {
     auth: { persistSession: false, autoRefreshToken: false }
   });
   const { data: { user }, error: authError } = await anonClient.auth.getUser(token);
+
+  // Rate limit per authenticated parent/user
+  const rlKey = `attempt_log:${user.id}`;
+  const rlRes = checkRateLimit(rlKey);
+  if (!rlRes.ok) {
+    res.setHeader('Retry-After', String(rlRes.retryAfterSec));
+    return res.status(429).json({ error: 'Rate limit exceeded' });
+  }
   if (authError || !user) {
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 
   // Parse body
   const body = req.body;
+
+  // Backward-compatible aliases from older clients
+  // - track -> mode
+  // - time_spent_sec -> time_spent_seconds
+  if (body && body.data && typeof body.data === 'object') {
+    if (body.data.track && !body.data.mode) body.data.mode = body.data.track;
+    if (typeof body.data.time_spent_sec !== 'undefined' && typeof body.data.time_spent_seconds === 'undefined') {
+      body.data.time_spent_seconds = body.data.time_spent_sec;
+    }
+  }
+
   if (!body || typeof body !== 'object') return res.status(400).json({ error: 'Invalid body' });
 
   // Validate problem_id is a real UUID
@@ -124,8 +171,8 @@ module.exports = async function handler(req, res) {
     if (child && child.parent_id === user.id) {
       childId = child.id;
     } else {
-      // child_id doesn't belong to this user — ignore it, use lookup
-      console.warn('[attempt/log] child_id mismatch, looking up by parent_id');
+      // Enterprise-grade: never silently accept a mismatched child_id.
+      return res.status(403).json({ error: 'child_id does not belong to this parent' });
     }
   }
 
