@@ -158,27 +158,20 @@
   function LP_getTrack(){ return new URLSearchParams(location.search).get('track')==='olympiad'?'olympiad':'regular'; }
   async function LP_loadScript(src){ return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.async=true;s.onload=ok;s.onerror=()=>no(new Error('Failed: '+src));document.head.appendChild(s);}); }
 
-  // ═══ CONFIG ═══
-  const DEBUG=location.hostname==='localhost'||location.search.includes('debug=1');
-  const ALLOW_CLIENT_FALLBACK=true; // Set false once /api/attempt/log is confirmed working
-  function log(...a){if(DEBUG)console.log('[LP]',...a);}
-  function warn(...a){if(DEBUG)console.warn('[LP]',...a);}
-  const UUID_RE=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  function isValidUUID(v){return typeof v==='string'&&UUID_RE.test(v);}
-  let killSwitchActive=false; // set by /api/experiment/flags
-
   // ═══ STATE ═══
   const STORAGE_KEY='logicpals.auth';
   const TRACK=LP_getTrack();
   const LOGIN_URL='/login.html?next='+encodeURIComponent(location.pathname+location.search);
 
-  let sb=null, currentProblem=null, currentChildId=null, currentUserId=null, accessToken=null;
+  let sb=null, currentProblem=null, currentChildId=null, currentUserId=null;
   let hintsUsed=0, chatLog=[], startTime=null, timerInt=null;
   let isProcessing=false, questionsAsked=0, userSubscription=null;
   let problemCount=0, sessionCorrect=0, sessionTotal=0;
-  let firstInputTime=null;
-  let sessionId=null;
-  let sessionTimes=[];
+  let firstInputTime=null; // tracks time_to_first_input
+  let sessionId=null;       // UUID for this practice session
+  let sessionTimes=[];      // track solve times for avg speed
+  const UUID_RE=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  function isValidUUID(v){return typeof v==='string'&&UUID_RE.test(v);}
 
   const localPuzzles=[
     {id:'999',problem_text:'A farmer has 17 sheep and all but 9 die. How many are left?',solution_explanation:'9',answer_key:'9',category:'logic',difficulty:'medium',hints:['Read carefully!','It says "all but 9"','The answer is in the question.']},
@@ -359,20 +352,22 @@
     dom.textInput.focus();
   }
 
-  // ═══ LOG ATTEMPT — server-side first, client fallback ═══
+  // ═══ LOG ATTEMPT — ONE record per problem ═══
   async function logAttempt(solvedCorrectly,submittedAnswer){
+    if(!sb)return;
+    // Must have at least one identity
+    if(!currentChildId&&!currentUserId){console.warn('[Learn] No identity to log attempt');return;}
+    // Only save DB problems (valid UUIDs), skip local fallback puzzles
     const pid=currentProblem?.id;
-    if(!isValidUUID(pid)){log('Local puzzle (id='+pid+'), skipping save');return;}
-    if(!currentChildId&&!currentUserId){warn('No identity — cannot log');return;}
+    if(!isValidUUID(pid)){console.log('[Learn] Local puzzle, skipping DB save. id=',pid);return;}
 
     const now=new Date().toISOString();
     const elapsed=startTime?Math.round((Date.now()-startTime)/1000):null;
     const ttfi=firstInputTime&&startTime?Math.round((firstInputTime-startTime)/1000):null;
     if(solvedCorrectly&&elapsed) sessionTimes.push(elapsed);
 
-    const payload={
+    const row={
       problem_id: pid,
-      child_id: currentChildId||undefined,
       solved_correctly: solvedCorrectly,
       is_correct: solvedCorrectly,
       hints_used: hintsUsed,
@@ -389,39 +384,61 @@
       difficulty_tier: currentProblem?.difficulty||null,
       attempt_state: solvedCorrectly?'completed':'skipped'
     };
+    if(currentChildId) row.child_id=currentChildId;
+    if(currentUserId) row.user_id=currentUserId;
 
-    // Strategy 1: Server-side API (validated, service-role insert)
-    if(accessToken){
-      try{
-        const r=await fetch('/api/attempt/log',{
-          method:'POST',
-          headers:{'Content-Type':'application/json','Authorization':'Bearer '+accessToken},
-          body:JSON.stringify(payload)
-        });
-        const d=await r.json();
-        if(r.ok&&d.ok){log('Saved via API:',d.id);return;}
-        warn('API error:',d.error||r.status);
-      }catch(e){warn('API unreachable:',e.message);}
+    
+    // Add track for server-side verification (regular|olympiad)
+    row.track = TRACK;
+
+    // Enterprise path: server-side attempt logging
+    const ALLOW_CLIENT_FALLBACK = false; // keep FALSE in production
+
+    // Get JWT
+    let jwt = null;
+    try{
+      const s = await sb.auth.getSession();
+      jwt = s?.data?.session?.access_token || null;
+    }catch(e){ jwt = null; }
+
+    if(!jwt){
+      console.warn('[attempt] No JWT/session. Attempt not logged.');
+      if(!ALLOW_CLIENT_FALLBACK) return;
     }
 
-    // Strategy 2: Direct Supabase (fallback — disable once API is stable)
-    if(ALLOW_CLIENT_FALLBACK&&sb){
-      const row={...payload};
-      if(currentChildId)row.child_id=currentChildId;
-      if(currentUserId)row.user_id=currentUserId;
-      try{
-        const{data,error}=await sb.from('attempts').insert([row]).select('id');
-        if(!error&&data?.[0]){log('Saved via Supabase:',data[0].id);return;}
-        warn('Supabase insert error:',error?.message);
-        // Strategy 3: minimal row
-        const min={problem_id:pid,is_correct:solvedCorrectly,solved_correctly:solvedCorrectly,
-          hints_used:hintsUsed,attempt_number:problemCount,mode:TRACK};
-        if(currentChildId)min.child_id=currentChildId;
-        if(currentUserId)min.user_id=currentUserId;
-        const{error:e2}=await sb.from('attempts').insert([min]);
-        if(!e2){log('Saved (minimal)');return;}
-        warn('Minimal insert failed:',e2?.message);
-      }catch(e){if(DEBUG)console.error('[LP] logAttempt:',e);}
+    // 1) Server endpoint
+    try{
+      const r = await fetch('/api/attempt/log', {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          ...(jwt ? {'Authorization': 'Bearer ' + jwt} : {})
+        },
+        body: JSON.stringify({ data: row })
+      });
+
+      if(r.ok){
+        const out = await r.json();
+        if(DEBUG) console.log('[attempt] server logged', out);
+        return;
+      }
+
+      let body=null;
+      try{ body = await r.json(); }catch(_){}
+      console.warn('[attempt] server refused', r.status, body?.error || '');
+      if(!ALLOW_CLIENT_FALLBACK) return;
+    }catch(e){
+      console.warn('[attempt] server network error');
+      if(!ALLOW_CLIENT_FALLBACK) return;
+    }
+
+    // 2) Controlled rollback only (disabled by default)
+    try{
+      const { data, error } = await sb.from('attempts').insert(row).select('id').single();
+      if(error) throw error;
+      if(DEBUG) console.log('[attempt] client fallback logged', data?.id);
+    }catch(e){
+      console.warn('[attempt] client fallback failed');
     }
   }
 
@@ -495,16 +512,12 @@
       });
 
       // Auth — no redirect, overlay instead
-      let user=null, session=null;
-      try{const{data}=await sb.auth.getSession();if(data?.session){session=data.session;user=data.session.user;}}catch(_){}
+      let user=null;
+      try{const{data}=await sb.auth.getSession();if(data?.session?.user)user=data.session.user;}catch(_){}
       if(!user){try{const{data}=await sb.auth.getUser();if(data?.user)user=data.user;}catch(_){}}
       if(!user){dom.authGate.classList.add('show');return;}
       currentUserId=user.id;
-      if(session?.access_token) accessToken=session.access_token;
-      log('Auth OK:',user.id);
-
-      // Keep token fresh on refresh
-      sb.auth.onAuthStateChange((_event,s)=>{if(s?.access_token)accessToken=s.access_token;});
+      console.log('[Learn] Auth OK:',user.id,user.email);
 
       // Subscription guard (graceful)
       try{await LP_loadScript('/assets/js/subscription-guard.js');}catch(_){}
@@ -519,27 +532,13 @@
         }
       }catch(_){}
 
-      // Kill-switch: check if practice is disabled via experiment flags
-      try{
-        const flagsRes=await fetch('/api/experiment/flags',{headers:{'Authorization':'Bearer '+accessToken},cache:'no-store'});
-        if(flagsRes.ok){
-          const flags=await flagsRes.json();
-          if(flags?.practice_disabled){
-            killSwitchActive=true;
-            LP_showFatal('Practice is temporarily disabled for maintenance. Please try again soon.');
-            return;
-          }
-          log('Flags:',flags);
-        }
-      }catch(_){/* flags endpoint not deployed yet — continue normally */}
-
       // Child ID
       try{
         const{data,error}=await sb.from('children').select('id,name').eq('parent_id',user.id).single();
-        if(data?.id){currentChildId=data.id;log('Child:',data.id,data.name);}
-        else warn('No child profile:',error?.message);
+        if(data?.id){currentChildId=data.id;console.log('[Learn] Child:',data.id,data.name);}
+        else console.warn('[Learn] No child profile:',error?.message);
       }catch(_){}
-      if(!currentChildId) warn('No child_id — will use user_id for attempts');
+      if(!currentChildId) console.warn('[Learn] No child_id — will use user_id for attempts');
 
       // Responsive
       if(window.innerWidth>600)dom.toggleBtn.style.display='none';
