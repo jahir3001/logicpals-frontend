@@ -217,6 +217,8 @@
   const safe=(el,t)=>{if(el)el.textContent=(t!=null&&t!=='')?t:'\u2014';};
   const STORAGE_KEY='logicpals.auth';
   const LOGIN_URL='/login.html?next='+encodeURIComponent('/dashboard.html');
+  const DEBUG=location.hostname==='localhost'||location.search.includes('debug=1');
+  function log(...a){if(DEBUG)console.log('[Dash]',...a);}
 
   function setStatus(s,m){safe($('planText'),m);$('planDot').classList.remove('dot-good','dot-warn','dot-bad');$('planDot').classList.add(s==='good'?'dot-good':s==='bad'?'dot-bad':'dot-warn');}
   function showAuth(){$('loadingState').style.display='none';$('authNotice').style.display='block';$('content').style.display='none';}
@@ -242,9 +244,6 @@
     if(!env.SUPABASE_URL||!env.SUPABASE_ANON_KEY){setStatus('bad','Config missing');showAuth();return;}
 
     const sb=supabase.createClient(env.SUPABASE_URL,env.SUPABASE_ANON_KEY,{auth:{storageKey:STORAGE_KEY,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-    // QC/debug handle (does NOT change security; exposes existing client instance)
-    window.__LP_SB = sb;
-
 
     let user=null;
     try{const{data}=await sb.auth.getSession();if(data?.session?.user)user=data.session.user;}catch(_){}
@@ -264,9 +263,25 @@
 
     // Child + school_name
     let childId=null,childData=null;
-    try{const{data}=await sb.from('children').select('id,name,school_name,age,streak_days,total_problems_solved').eq('parent_id',user.id).single();if(data){childId=data.id;childData=data;}}catch(_){}
+    try{const{data}=await sb.from('children').select('id,name,school_name,age,streak_days,total_problems_solved').eq('parent_id',user.id).single();if(data){childId=data.id;childData=data;log('Child:',data.id,data.name);}}catch(_){}
 
-    if(!childId){
+    // Fetch attempts — child_id first, then user_id fallback
+    let attempts=[];
+    if(childId){
+      try{
+        const{data,error}=await sb.from('attempts').select('*, problems(category, difficulty)').eq('child_id',childId).order('created_at',{ascending:false}).limit(500);
+        if(!error&&data)attempts=data;
+      }catch(_){}
+    }
+    if(!attempts.length){
+      try{
+        const{data}=await sb.from('attempts').select('*, problems(category, difficulty)').eq('user_id',user.id).order('created_at',{ascending:false}).limit(500);
+        if(data&&data.length>0){attempts=data;log('Loaded',data.length,'attempts via user_id');}
+      }catch(_){}
+    }
+    log('Attempts:',attempts.length,'solved:',attempts.filter(wasSolved).length);
+
+    if(!childId&&!attempts.length){
       showContent();
       safe($('kpiSolved'),'0');safe($('kpiAccuracy'),'0%');safe($('kpiSpeed'),'\u2014');safe($('kpiStreak'),'0');
       $('heroHeadline').textContent='Start your first practice session!';
@@ -280,22 +295,6 @@
       $('btnStart').addEventListener('click',()=>location.assign('/learn.html?track=regular'));
       return;
     }
-
-    // Fetch attempts with problem data — try child_id, fallback to user_id
-    let attempts=[];
-    if(childId){
-      try{
-        const{data,error}=await sb.from('attempts').select('*, problems(category, difficulty)').eq('child_id',childId).order('created_at',{ascending:false}).limit(500);
-        if(!error&&data)attempts=data;
-      }catch(_){}
-    }
-    if(!attempts.length){
-      try{
-        const{data}=await sb.from('attempts').select('*, problems(category, difficulty)').eq('user_id',user.id).order('created_at',{ascending:false}).limit(500);
-        if(data&&data.length)attempts=data;
-      }catch(_){}
-    }
-    console.log('[Dashboard] Loaded',attempts.length,'attempts,',attempts.filter(wasSolved).length,'solved');
 
     // Fetch school leaderboard
     let schoolPeers=[];
@@ -474,17 +473,20 @@
   // ═══ School Leaderboard ═══
   function renderLeaderboard(peers,childId,childData){
     const el=$('leaderboardList');
-    if(!childData?.school_name){el.innerHTML='<div class="lb-empty">School not set. Update your profile to see your school leaderboard.</div>';return;}
-    if(!peers.length){el.innerHTML='<div class="lb-empty">No classmates found at '+childData.school_name+' yet.</div>';return;}
-
-    let h='<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;"><span style="font-size:13px;font-weight:700;color:var(--accent);padding:5px 12px;border-radius:8px;background:var(--ys);border:1px solid rgba(254,202,87,.2);">\uD83C\uDFEB '+childData.school_name+'</span><span style="font-size:11px;color:var(--muted);">'+peers.length+' student'+(peers.length!==1?'s':'')+'</span></div>';
+    if(!childData?.school_name){el.innerHTML='<div class="lb-empty">School not set. Update your child\'s profile to see the school leaderboard.</div>';return;}
+    if(!peers.length){el.innerHTML='<div class="lb-empty">No students found at '+childData.school_name+' yet.</div>';return;}
+    let h='<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">';
+    h+='<span style="font-size:13px;font-weight:700;color:var(--accent);padding:5px 12px;border-radius:8px;background:var(--ys);border:1px solid rgba(254,202,87,.2);">\uD83C\uDFEB '+childData.school_name+'</span>';
+    h+='<span style="font-size:11px;color:var(--muted);">'+peers.length+' student'+(peers.length!==1?'s':'')+'</span></div>';
     peers.forEach((p,i)=>{
-      const rank=i+1;
+      const rank=i+1,isYou=p.id===childId,pts=p.total_problems_solved||0;
       const rankClass=rank===1?'gold':rank===2?'silver':rank===3?'bronze':'';
-      const isYou=p.id===childId;
       const medal=rank===1?'\uD83E\uDD47':rank===2?'\uD83E\uDD48':rank===3?'\uD83E\uDD49':String(rank);
-      const pts=p.total_problems_solved||0;
-      h+=`<div class="lb-item" style="${isYou?'background:rgba(108,92,231,.06);border-radius:10px;padding:10px 12px;margin:0 -12px;':''}"><div class="lb-rank ${rankClass}">${medal}</div><div class="lb-name${isYou?' you':''}">${p.name||'Student'}${isYou?' (You)':''}</div><div class="lb-score">${pts}<span style="font-size:10px;color:var(--muted);font-weight:600;margin-left:4px;">pts</span></div></div>`;
+      const name=p.name||'Student';
+      h+='<div class="lb-item"'+(isYou?' style="background:rgba(108,92,231,.06);border-radius:10px;padding:10px 12px;margin:0 -12px;"':'')+'>';
+      h+='<div class="lb-rank '+rankClass+'">'+medal+'</div>';
+      h+='<div class="lb-name'+(isYou?' you':'')+'">'+name+(isYou?' (You)':'')+'</div>';
+      h+='<div class="lb-score">'+pts+'<span style="font-size:10px;color:var(--muted);font-weight:600;margin-left:4px;">pts</span></div></div>';
     });
     el.innerHTML=h;
   }
