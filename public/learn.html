@@ -425,24 +425,30 @@
 
       let body=null;
       try{ body = await r.json(); }catch(_){}
-      console.warn('[attempt] server refused', r.status, body?.error || '');
+      if(DEBUG) console.warn('[attempt] server refused', r.status, body?.error || '');
+      toast('Could not save progress (server refused). Please refresh and try again.');
       if(!ALLOW_CLIENT_FALLBACK) return;
     }catch(e){
-      console.warn('[attempt] server network error');
+      if(DEBUG) console.warn('[attempt] server network error');
+      toast('Could not reach server to save progress. Check internet and retry.');
       if(!ALLOW_CLIENT_FALLBACK) return;
     }
 
-    // 2) Controlled rollback only (disabled by default)
-    try{
-      const { data, error } = await sb.from('attempts').insert(row).select('id').single();
-      if(error) throw error;
-      if(DEBUG) console.log('[attempt] client fallback logged', data?.id);
-    }catch(e){
-      console.warn('[attempt] client fallback failed');
-    }
+    // Enterprise: no client-side attempt writes.
   }
 
-  // ═══ FINISH PUZZLE ═══
+  
+  function toast(msg){
+    try{
+      const el=document.createElement('div');
+      el.className='lp-toast';
+      el.textContent=msg;
+      document.body.appendChild(el);
+      setTimeout(()=>el.classList.add('show'),10);
+      setTimeout(()=>{el.classList.remove('show'); setTimeout(()=>el.remove(),300);},2600);
+    }catch(_){}
+  }
+// ═══ FINISH PUZZLE ═══
   function finishPuzzle(correct){
     localStorage.removeItem('lp_state');
     sessionCorrect++;sessionTotal++;
@@ -465,6 +471,7 @@
 
   // ═══ HINT ═══
   function useHint(){
+    if(!HINTS_ENABLED){ toast('Hints are temporarily disabled.'); return; }
     if(hintsUsed>=3)return;
     let hints=currentProblem?.hints;
     if(!hints||!Array.isArray(hints)||!hints.length) hints=['Think carefully about the wording!','Read the problem one more time.','The answer might be simpler than you think.'];
