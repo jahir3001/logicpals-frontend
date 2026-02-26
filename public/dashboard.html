@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>LogicPals — Regular Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js">
+  function dlog(){ if(DEBUG) console.log.apply(console, arguments); }
+  function dwarn(){ if(DEBUG) console.warn.apply(console, arguments); }
+</script>
   <style>
     :root{--primary:#6c5ce7;--accent:#feca57;--text:#f0f0f5;--muted:#5d5f7e;--text2:#9899b3;--bg:#0c0e1a;--card:rgba(20,24,52,.55);--border:rgba(255,255,255,.06);--good:#00d2a0;--bad:#ff6b6b;--radius:20px;--radius2:14px;--max:1100px;--tap:44px;--font:'Plus Jakarta Sans',-apple-system,sans-serif;--font-d:'Outfit',-apple-system,sans-serif;--glow:rgba(108,92,231,.35);--glow2:rgba(0,210,160,.25);--as:rgba(108,92,231,.12);--ys:rgba(254,202,87,.10);}
     *{box-sizing:border-box;}html,body{height:100%;}
@@ -299,7 +302,7 @@
         if(data&&data.length)attempts=data;
       }catch(_){}
     }
-    console.log('[Dashboard] Loaded',attempts.length,'attempts,',attempts.filter(wasSolved).length,'solved');
+    dlog('[Dashboard] Loaded',attempts.length,'attempts,',attempts.filter(wasSolved).length,'solved');
 
     // Fetch school leaderboard
     let schoolPeers=[];
