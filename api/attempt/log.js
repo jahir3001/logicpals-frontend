@@ -75,7 +75,10 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   // Check env — ALL THREE required, no fallbacks
-  const { SUPABASE_URL, SUPABASE_SERVICE_KEY, SUPABASE_ANON_KEY } = process.env;
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+  // Vercel env uses SUPABASE_SERVICE_ROLE_KEY (recommended). We also accept legacy SUPABASE_SERVICE_KEY.
+  const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY || !SUPABASE_ANON_KEY) {
     console.error('[attempt/log] Missing env:', { url: !!SUPABASE_URL, service: !!SUPABASE_SERVICE_KEY, anon: !!SUPABASE_ANON_KEY });
     return res.status(500).json({ error: 'Server misconfigured' });
