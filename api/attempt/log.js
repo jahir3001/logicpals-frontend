@@ -2,6 +2,7 @@
 // Enterprise-safe attempt logging endpoint for LogicPals (Step 8H)
 // - Validates Supabase JWT (access token) from Authorization: Bearer <token>
 // - Enforces parent -> child ownership using public.children(parent_id)
+// - Rate limit guard via public.rpc_rate_limit_check(...)
 // - Uses atomic SECURITY DEFINER RPC: public.rpc_attempt_log_atomic(...) (NO direct writes)
 // - Best-effort immutable audit event into public.audit_log (if table exists)
 
@@ -36,18 +37,10 @@ function toBool(v, def = null) {
 }
 
 async function getUserId(supabase, token) {
-  // supabase-js versions vary; support both signatures
   try {
     if (supabase?.auth?.getUser) {
       const r = await supabase.auth.getUser(token);
       if (r?.data?.user?.id) return r.data.user.id;
-      if (r?.data?.user?.user_metadata?.sub) return r.data.user.user_metadata.sub;
-    }
-  } catch (_) {}
-  try {
-    if (supabase?.auth?.getSession) {
-      const r2 = await supabase.auth.getSession();
-      if (r2?.data?.session?.user?.id) return r2.data.session.user.id;
     }
   } catch (_) {}
   return null;
@@ -69,7 +62,6 @@ export default async function handler(req, res) {
   const token = getBearerToken(req);
   if (!token) return json(res, 401, { error: 'missing_bearer_token' });
 
-  // IMPORTANT: Use the USER's JWT as Authorization so RLS applies correctly for the ownership check.
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
@@ -99,62 +91,60 @@ export default async function handler(req, res) {
     return json(res, 400, { error: 'missing_ids', hint: 'Provide child_id and problem_id (UUIDs).' });
   }
 
-  // Ownership check: child must belong to current parent (auth user)
+  // Ownership check: child must belong to current parent
   const { data: childRow, error: childErr } = await supabase
     .from('children')
     .select('id, parent_id')
     .eq('id', childId)
     .maybeSingle();
 
-  if (childErr) {
-    return json(res, 500, { error: 'child_lookup_failed', detail: childErr.message });
-  }
-  if (!childRow) {
-    return json(res, 404, { error: 'child_not_found' });
-  }
+  if (childErr) return json(res, 500, { error: 'child_lookup_failed', detail: childErr.message });
+  if (!childRow) return json(res, 404, { error: 'child_not_found' });
   if (childRow.parent_id !== userId) {
-    return json(res, 403, {
-      error: 'child_not_owned',
-      hint: 'Use the access_token (JWT) for the SAME parent user as children.parent_id.',
-    });
+    return json(res, 403, { error: 'child_not_owned' });
   }
 
-  // Map payload -> RPC params (atomic write path)
+  // ✅ Rate limit (20 requests / 60 seconds per parent per route)
+  const { data: allow, error: rlErr } = await supabase.rpc('rpc_rate_limit_check', {
+    p_route: 'attempt_log',
+    p_limit: 20,
+    p_window_seconds: 60,
+  });
+
+  if (rlErr) {
+    return json(res, 500, { error: 'rate_limit_failed', detail: rlErr.message });
+  }
+  if (allow === false) {
+    return json(res, 429, { error: 'rate_limited', retry_after_seconds: 60 });
+  }
+
+  // RPC args
   const solvedCorrectly = toBool(body.solved_correctly ?? body.is_correct, null);
 
   const rpcArgs = {
     p_child_id: childId,
     p_problem_id: problemId,
-
-    // We use "mode" to store track-like usage in your attempts schema
     p_mode: body.mode ?? track,
-
     p_difficulty_tier: body.difficulty_tier ?? null,
     p_attempt_state: body.attempt_state ?? 'SUBMITTED',
-
-    // Keep both fields supported by your table
     p_solved_correctly: solvedCorrectly,
     p_is_correct: solvedCorrectly,
-
     p_hints_used: toInt(body.hints_used, 0),
     p_questions_asked: toInt(body.questions_asked, 0),
-
     p_time_spent_seconds: toInt(body.time_spent_sec ?? body.time_spent_seconds, null),
     p_time_to_first_input_seconds: toInt(body.time_to_first_input_seconds, null),
-
     p_submitted_answer: body.submitted_answer ?? null,
     p_session_id: body.session_id ?? null,
     p_session_item_id: body.session_item_id ?? null,
   };
 
-  // Atomic attempt logging (deactivate prior active + insert new active)
   const { data: rpcData, error: rpcErr } = await supabase.rpc('rpc_attempt_log_atomic', rpcArgs);
 
   if (rpcErr) {
     return json(res, 400, {
       error: 'rpc_failed',
       detail: rpcErr.message,
-      hint: 'Ensure public.rpc_attempt_log_atomic(...) exists and is granted to authenticated.',
+      hint: 'Create public.rpc_attempt_log_atomic(...) and grant execute to authenticated.',
     });
   }
 
@@ -168,20 +158,9 @@ export default async function handler(req, res) {
       action: 'attempt_logged',
       entity: 'attempts',
       entity_id: attemptId,
-      details: {
-        track,
-        child_id: childId,
-        problem_id: problemId,
-        attempt_number: attemptNumber,
-      },
+      details: { track, child_id: childId, problem_id: problemId, attempt_number: attemptNumber },
     });
-  } catch (_) {
-    // ignore if audit_log not present or RLS blocks it
-  }
+  } catch (_) {}
 
-  return json(res, 200, {
-    ok: true,
-    attempt_id: attemptId,
-    attempt_number: attemptNumber,
-  });
+  return json(res, 200, { ok: true, attempt_id: attemptId, attempt_number: attemptNumber });
 }
