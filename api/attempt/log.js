@@ -1,9 +1,16 @@
 // api/attempt/log.js
-// Enterprise-safe attempt logging endpoint for LogicPals
-// - Validates Supabase JWT (access token) from Authorization: Bearer <token>
-// - Enforces parent -> child ownership using public.children(parent_id)
-// - Inserts into public.attempts using REAL schema columns (no phantom fields like skill_track)
-// - Writes immutable audit event into public.audit_log (if table exists)
+// LogicPals — Enterprise Attempt Logging Endpoint (FINAL)
+// Version: 1.0.0
+//
+// Guarantees:
+// - Requires Supabase access_token (JWT) in Authorization: Bearer <token>
+// - Enforces parent -> child ownership via public.children(parent_id)
+// - Inserts ONLY real columns that exist in public.attempts (per your schema screenshots)
+// - Best-effort immutable logging into public.audit_log (your DB has audit_log + triggers)
+//
+// Notes:
+// - "PASTE_YOUR_ACCESS_TOKEN_HERE" = Supabase access_token (JWT). Same thing for our purposes.
+// - If your RLS blocks access to children/attempts, this endpoint will fail (by design).
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -35,22 +42,36 @@ function toBool(v, def = null) {
   return def;
 }
 
+// Safe fallback: decode JWT payload and read `sub`
+// (No signature verification here; we only use it as a fallback if supabase-js method is unavailable)
+function decodeJwtSub(token) {
+  try {
+    const parts = String(token).split('.');
+    if (parts.length < 2) return null;
+    const payloadB64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = payloadB64 + '='.repeat((4 - (payloadB64.length % 4)) % 4);
+    const jsonStr = Buffer.from(padded, 'base64').toString('utf8');
+    const payload = JSON.parse(jsonStr);
+    return payload?.sub || null;
+  } catch {
+    return null;
+  }
+}
+
 async function getUserId(supabase, token) {
-  // supabase-js versions vary; support both signatures
+  // Prefer official method first
   try {
     if (supabase?.auth?.getUser) {
-      const r = await supabase.auth.getUser(token);
+      // supabase-js v2 expects no token if Authorization header is already set globally
+      const r = await supabase.auth.getUser();
       if (r?.data?.user?.id) return r.data.user.id;
-      if (r?.data?.user?.user_metadata?.sub) return r.data.user.user_metadata.sub;
     }
-  } catch (_) {}
-  try {
-    if (supabase?.auth?.getSession) {
-      const r2 = await supabase.auth.getSession();
-      if (r2?.data?.session?.user?.id) return r2.data.session.user.id;
-    }
-  } catch (_) {}
-  return null;
+  } catch {
+    // ignore and fallback
+  }
+
+  // Fallback to JWT sub
+  return decodeJwtSub(token);
 }
 
 async function computeNextAttemptNumber(supabase, childId, problemId) {
@@ -84,7 +105,7 @@ export default async function handler(req, res) {
   const token = getBearerToken(req);
   if (!token) return json(res, 401, { error: 'missing_bearer_token' });
 
-  // IMPORTANT: Use the USER's JWT as Authorization so RLS applies correctly.
+  // IMPORTANT: Use the user JWT in global headers so RLS is enforced.
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
@@ -93,7 +114,7 @@ export default async function handler(req, res) {
   if (!userId) {
     return json(res, 401, {
       error: 'invalid_or_expired_token',
-      hint: 'Your Authorization Bearer token must be the Supabase access_token (JWT) for the signed-in user.',
+      hint: 'Authorization must be the Supabase access_token (JWT) for the signed-in user.',
     });
   }
 
@@ -121,23 +142,25 @@ export default async function handler(req, res) {
     .eq('id', childId)
     .maybeSingle();
 
-  if (childErr) {
-    return json(res, 500, { error: 'child_lookup_failed', detail: childErr.message });
-  }
-  if (!childRow) {
-    return json(res, 404, { error: 'child_not_found' });
-  }
+  if (childErr) return json(res, 500, { error: 'child_lookup_failed', detail: childErr.message });
+  if (!childRow) return json(res, 404, { error: 'child_not_found' });
+
   if (childRow.parent_id !== userId) {
     return json(res, 403, {
       error: 'child_id does not belong to this parent',
-      hint: 'Use the access_token (JWT) for the SAME parent user as children.parent_id, then pick a child id where children.parent_id = auth user id.',
+      hint: 'Use the access_token (JWT) for the SAME parent user as children.parent_id, then choose a child where children.parent_id = your auth user id.',
     });
   }
 
-  // Map payload -> real attempts schema
+  // attempts table schema (your screenshots show these columns exist):
+  // id, child_id, problem_id, attempt_number (NOT NULL), solved_correctly, is_correct,
+  // hints_used, questions_asked, ai_conversation, created_at, completed_at, user_id,
+  // attempt_state, difficulty_tier, mode, started_at, submitted_at, review_started_at,
+  // score_delta, active, time_spent_seconds, time_to_first_input_seconds, submitted_answer,
+  // session_id, session_item_id
+
   const solvedCorrectly = toBool(body.solved_correctly ?? body.is_correct, false);
 
-  // Use provided attempt_number if valid, else compute next.
   let attemptNumber = toInt(body.attempt_number, null);
   if (!attemptNumber || attemptNumber < 1) {
     attemptNumber = await computeNextAttemptNumber(supabase, childId, problemId);
@@ -146,24 +169,21 @@ export default async function handler(req, res) {
   const row = {
     child_id: childId,
     problem_id: problemId,
-
-    // REQUIRED in your schema
     attempt_number: attemptNumber,
 
-    // Keep both fields for compatibility (your table has BOTH)
     solved_correctly: solvedCorrectly,
     is_correct: solvedCorrectly,
 
-    // Optional analytics fields (all exist in your schema)
     hints_used: toInt(body.hints_used, 0),
     questions_asked: toInt(body.questions_asked, 0),
+
     time_spent_seconds: toInt(body.time_spent_sec ?? body.time_spent_seconds, null),
     time_to_first_input_seconds: toInt(body.time_to_first_input_seconds, null),
 
     submitted_answer: body.submitted_answer ?? null,
     ai_conversation: body.ai_conversation ?? null,
 
-    mode: body.mode ?? track,               // e.g. 'regular' or 'olympiad'
+    mode: body.mode ?? track, // 'regular' or 'olympiad'
     difficulty_tier: body.difficulty_tier ?? null,
     attempt_state: body.attempt_state ?? 'SUBMITTED',
 
@@ -172,13 +192,13 @@ export default async function handler(req, res) {
 
     started_at: body.started_at ?? null,
     submitted_at: body.submitted_at ?? null,
+    review_started_at: body.review_started_at ?? null,
     completed_at: body.completed_at ?? null,
 
     user_id: userId,
     active: true,
   };
 
-  // Insert attempt
   const { data: inserted, error: insErr } = await supabase
     .from('attempts')
     .insert(row)
@@ -189,11 +209,12 @@ export default async function handler(req, res) {
     return json(res, 500, {
       error: 'insert_failed',
       detail: insErr.message,
-      hint: 'Verify attempts table columns match row keys; if you recently changed schema, redeploy Vercel.',
+      hint: 'If schema recently changed, redeploy Vercel. Also confirm RLS permits inserts for this user.',
     });
   }
 
-  // Best-effort immutable audit log
+  // Best-effort immutable audit log into public.audit_log
+  // (You already have triggers: no_update / no_delete)
   try {
     await supabase.from('audit_log').insert({
       actor_user_id: userId,
@@ -207,8 +228,8 @@ export default async function handler(req, res) {
         attempt_number: inserted?.attempt_number ?? attemptNumber,
       },
     });
-  } catch (_) {
-    // ignore if audit_log not present or RLS blocks it
+  } catch {
+    // ignore if audit_log is missing or blocked by RLS
   }
 
   return json(res, 200, {
