@@ -1,251 +1,212 @@
-// api/attempt/log.js — Secure server-side attempt logging
-// Vercel Serverless Function (Node.js runtime)
+// api/attempt/log.js
+// Enterprise-grade server-side attempt logging (JWT required)
+// - Verifies caller is authenticated
+// - Enforces child ownership (parent -> children relationship)
+// - Optional durable rate limiting via Supabase RPC (fail-open if RPC missing)
+// - Writes into public.attempts
 //
-// Required env vars in Vercel dashboard:
-//   SUPABASE_URL          — your Supabase project URL
-//   SUPABASE_SERVICE_KEY   — service_role key (NOT the anon key)
-//   SUPABASE_ANON_KEY      — anon key (for JWT verification)
-//
-// The service_role key bypasses RLS and lets us insert with full control.
-// The anon key is used only to verify the JWT sent by the client.
+// Expected env vars on Vercel:
+//   SUPABASE_URL
+//   SUPABASE_SERVICE_ROLE_KEY   (server-only)
+//   SUPABASE_ANON_KEY           (optional; not used here)
 
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from "@supabase/supabase-js";
 
-// --- Best-effort in-memory rate limiting (per lambda instance) ---
-// NOTE: Serverless instances can scale horizontally, so this is not a perfect global limiter.
-// It still protects against accidental floods and basic abuse.
-// For strict global rate limiting, back with Redis/Upstash or a DB-based limiter.
-const ATTEMPT_LOG_RATE_LIMIT_PER_MIN = Number.parseInt(process.env.ATTEMPT_LOG_RATE_LIMIT_PER_MIN || "60", 10);
-const _rl = new Map(); // key -> { windowStartMs, count }
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-function checkRateLimit(key) {
-  if (!Number.isFinite(ATTEMPT_LOG_RATE_LIMIT_PER_MIN) || ATTEMPT_LOG_RATE_LIMIT_PER_MIN <= 0) return { ok: true };
+const sb = (SUPABASE_URL && SERVICE_ROLE)
+  ? createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } })
+  : null;
 
-  const now = Date.now();
-  const windowMs = 60_000;
+// Rate-limit policy (per authenticated user)
+const RL_LIMIT = 60;          // requests
+const RL_WINDOW_SECONDS = 60; // per minute
+const RL_RPC = "rate_limit_check_and_inc"; // optional RPC name in Supabase
 
-  const cur = _rl.get(key);
-  if (!cur || (now - cur.windowStartMs) >= windowMs) {
-    _rl.set(key, { windowStartMs: now, count: 1 });
-    return { ok: true, remaining: ATTEMPT_LOG_RATE_LIMIT_PER_MIN - 1 };
-  }
-
-  if (cur.count >= ATTEMPT_LOG_RATE_LIMIT_PER_MIN) {
-    const retryAfterSec = Math.max(1, Math.ceil((windowMs - (now - cur.windowStartMs)) / 1000));
-    return { ok: false, retryAfterSec };
-  }
-
-  cur.count += 1;
-  return { ok: true, remaining: Math.max(0, ATTEMPT_LOG_RATE_LIMIT_PER_MIN - cur.count) };
+function json(res, status, obj) {
+  res.statusCode = status;
+  res.setHeader("Content-Type", "application/json");
+  res.end(JSON.stringify(obj));
 }
 
-// UUID validation
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-function isUUID(v) { return typeof v === 'string' && UUID_RE.test(v); }
-
-// Allowed fields and their types for sanitization
-const ALLOWED_FIELDS = {
-  problem_id:                 'uuid',
-  solved_correctly:           'boolean',
-  is_correct:                 'boolean',
-  hints_used:                 'integer',
-  questions_asked:            'integer',
-  attempt_number:             'integer',
-  submitted_answer:           'string',
-  ai_conversation:            'json',
-  time_spent_seconds:         'integer',
-  time_to_first_input_seconds:'integer',
-  started_at:                 'timestamp',
-  completed_at:               'timestamp',
-  session_id:                 'uuid',
-  mode:                       'string',
-  difficulty_tier:            'string',
-  attempt_state:              'string'
-};
-
-function sanitizeRow(body) {
-  const clean = {};
-  for (const [key, type] of Object.entries(ALLOWED_FIELDS)) {
-    const val = body[key];
-    if (val === undefined || val === null) continue;
-    switch (type) {
-      case 'uuid':
-        if (isUUID(val)) clean[key] = val;
-        break;
-      case 'boolean':
-        clean[key] = !!val;
-        break;
-      case 'integer':
-        const n = parseInt(val, 10);
-        if (!isNaN(n) && n >= 0 && n < 100000) clean[key] = n;
-        break;
-      case 'string':
-        if (typeof val === 'string' && val.length < 10000) clean[key] = val.slice(0, 10000);
-        break;
-      case 'json':
-        if (Array.isArray(val) && val.length < 200) clean[key] = val;
-        break;
-      case 'timestamp':
-        if (typeof val === 'string' && !isNaN(Date.parse(val))) clean[key] = val;
-        break;
-    }
-  }
-  return clean;
+function getBearerToken(req) {
+  const auth = req.headers.authorization || req.headers.Authorization || "";
+  const m = /^Bearer\s+(.+)$/.exec(auth);
+  return m ? m[1] : null;
 }
 
-module.exports = async function handler(req, res) {
-  // CORS — locked to your domain (set ALLOWED_ORIGIN in Vercel env)
-  const origin = process.env.ALLOWED_ORIGIN || 'https://logicpals-frontend.vercel.app';
-  res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+function asInt(v, d = null) {
+  if (v === undefined || v === null || v === "") return d;
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.trunc(n) : d;
+}
 
-  // Check env — ALL THREE required, no fallbacks
-  const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
-  // Vercel env uses SUPABASE_SERVICE_ROLE_KEY (recommended). We also accept legacy SUPABASE_SERVICE_KEY.
-  const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY || !SUPABASE_ANON_KEY) {
-    console.error('[attempt/log] Missing env:', { url: !!SUPABASE_URL, service: !!SUPABASE_SERVICE_KEY, anon: !!SUPABASE_ANON_KEY });
-    return res.status(500).json({ error: 'Server misconfigured' });
-  }
+async function maybeRateLimit(userId) {
+  if (!sb) return { ok: true, skipped: true, reason: "missing_supabase" };
 
-  // Extract JWT from Authorization header
-  const authHeader = req.headers.authorization || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-  if (!token) return res.status(401).json({ error: 'Missing authorization token' });
-
-  // Verify JWT using ANON key only (never service key for auth verification)
-  const anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-  const { data: { user }, error: authError } = await anonClient.auth.getUser(token);
-
-  // Rate limit per authenticated parent/user
-  const rlKey = `attempt_log:${user.id}`;
-  const rlRes = checkRateLimit(rlKey);
-  if (!rlRes.ok) {
-    res.setHeader('Retry-After', String(rlRes.retryAfterSec));
-    return res.status(429).json({ error: 'Rate limit exceeded' });
-  }
-  if (authError || !user) {
-    return res.status(401).json({ error: 'Invalid or expired token' });
-  }
-
-  // Parse body
-  const body = req.body;
-
-  // Backward-compatible aliases from older clients
-  // - track -> mode
-  // - time_spent_sec -> time_spent_seconds
-  if (body && body.data && typeof body.data === 'object') {
-    if (body.data.track && !body.data.mode) body.data.mode = body.data.track;
-    if (typeof body.data.time_spent_sec !== 'undefined' && typeof body.data.time_spent_seconds === 'undefined') {
-      body.data.time_spent_seconds = body.data.time_spent_sec;
-    }
-  }
-
-  if (!body || typeof body !== 'object') return res.status(400).json({ error: 'Invalid body' });
-
-  // Validate problem_id is a real UUID
-  if (!isUUID(body.problem_id)) {
-    return res.status(400).json({ error: 'Invalid problem_id' });
-  }
-
-  // Create service-role client (bypasses RLS)
-  const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-
-  // Resolve child_id: verify this child belongs to this parent
-  let childId = null;
-  if (isUUID(body.child_id)) {
-    const { data: child } = await sb
-      .from('children')
-      .select('id, parent_id')
-      .eq('id', body.child_id)
-      .single();
-
-    if (child && child.parent_id === user.id) {
-      childId = child.id;
-    } else {
-      // Enterprise-grade: never silently accept a mismatched child_id.
-      return res.status(403).json({ error: 'child_id does not belong to this parent' });
-    }
-  }
-
-  // Fallback: look up child by parent_id
-  if (!childId) {
-    const { data: child } = await sb
-      .from('children')
-      .select('id')
-      .eq('parent_id', user.id)
-      .single();
-    if (child) childId = child.id;
-  }
-
-  // Sanitize the row — only allow known fields with validated types
-  const row = sanitizeRow(body);
-  row.user_id = user.id;
-  if (childId) row.child_id = childId;
-
-  // Ensure required fields
-  if (!row.problem_id) return res.status(400).json({ error: 'problem_id required' });
-  if (row.attempt_number === undefined) row.attempt_number = 1;
-
-  // ═══ Track verification: confirm problem matches claimed mode ═══
-  if (row.mode) {
-    const { data: problem } = await sb
-      .from('problems')
-      .select('olympiad_level')
-      .eq('id', row.problem_id)
-      .single();
-
-    if (problem) {
-      const expectedLevel = row.mode === 'olympiad' ? 'olympiad' : 'regular';
-      if (problem.olympiad_level && problem.olympiad_level !== expectedLevel) {
-        console.warn('[attempt/log] Track mismatch:', { claimed: row.mode, actual: problem.olympiad_level });
-        // Auto-correct to the real track instead of rejecting
-        row.mode = problem.olympiad_level === 'olympiad' ? 'olympiad' : 'regular';
-      }
-    }
-  }
-
-  // ═══ Insert attempt ═══
-  const { data, error } = await sb.from('attempts').insert([row]).select('id');
-  if (error) {
-    console.error('[attempt/log] Insert error:', error.message, error.code);
-    return res.status(500).json({ error: 'Failed to save attempt', detail: error.message });
-  }
-
-  const attemptId = data?.[0]?.id || null;
-
-  // ═══ Audit log — record who wrote what and when ═══
+  // Fail-open: if RPC doesn't exist / errors, we allow the request but log the warning.
   try {
-    await sb.from('audit_log').insert([{
-      action: 'attempt_created',
-      user_id: user.id,
-      child_id: childId || null,
-      resource_id: attemptId,
-      resource_type: 'attempt',
-      metadata: {
-        problem_id: row.problem_id,
-        is_correct: row.is_correct,
-        mode: row.mode || null,
-        ip: req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || null,
-        user_agent: (req.headers['user-agent'] || '').slice(0, 200)
-      }
-    }]);
-  } catch (auditErr) {
-    // Audit failure must never block the attempt save
-    console.warn('[attempt/log] Audit log failed:', auditErr.message);
+    const key = `attempt_log:${userId}`;
+    const { data, error } = await sb.rpc(RL_RPC, {
+      p_key: key,
+      p_limit: RL_LIMIT,
+      p_window_seconds: RL_WINDOW_SECONDS,
+    });
+
+    if (error) {
+      return { ok: true, skipped: true, reason: `rate_limit_rpc_error:${error.code || "unknown"}` };
+    }
+
+    // Expected data shape: { ok: boolean, remaining: int, reset_in: int }
+    if (data && data.ok === false) {
+      return { ok: false, reset_in: data.reset_in ?? null };
+    }
+
+    return { ok: true, remaining: data?.remaining ?? null, reset_in: data?.reset_in ?? null };
+  } catch (e) {
+    return { ok: true, skipped: true, reason: "rate_limit_exception" };
+  }
+}
+
+async function resolveChildIdForParent(parentId, requestedChildId) {
+  // Security-first:
+  // - If requestedChildId exists but doesn't belong -> 403
+  // - If not provided and parent has exactly 1 child -> use it
+  // - If not provided and parent has 0 or >1 -> 400 (caller must specify)
+  const base = sb.from("children").select("id").eq("parent_id", parentId);
+
+  if (requestedChildId) {
+    const { data, error } = await base.eq("id", requestedChildId).maybeSingle();
+    if (error) throw error;
+    if (!data?.id) return { ok: false, status: 403, code: "CHILD_NOT_OWNED" };
+    return { ok: true, child_id: data.id };
   }
 
-  return res.status(200).json({
-    ok: true,
-    id: attemptId,
-    child_id: childId
-  });
-};
+  const { data, error } = await base.order("created_at", { ascending: false }).limit(2);
+  if (error) throw error;
+
+  if (!data || data.length === 0) return { ok: false, status: 400, code: "NO_CHILD_FOUND" };
+  if (data.length > 1) return { ok: false, status: 400, code: "MULTIPLE_CHILDREN" };
+  return { ok: true, child_id: data[0].id };
+}
+
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
+    return json(res, 405, { error: "Method Not Allowed" });
+  }
+
+  if (!SUPABASE_URL || !SERVICE_ROLE || !sb) {
+    return json(res, 500, { error: "Server misconfigured", missing: { SUPABASE_URL: !SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: !SERVICE_ROLE } });
+  }
+
+  const token = getBearerToken(req);
+  if (!token) return json(res, 401, { error: "Missing Authorization Bearer token" });
+
+  // Validate JWT and extract parent user id
+  const { data: userResp, error: userErr } = await sb.auth.getUser(token);
+  if (userErr || !userResp?.user?.id) return json(res, 401, { error: "Invalid/expired token" });
+  const parent_id = userResp.user.id;
+
+  // Optional durable rate limiting
+  const rl = await maybeRateLimit(parent_id);
+  if (rl.ok === false) {
+    res.setHeader("Retry-After", String(rl.reset_in ?? RL_WINDOW_SECONDS));
+    return json(res, 429, { error: "Rate limit exceeded", reset_in: rl.reset_in ?? null });
+  }
+
+  // Parse body (Vercel gives req.body for JSON, but be defensive)
+  let body = req.body;
+  if (typeof body === "string") {
+    try { body = JSON.parse(body); } catch { body = null; }
+  }
+  if (!body || typeof body !== "object") return json(res, 400, { error: "Invalid JSON body" });
+
+  const track = (body.track === "olympiad") ? "olympiad" : "regular";
+  const problem_id = body.problem_id || null;
+
+  if (!problem_id) return json(res, 400, { error: "problem_id is required" });
+
+  // Resolve child ownership
+  const childRes = await resolveChildIdForParent(parent_id, body.child_id || null);
+  if (!childRes.ok) {
+    if (childRes.code === "CHILD_NOT_OWNED") {
+      return json(res, 403, {
+        error: "child_id does not belong to this parent",
+        hint: "Use a child_id from public.children where parent_id = your auth user id",
+      });
+    }
+    if (childRes.code === "NO_CHILD_FOUND") {
+      return json(res, 400, {
+        error: "No child profile found for this parent",
+        hint: "Create a child record (public.children) linked to this parent_id, then retry.",
+      });
+    }
+    if (childRes.code === "MULTIPLE_CHILDREN") {
+      return json(res, 400, {
+        error: "Multiple children found; child_id is required",
+        hint: "Pick the correct child_id from public.children for this parent_id and include it in the request body.",
+      });
+    }
+    return json(res, 400, { error: "Unable to resolve child_id" });
+  }
+  const child_id = childRes.child_id;
+
+  // Fetch canonical attributes from problems table for consistency
+  const { data: p, error: pErr } = await sb
+    .from("problems")
+    .select("difficulty_tier, skill_track, intended_track, olympiad_level")
+    .eq("id", problem_id)
+    .maybeSingle();
+
+  if (pErr) return json(res, 500, { error: "Problem lookup failed", details: pErr.message });
+
+  const difficulty_tier = p?.difficulty_tier ?? null;
+  const skill_track = p?.skill_track ?? null;
+  const intended_track = p?.intended_track ?? null;
+  const mode = (track === "olympiad") ? (p?.olympiad_level ?? "OLYMPIAD") : "STANDARD";
+
+  const payload = {
+    child_id,
+    user_id: parent_id,
+    problem_id,
+    attempt_state: track === "olympiad" ? "OLYMPIAD" : "PRACTICE",
+    mode,
+    difficulty_tier,
+    skill_track,
+    // v1 compatibility fields (accept both naming styles from clients)
+    is_correct: body.is_correct ?? body.solved_correctly ?? null,
+    solved_correctly: body.solved_correctly ?? body.is_correct ?? null,
+    hints_used: asInt(body.hints_used, 0),
+    questions_asked: asInt(body.questions_asked, 0),
+    attempt_number: asInt(body.attempt_number, 1),
+    time_spent_seconds: asInt(body.time_spent_seconds, asInt(body.time_spent_sec, null)),
+    completed_at: new Date().toISOString(),
+    // Optional fields
+    session_id: body.session_id || null,
+    session_item_id: body.session_item_id || null,
+    submitted_answer: body.submitted_answer || null,
+    submitted_at: body.submitted_at || null,
+    started_at: body.started_at || null,
+  };
+
+  // Insert attempt
+  const { data: ins, error: insErr } = await sb
+    .from("attempts")
+    .insert(payload)
+    .select("id, child_id")
+    .single();
+
+  if (insErr) return json(res, 500, { error: "Insert failed", details: insErr.message });
+
+  // If caller provided a mismatching child_id, emit a warning line in logs (no PII)
+  if (body.child_id && body.child_id !== child_id) {
+    console.warn("[attempt/log] child_id mismatch, enforced ownership");
+  }
+  if (rl?.skipped) {
+    console.warn("[attempt/log] rate limit skipped:", rl.reason);
+  }
+
+  return json(res, 200, { ok: true, id: ins.id, child_id: ins.child_id });
+}
