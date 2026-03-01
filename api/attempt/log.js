@@ -1,9 +1,9 @@
 // api/attempt/log.js
-// Enterprise-safe attempt logging endpoint for LogicPals
+// Enterprise-safe attempt logging endpoint for LogicPals (Step 8H)
 // - Validates Supabase JWT (access token) from Authorization: Bearer <token>
 // - Enforces parent -> child ownership using public.children(parent_id)
-// - Inserts into public.attempts using REAL schema columns (no phantom fields like skill_track)
-// - Writes immutable audit event into public.audit_log (if table exists)
+// - Uses atomic SECURITY DEFINER RPC: public.rpc_attempt_log_atomic(...) (NO direct writes)
+// - Best-effort immutable audit event into public.audit_log (if table exists)
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -53,21 +53,6 @@ async function getUserId(supabase, token) {
   return null;
 }
 
-async function computeNextAttemptNumber(supabase, childId, problemId) {
-  const { data, error } = await supabase
-    .from('attempts')
-    .select('attempt_number')
-    .eq('child_id', childId)
-    .eq('problem_id', problemId)
-    .order('attempt_number', { ascending: false })
-    .limit(1);
-
-  if (error) return 1;
-  const last = data?.[0]?.attempt_number;
-  const n = Number(last);
-  return Number.isFinite(n) ? n + 1 : 1;
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'method_not_allowed' });
 
@@ -84,7 +69,7 @@ export default async function handler(req, res) {
   const token = getBearerToken(req);
   if (!token) return json(res, 401, { error: 'missing_bearer_token' });
 
-  // IMPORTANT: Use the USER's JWT as Authorization so RLS applies correctly.
+  // IMPORTANT: Use the USER's JWT as Authorization so RLS applies correctly for the ownership check.
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
@@ -93,7 +78,7 @@ export default async function handler(req, res) {
   if (!userId) {
     return json(res, 401, {
       error: 'invalid_or_expired_token',
-      hint: 'Your Authorization Bearer token must be the Supabase access_token (JWT) for the signed-in user.',
+      hint: 'Authorization Bearer token must be the Supabase access_token (JWT) for the signed-in user.',
     });
   }
 
@@ -129,87 +114,52 @@ export default async function handler(req, res) {
   }
   if (childRow.parent_id !== userId) {
     return json(res, 403, {
-      error: 'child_id does not belong to this parent',
-      hint: 'Use the access_token (JWT) for the SAME parent user as children.parent_id, then pick a child id where children.parent_id = auth user id.',
+      error: 'child_not_owned',
+      hint: 'Use the access_token (JWT) for the SAME parent user as children.parent_id.',
     });
   }
 
-  // Map payload -> real attempts schema
-  const solvedCorrectly = toBool(body.solved_correctly ?? body.is_correct, false);
+  // Map payload -> RPC params (atomic write path)
+  const solvedCorrectly = toBool(body.solved_correctly ?? body.is_correct, null);
 
-  // Use provided attempt_number if valid, else compute next.
-  let attemptNumber = toInt(body.attempt_number, null);
-  if (!attemptNumber || attemptNumber < 1) {
-    attemptNumber = await computeNextAttemptNumber(supabase, childId, problemId);
-  }
+  const rpcArgs = {
+    p_child_id: childId,
+    p_problem_id: problemId,
 
-// Enforce unique "active attempt" constraint (idx_attempts_active):
-// If you have a partial unique index like (child_id, problem_id) WHERE active=true,
-// we must deactivate any previous active row before inserting a new one.
-const { error: deactivateErr } = await supabase
-  .from('attempts')
-  .update({ active: false })
-  .eq('child_id', childId)
-  .eq('problem_id', problemId)
-  .eq('active', true);
+    // We use "mode" to store track-like usage in your attempts schema
+    p_mode: body.mode ?? track,
 
-if (deactivateErr) {
-  return json(res, 403, {
-    error: 'deactivate_failed',
-    detail: deactivateErr.message,
-    hint: 'Ensure RLS allows this user to update attempts rows for their own child_id, or move this into a SECURITY DEFINER RPC for atomicity.',
-  });
-}
+    p_difficulty_tier: body.difficulty_tier ?? null,
+    p_attempt_state: body.attempt_state ?? 'SUBMITTED',
 
-  const row = {
-    child_id: childId,
-    problem_id: problemId,
+    // Keep both fields supported by your table
+    p_solved_correctly: solvedCorrectly,
+    p_is_correct: solvedCorrectly,
 
-    // REQUIRED in your schema
-    attempt_number: attemptNumber,
+    p_hints_used: toInt(body.hints_used, 0),
+    p_questions_asked: toInt(body.questions_asked, 0),
 
-    // Keep both fields for compatibility (your table has BOTH)
-    solved_correctly: solvedCorrectly,
-    is_correct: solvedCorrectly,
+    p_time_spent_seconds: toInt(body.time_spent_sec ?? body.time_spent_seconds, null),
+    p_time_to_first_input_seconds: toInt(body.time_to_first_input_seconds, null),
 
-    // Optional analytics fields (all exist in your schema)
-    hints_used: toInt(body.hints_used, 0),
-    questions_asked: toInt(body.questions_asked, 0),
-    time_spent_seconds: toInt(body.time_spent_sec ?? body.time_spent_seconds, null),
-    time_to_first_input_seconds: toInt(body.time_to_first_input_seconds, null),
-
-    submitted_answer: body.submitted_answer ?? null,
-    ai_conversation: body.ai_conversation ?? null,
-
-    mode: body.mode ?? track,               // e.g. 'regular' or 'olympiad'
-    difficulty_tier: body.difficulty_tier ?? null,
-    attempt_state: body.attempt_state ?? 'SUBMITTED',
-
-    session_id: body.session_id ?? null,
-    session_item_id: body.session_item_id ?? null,
-
-    started_at: body.started_at ?? null,
-    submitted_at: body.submitted_at ?? null,
-    completed_at: body.completed_at ?? null,
-
-    user_id: userId,
-    active: true,
+    p_submitted_answer: body.submitted_answer ?? null,
+    p_session_id: body.session_id ?? null,
+    p_session_item_id: body.session_item_id ?? null,
   };
 
-  // Insert attempt
-  const { data: inserted, error: insErr } = await supabase
-    .from('attempts')
-    .insert(row)
-    .select('id, created_at, attempt_number')
-    .maybeSingle();
+  // Atomic attempt logging (deactivate prior active + insert new active)
+  const { data: rpcData, error: rpcErr } = await supabase.rpc('rpc_attempt_log_atomic', rpcArgs);
 
-  if (insErr) {
-    return json(res, 500, {
-      error: 'insert_failed',
-      detail: insErr.message,
-      hint: 'Verify attempts table columns match row keys; if you recently changed schema, redeploy Vercel.',
+  if (rpcErr) {
+    return json(res, 400, {
+      error: 'rpc_failed',
+      detail: rpcErr.message,
+      hint: 'Ensure public.rpc_attempt_log_atomic(...) exists and is granted to authenticated.',
     });
   }
+
+  const attemptId = rpcData?.[0]?.attempt_id ?? null;
+  const attemptNumber = rpcData?.[0]?.attempt_number ?? null;
 
   // Best-effort immutable audit log
   try {
@@ -217,12 +167,12 @@ if (deactivateErr) {
       actor_user_id: userId,
       action: 'attempt_logged',
       entity: 'attempts',
-      entity_id: inserted?.id ?? null,
+      entity_id: attemptId,
       details: {
         track,
         child_id: childId,
         problem_id: problemId,
-        attempt_number: inserted?.attempt_number ?? attemptNumber,
+        attempt_number: attemptNumber,
       },
     });
   } catch (_) {
@@ -231,8 +181,7 @@ if (deactivateErr) {
 
   return json(res, 200, {
     ok: true,
-    attempt_id: inserted?.id,
-    attempt_number: inserted?.attempt_number ?? attemptNumber,
-    created_at: inserted?.created_at,
+    attempt_id: attemptId,
+    attempt_number: attemptNumber,
   });
 }
