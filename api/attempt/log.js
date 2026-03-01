@@ -167,14 +167,20 @@ export default async function handler(req, res) {
   const intended_track = p?.intended_track ?? null;
   const mode = (track === "olympiad") ? (p?.olympiad_level ?? "OLYMPIAD") : "STANDARD";
 
-  const payload = {
+  
+  // Optional JSONB blob for debugging / analytics (kept small; no PII)
+  const clientAiConv = (body.ai_conversation && typeof body.ai_conversation === "object") ? body.ai_conversation : null;
+  const ai_conversation = clientAiConv
+    ? { ...clientAiConv, meta: { ...(clientAiConv.meta || {}), skill_track, intended_track, olympiad_level, mode, difficulty_tier, track } }
+    : { meta: { skill_track, intended_track, olympiad_level, mode, difficulty_tier, track } };
+
+const payload = {
     child_id,
     user_id: parent_id,
     problem_id,
     attempt_state: track === "olympiad" ? "OLYMPIAD" : "PRACTICE",
     mode,
     difficulty_tier,
-    skill_track,
     // v1 compatibility fields (accept both naming styles from clients)
     is_correct: body.is_correct ?? body.solved_correctly ?? null,
     solved_correctly: body.solved_correctly ?? body.is_correct ?? null,
@@ -183,6 +189,7 @@ export default async function handler(req, res) {
     attempt_number: asInt(body.attempt_number, 1),
     time_spent_seconds: asInt(body.time_spent_seconds, asInt(body.time_spent_sec, null)),
     completed_at: new Date().toISOString(),
+    ai_conversation,
     // Optional fields
     session_id: body.session_id || null,
     session_item_id: body.session_item_id || null,
