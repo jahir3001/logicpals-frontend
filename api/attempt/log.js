@@ -124,6 +124,20 @@ export default async function handler(req, res) {
     });
   }
 
+	  // ✅ Rate limit guard (20 requests / 60 seconds per parent per route)
+  const { data: allow, error: rlErr } = await supabase.rpc('rpc_rate_limit_check', {
+    p_route: 'attempt_log',
+    p_limit: 20,
+    p_window_seconds: 60,
+  });
+
+  if (rlErr) {
+    return json(res, 500, { error: 'rate_limit_failed', detail: rlErr.message });
+  }
+  if (allow === false) {
+    return json(res, 429, { error: 'rate_limited', retry_after_seconds: 60 });
+  }
+
   // ✅ Rate limit guard (enterprise durable: DB-backed)
   // Default: 20 requests per 60 seconds per parent for this route
   const { data: allow, error: rlErr } = await supabase.rpc('rpc_rate_limit_check', {
