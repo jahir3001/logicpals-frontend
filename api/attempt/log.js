@@ -1,101 +1,84 @@
 // api/attempt/log.js
-// Enterprise-safe attempt logging endpoint for LogicPals (Step 8H)
-// - Validates Supabase JWT (access token) from Authorization: Bearer <token>
-// - Enforces parent -> child ownership using public.children(parent_id)
-// - Rate limit guard via public.rpc_rate_limit_check(...)
-// - Uses atomic SECURITY DEFINER RPC: public.rpc_attempt_log_atomic(...) (NO direct writes)
-// - Returns explicit 429 payload + best-practice headers
+// Enterprise attempt logging (LogicPals)
+// - Auth: validates Supabase access_token (JWT)
+// - Ownership: parent -> child enforcement (children.parent_id = auth.uid())
+// - Rate limit: DB-backed (rpc_rate_limit_check)
+// - Atomic write: rpc_attempt_log_atomic (deactivate previous active + insert new active)
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
-function sendJson(res, status, obj, headers = {}) {
+function sendJson(res, status, payload, headers = {}) {
   res.statusCode = status;
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  // security + caching hygiene
-  res.setHeader('Cache-Control', 'no-store');
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-
+  res.setHeader("Content-Type", "application/json");
   for (const [k, v] of Object.entries(headers)) res.setHeader(k, String(v));
-  res.end(JSON.stringify(obj));
+  res.end(JSON.stringify(payload));
 }
 
-function getBearerToken(req) {
-  const h = req.headers?.authorization || req.headers?.Authorization || '';
+function getBearer(req) {
+  const h = req.headers?.authorization || req.headers?.Authorization || "";
   const m = /^Bearer\s+(.+)$/.exec(String(h).trim());
   return m ? m[1] : null;
 }
 
 function toInt(v, def = null) {
-  if (v === undefined || v === null || v === '') return def;
+  if (v === undefined || v === null || v === "") return def;
   const n = Number(v);
   return Number.isFinite(n) ? Math.trunc(n) : def;
 }
 
 function toBool(v, def = null) {
   if (v === undefined || v === null) return def;
-  if (typeof v === 'boolean') return v;
-  if (typeof v === 'number') return v !== 0;
+  if (typeof v === "boolean") return v;
+  if (typeof v === "number") return v !== 0;
   const s = String(v).toLowerCase().trim();
-  if (['true', '1', 'yes', 'y'].includes(s)) return true;
-  if (['false', '0', 'no', 'n'].includes(s)) return false;
+  if (["true", "1", "yes", "y"].includes(s)) return true;
+  if (["false", "0", "no", "n"].includes(s)) return false;
   return def;
 }
 
-function isUuid(x) {
-  return typeof x === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(x);
-}
-
-async function getUserId(supabase, token) {
-  // supabase-js versions vary; support both signatures
-  try {
-    const r = await supabase.auth.getUser(token);
-    if (r?.data?.user?.id) return r.data.user.id;
-  } catch (_) {}
-  try {
-    const r2 = await supabase.auth.getUser();
-    if (r2?.data?.user?.id) return r2.data.user.id;
-  } catch (_) {}
-  return null;
+async function getAuthedUserId(supabase, token) {
+  // v2 supports getUser() with the JWT from global headers, but we also pass token for compatibility
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data?.user?.id) return null;
+  return data.user.id;
 }
 
 export default async function handler(req, res) {
-  // CORS (safe default for Vercel functions)
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'OPTIONS') return sendJson(res, 200, { ok: true });
-  if (req.method !== 'POST') return sendJson(res, 405, { error: 'method_not_allowed' });
+  if (req.method !== "POST") {
+    return sendJson(res, 405, { error: "method_not_allowed" });
+  }
 
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     return sendJson(res, 500, {
-      error: 'missing_supabase_config',
-      hint: 'Set SUPABASE_URL and SUPABASE_ANON_KEY in Vercel Environment Variables.',
+      error: "missing_supabase_config",
+      hint: "Set SUPABASE_URL and SUPABASE_ANON_KEY in Vercel Environment Variables.",
     });
   }
 
-  const token = getBearerToken(req);
-  if (!token) return sendJson(res, 401, { error: 'missing_bearer_token' });
+  const token = getBearer(req);
+  if (!token) {
+    return sendJson(res, 401, { error: "missing_bearer_token" });
+  }
 
-  // Use USER JWT so RLS applies for ownership checks
+  // RLS must apply as the signed-in user
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
 
-  const userId = await getUserId(supabase, token);
+  const userId = await getAuthedUserId(supabase, token);
   if (!userId) {
     return sendJson(res, 401, {
-      error: 'invalid_or_expired_token',
-      hint: 'Authorization Bearer token must be the Supabase access_token (JWT) for the signed-in user.',
+      error: "invalid_or_expired_token",
+      hint: "Use a fresh Supabase access_token (JWT) from the signed-in parent user. Tokens expire—re-login and copy a new one.",
     });
   }
 
-  // Parse body safely
+  // Parse body
   let body = req.body;
-  if (typeof body === 'string') {
+  if (typeof body === "string") {
     try {
       body = JSON.parse(body);
     } catch {
@@ -104,110 +87,126 @@ export default async function handler(req, res) {
   }
   body = body || {};
 
-  const track = String(body.track || '').toLowerCase().trim();
+  const track = String(body.track || "").toLowerCase().trim();
   const childId = body.child_id || body.childId;
   const problemId = body.problem_id || body.problemId;
 
-  if (!track || !['regular', 'olympiad'].includes(track)) {
-    return sendJson(res, 400, { error: 'invalid_track', hint: 'track must be "regular" or "olympiad".' });
+  if (!track || !["regular", "olympiad"].includes(track)) {
+    return sendJson(res, 400, { error: "invalid_track", hint: 'track must be "regular" or "olympiad"' });
   }
   if (!childId || !problemId) {
-    return sendJson(res, 400, { error: 'missing_ids', hint: 'Provide child_id and problem_id (UUIDs).' });
-  }
-  if (!isUuid(childId) || !isUuid(problemId)) {
-    return sendJson(res, 400, { error: 'invalid_uuid', hint: 'child_id and problem_id must be valid UUIDs.' });
+    return sendJson(res, 400, { error: "missing_ids", hint: "Provide child_id and problem_id (UUIDs)." });
   }
 
-  // Ownership check: child must belong to current parent
+  // Ownership check (parent -> child)
+  // NOTE: If you later move this check inside rpc_attempt_log_atomic, you can remove this block.
   const { data: childRow, error: childErr } = await supabase
-    .from('children')
-    .select('id, parent_id')
-    .eq('id', childId)
+    .from("children")
+    .select("id,parent_id")
+    .eq("id", childId)
     .maybeSingle();
 
-  if (childErr) return sendJson(res, 500, { error: 'child_lookup_failed', detail: childErr.message });
-  if (!childRow) return sendJson(res, 404, { error: 'child_not_found' });
-
+  if (childErr) {
+    return sendJson(res, 500, { error: "child_lookup_failed", detail: childErr.message });
+  }
+  if (!childRow) {
+    return sendJson(res, 404, { error: "child_not_found" });
+  }
   if (childRow.parent_id !== userId) {
     return sendJson(res, 403, {
-      error: 'child_not_owned',
-      hint: 'Use the access_token (JWT) for the SAME parent user as children.parent_id.',
+      error: "forbidden_child",
+      hint: "This child_id does not belong to the authenticated parent (auth.uid).",
     });
   }
 
+  // =========================
   // Rate limit (DB-backed)
-  // Tune these to your product policy:
-  const LIMIT = 20;
-  const WINDOW_SECONDS = 60;
-  const ROUTE = 'attempt_log';
+  // =========================
+  // Tune these as you want (enterprise defaults)
+  const LIMIT = toInt(process.env.ATTEMPT_LOG_RATE_LIMIT, 25) ?? 25; // requests
+  const WINDOW_SECONDS = toInt(process.env.ATTEMPT_LOG_RATE_WINDOW_SECONDS, 60) ?? 60;
 
-  const { data: allow, error: rlErr } = await supabase.rpc('rpc_rate_limit_check', {
-    p_route: ROUTE,
+  const { data: allowed, error: rlErr } = await supabase.rpc("rpc_rate_limit_check", {
+    p_route: "attempt_log",
     p_limit: LIMIT,
     p_window_seconds: WINDOW_SECONDS,
   });
 
   if (rlErr) {
-    return sendJson(res, 500, { error: 'rate_limit_failed', detail: rlErr.message });
+    return sendJson(res, 500, { error: "rate_limit_rpc_failed", detail: rlErr.message });
   }
 
-  if (allow === false) {
-    // Best-practice: Retry-After header + explicit body
+  if (allowed === false) {
+    // Best practice: explicit payload + Retry-After header
+    const retryAfter = WINDOW_SECONDS; // simple + safe
     return sendJson(
       res,
       429,
       {
-        error: 'rate_limited',
-        route: ROUTE,
+        error: "rate_limited",
+        route: "attempt_log",
         limit: LIMIT,
         window_seconds: WINDOW_SECONDS,
-        retry_after_seconds: WINDOW_SECONDS,
+        retry_after_seconds: retryAfter,
       },
       {
-        'Retry-After': WINDOW_SECONDS,
-        'X-RateLimit-Limit': LIMIT,
+        "Retry-After": retryAfter,
+        "X-RateLimit-Limit": LIMIT,
+        "X-RateLimit-Window": WINDOW_SECONDS,
       }
     );
   }
 
-  // Map payload -> RPC params (atomic write path)
-  const solvedCorrectly = toBool(body.solved_correctly ?? body.is_correct, null);
+  // =========================
+  // Atomic attempt log RPC
+  // =========================
+  const solvedCorrectly = toBool(body.solved_correctly ?? body.is_correct, false);
+  const attemptState = body.attempt_state ?? "SUBMITTED";
+  const mode = body.mode ?? track;
+  const difficultyTier = body.difficulty_tier ?? null;
 
-  const rpcArgs = {
+  // Optional analytics fields
+  const hintsUsed = toInt(body.hints_used, 0) ?? 0;
+  const questionsAsked = toInt(body.questions_asked, 0) ?? 0;
+  const timeSpentSeconds = toInt(body.time_spent_sec ?? body.time_spent_seconds, null);
+  const timeToFirstInputSeconds = toInt(body.time_to_first_input_seconds, null);
+
+  const rpcPayload = {
+    // Must match your function signature (p_* params)
     p_child_id: childId,
     p_problem_id: problemId,
-
-    // keep these aligned with your attempts schema
-    p_mode: body.mode ?? track,
-    p_difficulty_tier: body.difficulty_tier ?? null,
-    p_attempt_state: body.attempt_state ?? 'SUBMITTED',
+    p_mode: mode,
+    p_difficulty_tier: difficultyTier,
+    p_attempt_state: attemptState,
     p_solved_correctly: solvedCorrectly,
     p_is_correct: solvedCorrectly,
-    p_hints_used: toInt(body.hints_used, 0),
-    p_questions_asked: toInt(body.questions_asked, 0),
-    p_time_spent_seconds: toInt(body.time_spent_sec ?? body.time_spent_seconds, null),
-    p_time_to_first_input_seconds: toInt(body.time_to_first_input_seconds, null),
-    p_submitted_answer: body.submitted_answer ?? null,
+    p_hints_used: hintsUsed,
+    p_questions_asked: questionsAsked,
+
+    // If your RPC signature includes these, keep them; otherwise your function should have defaults.
+    p_score_delta: toInt(body.score_delta, null),
     p_session_id: body.session_id ?? null,
     p_session_item_id: body.session_item_id ?? null,
-
-    // optional
     p_ai_conversation: body.ai_conversation ?? null,
+    p_submitted_answer: body.submitted_answer ?? null,
+    p_time_spent_seconds: timeSpentSeconds,
+    p_time_to_first_input_seconds: timeToFirstInputSeconds,
   };
 
-  const { data: rpcData, error: rpcErr } = await supabase.rpc('rpc_attempt_log_atomic', rpcArgs);
+  const { data: rpcResult, error: rpcErr } = await supabase.rpc("rpc_attempt_log_atomic", rpcPayload);
 
   if (rpcErr) {
-    // This is where "schema cache" / signature mismatch shows up
     return sendJson(res, 400, {
-      error: 'rpc_failed',
+      error: "rpc_failed",
       detail: rpcErr.message,
-      hint: 'If this mentions "schema cache", reload PostgREST schema or restart Supabase API. Also re-check rpc_attempt_log_atomic signature and GRANT.',
+      hint:
+        "If this says the function cannot be found, wait 1–3 minutes after DB changes (schema cache), then retry. Also confirm your function parameters match the payload keys.",
     });
   }
 
-  const attemptId = rpcData?.[0]?.attempt_id ?? null;
-  const attemptNumber = rpcData?.[0]?.attempt_number ?? null;
+  // Expecting rpcResult like: { attempt_id, attempt_number } OR a row
+  const attemptId = rpcResult?.attempt_id ?? rpcResult?.id ?? null;
+  const attemptNumber = rpcResult?.attempt_number ?? null;
 
   return sendJson(res, 200, {
     ok: true,
