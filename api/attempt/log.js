@@ -1,112 +1,214 @@
 // api/attempt/log.js
+// LogicPals — Enterprise Attempt Logging
+// - Requires Authorization: Bearer <Supabase access_token JWT>
+// - Enforces parent -> child ownership via public.children
+// - DB-backed rate limit via public.rpc_rate_limit_check(route, limit, window_seconds)
+// - Atomic attempt log via public.rpc_attempt_log_atomic(...)
+// - Returns explicit 429 payload + best-practice headers
+
 import { createClient } from "@supabase/supabase-js";
 
-function json(res, status, body, extraHeaders = {}) {
-  const headers = {
-    "Content-Type": "application/json; charset=utf-8",
-    // CORS (tighten origin later if you want)
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Cache-Control": "no-store",
-    ...extraHeaders,
-  };
-  res.status(status).setHeader("Content-Type", headers["Content-Type"]);
-  Object.entries(headers).forEach(([k, v]) => res.setHeader(k, v));
-  res.status(status).send(JSON.stringify(body));
+function sendJson(res, status, obj, extraHeaders = {}) {
+  res.statusCode = status;
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+  for (const [k, v] of Object.entries(extraHeaders)) res.setHeader(k, v);
+  res.end(JSON.stringify(obj));
 }
 
-function getBearer(req) {
-  const h = req.headers.authorization || req.headers.Authorization || "";
-  const m = String(h).match(/^Bearer\s+(.+)$/i);
+function getBearerToken(req) {
+  const h = req.headers?.authorization || req.headers?.Authorization || "";
+  const m = /^Bearer\s+(.+)$/.exec(String(h).trim());
   return m ? m[1] : null;
 }
 
-function toInt(v, fallback = 0) {
-  const n = Number(v);
-  return Number.isFinite(n) ? Math.trunc(n) : fallback;
+function isUuid(x) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    String(x || "")
+  );
 }
 
-function toBool(v, fallback = false) {
+function toInt(v, def = null) {
+  if (v === undefined || v === null || v === "") return def;
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.trunc(n) : def;
+}
+
+function toBool(v, def = null) {
+  if (v === undefined || v === null) return def;
   if (typeof v === "boolean") return v;
-  if (v === "true") return true;
-  if (v === "false") return false;
-  return fallback;
+  if (typeof v === "number") return v !== 0;
+  const s = String(v).toLowerCase().trim();
+  if (["true", "1", "yes", "y"].includes(s)) return true;
+  if (["false", "0", "no", "n"].includes(s)) return false;
+  return def;
+}
+
+async function getAuthUserId(supabase, jwt) {
+  // supabase-js supports getUser(jwt) on newer versions
+  try {
+    const r = await supabase.auth.getUser(jwt);
+    return r?.data?.user?.id || null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeBody(req) {
+  let body = req.body;
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      body = {};
+    }
+  }
+  return body || {};
+}
+
+function mapPostgrestError(err) {
+  const msg = err?.message || "unknown_error";
+  const code = err?.code || err?.details || "";
+
+  // Common Postgres / PostgREST cases we saw in your screenshots:
+  // 22P02 = invalid input syntax (uuid etc)
+  // 23503 = foreign key violation (problem_id not found etc)
+  // 42501 = insufficient_privilege (GRANT missing)
+  if (String(code).includes("22P02") || msg.toLowerCase().includes("invalid input syntax")) {
+    return { http: 400, error: "invalid_input", detail: msg, hint: "Check UUIDs in child_id / problem_id." };
+  }
+  if (String(code).includes("23503") || msg.toLowerCase().includes("foreign key")) {
+    return {
+      http: 400,
+      error: "fk_violation",
+      detail: msg,
+      hint: "Your problem_id must exist in public.problems (you previously accidentally sent child_id as problem_id).",
+    };
+  }
+  if (String(code).includes("42501") || msg.toLowerCase().includes("permission")) {
+    return {
+      http: 403,
+      error: "permission_denied",
+      detail: msg,
+      hint: "Check GRANT EXECUTE on RPC + RLS policies for authenticated users.",
+    };
+  }
+  return { http: 500, error: "rpc_failed", detail: msg };
+}
+
+async function callAttemptRpcWithFallback(supabase, payloadV2, payloadLegacy) {
+  // Try “minimal” / current signature first
+  let r = await supabase.rpc("rpc_attempt_log_atomic", payloadV2);
+  if (!r.error) return r;
+
+  const msg = String(r.error?.message || "");
+  const schemaCache = msg.toLowerCase().includes("schema cache") || msg.toLowerCase().includes("could not find the function");
+
+  // If signature mismatch, retry with legacy payload
+  if (schemaCache && payloadLegacy) {
+    const r2 = await supabase.rpc("rpc_attempt_log_atomic", payloadLegacy);
+    return r2;
+  }
+  return r;
 }
 
 export default async function handler(req, res) {
-  if (req.method === "OPTIONS") return json(res, 204, {});
-  if (req.method !== "POST") return json(res, 405, { error: "method_not_allowed" });
+  if (req.method === "OPTIONS") return sendJson(res, 204, {}, { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type, Authorization", "Access-Control-Allow-Methods": "POST, OPTIONS" });
+  if (req.method !== "POST") return sendJson(res, 405, { error: "method_not_allowed" });
 
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    return json(res, 500, { error: "missing_supabase_config" });
-  }
-
-  const token = getBearer(req);
-  if (!token) return json(res, 401, { error: "missing_bearer_token" });
-
-  // Auth-bound Supabase client (auth.uid() works inside RPC)
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
-
-  // 1) Validate JWT + get current user
-  const { data: userData, error: userErr } = await supabase.auth.getUser(token);
-  if (userErr || !userData?.user?.id) {
-    return json(res, 401, {
-      error: "invalid_or_expired_token",
-      hint: "Use a fresh Supabase access_token (JWT) for the signed-in user.",
+    return sendJson(res, 500, {
+      error: "missing_supabase_config",
+      hint: "Set SUPABASE_URL and SUPABASE_ANON_KEY in Vercel Environment Variables.",
     });
   }
-  const parentUserId = userData.user.id;
 
-  // 2) Parse input
-  let body = {};
-  try {
-    body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body || {});
-  } catch {
-    return json(res, 400, { error: "invalid_json" });
+  const jwt = getBearerToken(req);
+  if (!jwt) return sendJson(res, 401, { error: "missing_bearer_token" });
+
+  // RLS must apply => use user JWT on every request
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+      },
+    },
+  });
+
+  const userId = await getAuthUserId(supabase, jwt);
+  if (!userId) {
+    return sendJson(res, 401, {
+      error: "invalid_or_expired_token",
+      hint: "Use the Supabase access_token (JWT) from a *fresh* signed-in session. Your $ACCESS_TOKEN often expires.",
+    });
   }
 
-  const track = String(body.track || "regular"); // "regular" | "olympiad"
-  const childId = body.child_id;
-  const problemId = body.problem_id;
+  const body = normalizeBody(req);
 
-  if (!childId || !problemId) {
-    return json(res, 400, { error: "missing_required_fields", required: ["child_id", "problem_id"] });
+  const track = String(body.track || "").toLowerCase().trim();
+  const childId = body.child_id ?? body.childId;
+  const problemId = body.problem_id ?? body.problemId;
+
+  if (!["regular", "olympiad"].includes(track)) {
+    return sendJson(res, 400, { error: "invalid_track", hint: 'track must be "regular" or "olympiad"' });
+  }
+  if (!isUuid(childId) || !isUuid(problemId)) {
+    return sendJson(res, 400, {
+      error: "invalid_ids",
+      hint: "child_id and problem_id must be UUIDs (do not pass '...' or placeholders).",
+    });
   }
 
-  // 3) Rate limit (DB-backed, keyed by auth.uid + route + window)
-  // Enterprise defaults (tune later):
+  // 1) Enforce parent -> child ownership (this also catches your “child_not_found” case)
+  const { data: childRow, error: childErr } = await supabase
+    .from("children")
+    .select("id,parent_id")
+    .eq("id", childId)
+    .maybeSingle();
+
+  if (childErr) return sendJson(res, 500, { error: "child_lookup_failed", detail: childErr.message });
+  if (!childRow) return sendJson(res, 404, { error: "child_not_found", hint: "That child_id does not exist in public.children." });
+  if (childRow.parent_id !== userId) {
+    return sendJson(res, 403, {
+      error: "child_not_owned",
+      hint: "Use the parent user’s access_token that matches children.parent_id.",
+    });
+  }
+
+  // 2) DB-backed rate limit (route-scoped)
+  // Tune these numbers as you like:
   const ROUTE = "attempt_log";
-  const LIMIT = 30; // requests
-  const WINDOW_SECONDS = 60; // per minute
+  const LIMIT = 25;          // max requests per window
+  const WINDOW_SECONDS = 60; // 1 minute window
 
-  const { data: allowed, error: rlErr } = await supabase.rpc("rpc_rate_limit_check", {
+  const rl = await supabase.rpc("rpc_rate_limit_check", {
     p_route: ROUTE,
     p_limit: LIMIT,
     p_window_seconds: WINDOW_SECONDS,
   });
 
-  if (rlErr) {
-    // Don’t block learning if limiter has an issue; but do surface it
-    return json(res, 500, { error: "rate_limit_check_failed", detail: rlErr.message });
+  if (rl.error) {
+    // If rate limit RPC not ready / permissions missing
+    const mapped = mapPostgrestError(rl.error);
+    return sendJson(res, mapped.http, { error: "rate_limit_rpc_failed", detail: mapped.detail, hint: mapped.hint });
   }
 
-  if (allowed === false) {
-    // Best practice headers for clients
-    return json(
+  const allowed = !!rl.data;
+  if (!allowed) {
+    // ✅ Enterprise: explicit payload + headers
+    return sendJson(
       res,
       429,
       {
+        ok: false,
         error: "rate_limited",
         route: ROUTE,
         limit: LIMIT,
         window_seconds: WINDOW_SECONDS,
-        hint: "Slow down and retry after the window resets.",
+        hint: "Too many requests. Slow down and retry.",
       },
       {
         "Retry-After": String(WINDOW_SECONDS),
@@ -116,52 +218,89 @@ export default async function handler(req, res) {
     );
   }
 
-  // 4) Parent -> child ownership check (prevents “child not found” confusion)
-  // This requires an RLS policy that lets a parent read their own child row.
-  const { data: childRow, error: childErr } = await supabase
-    .from("children")
-    .select("id, parent_id")
-    .eq("id", childId)
-    .maybeSingle();
+  // 3) Prepare fields for RPC
+  const solvedCorrectly = toBool(body.solved_correctly ?? body.is_correct, false);
 
-  if (childErr) return json(res, 500, { error: "child_lookup_failed", detail: childErr.message });
-  if (!childRow) return json(res, 404, { error: "child_not_found" });
-  if (childRow.parent_id !== parentUserId) {
-    return json(res, 403, { error: "forbidden_child", hint: "child_id does not belong to this user" });
-  }
+  const mode = String(body.mode ?? track);
+  const difficultyTier = body.difficulty_tier ?? null;
+  const attemptState = body.attempt_state ?? "SUBMITTED";
 
-  // 5) Call the atomic RPC (THIS is where your 400 happened when signature mismatched)
-  // Adjust keys to match the exact signature from the SQL in Step 1.
-  const rpcPayload = {
+  const hintsUsed = toInt(body.hints_used, 0);
+  const questionsAsked = toInt(body.questions_asked, 0);
+
+  const timeSpentSeconds = toInt(body.time_spent_sec ?? body.time_spent_seconds, null);
+  const timeToFirstInputSeconds = toInt(body.time_to_first_input_seconds, null);
+
+  const submittedAnswer = body.submitted_answer ?? null;
+  const aiConversation = body.ai_conversation ?? null;
+
+  const sessionId = body.session_id ?? null;
+  const sessionItemId = body.session_item_id ?? null;
+
+  // 4) RPC payloads
+  // V2 (minimal/current signature — matches your screenshot start)
+  const payloadV2 = {
     p_child_id: childId,
     p_problem_id: problemId,
-    p_mode: track,
-    p_difficulty_tier: String(body.difficulty_tier || "standard"),
-    p_attempt_state: String(body.attempt_state || "SUBMITTED"),
-    p_solved_correctly: toBool(body.solved_correctly, false),
-    p_is_correct: toBool(body.solved_correctly, false), // keep consistent
-    p_hints_used: toInt(body.hints_used, 0),
-    p_questions_asked: toInt(body.questions_asked, 0),
-    p_time_spent_seconds: toInt(body.time_spent_sec, 0),
-    p_time_to_first_input_seconds: toInt(body.time_to_first_input_sec, 0),
-    // If your function includes these, add them:
-    // p_submitted_answer: body.submitted_answer ?? null,
+    p_mode: mode,
+    p_difficulty_tier: difficultyTier,
+    p_attempt_state: attemptState,
+    p_solved_correctly: solvedCorrectly,
+    p_is_correct: solvedCorrectly,
+    p_hints_used: hintsUsed,
+    // the rest may or may not exist in signature; if not, legacy fallback will handle
+    p_questions_asked: questionsAsked,
+    p_time_spent_seconds: timeSpentSeconds,
+    p_time_to_first_input_seconds: timeToFirstInputSeconds,
+    p_submitted_answer: submittedAnswer,
+    p_ai_conversation: aiConversation,
+    p_session_id: sessionId,
+    p_session_item_id: sessionItemId,
   };
 
-  const { data: rpcOut, error: rpcErr } = await supabase.rpc("rpc_attempt_log_atomic", rpcPayload);
+  // Legacy payload (covers your earlier “long signature” errors)
+  const payloadLegacy = {
+    // keep same core
+    p_child_id: childId,
+    p_problem_id: problemId,
+    p_mode: mode,
+    p_difficulty_tier: difficultyTier,
+    p_attempt_state: attemptState,
+    p_solved_correctly: solvedCorrectly,
+    p_is_correct: solvedCorrectly,
+    p_hints_used: hintsUsed,
+    p_questions_asked: questionsAsked,
+    p_time_spent_seconds: timeSpentSeconds,
+    p_time_to_first_input_seconds: timeToFirstInputSeconds,
+    p_submitted_answer: submittedAnswer,
+    p_ai_conversation: aiConversation,
+    p_session_id: sessionId,
+    p_session_item_id: sessionItemId,
 
-  if (rpcErr) {
-    return json(res, 400, {
-      error: "rpc_failed",
-      detail: rpcErr.message,
+    // extra older fields (safe to include only on legacy retry)
+    p_attempt_number: toInt(body.attempt_number, null),
+    p_score_delta: body.score_delta ?? null,
+  };
+
+  // 5) Call atomic RPC with fallback
+  const rpcRes = await callAttemptRpcWithFallback(supabase, payloadV2, payloadLegacy);
+
+  if (rpcRes.error) {
+    const mapped = mapPostgrestError(rpcRes.error);
+    return sendJson(res, mapped.http, {
+      error: mapped.error,
+      detail: mapped.detail,
       hint:
-        "If this mentions 'schema cache' or 'could not find function', your log.js payload keys do NOT match the function signature. Re-run the args SQL and update rpcPayload.",
+        mapped.hint ||
+        "If this mentions 'schema cache', your log.js args do not match the current rpc_attempt_log_atomic signature. Keep this file deployed and re-run notify pgrst reload schema.",
     });
   }
 
-  // Some RPCs return a row, some return scalar. Normalize response.
-  const attempt_id = rpcOut?.attempt_id || rpcOut?.id || null;
-  const attempt_number = rpcOut?.attempt_number ?? null;
-
-  return json(res, 200, { ok: true, attempt_id, attempt_number });
+  // Expected: { attempt_id, attempt_number } OR similar
+  const out = rpcRes.data || {};
+  return sendJson(res, 200, {
+    ok: true,
+    attempt_id: out.attempt_id ?? out.id ?? null,
+    attempt_number: out.attempt_number ?? null,
+  });
 }
