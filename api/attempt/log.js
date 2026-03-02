@@ -1,216 +1,185 @@
 // api/attempt/log.js
-// Enterprise attempt logging (LogicPals)
-// - Auth: validates Supabase access_token (JWT)
-// - Ownership: parent -> child enforcement (children.parent_id = auth.uid())
-// - Rate limit: DB-backed (rpc_rate_limit_check)
-// - Atomic write: rpc_attempt_log_atomic (deactivate previous active + insert new active)
+// Enterprise Attempt Logging Endpoint (LogicPals)
+// - Enforces parent->child ownership
+// - DB-backed rate limiting via RPC (rpc_rate_limit_check)
+// - Atomic attempt logging via RPC (rpc_attempt_log_atomic)
+// - Explicit 429 payload + best-practice rate limit headers
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js';
 
-function sendJson(res, status, payload, headers = {}) {
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'content-type, authorization',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
+function json(res, status, body, extraHeaders = {}) {
   res.statusCode = status;
-  res.setHeader("Content-Type", "application/json");
-  for (const [k, v] of Object.entries(headers)) res.setHeader(k, String(v));
-  res.end(JSON.stringify(payload));
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  Object.entries({ ...corsHeaders, ...extraHeaders }).forEach(([k, v]) => res.setHeader(k, v));
+  res.end(JSON.stringify(body));
 }
 
-function getBearer(req) {
-  const h = req.headers?.authorization || req.headers?.Authorization || "";
-  const m = /^Bearer\s+(.+)$/.exec(String(h).trim());
+function getBearerToken(req) {
+  const h = req.headers?.authorization || req.headers?.Authorization || '';
+  const m = String(h).match(/^Bearer\s+(.+)$/i);
   return m ? m[1] : null;
 }
 
-function toInt(v, def = null) {
-  if (v === undefined || v === null || v === "") return def;
+function safeInt(v, fallback = 0) {
+  if (v === null || v === undefined || v === '') return fallback;
   const n = Number(v);
-  return Number.isFinite(n) ? Math.trunc(n) : def;
+  return Number.isFinite(n) ? Math.trunc(n) : fallback;
 }
 
-function toBool(v, def = null) {
-  if (v === undefined || v === null) return def;
-  if (typeof v === "boolean") return v;
-  if (typeof v === "number") return v !== 0;
-  const s = String(v).toLowerCase().trim();
-  if (["true", "1", "yes", "y"].includes(s)) return true;
-  if (["false", "0", "no", "n"].includes(s)) return false;
-  return def;
-}
+// IMPORTANT: Do NOT send extra keys to PostgREST RPC.
+// PostgREST matches by parameter set; extra keys => "function ... not found".
+function buildAttemptRpcArgs(body) {
+  const solved_correctly = !!body.solved_correctly;
+  // Some callers send solved_correctly but not is_correct.
+  const is_correct =
+    body.is_correct === undefined || body.is_correct === null ? solved_correctly : !!body.is_correct;
 
-async function getAuthedUserId(supabase, token) {
-  // v2 supports getUser() with the JWT from global headers, but we also pass token for compatibility
-  const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data?.user?.id) return null;
-  return data.user.id;
+  const args = {
+    // matches your screenshot: function args start with p_child_id, p_problem_id, p_mode, ...
+    p_child_id: body.child_id,
+    p_problem_id: body.problem_id,
+    p_mode: body.track || body.mode || 'regular',
+    p_difficulty_tier: body.difficulty_tier || null,
+    p_attempt_state: body.attempt_state || (body.submitted_answer ? 'SUBMITTED' : 'PRACTICING'),
+    p_solved_correctly: solved_correctly,
+    p_is_correct: is_correct,
+    p_hints_used: safeInt(body.hints_used, 0),
+    p_questions_asked: safeInt(body.questions_asked, 0),
+    p_time_spent_seconds: safeInt(body.time_spent_sec ?? body.time_spent_seconds, 0),
+    p_time_to_first_input_seconds: safeInt(body.time_to_first_input_seconds, 0),
+    p_submitted_answer: body.submitted_answer ?? null,
+  };
+
+  // Remove undefined (don’t let undefined keys appear in RPC call)
+  Object.keys(args).forEach((k) => args[k] === undefined && delete args[k]);
+  return args;
 }
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return sendJson(res, 405, { error: "method_not_allowed" });
-  }
-
-  const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
-
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    return sendJson(res, 500, {
-      error: "missing_supabase_config",
-      hint: "Set SUPABASE_URL and SUPABASE_ANON_KEY in Vercel Environment Variables.",
-    });
-  }
-
-  const token = getBearer(req);
-  if (!token) {
-    return sendJson(res, 401, { error: "missing_bearer_token" });
-  }
-
-  // RLS must apply as the signed-in user
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
-
-  const userId = await getAuthedUserId(supabase, token);
-  if (!userId) {
-    return sendJson(res, 401, {
-      error: "invalid_or_expired_token",
-      hint: "Use a fresh Supabase access_token (JWT) from the signed-in parent user. Tokens expire—re-login and copy a new one.",
-    });
-  }
-
-  // Parse body
-  let body = req.body;
-  if (typeof body === "string") {
-    try {
-      body = JSON.parse(body);
-    } catch {
-      body = {};
+  try {
+    if (req.method === 'OPTIONS') {
+      Object.entries(corsHeaders).forEach(([k, v]) => res.setHeader(k, v));
+      res.statusCode = 204;
+      return res.end();
     }
-  }
-  body = body || {};
+    if (req.method !== 'POST') return json(res, 405, { error: 'method_not_allowed' });
 
-  const track = String(body.track || "").toLowerCase().trim();
-  const childId = body.child_id || body.childId;
-  const problemId = body.problem_id || body.problemId;
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+    const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY; // optional but recommended
 
-  if (!track || !["regular", "olympiad"].includes(track)) {
-    return sendJson(res, 400, { error: "invalid_track", hint: 'track must be "regular" or "olympiad"' });
-  }
-  if (!childId || !problemId) {
-    return sendJson(res, 400, { error: "missing_ids", hint: "Provide child_id and problem_id (UUIDs)." });
-  }
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      return json(res, 500, { error: 'missing_supabase_config' });
+    }
 
-  // Ownership check (parent -> child)
-  // NOTE: If you later move this check inside rpc_attempt_log_atomic, you can remove this block.
-  const { data: childRow, error: childErr } = await supabase
-    .from("children")
-    .select("id,parent_id")
-    .eq("id", childId)
-    .maybeSingle();
+    const token = getBearerToken(req);
+    if (!token) return json(res, 401, { error: 'missing_authorization' });
 
-  if (childErr) {
-    return sendJson(res, 500, { error: "child_lookup_failed", detail: childErr.message });
-  }
-  if (!childRow) {
-    return sendJson(res, 404, { error: "child_not_found" });
-  }
-  if (childRow.parent_id !== userId) {
-    return sendJson(res, 403, {
-      error: "forbidden_child",
-      hint: "This child_id does not belong to the authenticated parent (auth.uid).",
-    });
-  }
-
-  // =========================
-  // Rate limit (DB-backed)
-  // =========================
-  // Tune these as you want (enterprise defaults)
-  const LIMIT = toInt(process.env.ATTEMPT_LOG_RATE_LIMIT, 25) ?? 25; // requests
-  const WINDOW_SECONDS = toInt(process.env.ATTEMPT_LOG_RATE_WINDOW_SECONDS, 60) ?? 60;
-
-  const { data: allowed, error: rlErr } = await supabase.rpc("rpc_rate_limit_check", {
-    p_route: "attempt_log",
-    p_limit: LIMIT,
-    p_window_seconds: WINDOW_SECONDS,
-  });
-
-  if (rlErr) {
-    return sendJson(res, 500, { error: "rate_limit_rpc_failed", detail: rlErr.message });
-  }
-
-  if (allowed === false) {
-    // Best practice: explicit payload + Retry-After header
-    const retryAfter = WINDOW_SECONDS; // simple + safe
-    return sendJson(
-      res,
-      429,
+    // Enterprise: prefer service role server-side (bypass RLS and enforce manually)
+    const supabase = createClient(
+      SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY,
       {
-        error: "rate_limited",
-        route: "attempt_log",
-        limit: LIMIT,
-        window_seconds: WINDOW_SECONDS,
-        retry_after_seconds: retryAfter,
-      },
-      {
-        "Retry-After": retryAfter,
-        "X-RateLimit-Limit": LIMIT,
-        "X-RateLimit-Window": WINDOW_SECONDS,
+        auth: { persistSession: false, autoRefreshToken: false },
+        global: { headers: { Authorization: `Bearer ${token}` } },
       }
     );
-  }
 
-  // =========================
-  // Atomic attempt log RPC
-  // =========================
-  const solvedCorrectly = toBool(body.solved_correctly ?? body.is_correct, false);
-  const attemptState = body.attempt_state ?? "SUBMITTED";
-  const mode = body.mode ?? track;
-  const difficultyTier = body.difficulty_tier ?? null;
+    // Validate session
+    const { data: userData, error: userErr } = await supabase.auth.getUser(token);
+    if (userErr || !userData?.user) {
+      return json(res, 401, {
+        error: 'invalid_or_expired_token',
+        hint: 'Authorization Bearer token must be the Supabase access_token (JWT) of the signed-in user.',
+      });
+    }
+    const userId = userData.user.id;
 
-  // Optional analytics fields
-  const hintsUsed = toInt(body.hints_used, 0) ?? 0;
-  const questionsAsked = toInt(body.questions_asked, 0) ?? 0;
-  const timeSpentSeconds = toInt(body.time_spent_sec ?? body.time_spent_seconds, null);
-  const timeToFirstInputSeconds = toInt(body.time_to_first_input_seconds, null);
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    const child_id = body.child_id;
+    const problem_id = body.problem_id;
 
-  const rpcPayload = {
-    // Must match your function signature (p_* params)
-    p_child_id: childId,
-    p_problem_id: problemId,
-    p_mode: mode,
-    p_difficulty_tier: difficultyTier,
-    p_attempt_state: attemptState,
-    p_solved_correctly: solvedCorrectly,
-    p_is_correct: solvedCorrectly,
-    p_hints_used: hintsUsed,
-    p_questions_asked: questionsAsked,
+    if (!child_id || !problem_id) {
+      return json(res, 400, { error: 'missing_fields', required: ['child_id', 'problem_id'] });
+    }
 
-    // If your RPC signature includes these, keep them; otherwise your function should have defaults.
-    p_score_delta: toInt(body.score_delta, null),
-    p_session_id: body.session_id ?? null,
-    p_session_item_id: body.session_item_id ?? null,
-    p_ai_conversation: body.ai_conversation ?? null,
-    p_submitted_answer: body.submitted_answer ?? null,
-    p_time_spent_seconds: timeSpentSeconds,
-    p_time_to_first_input_seconds: timeToFirstInputSeconds,
-  };
+    // Ownership check: child must belong to this parent
+    const { data: childRow, error: childErr } = await supabase
+      .from('children')
+      .select('id,parent_id')
+      .eq('id', child_id)
+      .maybeSingle();
 
-  const { data: rpcResult, error: rpcErr } = await supabase.rpc("rpc_attempt_log_atomic", rpcPayload);
+    if (childErr) return json(res, 500, { error: 'db_error', detail: childErr.message });
+    if (!childRow || childRow.parent_id !== userId) {
+      return json(res, 404, { error: 'child_not_found' });
+    }
 
-  if (rpcErr) {
-    return sendJson(res, 400, {
-      error: "rpc_failed",
-      detail: rpcErr.message,
-      hint:
-        "If this says the function cannot be found, wait 1–3 minutes after DB changes (schema cache), then retry. Also confirm your function parameters match the payload keys.",
+    // DB-backed rate limit
+    const LIMIT = safeInt(process.env.ATTEMPT_LOG_RATE_LIMIT, 20);
+    const WINDOW = safeInt(process.env.ATTEMPT_LOG_RATE_WINDOW_SECONDS, 60);
+    const routeKey = 'attempt_log';
+
+    const { data: allowed, error: rlErr } = await supabase.rpc('rpc_rate_limit_check', {
+      p_route: routeKey,
+      p_limit: LIMIT,
+      p_window_seconds: WINDOW,
     });
+
+    if (rlErr) {
+      return json(res, 500, { error: 'rate_limit_check_failed', detail: rlErr.message });
+    }
+
+    if (!allowed) {
+      const retryAfter = WINDOW;
+      return json(
+        res,
+        429,
+        {
+          error: 'rate_limited',
+          route: routeKey,
+          limit: LIMIT,
+          window_seconds: WINDOW,
+          retry_after_seconds: retryAfter,
+        },
+        {
+          'Retry-After': String(retryAfter),
+          'X-RateLimit-Limit': String(LIMIT),
+          'X-RateLimit-Window': String(WINDOW),
+        }
+      );
+    }
+
+    // Atomic attempt log via RPC (NO extra params!)
+    const rpcArgs = buildAttemptRpcArgs({
+      ...body,
+      track: body.track || body.mode || 'regular',
+    });
+
+    const { data: out, error: rpcErr } = await supabase.rpc('rpc_attempt_log_atomic', rpcArgs);
+
+    if (rpcErr) {
+      return json(res, 400, {
+        error: 'rpc_failed',
+        detail: rpcErr.message,
+        hint:
+          "If this mentions 'schema cache' or 'could not find the function', run: select pg_notify('pgrst','reload schema'); and ensure GRANT EXECUTE on rpc_attempt_log_atomic to authenticated.",
+        rpc_args_sent: Object.keys(rpcArgs),
+      });
+    }
+
+    const row = Array.isArray(out) ? out[0] : out;
+    const attempt_id = row?.attempt_id || row?.id || null;
+    const attempt_number = row?.attempt_number ?? null;
+
+    return json(res, 200, { ok: true, attempt_id, attempt_number });
+  } catch (e) {
+    return json(res, 500, { error: 'server_error', detail: String(e?.message || e) });
   }
-
-  // Expecting rpcResult like: { attempt_id, attempt_number } OR a row
-  const attemptId = rpcResult?.attempt_id ?? rpcResult?.id ?? null;
-  const attemptNumber = rpcResult?.attempt_number ?? null;
-
-  return sendJson(res, 200, {
-    ok: true,
-    attempt_id: attemptId,
-    attempt_number: attemptNumber,
-  });
 }
