@@ -124,22 +124,8 @@ export default async function handler(req, res) {
     });
   }
 
-	  // ✅ Rate limit guard (20 requests / 60 seconds per parent per route)
-  const { data: allow, error: rlErr } = await supabase.rpc('rpc_rate_limit_check', {
-    p_route: 'attempt_log',
-    p_limit: 20,
-    p_window_seconds: 60,
-  });
-
-  if (rlErr) {
-    return json(res, 500, { error: 'rate_limit_failed', detail: rlErr.message });
-  }
-  if (allow === false) {
-    return json(res, 429, { error: 'rate_limited', retry_after_seconds: 60 });
-  }
-
-  // ✅ Rate limit guard (enterprise durable: DB-backed)
-  // Default: 20 requests per 60 seconds per parent for this route
+  // ✅ Rate limit guard (DB-backed, durable)
+  // Default: 20 requests / 60 seconds per parent per route
   const { data: allow, error: rlErr } = await supabase.rpc('rpc_rate_limit_check', {
     p_route: 'attempt_log',
     p_limit: 20,
@@ -159,29 +145,20 @@ export default async function handler(req, res) {
   const rpcArgs = {
     p_child_id: childId,
     p_problem_id: problemId,
-
-    // We use "mode" to store track-like usage in your attempts schema
     p_mode: body.mode ?? track,
-
     p_difficulty_tier: body.difficulty_tier ?? null,
     p_attempt_state: body.attempt_state ?? 'SUBMITTED',
-
-    // Keep both fields supported by your table
     p_solved_correctly: solvedCorrectly,
     p_is_correct: solvedCorrectly,
-
     p_hints_used: toInt(body.hints_used, 0),
     p_questions_asked: toInt(body.questions_asked, 0),
-
     p_time_spent_seconds: toInt(body.time_spent_sec ?? body.time_spent_seconds, null),
     p_time_to_first_input_seconds: toInt(body.time_to_first_input_seconds, null),
-
     p_submitted_answer: body.submitted_answer ?? null,
     p_session_id: body.session_id ?? null,
     p_session_item_id: body.session_item_id ?? null,
   };
 
-  // Atomic attempt logging (deactivate prior active + insert new active)
   const { data: rpcData, error: rpcErr } = await supabase.rpc('rpc_attempt_log_atomic', rpcArgs);
 
   if (rpcErr) {
@@ -209,9 +186,7 @@ export default async function handler(req, res) {
         attempt_number: attemptNumber,
       },
     });
-  } catch (_) {
-    // ignore if audit_log not present or RLS blocks it
-  }
+  } catch (_) {}
 
   return json(res, 200, {
     ok: true,
