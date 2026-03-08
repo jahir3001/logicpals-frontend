@@ -1,14 +1,14 @@
-<!-- 
-  UPDATED SIGNUP.HTML - WITH SUBSCRIPTION SYSTEM
-  
-  Changes from original:
-  1. No longer manually sets subscription_status (trigger handles it)
-  2. Shows trial expiry date clearly
-  3. Better error handling
-  4. Redirects to dashboard after successful signup
--->
+<!--
+  UPDATED SIGNUP.HTML - WITH SUBSCRIPTION SYSTEM + P1.6 DEVICE FINGERPRINT SEEDING
 
-<!-- COPY EVERYTHING FROM HERE TO END OF FILE -->
+  Changes from previous version:
+  1. P1.6: Seeds lp_device_id into localStorage on page load (before auth completes)
+  2. P1.6: Exposes window.lpGetClientMeta() for downstream session creation pages
+  3. No longer manually sets subscription_status (trigger handles it)
+  4. Shows trial expiry date clearly
+  5. Better error handling
+  6. Redirects to dashboard after successful signup
+-->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -210,7 +210,8 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-    </style>  <script src="/assets/js/env-loader.js"></script>
+    </style>
+    <script src="/assets/js/env-loader.js"></script>
 </head>
 <body>
 
@@ -227,7 +228,7 @@
             <strong>✨ What you'll get:</strong><br>
             • Unlimited problem solving for 7 days<br>
             • AI Socratic tutor that never gives direct answers<br>
-            • Join school leaderboard & compete!
+            • Join school leaderboard &amp; compete!
         </div>
 
         <form id="signupForm" onsubmit="handleSignup(event)">
@@ -353,24 +354,67 @@
     </div>
 
     <script>
-        // FIXED: Correct Supabase initialization
+        // ─────────────────────────────────────────────────────────
+        // P1.6 DEVICE FINGERPRINT SEEDING
+        // Runs immediately on page load — before Supabase auth.
+        // New users who sign up here get a device_id before they
+        // ever reach the dashboard/training pages that insert into
+        // the DB sessions table.
+        // ─────────────────────────────────────────────────────────
+        function getOrCreateDeviceId() {
+            try {
+                let id = localStorage.getItem('lp_device_id');
+                if (!id) {
+                    id = crypto.randomUUID();
+                    localStorage.setItem('lp_device_id', id);
+                }
+                return id;
+            } catch (e) {
+                // localStorage blocked (private mode, iframe, etc.)
+                return crypto.randomUUID();
+            }
+        }
+
+        // Seed immediately
+        getOrCreateDeviceId();
+
+        // Expose globally so any downstream page can call window.lpGetClientMeta()
+        // to get the full client_meta object for the DB sessions INSERT
+        window.lpGetClientMeta = function() {
+            return {
+                device_id:  getOrCreateDeviceId(),
+                user_agent: navigator.userAgent,
+                platform:   navigator.platform,
+                screen_res: `${screen.width}x${screen.height}`,
+                timezone:   Intl.DateTimeFormat().resolvedOptions().timeZone,
+            };
+        };
+
+        // ─────────────────────────────────────────────────────────
+        // SUPABASE INIT
+        // ─────────────────────────────────────────────────────────
         const { createClient } = supabase;
         const { SUPABASE_URL: supabaseUrl, SUPABASE_ANON_KEY: supabaseAnonKey } = window.__LP_ENV || {};
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase config. Ensure /api/env is deployed and reachable.');
-    }
+        if (!supabaseUrl || !supabaseAnonKey) {
+            throw new Error('Missing Supabase config. Ensure /api/env is deployed and reachable.');
+        }
         
-        const sb = createClient(supabaseUrl, supabaseAnonKey);
+        const sb = createClient(supabaseUrl, supabaseAnonKey, {
+          auth: {
+            storageKey: 'logicpals.auth',
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+          }
+        });
 
         async function handleSignup(e) {
             e.preventDefault();
             
-            // UI Elements
             const btn = document.getElementById('submitBtn');
             const errDiv = document.getElementById('errorMessage');
             const successDiv = document.getElementById('successMessage');
             
-            // Get form values
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const phone = document.getElementById('phone').value.trim() || null;
@@ -379,7 +423,6 @@
             const schoolName = document.getElementById('schoolName').value.trim();
             const curriculum = document.getElementById('curriculum').value || null;
 
-            // Validation
             if (!email || !password || !childName || !childAge || !schoolName) {
                 showError('Please fill in all required fields');
                 return;
@@ -390,7 +433,6 @@
                 return;
             }
 
-            // Set loading state
             btn.innerHTML = '<span class="spinner"></span> Creating your account...';
             btn.disabled = true;
             hideMessages();
@@ -426,7 +468,6 @@
                         full_name: childName,
                         phone: phone,
                         role: 'parent'
-                        // NOTE: subscription_status removed - let trigger handle it
                     }]);
 
                 if (profileError && !profileError.message.includes('duplicate')) {
@@ -454,7 +495,7 @@
                         difficulty_level: 'medium',
                         total_problems_solved: 0,
                         streak_days: 0,
-                        subscription_tier: 'free_trial'  // Set child's tier to free_trial
+                        subscription_tier: 'free_trial'
                     }])
                     .select()
                     .single();
@@ -465,7 +506,7 @@
                 }
 
                 // STEP 5: Verify free trial was created (by the trigger)
-                const { data: subscription, error: subError } = await sb
+                const { data: subscription } = await sb
                     .from('subscriptions')
                     .select('*')
                     .eq('user_id', userId)
@@ -475,13 +516,14 @@
                 if (subscription) {
                     const expiryDate = new Date(subscription.end_date);
                     const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
-                    
                     showSuccess(`🎉 Welcome, ${childName}! Your 7-day trial is active (${daysLeft} days left). Redirecting...`);
                 } else {
                     showSuccess(`Welcome, ${childName}! 🎉 Redirecting to your dashboard...`);
                 }
                 
-                // Wait 2 seconds then redirect
+                // P1.6: Re-confirm device_id is seeded before landing on dashboard
+                getOrCreateDeviceId();
+
                 setTimeout(() => {
                     window.location.href = 'dashboard.html';
                 }, 2000);

@@ -1,1476 +1,1384 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Olympiad Training - LogicPals</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Literata:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    
-    <script src="/app/guards/subscription-guard.js" defer></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --gold-50: #FFFBEB;
-            --gold-100: #FEF3C7;
-            --gold-200: #FDE68A;
-            --gold-300: #FCD34D;
-            --gold-400: #FBBF24;
-            --gold-500: #F59E0B;
-            --gold-600: #D97706;
-            --gold-700: #B45309;
-            --gold-800: #92400E;
-            --gold-900: #78350F;
-            
-            --gray-50: #F9FAFB;
-            --gray-100: #F3F4F6;
-            --gray-200: #E5E7EB;
-            --gray-300: #D1D5DB;
-            --gray-700: #374151;
-            --gray-800: #1F2937;
-            --gray-900: #111827;
-            
-            --success: #10B981;
-            --warning: #F59E0B;
-            --danger: #EF4444;
-            
-            --warmup: #E5E7EB;
-            --standard: #FCD34D;
-            --challenge: #FB923C;
-            --contest: #DC2626;
-            --elite: #1F2937;
-            
-            --font-display: 'Playfair Display', serif;
-            --font-body: 'Literata', serif;
-        }
-
-        body {
-            font-family: var(--font-body);
-            background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%);
-            min-height: 100vh;
-            color: var(--gray-900);
-            line-height: 1.6;
-        }
-
-        /* Header */
-        .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 16px 0;
-            border-bottom: 2px solid var(--gold-300);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.1);
-        }
-
-        .header-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-            color: var(--gray-900);
-        }
-
-        .logo-text {
-            font-family: var(--font-display);
-            font-size: 24px;
-            font-weight: 900;
-        }
-
-        /* Navigation */
-        .nav-tabs {
-            display: flex;
-            gap: 8px;
-            background: white;
-            padding: 8px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        .nav-tab {
-            padding: 10px 20px;
-            border: none;
-            background: transparent;
-            color: var(--gray-700);
-            font-weight: 600;
-            font-size: 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .nav-tab:hover {
-            background: var(--gold-50);
-            color: var(--gold-700);
-        }
-
-        .nav-tab.active {
-            background: linear-gradient(135deg, var(--gold-500), var(--gold-600));
-            color: white;
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-        }
-
-        /* Container */
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 40px 24px;
-        }
-
-        /* Sections */
-        .section {
-            display: none;
-        }
-
-        .section.active {
-            display: block;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Level Cards */
-        .level-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 24px;
-            max-width: 1200px;
-            margin: 0 auto 60px;
-        }
-
-        .level-card {
-            background: white;
-            border: 3px solid var(--gold-200);
-            border-radius: 16px;
-            padding: 28px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-
-        .level-card:hover {
-            border-color: var(--gold-400);
-            transform: translateY(-4px);
-            box-shadow: 0 12px 32px rgba(245, 158, 11, 0.25);
-        }
-
-        .level-card.selected {
-            border-color: var(--gold-600);
-            background: linear-gradient(135deg, var(--gold-50), white);
-            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
-        }
-
-        .level-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-        }
-
-        .level-title {
-            font-family: var(--font-display);
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--gray-900);
-            margin-bottom: 8px;
-        }
-
-        .level-subtitle {
-            font-size: 14px;
-            color: var(--gray-700);
-            margin-bottom: 8px;
-        }
-
-        .level-desc {
-            font-size: 13px;
-            color: var(--gray-700);
-            font-style: italic;
-        }
-
-        /* TODAY'S PLAN (FIXED: No longer random!) */
-        .today-plan-container {
-            display: none;
-            max-width: 700px;
-            margin: 0 auto 60px;
-        }
-
-        .today-plan-card {
-            background: white;
-            border: 3px solid var(--gold-400);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 16px 48px rgba(245, 158, 11, 0.25);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .today-plan-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 6px;
-            background: linear-gradient(90deg, var(--gold-500), var(--gold-600), var(--gold-500));
-        }
-
-        .plan-header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-
-        .plan-title {
-            font-family: var(--font-display);
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--gray-900);
-            margin-bottom: 8px;
-        }
-
-        .plan-subtitle {
-            font-size: 16px;
-            color: var(--gray-700);
-        }
-
-        /* EXPLAINABILITY (NEW: Why this plan?) */
-        .plan-reasoning {
-            background: var(--gold-50);
-            border-left: 4px solid var(--gold-500);
-            padding: 16px;
-            margin-bottom: 24px;
-            border-radius: 8px;
-        }
-
-        .plan-reasoning-title {
-            font-weight: 700;
-            font-size: 14px;
-            color: var(--gold-800);
-            margin-bottom: 8px;
-        }
-
-        .plan-reasoning-text {
-            font-size: 13px;
-            color: var(--gray-700);
-            line-height: 1.5;
-        }
-
-        .plan-mix {
-            margin-bottom: 24px;
-        }
-
-        .plan-mix-title {
-            font-weight: 700;
-            font-size: 15px;
-            margin-bottom: 12px;
-            color: var(--gray-800);
-        }
-
-        .plan-problems {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            justify-content: center;
-        }
-
-        .plan-problem-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 16px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        /* ARCHETYPE VISIBILITY (NEW!) */
-        .plan-archetypes {
-            margin-bottom: 24px;
-            background: var(--gray-50);
-            padding: 16px;
-            border-radius: 8px;
-        }
-
-        .plan-archetypes-title {
-            font-weight: 700;
-            font-size: 15px;
-            margin-bottom: 8px;
-            color: var(--gray-800);
-        }
-
-        .plan-archetypes-list {
-            font-size: 13px;
-            color: var(--gray-700);
-            line-height: 1.6;
-        }
-
-        .archetype-item {
-            padding: 4px 0;
-        }
-
-        .archetype-name {
-            font-weight: 600;
-            color: var(--gold-700);
-        }
-
-        .plan-focus {
-            margin-bottom: 32px;
-            text-align: center;
-        }
-
-        .plan-focus-title {
-            font-weight: 700;
-            font-size: 15px;
-            margin-bottom: 8px;
-            color: var(--gray-800);
-        }
-
-        .plan-focus-skills {
-            font-size: 16px;
-            color: var(--gold-700);
-            font-weight: 600;
-        }
-
-        .start-training-btn {
-            background: linear-gradient(135deg, var(--gold-500), var(--gold-600));
-            color: white;
-            border: none;
-            padding: 18px 48px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 18px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            margin-bottom: 16px;
-        }
-
-        .start-training-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4);
-        }
-
-        .plan-countdown {
-            text-align: center;
-            font-size: 13px;
-            color: var(--gray-700);
-            margin-bottom: 16px;
-        }
-
-        .plan-customize {
-            text-align: center;
-            font-size: 14px;
-            color: var(--gray-700);
-        }
-
-        .plan-customize button {
-            background: none;
-            border: none;
-            color: var(--gold-600);
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: underline;
-            margin: 0 8px;
-        }
-
-        /* Difficulty Badges */
-        .difficulty-badge {
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            position: relative;
-            cursor: help;
-        }
-
-        .difficulty-badge .info-icon {
-            font-size: 14px;
-            opacity: 0.7;
-        }
-
-        .tooltip {
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            margin-bottom: 12px;
-            background: var(--gray-900);
-            color: white;
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 13px;
-            line-height: 1.6;
-            width: 320px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            z-index: 1000;
-            font-weight: 400;
-            pointer-events: none;
-        }
-
-        .tooltip::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 8px solid transparent;
-            border-top-color: var(--gray-900);
-        }
-
-        .difficulty-badge:hover .tooltip {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .tooltip-title {
-            font-weight: 700;
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
-
-        .tooltip-section {
-            margin-bottom: 12px;
-        }
-
-        .tooltip-section:last-child {
-            margin-bottom: 0;
-        }
-
-        .tooltip-label {
-            font-weight: 600;
-            opacity: 0.8;
-            font-size: 12px;
-            margin-bottom: 4px;
-        }
-
-        .tooltip-value {
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-        .tooltip-example {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 8px;
-            border-radius: 6px;
-            font-style: italic;
-            font-size: 12px;
-            margin-top: 4px;
-        }
-
-        .tooltip-at-level {
-            background: rgba(251, 191, 36, 0.2);
-            padding: 8px;
-            border-radius: 6px;
-            margin-top: 8px;
-            font-size: 12px;
-        }
-
-        .difficulty-warmup { background: var(--warmup); color: var(--gray-800); }
-        .difficulty-standard { background: var(--standard); color: var(--gray-900); }
-        .difficulty-challenge { background: var(--challenge); color: white; }
-        .difficulty-contest { background: var(--contest); color: white; }
-        .difficulty-elite { background: var(--elite); color: white; }
-
-        /* Mock Cards */
-        .mock-card {
-            background: white;
-            border: 3px solid var(--contest);
-            border-radius: 16px;
-            padding: 32px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .mock-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 32px rgba(220, 38, 38, 0.25);
-        }
-
-        .mock-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-
-        .mock-title {
-            font-family: var(--font-display);
-            font-size: 26px;
-            font-weight: 700;
-            margin-bottom: 12px;
-        }
-
-        .mock-desc {
-            color: var(--gray-700);
-            margin-bottom: 16px;
-            line-height: 1.6;
-        }
-
-        .mock-details {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            font-size: 14px;
-        }
-
-        .mock-detail {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .mock-badge {
-            background: var(--contest);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 12px;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 16px;
-            }
-
-            .nav-tabs {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            .level-cards {
-                grid-template-columns: 1fr;
-            }
-
-            .tooltip {
-                width: 280px;
-            }
-
-            .today-plan-card {
-                padding: 24px;
-            }
-        }
-    </style>
-  <script src="/assets/js/env-loader.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Olympiad Training - LogicPals</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Literata:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+
+  <!-- Keep your guard -->
+  <script src="/app/guards/subscription-guard.js" defer></script>
+  <!-- Env loader (should set window.__LP_ENV). Falls back to /api/env if not present -->
+  <script src="/assets/js/env-loader.js" defer></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold-50: #FFFBEB;
+      --gold-100: #FEF3C7;
+      --gold-200: #FDE68A;
+      --gold-300: #FCD34D;
+      --gold-400: #FBBF24;
+      --gold-500: #F59E0B;
+      --gold-600: #D97706;
+      --gold-700: #B45309;
+      --gold-800: #92400E;
+      --gold-900: #78350F;
+
+      --gray-50: #F9FAFB;
+      --gray-100: #F3F4F6;
+      --gray-200: #E5E7EB;
+      --gray-300: #D1D5DB;
+      --gray-700: #374151;
+      --gray-800: #1F2937;
+      --gray-900: #111827;
+
+      --success: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+
+      --warmup: #E5E7EB;
+      --standard: #FCD34D;
+      --challenge: #FB923C;
+      --contest: #DC2626;
+      --elite: #1F2937;
+
+      --font-display: 'Playfair Display', serif;
+      --font-body: 'Literata', serif;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%);
+      min-height: 100vh;
+      color: var(--gray-900);
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 16px 0;
+      border-bottom: 2px solid var(--gold-300);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 4px 20px rgba(245, 158, 11, 0.1);
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--gray-900);
+      white-space: nowrap;
+    }
+
+    .logo-text {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    /* Navigation */
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      background: white;
+      padding: 8px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .nav-tab {
+      padding: 10px 20px;
+      border: none;
+      background: transparent;
+      color: var(--gray-700);
+      font-weight: 600;
+      font-size: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: var(--font-body);
+    }
+
+    .nav-tab:hover {
+      background: var(--gold-50);
+      color: var(--gold-700);
+    }
+
+    .nav-tab.active {
+      background: linear-gradient(135deg, var(--gold-500), var(--gold-600));
+      color: white;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    /* Sections */
+    .section { display: none; }
+    .section.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Level Cards */
+    .level-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto 60px;
+    }
+
+    .level-card {
+      background: white;
+      border: 3px solid var(--gold-200);
+      border-radius: 16px;
+      padding: 28px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .level-card:hover {
+      border-color: var(--gold-400);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(245, 158, 11, 0.25);
+    }
+
+    .level-card.selected {
+      border-color: var(--gold-600);
+      background: linear-gradient(135deg, var(--gold-50), white);
+      box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
+    }
+
+    .level-icon { font-size: 48px; margin-bottom: 12px; }
+    .level-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 8px;
+    }
+    .level-subtitle { font-size: 14px; color: var(--gray-700); margin-bottom: 8px; }
+    .level-desc { font-size: 13px; color: var(--gray-700); font-style: italic; }
+
+    /* TODAY'S PLAN */
+    .today-plan-container { display: none; max-width: 700px; margin: 0 auto 60px; }
+    .today-plan-card {
+      background: white;
+      border: 3px solid var(--gold-400);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 16px 48px rgba(245, 158, 11, 0.25);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .today-plan-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, var(--gold-500), var(--gold-600), var(--gold-500));
+    }
+
+    .plan-header { text-align: center; margin-bottom: 32px; }
+    .plan-title {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 8px;
+    }
+    .plan-subtitle { font-size: 16px; color: var(--gray-700); }
+
+    .plan-reasoning {
+      background: var(--gold-50);
+      border-left: 4px solid var(--gold-500);
+      padding: 16px;
+      margin-bottom: 24px;
+      border-radius: 8px;
+    }
+    .plan-reasoning-title { font-weight: 700; font-size: 14px; color: var(--gold-800); margin-bottom: 8px; }
+    .plan-reasoning-text { font-size: 13px; color: var(--gray-700); line-height: 1.5; }
+
+    .plan-archetypes {
+      margin-bottom: 24px;
+      background: var(--gray-50);
+      padding: 16px;
+      border-radius: 8px;
+    }
+    .plan-archetypes-title { font-weight: 700; font-size: 15px; margin-bottom: 8px; color: var(--gray-800); }
+    .plan-archetypes-list { font-size: 13px; color: var(--gray-700); line-height: 1.6; }
+    .archetype-item { padding: 4px 0; }
+    .archetype-name { font-weight: 600; color: var(--gold-700); }
+
+    .plan-mix { margin-bottom: 24px; }
+    .plan-mix-title { font-weight: 700; font-size: 15px; margin-bottom: 12px; color: var(--gray-800); }
+    .plan-problems { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+
+    /* Updated to match old design (dot icon in pills) */
+    .plan-problem-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.2px;
+      border: 1px solid rgba(17,24,39,0.08);
+    }
+    .plan-problem-dot {
+      width: 10px; height: 10px;
+      border-radius: 999px;
+      border: 2px solid rgba(17,24,39,0.25);
+      background: rgba(255,255,255,0.7);
+    }
+
+    .plan-focus { margin-bottom: 32px; text-align: center; }
+    .plan-focus-title { font-weight: 700; font-size: 15px; margin-bottom: 8px; color: var(--gray-800); }
+    .plan-focus-skills { font-size: 14px; color: var(--gold-700); font-weight: 800; }
+
+    .start-training-btn {
+      background: linear-gradient(135deg, var(--gold-500), var(--gold-600));
+      color: white;
+      border: none;
+      padding: 18px 48px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .start-training-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4); }
+
+    /* Restored old "Starting..." countdown feel */
+    .plan-countdown {
+      text-align: center;
+      font-size: 12px;
+      color: var(--gray-700);
+      margin-bottom: 12px;
+      min-height: 18px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .plan-customize { text-align: center; font-size: 12px; color: var(--gray-700); }
+    .plan-customize button {
+      background: none;
+      border: none;
+      color: var(--gold-600);
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: underline;
+      margin: 0 8px;
+      font-family: var(--font-body);
+      font-size: 12px;
+    }
+
+    /* Difficulty Badges (Skill section) */
+    .difficulty-badge {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+      cursor: help;
+      user-select: none;
+    }
+    .difficulty-badge .info-icon { font-size: 14px; opacity: 0.7; }
+
+    .tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: 12px;
+      background: var(--gray-900);
+      color: white;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+      width: 320px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      font-weight: 400;
+      pointer-events: none;
+    }
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 8px solid transparent;
+      border-top-color: var(--gray-900);
+    }
+    .difficulty-badge:hover .tooltip { opacity: 1; visibility: visible; }
+
+    .tooltip-title { font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+    .tooltip-section { margin-bottom: 12px; }
+    .tooltip-section:last-child { margin-bottom: 0; }
+    .tooltip-label { font-weight: 600; opacity: 0.8; font-size: 12px; margin-bottom: 4px; }
+    .tooltip-value { font-size: 13px; line-height: 1.5; }
+    .tooltip-example {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 8px;
+      border-radius: 6px;
+      font-style: italic;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .tooltip-at-level {
+      background: rgba(251, 191, 36, 0.2);
+      padding: 8px;
+      border-radius: 6px;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+
+    .difficulty-warmup { background: var(--warmup); color: var(--gray-800); }
+    .difficulty-standard { background: var(--standard); color: var(--gray-900); }
+    .difficulty-challenge { background: var(--challenge); color: white; }
+    .difficulty-contest { background: var(--contest); color: white; }
+    .difficulty-elite { background: var(--elite); color: white; }
+
+    /* Mock Cards */
+    .mock-card {
+      background: white;
+      border: 3px solid var(--contest);
+      border-radius: 16px;
+      padding: 32px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .mock-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(220, 38, 38, 0.25); }
+    .mock-icon { font-size: 48px; margin-bottom: 16px; }
+    .mock-title { font-family: var(--font-display); font-size: 26px; font-weight: 700; margin-bottom: 12px; }
+    .mock-desc { color: var(--gray-700); margin-bottom: 16px; line-height: 1.6; }
+    .mock-details { display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+    .mock-detail { display: flex; align-items: center; gap: 8px; }
+    .mock-badge {
+      background: var(--contest);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    /* Enterprise banners / modals */
+    .banner {
+      display: none;
+      max-width: 1200px;
+      margin: 0 auto 20px;
+      background: rgba(255,255,255,0.95);
+      border: 2px solid var(--gold-300);
+      border-radius: 14px;
+      padding: 14px 16px;
+      box-shadow: 0 8px 24px rgba(245,158,11,0.12);
+    }
+    .banner.show { display: block; }
+    .banner-title { font-weight: 900; color: var(--gray-900); margin-bottom: 4px; }
+    .banner-text { color: var(--gray-700); font-size: 13px; }
+    .banner-danger { border-color: rgba(239,68,68,0.4); }
+    .banner-danger .banner-title { color: #991B1B; }
+
+    .modal-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(17,24,39,0.55);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal {
+      width: 100%;
+      max-width: 520px;
+      background: white;
+      border-radius: 18px;
+      border: 3px solid var(--gold-300);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+      overflow: hidden;
+    }
+    .modal-head {
+      padding: 16px 18px;
+      background: linear-gradient(135deg, var(--gold-50), white);
+      border-bottom: 1px solid var(--gold-200);
+    }
+    .modal-title { font-family: var(--font-display); font-size: 20px; font-weight: 900; }
+    .modal-body { padding: 16px 18px; }
+    .modal-foot { padding: 16px 18px; border-top: 1px solid var(--gold-200); display: flex; gap: 10px; justify-content: flex-end; }
+    .select {
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 2px solid var(--gold-200);
+      outline: none;
+      font-family: var(--font-body);
+      font-size: 14px;
+    }
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: var(--font-body);
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--gold-500), var(--gold-600)); color: white; }
+    .btn-secondary { background: var(--gray-100); color: var(--gray-900); }
+    .btn:hover { filter: brightness(0.98); }
+
+    @media (max-width: 1024px) {
+      .header-content { flex-direction: column; align-items: stretch; }
+    }
+    @media (max-width: 768px) {
+      .level-cards { grid-template-columns: 1fr; }
+      .tooltip { width: 280px; }
+      .today-plan-card { padding: 24px; }
+    }
+  </style>
 </head>
+
 <body>
-    <div class="header">
-        <div class="header-content">
-            <a href="#" class="logo">
-                <span class="logo-icon">🧠</span>
-                <span class="logo-text">LogicPals Olympiad</span>
-            </a>
-            
-            <div class="nav-tabs">
-                <button class="nav-tab active" onclick="switchSection('training')">Start Training</button>
-                <button class="nav-tab" onclick="switchSection('skills')">Skill Tracks</button>
-                <button class="nav-tab" onclick="switchSection('mocks')">Mock Olympiads</button>
-                <button class="nav-tab" onclick="switchSection('progress')">Progress</button>
-                <button class="nav-tab" onclick="switchSection('leaderboard')">Leaderboard</button>
-            </div>
-        </div>
+  <div class="header">
+    <div class="header-content">
+      <a href="#" class="logo" onclick="return false;">
+        <span class="logo-icon">🧠</span>
+        <span class="logo-text">LogicPals Olympiad</span>
+      </a>
+
+      <div class="nav-tabs" aria-label="Olympiad navigation">
+        <button class="nav-tab active" data-tab="training" onclick="switchSection('training')">Start Training</button>
+        <button class="nav-tab" data-tab="skills" onclick="switchSection('skills')">Skill Tracks</button>
+        <button class="nav-tab" data-tab="mocks" onclick="switchSection('mocks')">Mock Olympiads</button>
+        <button class="nav-tab" data-tab="progress" onclick="switchSection('progress')">Progress</button>
+        <button class="nav-tab" data-tab="leaderboard" onclick="switchSection('leaderboard')">Leaderboard</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="banner" id="infoBanner">
+      <div class="banner-title" id="infoBannerTitle"></div>
+      <div class="banner-text" id="infoBannerText"></div>
     </div>
 
-    <div class="container">
-        <!-- Start Training Section -->
-        <div class="section active" id="section-training">
-            <h1 style="font-family: var(--font-display); font-size: 42px; text-align: center; margin-bottom: 16px;">
-                Start Your Olympiad Training
-            </h1>
-            <p style="text-align: center; font-size: 18px; color: var(--gray-700); max-width: 700px; margin: 0 auto 48px;">
-                Choose your level to begin. Your personal coach will create today's perfect training plan.
-            </p>
-
-            <div class="level-cards">
-                <div class="level-card" data-level="primary" onclick="selectLevel('primary')">
-                    <div class="level-icon">🌱</div>
-                    <div class="level-title">Primary (8-9)</div>
-                    <div class="level-subtitle">Regional Round (Class 3-5)</div>
-                    <div class="level-desc">Build thinking habits</div>
-                </div>
-
-                <div class="level-card" data-level="junior" onclick="selectLevel('junior')">
-                    <div class="level-icon">🌿</div>
-                    <div class="level-title">Junior (10-11)</div>
-                    <div class="level-subtitle">Regional Round (Class 6-8)</div>
-                    <div class="level-desc">Core Olympiad skills</div>
-                </div>
-
-                <div class="level-card" data-level="secondary" onclick="selectLevel('secondary')">
-                    <div class="level-icon">🌳</div>
-                    <div class="level-title">Secondary (12-13)</div>
-                    <div class="level-subtitle">National Round (Class 9-10)</div>
-                    <div class="level-desc">Advanced reasoning</div>
-                </div>
-
-                <div class="level-card" data-level="higher_secondary" onclick="selectLevel('higher_secondary')">
-                    <div class="level-icon">🎋</div>
-                    <div class="level-title">Higher Secondary (14-15)</div>
-                    <div class="level-subtitle">National Round (Class 11-12)</div>
-                    <div class="level-desc">Contest preparation</div>
-                </div>
-
-                <div class="level-card" data-level="advanced" onclick="selectLevel('advanced')">
-                    <div class="level-icon">🏔️</div>
-                    <div class="level-title">Advanced (16+)</div>
-                    <div class="level-subtitle">Selection / IMO Preparation</div>
-                    <div class="level-desc">Elite problem-solving</div>
-                </div>
-            </div>
-
-            <!-- TODAY'S PLAN (FIXED: With archetypes, deterministic, explainable) -->
-            <div class="today-plan-container" id="todayPlanContainer">
-                <div class="today-plan-card">
-                    <div class="plan-header">
-                        <div class="plan-title">🧠 Today's Olympiad Plan</div>
-                        <div class="plan-subtitle" id="planTime">20 minutes</div>
-                    </div>
-
-                    <!-- EXPLAINABILITY: Why this plan? -->
-                    <div class="plan-reasoning">
-                        <div class="plan-reasoning-title">📊 Why this plan?</div>
-                        <div class="plan-reasoning-text" id="planReasoning">
-                            <!-- Dynamically generated explanation -->
-                        </div>
-                    </div>
-
-                    <!-- ARCHETYPES: What patterns will you learn? -->
-                    <div class="plan-archetypes">
-                        <div class="plan-archetypes-title">🎯 Thinking Patterns You'll Practice:</div>
-                        <div class="plan-archetypes-list" id="planArchetypes">
-                            <!-- Dynamically generated archetypes -->
-                        </div>
-                    </div>
-
-                    <div class="plan-mix">
-                        <div class="plan-mix-title">Training Mix:</div>
-                        <div class="plan-problems" id="planProblems">
-                            <!-- Dynamically generated -->
-                        </div>
-                    </div>
-
-                    <div class="plan-focus">
-                        <div class="plan-focus-title">Focus Skills:</div>
-                        <div class="plan-focus-skills" id="planSkills">
-                            <!-- Dynamically generated -->
-                        </div>
-                    </div>
-
-                    <button class="start-training-btn" onclick="startTraining()">
-                        START TODAY'S TRAINING
-                    </button>
-
-                    <div class="plan-countdown" id="countdown">
-                        Auto-starting in 3 seconds... (click to start now)
-                    </div>
-
-                    <div class="plan-customize">
-                        Or customize:
-                        <button onclick="switchMode('bootcamp')">Bootcamp</button>
-                        <button onclick="switchMode('mock')">Mock Exam</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Skill Tracks Section -->
-        <div class="section" id="section-skills">
-            <h2 style="font-family: var(--font-display); font-size: 36px; margin-bottom: 16px; text-align: center;">
-                7 Core Thinking Skills
-            </h2>
-            <p style="text-align: center; font-size: 18px; color: var(--gray-700); max-width: 700px; margin: 0 auto 32px;">
-                Master these skills to excel in BdMO, Selection Rounds, and IMO competitions.
-            </p>
-
-            <div style="background: white; border-radius: 16px; padding: 32px; max-width: 900px; margin: 0 auto 40px; border: 2px solid var(--gold-200);">
-                <h3 style="font-family: var(--font-display); font-size: 22px; margin-bottom: 16px; text-align: center;">
-                    Understanding Problem Difficulty
-                </h3>
-                <p style="text-align: center; font-size: 14px; color: var(--gray-700); margin-bottom: 24px;">
-                    Problems are rated by thinking depth, not number size. Hover over each tier to see examples for your level.
-                </p>
-                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;" id="difficultyBadges">
-                    <!-- Dynamically generated with level-specific tooltips -->
-                </div>
-                <p style="text-align: center; font-size: 12px; color: var(--gray-700); margin-top: 20px; font-style: italic;">
-                    💡 "Difficulty = depth of thinking, not size of numbers"
-                </p>
-            </div>
-        </div>
-
-        <!-- Mock Olympiads Section -->
-        <div class="section" id="section-mocks">
-            <h2 style="font-family: var(--font-display); font-size: 36px; margin-bottom: 16px; text-align: center;">
-                Mock Olympiad Exams
-            </h2>
-            <p style="text-align: center; font-size: 18px; color: var(--gray-700); max-width: 700px; margin: 0 auto 48px;">
-                Simulate real BdMO experience. <strong>Contest-level difficulty only.</strong> No hints allowed.
-            </p>
-
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; max-width: 1200px; margin: 0 auto;">
-                <div class="mock-card" onclick="startMockExam('regional')">
-                    <div class="mock-icon">📝</div>
-                    <div class="mock-title">Regional Mock</div>
-                    <div class="mock-desc">Beginner-friendly format with BdMO-style problems</div>
-                    <div class="mock-details">
-                        <div class="mock-detail">⏱️ <span>BdMO-style timing (varies by level)</span></div>
-                        <div class="mock-detail">📊 <span>8-10 problems (Primary), 6-8 (Secondary)</span></div>
-                        <div class="mock-detail"><span class="mock-badge">100% 🔴 Contest Tier</span></div>
-                        <div class="mock-detail">🚫 <span>No hints allowed</span></div>
-                    </div>
-                </div>
-
-                <div class="mock-card" onclick="startMockExam('national')">
-                    <div class="mock-icon">🏆</div>
-                    <div class="mock-title">National Mock</div>
-                    <div class="mock-desc">Intermediate challenge matching National Round difficulty</div>
-                    <div class="mock-details">
-                        <div class="mock-detail">⏱️ <span>BdMO-style timing (varies by level)</span></div>
-                        <div class="mock-detail">📊 <span>6-8 problems (varies by level)</span></div>
-                        <div class="mock-detail"><span class="mock-badge">80% 🔴 Contest + 20% ⚫ Elite</span></div>
-                        <div class="mock-detail">🚫 <span>No hints allowed</span></div>
-                    </div>
-                </div>
-
-                <div class="mock-card" onclick="startMockExam('selection')">
-                    <div class="mock-icon">🥇</div>
-                    <div class="mock-title">Selection Mock</div>
-                    <div class="mock-desc">Advanced IMO preparation for top performers</div>
-                    <div class="mock-details">
-                        <div class="mock-detail">⏱️ <span>BdMO-style timing (varies by level)</span></div>
-                        <div class="mock-detail">📊 <span>4-6 problems (IMO-style)</span></div>
-                        <div class="mock-detail"><span class="mock-badge">60% 🔴 Contest + 40% ⚫ Elite</span></div>
-                        <div class="mock-detail">🚫 <span>No hints allowed</span></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Progress Section -->
-        <div class="section" id="section-progress">
-            <h2 style="font-family: var(--font-display); font-size: 36px; text-align: center; margin-bottom: 48px;">
-                Your Progress & Stats
-            </h2>
-            <p style="text-align: center; color: var(--gray-700); font-size: 16px;">
-                Complete your first training session to see your progress dashboard!
-            </p>
-        </div>
-
-        <!-- Leaderboard Section -->
-        <div class="section" id="section-leaderboard">
-            <h2 style="font-family: var(--font-display); font-size: 36px; text-align: center; margin-bottom: 24px;">
-                Leaderboards
-            </h2>
-            
-            <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 32px; flex-wrap: wrap;">
-                <button class="nav-tab active" onclick="switchLeaderboard('overall')">Overall</button>
-                <button class="nav-tab" onclick="switchLeaderboard('level')">My Level</button>
-                <button class="nav-tab" onclick="switchLeaderboard('skills')">Skills</button>
-                <button class="nav-tab" onclick="switchLeaderboard('mocks')">Mock Prestige</button>
-                <button class="nav-tab" onclick="switchLeaderboard('growth')">Growth (30 Days)</button>
-            </div>
-
-            <div id="leaderboard-overall" class="leaderboard-section active">
-                <h3 style="text-align: center; margin-bottom: 24px;">Overall Olympiad Rankings</h3>
-                <p style="text-align: center; color: var(--gray-700);">Complete training to join the leaderboard!</p>
-            </div>
-
-            <div id="leaderboard-level" class="leaderboard-section" style="display: none;">
-                <h3 style="text-align: center; margin-bottom: 24px;">My Level Rankings</h3>
-                <p style="text-align: center; color: var(--gray-700);">Fair competition with same-age peers!</p>
-            </div>
-
-            <div id="leaderboard-skills" class="leaderboard-section" style="display: none;">
-                <h3 style="text-align: center; margin-bottom: 24px;">Skill Track Champions</h3>
-                <p style="text-align: center; color: var(--gray-700);">7 separate leaderboards for each thinking skill!</p>
-            </div>
-
-            <div id="leaderboard-mocks" class="leaderboard-section" style="display: none;">
-                <h3 style="text-align: center; margin-bottom: 24px;">Mock Exam Prestige Board</h3>
-                <p style="text-align: center; color: var(--gray-700);">Based on timed mock performance only - most credible ranking!</p>
-            </div>
-
-            <div id="leaderboard-growth" class="leaderboard-section" style="display: none;">
-                <h3 style="text-align: center; margin-bottom: 24px;">Growth Leaderboard (Last 30 Days)</h3>
-                <p style="text-align: center; color: var(--gray-700);">Who improved the most recently? New students welcomed!</p>
-            </div>
-        </div>
+    <div class="banner banner-danger" id="errorBanner">
+      <div class="banner-title" id="errorBannerTitle">Action required</div>
+      <div class="banner-text" id="errorBannerText"></div>
     </div>
 
-    <script>
-        // FIXED: Updated tier distributions (expert-recommended)
-        const TIER_DISTRIBUTIONS = {
-            primary: {
-                warmup: 0.30,
-                standard: 0.50,
-                challenge: 0.20,
-                contest: 0,
-                elite: 0
-            },
-            junior: {
-                warmup: 0.20,
-                standard: 0.50,
-                challenge: 0.25,
-                contest: 0.05,
-                elite: 0
-            },
-            secondary: {
-                warmup: 0.10,
-                standard: 0.45,
-                challenge: 0.30,
-                contest: 0.15,
-                elite: 0
-            },
-            higher_secondary: {
-                warmup: 0.05,
-                standard: 0.40,
-                challenge: 0.30,
-                contest: 0.20,
-                elite: 0.05
-            },
-            advanced: {
-                warmup: 0,
-                standard: 0.25,
-                challenge: 0.30,
-                contest: 0.30,
-                elite: 0.15
-            }
-        };
+    <!-- Start Training -->
+    <div class="section active" id="section-training">
+      <h1 style="font-family: var(--font-display); font-size: 42px; text-align: center; margin-bottom: 16px;">
+        Start Your Olympiad Training
+      </h1>
+      <p style="text-align: center; font-size: 18px; color: var(--gray-700); max-width: 700px; margin: 0 auto 48px;">
+        Choose your level to begin. Your personal coach will create today's perfect training plan.
+      </p>
 
-        // FIXED: Archetype library (from master roadmap)
-        const ARCHETYPES = {
-            constraint_translation: {
-                name: "Constraint Translation",
-                description: "Convert words into strict logical constraints",
-                skill_track: "Thinking with Constraints"
-            },
-            elimination_by_contradiction: {
-                name: "Elimination by Contradiction",
-                description: "Assume option is true → show it violates → eliminate",
-                skill_track: "Logic & Reasoning"
-            },
-            ordering_partial_info: {
-                name: "Ordering with Partial Information",
-                description: "Use inequalities to fix relative order",
-                skill_track: "Logic & Reasoning"
-            },
-            truth_lie_deduction: {
-                name: "Truth-Lie Deduction",
-                description: "Use consistency rules to find truth",
-                skill_track: "Logic & Reasoning"
-            },
-            digit_constraint: {
-                name: "Digit Constraint Reasoning",
-                description: "Digits restrict numbers more than expected",
-                skill_track: "Divisibility & Digit Logic"
-            },
-            divisibility_remainders: {
-                name: "Divisibility via Remainders",
-                description: "Think in remainders, not full division",
-                skill_track: "Divisibility & Digit Logic"
-            },
-            parity_trap: {
-                name: "Parity (Even-Odd) Trap",
-                description: "Even/odd structure makes some outcomes impossible",
-                skill_track: "Patterns & Invariants"
-            },
-            bounding: {
-                name: "Bounding (At Least/At Most)",
-                description: "Find minimum or maximum using constraints",
-                skill_track: "Worst-Case & Guarantee"
-            },
-            structured_counting: {
-                name: "Structured Counting",
-                description: "Count systematically using tree or table",
-                skill_track: "Smart Counting"
-            },
-            complement_counting: {
-                name: "Complement Counting",
-                description: "Count everything, subtract what you don't want",
-                skill_track: "Smart Counting"
-            },
-            symmetry_reduction: {
-                name: "Symmetry Reduction",
-                description: "Many cases are actually the same",
-                skill_track: "Smart Counting"
-            },
-            pigeonhole_guarantee: {
-                name: "Pigeonhole Guarantee",
-                description: "More items than containers → something repeats",
-                skill_track: "Worst-Case & Guarantee"
-            },
-            invariant_detection: {
-                name: "Invariant Detection",
-                description: "Something stays same even when things change",
-                skill_track: "Patterns & Invariants"
-            },
-            pattern_extension: {
-                name: "Pattern Extension with Constraint",
-                description: "Pattern continues, but rules restrict it",
-                skill_track: "Patterns & Invariants"
-            },
-            extremal_principle: {
-                name: "Extremal Principle",
-                description: "Look at smallest/largest element first",
-                skill_track: "Worst-Case & Guarantee"
-            },
-            symmetry_in_shapes: {
-                name: "Symmetry in Shapes",
-                description: "Reflect or rotate to simplify geometry",
-                skill_track: "Geometry without Formulas"
-            },
-            equal_area_reasoning: {
-                name: "Equal Area Reasoning",
-                description: "Different shapes can have equal area without numbers",
-                skill_track: "Geometry without Formulas"
-            },
-            hidden_auxiliary_line: {
-                name: "Hidden Auxiliary Line",
-                description: "Adding one line reveals everything",
-                skill_track: "Geometry without Formulas"
-            },
-            casework_with_pruning: {
-                name: "Casework with Pruning",
-                description: "Split into cases but eliminate most early",
-                skill_track: "Mixed Challenges"
-            },
-            constructive_strategy: {
-                name: "Constructive Strategy",
-                description: "Build example that satisfies all constraints",
-                skill_track: "Mixed Challenges"
-            },
-            reverse_thinking: {
-                name: "Reverse Thinking",
-                description: "Start from goal and reverse steps",
-                skill_track: "Mixed Challenges"
-            },
-            transfer_trick: {
-                name: "Transfer Trick",
-                description: "Known idea applies in disguised form",
-                skill_track: "Mixed Challenges"
-            }
-        };
+      <div class="level-cards">
+        <div class="level-card" data-level="primary" onclick="selectLevel('primary')">
+          <div class="level-icon">🌱</div>
+          <div class="level-title">Primary (8-9)</div>
+          <div class="level-subtitle">Regional Round (Class 3-5)</div>
+          <div class="level-desc">Build thinking habits</div>
+        </div>
 
-        // FIXED: Level-specific archetype mapping (which archetypes allowed at each level)
-        const LEVEL_ARCHETYPE_MAP = {
-            primary: [
-                'constraint_translation', 'ordering_partial_info', 'truth_lie_deduction',
-                'digit_constraint', 'parity_trap', 'structured_counting', 
-                'pattern_extension', 'symmetry_in_shapes', 'reverse_thinking'
-            ],
-            junior: [
-                'constraint_translation', 'elimination_by_contradiction', 'ordering_partial_info', 
-                'truth_lie_deduction', 'digit_constraint', 'divisibility_remainders', 'parity_trap',
-                'bounding', 'structured_counting', 'complement_counting', 'symmetry_reduction',
-                'pigeonhole_guarantee', 'pattern_extension', 'invariant_detection',
-                'symmetry_in_shapes', 'equal_area_reasoning', 'casework_with_pruning',
-                'constructive_strategy', 'reverse_thinking'
-            ],
-            secondary: [
-                'constraint_translation', 'elimination_by_contradiction', 'ordering_partial_info',
-                'truth_lie_deduction', 'digit_constraint', 'divisibility_remainders', 'parity_trap',
-                'bounding', 'structured_counting', 'complement_counting', 'symmetry_reduction',
-                'pigeonhole_guarantee', 'pattern_extension', 'invariant_detection', 'extremal_principle',
-                'symmetry_in_shapes', 'equal_area_reasoning', 'hidden_auxiliary_line',
-                'casework_with_pruning', 'constructive_strategy', 'reverse_thinking', 'transfer_trick'
-            ],
-            higher_secondary: [
-                'constraint_translation', 'elimination_by_contradiction', 'ordering_partial_info',
-                'truth_lie_deduction', 'digit_constraint', 'divisibility_remainders', 'parity_trap',
-                'bounding', 'structured_counting', 'complement_counting', 'symmetry_reduction',
-                'pigeonhole_guarantee', 'pattern_extension', 'invariant_detection', 'extremal_principle',
-                'symmetry_in_shapes', 'equal_area_reasoning', 'hidden_auxiliary_line',
-                'casework_with_pruning', 'constructive_strategy', 'reverse_thinking', 'transfer_trick'
-            ],
-            advanced: [
-                'constraint_translation', 'elimination_by_contradiction', 'ordering_partial_info',
-                'truth_lie_deduction', 'digit_constraint', 'divisibility_remainders', 'parity_trap',
-                'bounding', 'structured_counting', 'complement_counting', 'symmetry_reduction',
-                'pigeonhole_guarantee', 'pattern_extension', 'invariant_detection', 'extremal_principle',
-                'symmetry_in_shapes', 'equal_area_reasoning', 'hidden_auxiliary_line',
-                'casework_with_pruning', 'constructive_strategy', 'reverse_thinking', 'transfer_trick'
-            ]
-        };
+        <div class="level-card" data-level="junior" onclick="selectLevel('junior')">
+          <div class="level-icon">🌿</div>
+          <div class="level-title">Junior (10-11)</div>
+          <div class="level-subtitle">Regional Round (Class 6-8)</div>
+          <div class="level-desc">Core Olympiad skills</div>
+        </div>
 
-        // Level-specific tooltips
-        const TIER_TOOLTIPS = {
-            warmup: {
-                title: '⚪ Warmup',
-                purpose: 'Build confidence & activate thinking',
-                insights: '1 insight',
-                time: '3-6 minutes',
-                success: '80%+ success rate',
-                hints: 'Available after 1 minute',
-                equivalent: 'Below Regional level',
-                examples: {
-                    primary: 'Triangle ABC has angles 50° and 60°. Find the third angle.',
-                    junior: 'A number ends in 4. Is it divisible by 2? By 4?',
-                    secondary: 'If 3x + 5 = 17, find x.',
-                    higher_secondary: 'Find the area of triangle with base 8 and height 5.',
-                    advanced: 'Evaluate: 15 × 12 using mental math tricks.'
-                },
-                atLevel: {
-                    primary: 'Perfect for building your confidence! Most students solve these easily.',
-                    junior: 'Quick warm-up before harder problems.',
-                    secondary: 'Rarely used at your level - you\'re ready for more!',
-                    higher_secondary: 'Almost never needed - jump straight to Standard.',
-                    advanced: 'Not used at your level.'
-                }
-            },
-            standard: {
-                title: '🟡 Standard',
-                purpose: 'Core Olympiad practice',
-                insights: '1-2 insights',
-                time: '5-10 minutes',
-                success: '50-70% success rate',
-                hints: 'Available after 3 minutes',
-                equivalent: 'Regional Olympiad level',
-                examples: {
-                    primary: 'Triangle ABC has AB = AC and angle A = 40°. Find angle B.',
-                    junior: 'How many routes from A to B on a 3×3 grid moving only right or up?',
-                    secondary: 'Prove that the sum of any two consecutive odd numbers is even.',
-                    higher_secondary: 'Find all integer solutions to x² - y² = 15.',
-                    advanced: 'Prove Fermat\'s Little Theorem for prime p = 5.'
-                },
-                atLevel: {
-                    primary: 'This is your main training ground! Master these to excel at Regional.',
-                    junior: 'Most of your daily practice - core Olympiad thinking!',
-                    secondary: 'Regular practice to maintain sharp problem-solving.',
-                    higher_secondary: 'Maintenance level - keeps your skills sharp.',
-                    advanced: 'Foundation work before Contest problems.'
-                }
-            },
-            challenge: {
-                title: '🟠 Challenge',
-                purpose: 'Stretch your thinking',
-                insights: '2 insights',
-                time: '8-15 minutes',
-                success: '30-50% success rate',
-                hints: 'Limited hints after 5 minutes',
-                equivalent: 'Hard Regional / Entry National',
-                examples: {
-                    primary: 'Triangle ABC has angle A = 2 × angle B = 3 × angle C. Find all angles.',
-                    junior: 'Find how many ways to arrange 5 people if exactly 2 specific people must be adjacent.',
-                    secondary: 'Prove that n² - n is always even for any integer n.',
-                    higher_secondary: 'Find the number of solutions to x + y + z = 10 where x,y,z are positive integers.',
-                    advanced: 'Prove that √2 + √3 is irrational.'
-                },
-                atLevel: {
-                    primary: 'Stretch problems! Struggle is normal and builds strong thinking.',
-                    junior: 'Regular challenge - you\'ll get better with practice!',
-                    secondary: 'This is where real growth happens!',
-                    higher_secondary: 'Main training focus - perfect difficulty for you.',
-                    advanced: 'Regular warm-up before Contest level.'
-                }
-            },
-            contest: {
-                title: '🔴 Contest',
-                purpose: 'Real competition preparation',
-                insights: '2-3 insights',
-                time: '15-25 minutes',
-                success: '10-30% success rate',
-                hints: 'No hints allowed',
-                equivalent: 'National Olympiad level',
-                examples: {
-                    primary: 'Not available at your level',
-                    junior: 'Prove: If M is the midpoint of BC and AM bisects angle A, then AB = AC.',
-                    secondary: 'Find all prime numbers p where p² can be written as sum of cubes of two positive integers.',
-                    higher_secondary: 'Prove that for any triangle, the sum of medians is greater than 3/4 the perimeter.',
-                    advanced: 'IMO 2019 Problem 2 (moderate difficulty)'
-                },
-                atLevel: {
-                    primary: 'You\'ll see these when you\'re older! Focus on Standard & Challenge now.',
-                    junior: 'Rare problems - only occasionally to test readiness.',
-                    secondary: 'Mock exam difficulty - this is the real test!',
-                    higher_secondary: 'Regular practice - you\'re training for National!',
-                    advanced: 'Core training level alongside Elite.'
-                }
-            },
-            elite: {
-                title: '⚫ Elite',
-                purpose: 'Train future medalists',
-                insights: '3+ deep insights',
-                time: '25-40 minutes',
-                success: '<5% success rate',
-                hints: 'No hints (post-solution analysis only)',
-                equivalent: 'IMO Preparation level',
-                examples: {
-                    primary: 'Not available at your level',
-                    junior: 'Not available at your level',
-                    secondary: 'Not available at your level',
-                    higher_secondary: 'IMO-style geometry with circle constructions and angle chasing.',
-                    advanced: 'IMO 2023 Problem 6 (hardest problem)'
-                },
-                atLevel: {
-                    primary: 'Way too advanced! Master Standard first.',
-                    junior: 'Too advanced! Focus on Challenge.',
-                    secondary: 'Reserved for older students in Selection prep.',
-                    higher_secondary: 'Occasional stretch - rare but valuable!',
-                    advanced: 'Main training focus - you\'re preparing for IMO!'
-                }
-            }
-        };
+        <div class="level-card" data-level="secondary" onclick="selectLevel('secondary')">
+          <div class="level-icon">🌳</div>
+          <div class="level-title">Secondary (12-13)</div>
+          <div class="level-subtitle">National Round (Class 9-10)</div>
+          <div class="level-desc">Advanced reasoning</div>
+        </div>
 
-        // Supabase client
-        // Enterprise: Supabase from /api/env (no hardcoded URL/keys)
-	function getSupabaseClient() {
-  	if (!window.__LP_ENV || !window.__LP_ENV.SUPABASE_URL || !window.__LP_ENV.SUPABASE_ANON_KEY) {
-   	 throw new Error("Missing env config. Ensure /api/env is deployed.");
- 	 }
- 	 return supabase.createClient(
-    	window.__LP_ENV.SUPABASE_URL,
-   	 window.__LP_ENV.SUPABASE_ANON_KEY
-  	);
-	}
+        <div class="level-card" data-level="higher_secondary" onclick="selectLevel('higher_secondary')">
+          <div class="level-icon">🎋</div>
+          <div class="level-title">Higher Secondary (14-15)</div>
+          <div class="level-subtitle">National Round (Class 11-12)</div>
+          <div class="level-desc">Contest preparation</div>
+        </div>
 
-	const sb = getSupabaseClient();
+        <div class="level-card" data-level="advanced" onclick="selectLevel('advanced')">
+          <div class="level-icon">🏔️</div>
+          <div class="level-title">Advanced (16+)</div>
+          <div class="level-subtitle">Selection / IMO Preparation</div>
+          <div class="level-desc">Elite problem-solving</div>
+        </div>
+      </div>
 
-        let currentLevel = null;
-        let currentMode = 'mixed';
-        let countdownTimer = null;
+      <!-- Today's plan -->
+      <div class="today-plan-container" id="todayPlanContainer">
+        <div class="today-plan-card">
+          <div class="plan-header">
+            <div class="plan-title">🧠 Today's Olympiad Plan</div>
+            <div class="plan-subtitle" id="planTime">25-50 minutes</div>
+          </div>
 
-        // Switch sections
-        function switchSection(sectionName) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            
-            document.getElementById(`section-${sectionName}`).classList.add('active');
-            event.target.classList.add('active');
+          <div class="plan-reasoning">
+            <div class="plan-reasoning-title">📊 Why this plan?</div>
+            <div class="plan-reasoning-text" id="planReasoning"></div>
+          </div>
 
-            if (sectionName === 'skills' && currentLevel) {
-                renderDifficultyBadges(currentLevel);
-            }
+          <div class="plan-archetypes">
+            <div class="plan-archetypes-title">🎯 Thinking Patterns You'll Practice:</div>
+            <div class="plan-archetypes-list" id="planArchetypes"></div>
+          </div>
+
+          <div class="plan-mix">
+            <div class="plan-mix-title">Training Mix:</div>
+            <div class="plan-problems" id="planProblems"></div>
+          </div>
+
+          <div class="plan-focus">
+            <div class="plan-focus-title">Focus Skills:</div>
+            <div class="plan-focus-skills" id="planSkills"></div>
+          </div>
+
+          <button class="start-training-btn" onclick="startTraining(true)">
+            START TODAY'S TRAINING
+          </button>
+
+          <!-- Restored old behavior: Starting... auto countdown -->
+          <div class="plan-countdown" id="countdown" onclick="startTraining(false)">
+            Starting...
+          </div>
+
+          <div class="plan-customize">
+            Or customize:
+            <button onclick="switchMode('bootcamp')">Bootcamp</button>
+            <button onclick="switchMode('mock')">Mock Exam</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Skills -->
+    <div class="section" id="section-skills">
+      <h2 style="font-family: var(--font-display); font-size: 36px; margin-bottom: 16px; text-align: center;">
+        7 Core Thinking Skills
+      </h2>
+      <p style="text-align: center; font-size: 18px; color: var(--gray-700); max-width: 700px; margin: 0 auto 32px;">
+        Master these skills to excel in BdMO, Selection Rounds, and IMO competitions.
+      </p>
+
+      <div style="background: white; border-radius: 16px; padding: 32px; max-width: 900px; margin: 0 auto 40px; border: 2px solid var(--gold-200);">
+        <h3 style="font-family: var(--font-display); font-size: 22px; margin-bottom: 16px; text-align: center;">
+          Understanding Problem Difficulty
+        </h3>
+        <p style="text-align: center; font-size: 14px; color: var(--gray-700); margin-bottom: 24px;">
+          Problems are rated by thinking depth, not number size. Hover over each tier to see examples for your level.
+        </p>
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;" id="difficultyBadges"></div>
+        <p style="text-align: center; font-size: 12px; color: var(--gray-700); margin-top: 20px; font-style: italic;">
+          💡 "Difficulty = depth of thinking, not size of numbers"
+        </p>
+      </div>
+    </div>
+
+    <!-- Mocks -->
+    <div class="section" id="section-mocks">
+      <h2 style="font-family: var(--font-display); font-size: 36px; margin-bottom: 16px; text-align: center;">
+        Mock Olympiad Exams
+      </h2>
+      <p style="text-align: center; font-size: 18px; color: var(--gray-700); max-width: 700px; margin: 0 auto 48px;">
+        Simulate real BdMO experience. <strong>Contest-level difficulty only.</strong> No hints allowed.
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; max-width: 1200px; margin: 0 auto;">
+        <div class="mock-card" onclick="startMockExam('regional')">
+          <div class="mock-icon">📝</div>
+          <div class="mock-title">Regional Mock</div>
+          <div class="mock-desc">Beginner-friendly format with BdMO-style problems</div>
+          <div class="mock-details">
+            <div class="mock-detail">⏱️ <span>BdMO-style timing (varies by level)</span></div>
+            <div class="mock-detail">📊 <span>8-10 problems (Primary), 6-8 (Secondary)</span></div>
+            <div class="mock-detail"><span class="mock-badge">100% 🔴 Contest Tier</span></div>
+            <div class="mock-detail">🚫 <span>No hints allowed</span></div>
+          </div>
+        </div>
+
+        <div class="mock-card" onclick="startMockExam('national')">
+          <div class="mock-icon">🏆</div>
+          <div class="mock-title">National Mock</div>
+          <div class="mock-desc">Intermediate challenge matching National Round difficulty</div>
+          <div class="mock-details">
+            <div class="mock-detail">⏱️ <span>BdMO-style timing (varies by level)</span></div>
+            <div class="mock-detail">📊 <span>6-8 problems (varies by level)</span></div>
+            <div class="mock-detail"><span class="mock-badge">80% 🔴 Contest + 20% ⚫ Elite</span></div>
+            <div class="mock-detail">🚫 <span>No hints allowed</span></div>
+          </div>
+        </div>
+
+        <div class="mock-card" onclick="startMockExam('selection')">
+          <div class="mock-icon">🥇</div>
+          <div class="mock-title">Selection Mock</div>
+          <div class="mock-desc">Advanced IMO preparation for top performers</div>
+          <div class="mock-details">
+            <div class="mock-detail">⏱️ <span>BdMO-style timing (varies by level)</span></div>
+            <div class="mock-detail">📊 <span>4-6 problems (IMO-style)</span></div>
+            <div class="mock-detail"><span class="mock-badge">60% 🔴 Contest + 40% ⚫ Elite</span></div>
+            <div class="mock-detail">🚫 <span>No hints allowed</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="section" id="section-progress">
+      <h2 style="font-family: var(--font-display); font-size: 36px; text-align: center; margin-bottom: 48px;">
+        Your Progress & Stats
+      </h2>
+      <p style="text-align: center; color: var(--gray-700); font-size: 16px;">
+        Complete your first training session to see your progress dashboard!
+      </p>
+    </div>
+
+    <!-- Leaderboards -->
+    <div class="section" id="section-leaderboard">
+      <h2 style="font-family: var(--font-display); font-size: 36px; text-align: center; margin-bottom: 24px;">
+        Leaderboards
+      </h2>
+
+      <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 32px; flex-wrap: wrap;">
+        <button class="nav-tab active" data-leaderboard-tab="overall" onclick="switchLeaderboard('overall')">Overall</button>
+        <button class="nav-tab" data-leaderboard-tab="level" onclick="switchLeaderboard('level')">My Level</button>
+        <button class="nav-tab" data-leaderboard-tab="skills" onclick="switchLeaderboard('skills')">Skills</button>
+        <button class="nav-tab" data-leaderboard-tab="mocks" onclick="switchLeaderboard('mocks')">Mock Prestige</button>
+        <button class="nav-tab" data-leaderboard-tab="growth" onclick="switchLeaderboard('growth')">Growth (30 Days)</button>
+      </div>
+
+      <div id="leaderboard-overall" class="leaderboard-section" style="display:block;">
+        <h3 style="text-align: center; margin-bottom: 24px;">Overall Olympiad Rankings</h3>
+        <p style="text-align: center; color: var(--gray-700);">Complete training to join the leaderboard!</p>
+      </div>
+
+      <div id="leaderboard-level" class="leaderboard-section" style="display:none;">
+        <h3 style="text-align: center; margin-bottom: 24px;">My Level Rankings</h3>
+        <p style="text-align: center; color: var(--gray-700);">Fair competition with same-age peers!</p>
+      </div>
+
+      <div id="leaderboard-skills" class="leaderboard-section" style="display:none;">
+        <h3 style="text-align: center; margin-bottom: 24px;">Skill Track Champions</h3>
+        <p style="text-align: center; color: var(--gray-700);">7 separate leaderboards for each thinking skill!</p>
+      </div>
+
+      <div id="leaderboard-mocks" class="leaderboard-section" style="display:none;">
+        <h3 style="text-align: center; margin-bottom: 24px;">Mock Exam Prestige Board</h3>
+        <p style="text-align: center; color: var(--gray-700);">Based on timed mock performance only - most credible ranking!</p>
+      </div>
+
+      <div id="leaderboard-growth" class="leaderboard-section" style="display:none;">
+        <h3 style="text-align: center; margin-bottom: 24px;">Growth Leaderboard (Last 30 Days)</h3>
+        <p style="text-align: center; color: var(--gray-700);">Who improved the most recently? New students welcomed!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Child selection modal -->
+  <div class="modal-backdrop" id="childModal">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title">Select a child for Olympiad Training</div>
+      </div>
+      <div class="modal-body">
+        <div style="font-size: 13px; color: var(--gray-700); margin-bottom: 10px;">
+          Enterprise rule: all training and analytics are scoped to a child. You must select one to continue.
+        </div>
+        <select id="childSelect" class="select"></select>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" onclick="closeChildModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmChild()">Use this child</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /******************************************************************
+     * Enterprise Olympiad Page
+     * - Env safe init
+     * - Session enforcement
+     * - Child selection enforcement
+     * - Deterministic daily plan (seeded)
+     * - Restored OLD UX: plan time range, archetype naming in reasoning,
+     *   and auto countdown "Starting..." behavior.
+     ******************************************************************/
+
+    const APP_TRACK = "olympiad";
+    let sb = null;
+    let session = null;
+    let user = null;
+
+    // ─────────────────────────────────────────────────────────
+    // P1.6 DEVICE FINGERPRINT HELPERS
+    // lp_device_id is seeded in localStorage on login/signup.
+    // This page reads it (or creates it as fallback) and bundles
+    // it into the sessionStorage plan payload so the downstream
+    // session INSERT can pass it as client_meta to the DB.
+    // ─────────────────────────────────────────────────────────
+    function getOrCreateDeviceId() {
+      try {
+        let id = localStorage.getItem('lp_device_id');
+        if (!id) {
+          id = crypto.randomUUID();
+          localStorage.setItem('lp_device_id', id);
         }
+        return id;
+      } catch (e) {
+        return crypto.randomUUID();
+      }
+    }
 
-        // FIXED: Select Level & Generate Deterministic Plan
-        function selectLevel(level) {
-            console.log('✅ Level selected:', level);
-            currentLevel = level;
+    function lpGetClientMeta() {
+      return {
+        device_id:  getOrCreateDeviceId(),
+        user_agent: navigator.userAgent,
+        platform:   navigator.platform,
+        screen_res: `${screen.width}x${screen.height}`,
+        timezone:   Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+    }
 
-            document.querySelectorAll('.level-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            document.querySelector(`[data-level="${level}"]`).classList.add('selected');
+    let selectedChildId = null;
+    let selectedChildName = null;
 
-            // FIXED: Generate deterministic plan
-            generateTodaysPlan(level);
+    let currentLevel = null;
+    let currentMode = "mixed"; // mixed | bootcamp | mock
+
+    // Countdown state (old UX)
+    let countdownInterval = null;
+    let countdownSeconds = 0;
+    let countdownArmed = false;
+
+    const TIER_DISTRIBUTIONS = {
+      primary: { warmup: 0.30, standard: 0.50, challenge: 0.20, contest: 0, elite: 0 },
+      junior: { warmup: 0.20, standard: 0.50, challenge: 0.25, contest: 0.05, elite: 0 },
+      secondary: { warmup: 0.10, standard: 0.45, challenge: 0.30, contest: 0.15, elite: 0 },
+      higher_secondary: { warmup: 0.05, standard: 0.40, challenge: 0.30, contest: 0.20, elite: 0.05 },
+      advanced: { warmup: 0, standard: 0.25, challenge: 0.30, contest: 0.30, elite: 0.15 }
+    };
+
+    const ARCHETYPES = {
+      constraint_translation: { name: "Constraint Translation", description: "Convert words into strict logical constraints", skill_track: "Thinking with Constraints" },
+      elimination_by_contradiction: { name: "Elimination by Contradiction", description: "Assume option is true → show it violates → eliminate", skill_track: "Logic & Reasoning" },
+      ordering_partial_info: { name: "Ordering with Partial Information", description: "Use inequalities to fix relative order", skill_track: "Logic & Reasoning" },
+      truth_lie_deduction: { name: "Truth-Lie Deduction", description: "Use consistency rules to find truth", skill_track: "Logic & Reasoning" },
+      digit_constraint: { name: "Digit Constraint Reasoning", description: "Digits restrict numbers more than expected", skill_track: "Divisibility & Digit Logic" },
+      divisibility_remainders: { name: "Divisibility via Remainders", description: "Think in remainders, not full division", skill_track: "Divisibility & Digit Logic" },
+      parity_trap: { name: "Parity (Even-Odd) Trap", description: "Even/odd structure makes some outcomes impossible", skill_track: "Patterns & Invariants" },
+      bounding: { name: "Bounding (At Least/At Most)", description: "Find minimum or maximum using constraints", skill_track: "Worst-Case & Guarantee" },
+      structured_counting: { name: "Structured Counting", description: "Count systematically using tree or table", skill_track: "Smart Counting" },
+      complement_counting: { name: "Complement Counting", description: "Count everything, subtract what you don't want", skill_track: "Smart Counting" },
+      symmetry_reduction: { name: "Symmetry Reduction", description: "Many cases are actually the same", skill_track: "Smart Counting" },
+      pigeonhole_guarantee: { name: "Pigeonhole Guarantee", description: "More items than containers → something repeats", skill_track: "Worst-Case & Guarantee" },
+      invariant_detection: { name: "Invariant Detection", description: "Something stays same even when things change", skill_track: "Patterns & Invariants" },
+      pattern_extension: { name: "Pattern Extension with Constraint", description: "Pattern continues, but rules restrict it", skill_track: "Patterns & Invariants" },
+      extremal_principle: { name: "Extremal Principle", description: "Look at smallest/largest element first", skill_track: "Worst-Case & Guarantee" },
+      symmetry_in_shapes: { name: "Symmetry in Shapes", description: "Reflect or rotate to simplify geometry", skill_track: "Geometry without Formulas" },
+      equal_area_reasoning: { name: "Equal Area Reasoning", description: "Different shapes can have equal area without numbers", skill_track: "Geometry without Formulas" },
+      hidden_auxiliary_line: { name: "Hidden Auxiliary Line", description: "Adding one line reveals everything", skill_track: "Geometry without Formulas" },
+      casework_with_pruning: { name: "Casework with Pruning", description: "Split into cases but eliminate most early", skill_track: "Mixed Challenges" },
+      constructive_strategy: { name: "Constructive Strategy", description: "Build example that satisfies all constraints", skill_track: "Mixed Challenges" },
+      reverse_thinking: { name: "Reverse Thinking", description: "Start from goal and reverse steps", skill_track: "Mixed Challenges" },
+      transfer_trick: { name: "Transfer Trick", description: "Known idea applies in disguised form", skill_track: "Mixed Challenges" }
+    };
+
+    const LEVEL_ARCHETYPE_MAP = {
+      primary: [
+        "constraint_translation","ordering_partial_info","truth_lie_deduction",
+        "digit_constraint","parity_trap","structured_counting",
+        "pattern_extension","symmetry_in_shapes","reverse_thinking"
+      ],
+      junior: [
+        "constraint_translation","elimination_by_contradiction","ordering_partial_info",
+        "truth_lie_deduction","digit_constraint","divisibility_remainders","parity_trap",
+        "bounding","structured_counting","complement_counting","symmetry_reduction",
+        "pigeonhole_guarantee","pattern_extension","invariant_detection",
+        "symmetry_in_shapes","equal_area_reasoning","casework_with_pruning",
+        "constructive_strategy","reverse_thinking"
+      ],
+      secondary: [
+        "constraint_translation","elimination_by_contradiction","ordering_partial_info",
+        "truth_lie_deduction","digit_constraint","divisibility_remainders","parity_trap",
+        "bounding","structured_counting","complement_counting","symmetry_reduction",
+        "pigeonhole_guarantee","invariant_detection","extremal_principle",
+        "equal_area_reasoning","hidden_auxiliary_line","casework_with_pruning",
+        "constructive_strategy","reverse_thinking","transfer_trick"
+      ],
+      higher_secondary: [
+        "constraint_translation","elimination_by_contradiction","ordering_partial_info",
+        "truth_lie_deduction","divisibility_remainders","parity_trap",
+        "bounding","complement_counting","symmetry_reduction",
+        "pigeonhole_guarantee","invariant_detection","extremal_principle",
+        "equal_area_reasoning","hidden_auxiliary_line","casework_with_pruning",
+        "constructive_strategy","reverse_thinking","transfer_trick"
+      ],
+      advanced: [
+        "elimination_by_contradiction","ordering_partial_info","truth_lie_deduction",
+        "divisibility_remainders","parity_trap","bounding","complement_counting",
+        "symmetry_reduction","pigeonhole_guarantee","invariant_detection","extremal_principle",
+        "symmetry_in_shapes","equal_area_reasoning","hidden_auxiliary_line",
+        "casework_with_pruning","constructive_strategy","reverse_thinking","transfer_trick"
+      ]
+    };
+
+    function showInfo(title, text) {
+      const b = document.getElementById("infoBanner");
+      document.getElementById("infoBannerTitle").textContent = title || "";
+      document.getElementById("infoBannerText").textContent = text || "";
+      b.classList.add("show");
+    }
+    function hideInfo() { document.getElementById("infoBanner").classList.remove("show"); }
+
+    function showError(text) {
+      const b = document.getElementById("errorBanner");
+      document.getElementById("errorBannerText").textContent = text || "Unknown error";
+      b.classList.add("show");
+    }
+    function hideError() { document.getElementById("errorBanner").classList.remove("show"); }
+
+    async function ensureEnv() {
+      if (window.__LP_ENV && window.__LP_ENV.SUPABASE_URL && window.__LP_ENV.SUPABASE_ANON_KEY) return window.__LP_ENV;
+
+      const r = await fetch("/api/env", { cache: "no-store" });
+      if (!r.ok) throw new Error("Missing env config. Ensure /api/env works and Vercel env vars are set.");
+      const j = await r.json();
+      window.__LP_ENV = j;
+      if (!j?.SUPABASE_URL || !j?.SUPABASE_ANON_KEY) throw new Error("Invalid /api/env payload.");
+      return j;
+    }
+
+    async function initSupabase() {
+      const env = await ensureEnv();
+      if (!window.supabase || !window.supabase.createClient) throw new Error("Supabase JS library not loaded.");
+      // storageKey MUST match login.html / dashboard.html ('logicpals.auth')
+      // Without this, getSession() returns null even when the user is logged in,
+      // because the auth token is stored under a different localStorage key.
+      sb = window.supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
+        auth: {
+          storageKey: 'logicpals.auth',
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
         }
+      });
+    }
 
-        // FIXED: Generate deterministic, archetype-based, explainable plan
-        async function generateTodaysPlan(level) {
-            const distribution = TIER_DISTRIBUTIONS[level];
-            const problemCount = (level === 'advanced' || level === 'higher_secondary') ? 5 : 4;
-            
-            // Calculate problems per tier (ENFORCED)
-            const plan = {
-                warmup: Math.round(problemCount * distribution.warmup),
-                standard: Math.round(problemCount * distribution.standard),
-                challenge: Math.round(problemCount * distribution.challenge),
-                contest: Math.round(problemCount * distribution.contest),
-                elite: Math.round(problemCount * distribution.elite)
-            };
+    function redirectToLogin() {
+      const next = encodeURIComponent("olympiad.html");
+      window.location.href = `/login.html?next=${next}`;
+    }
 
-            // VALIDATOR: Ensure distributions are enforced
-            if (!validateTierDistribution(plan, level)) {
-                console.error('❌ VALIDATOR FAILED: Invalid tier distribution');
-                return;
-            }
+    async function requireSession() {
+      const { data, error } = await sb.auth.getSession();
+      if (error) throw new Error(error.message);
+      session = data?.session || null;
+      user = session?.user || null;
+      if (!user) { redirectToLogin(); return false; }
+      return true;
+    }
 
-            // FIXED: Deterministic archetype selection (not random!)
-            const selectedArchetypes = selectWeakestArchetypes(level, 2);
-            
-            // Generate problem badges HTML
-            let problemsHTML = '';
-            const tierConfig = {
-                warmup: { emoji: '⚪', label: 'Warmup', class: 'difficulty-warmup' },
-                standard: { emoji: '🟡', label: 'Standard', class: 'difficulty-standard' },
-                challenge: { emoji: '🟠', label: 'Challenge', class: 'difficulty-challenge' },
-                contest: { emoji: '🔴', label: 'Contest', class: 'difficulty-contest' },
-                elite: { emoji: '⚫', label: 'Elite', class: 'difficulty-elite' }
-            };
+    function openChildModal() { document.getElementById("childModal").classList.add("show"); }
+    function closeChildModal() { document.getElementById("childModal").classList.remove("show"); }
 
-            for (const [tier, count] of Object.entries(plan)) {
-                if (count > 0) {
-                    const config = tierConfig[tier];
-                    for (let i = 0; i < count; i++) {
-                        problemsHTML += `<span class="plan-problem-badge ${config.class}">${config.emoji} ${config.label}</span>`;
-                    }
-                }
-            }
+    function loadSavedChild() {
+      try {
+        const raw = localStorage.getItem("lp_selected_child");
+        if (!raw) return;
+        const j = JSON.parse(raw);
+        if (j?.id) { selectedChildId = j.id; selectedChildName = j.name || null; }
+      } catch {}
+    }
 
-            // Get skill tracks from selected archetypes
-            const focusSkills = [...new Set(selectedArchetypes.map(a => ARCHETYPES[a].skill_track))];
+    function saveChild(id, name) {
+      selectedChildId = id;
+      selectedChildName = name || "Child";
+      localStorage.setItem("lp_selected_child", JSON.stringify({ id, name }));
+    }
 
-            // EXPLAINABILITY: Generate reason for this plan
-            const reasoning = generatePlanReasoning(level, selectedArchetypes);
+    async function fetchChildrenList() {
+      const { data, error } = await sb.from("children").select("id, display_name, name").order("created_at", { ascending: true });
+      if (error) throw new Error(error.message);
+      return data || [];
+    }
 
-            // ARCHETYPES: Show what patterns they'll learn
-            const archetypesHTML = selectedArchetypes.map(archKey => {
-                const arch = ARCHETYPES[archKey];
-                return `<div class="archetype-item">
-                    <span class="archetype-name">${arch.name}:</span> ${arch.description}
-                </div>`;
-            }).join('');
+    async function ensureChildSelected() {
+      loadSavedChild();
+      const children = await fetchChildrenList();
+      const select = document.getElementById("childSelect");
+      select.innerHTML = "";
 
-            // Update UI
-            document.getElementById('planProblems').innerHTML = problemsHTML;
-            document.getElementById('planSkills').textContent = focusSkills.join(' + ');
-            document.getElementById('planTime').textContent = `${problemCount * 5}-${problemCount * 10} minutes`;
-            document.getElementById('planReasoning').textContent = reasoning;
-            document.getElementById('planArchetypes').innerHTML = archetypesHTML;
+      if (!children.length) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "No children found";
+        select.appendChild(opt);
+        openChildModal();
+        showError("No children found. Create a child first in the parent dashboard.");
+        return false;
+      }
 
-            // Show the plan
-            const container = document.getElementById('todayPlanContainer');
-            container.style.display = 'block';
+      let matched = null;
+      if (selectedChildId) matched = children.find(c => c.id === selectedChildId) || null;
 
-            setTimeout(() => {
-                container.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
+      if (!matched && children.length === 1) {
+        const c = children[0];
+        saveChild(c.id, c.display_name || c.name || "Child");
+        hideError();
+        return true;
+      }
 
-            startCountdown();
+      children.forEach(c => {
+        const nm = c.display_name || c.name || c.id.slice(0, 8);
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = nm;
+        if (selectedChildId && c.id === selectedChildId) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      if (matched) {
+        saveChild(matched.id, matched.display_name || matched.name || "Child");
+        hideError();
+        return true;
+      }
+
+      openChildModal();
+      showError("Please select a child to continue Olympiad training.");
+      return false;
+    }
+
+    async function confirmChild() {
+      const select = document.getElementById("childSelect");
+      const id = select.value;
+      if (!id) return;
+      const name = select.options[select.selectedIndex]?.textContent || "Child";
+      saveChild(id, name);
+      closeChildModal();
+      hideError();
+      if (currentLevel) generateTodaysPlan(currentLevel);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // P1.6 DB SESSION WRITE
+    // Creates a real row in public.sessions with client_meta.
+    // trg_extract_session_fingerprint fires on INSERT, populates
+    // session_fingerprints, then trg_detect_session_sharing fires.
+    // Called at startTraining() commit — not on page load — because
+    // the Olympiad planner is a staging page and a session only
+    // exists when the student actually starts training.
+    // Returns the DB session UUID. Gracefully falls back to a
+    // local UUID on any error so training is never blocked.
+    // ─────────────────────────────────────────────────────────
+    async function createDbSession(userId, childId, level, mode) {
+      if (!sb || !userId) return crypto.randomUUID();
+      try {
+        const { data, error } = await sb.from('sessions').insert({
+          user_id:       userId,
+          mode:          mode || 'challenge',
+          product_track: APP_TRACK,
+          status:        'draft',
+          level:         level || null,
+          client_meta:   lpGetClientMeta(),
+        }).select('id').single();
+        if (error) { console.warn('[Olympiad] sessions INSERT failed:', error.message); return crypto.randomUUID(); }
+        console.log('[Olympiad] DB session created:', data.id);
+        return data.id;
+      } catch (e) {
+        console.warn('[Olympiad] sessions INSERT exception:', e);
+        return crypto.randomUUID();
+      }
+    }
+
+    function isoDayUTC() {
+      const d = new Date();
+      return d.toISOString().slice(0, 10);
+    }
+
+    function fnv1a(str) {
+      let h = 0x811c9dc5;
+      for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = (h >>> 0) * 0x01000193;
+      }
+      return h >>> 0;
+    }
+
+    function seededPick(list, seedStr, count) {
+      const out = [];
+      if (!list.length) return out;
+      let seed = fnv1a(seedStr);
+      const used = new Set();
+      while (out.length < count && used.size < list.length) {
+        seed ^= seed << 13; seed >>>= 0;
+        seed ^= seed >>> 17; seed >>>= 0;
+        seed ^= seed << 5; seed >>>= 0;
+        const idx = seed % list.length;
+        const v = list[idx];
+        if (!used.has(v)) { used.add(v); out.push(v); }
+      }
+      return out;
+    }
+
+    function buildPlan(level) {
+      const dist = TIER_DISTRIBUTIONS[level];
+      const problemCount = (level === "advanced" || level === "higher_secondary") ? 6 : 5; // matches old screenshot feel
+
+      const raw = {
+        warmup: Math.floor(problemCount * dist.warmup),
+        standard: Math.floor(problemCount * dist.standard),
+        challenge: Math.floor(problemCount * dist.challenge),
+        contest: Math.floor(problemCount * dist.contest),
+        elite: Math.floor(problemCount * dist.elite)
+      };
+
+      let assigned = raw.warmup + raw.standard + raw.challenge + raw.contest + raw.elite;
+      let remaining = problemCount - assigned;
+
+      const order = ["standard","challenge","contest","elite","warmup"];
+      for (let i = 0; i < remaining; i++) raw[order[i % order.length]]++;
+
+      // Safety clamp
+      let total = 0;
+      for (const k of ["warmup","standard","challenge","contest","elite"]) total += raw[k] || 0;
+      if (total !== problemCount) {
+        raw.warmup = 0; raw.standard = problemCount; raw.challenge = 0; raw.contest = 0; raw.elite = 0;
+      }
+      return raw;
+    }
+
+    function selectArchetypesDeterministic(level, n) {
+      const allowed = LEVEL_ARCHETYPE_MAP[level] || [];
+      const seed = `${isoDayUTC()}|${user?.id || "anon"}|${selectedChildId || "nochild"}|${level}|${APP_TRACK}|${currentMode}`;
+      return seededPick(allowed, seed, n);
+    }
+
+    function setPlanTimeRange(level) {
+      // Restored "range" feel like old screenshots
+      const ranges = {
+        primary: "20-35 minutes",
+        junior: "25-40 minutes",
+        secondary: "25-45 minutes",
+        higher_secondary: "25-50 minutes",
+        advanced: "30-60 minutes"
+      };
+      document.getElementById("planTime").textContent = ranges[level] || "25-50 minutes";
+    }
+
+    function renderPlanUI(level, plan, archetypeKeys) {
+      document.getElementById("todayPlanContainer").style.display = "block";
+      setPlanTimeRange(level);
+
+      const tierLabels = {
+        warmup: { label: "Warmup", class: "difficulty-warmup" },
+        standard: { label: "Standard", class: "difficulty-standard" },
+        challenge: { label: "Challenge", class: "difficulty-challenge" },
+        contest: { label: "Contest", class: "difficulty-contest" },
+        elite: { label: "Elite", class: "difficulty-elite" }
+      };
+
+      let problemsHTML = "";
+      Object.entries(plan).forEach(([tier, count]) => {
+        if (count <= 0) return;
+        for (let i = 0; i < count; i++) {
+          const cfg = tierLabels[tier];
+          problemsHTML += `
+            <span class="plan-problem-badge ${cfg.class}">
+              <span class="plan-problem-dot"></span>
+              ${cfg.label}
+            </span>
+          `;
         }
+      });
+      document.getElementById("planProblems").innerHTML = problemsHTML;
 
-        // VALIDATOR: Check tier distribution is enforced
-        function validateTierDistribution(plan, level) {
-            const distribution = TIER_DISTRIBUTIONS[level];
-            const total = Object.values(plan).reduce((a, b) => a + b, 0);
-            
-            // Check warmup never exceeds 30%
-            if (plan.warmup / total > 0.30) {
-                console.error('❌ VALIDATOR: Warmup exceeds 30%');
-                return false;
-            }
-            
-            // Check forbidden tiers
-            if (level === 'primary') {
-                if (plan.contest > 0 || plan.elite > 0) {
-                    console.error('❌ VALIDATOR: Primary cannot have Contest/Elite');
-                    return false;
-                }
-            }
-            
-            if (level === 'junior') {
-                if (plan.elite > 0) {
-                    console.error('❌ VALIDATOR: Junior cannot have Elite');
-                    return false;
-                }
-            }
-            
-            if (level === 'secondary') {
-                if (plan.elite > 0) {
-                    console.error('❌ VALIDATOR: Secondary cannot have Elite');
-                    return false;
-                }
-            }
-            
-            return true;
+      const list = archetypeKeys.map(k => {
+        const a = ARCHETYPES[k];
+        if (!a) return "";
+        return `<div class="archetype-item"><span class="archetype-name">${a.name}:</span> ${a.description}</div>`;
+      }).join("");
+      document.getElementById("planArchetypes").innerHTML = list || "<div class='archetype-item'>No archetypes available for this level.</div>";
+
+      const focusSkills = Array.from(new Set(archetypeKeys.map(k => ARCHETYPES[k]?.skill_track).filter(Boolean)));
+      document.getElementById("planSkills").textContent = focusSkills.length ? focusSkills.join(" + ") : "Core Olympiad Skills";
+
+      // Restored old "Based on your ___ level, we've selected ___ and ___"
+      const levelNice = level.replace("_", " ");
+      const a1 = ARCHETYPES[archetypeKeys[0]]?.name || "Core Archetype";
+      const a2 = ARCHETYPES[archetypeKeys[1]]?.name || "Core Archetype";
+      document.getElementById("planReasoning").textContent =
+        `Based on your ${levelNice} level, we've selected ${a1} and ${a2} for today's focus. ` +
+        `These thinking patterns will strengthen your core Olympiad skills.`;
+    }
+
+    function resetCountdownUI() {
+      const cd = document.getElementById("countdown");
+      cd.textContent = "Starting...";
+      countdownSeconds = 0;
+      countdownArmed = false;
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+
+    function armAutoStartCountdown() {
+      // Old behavior: auto-starting in 3 seconds feel
+      const cd = document.getElementById("countdown");
+      countdownSeconds = 3;
+      countdownArmed = true;
+
+      cd.textContent = `Starting in ${countdownSeconds} seconds... (click to start now)`;
+
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        countdownSeconds -= 1;
+        if (countdownSeconds <= 0) {
+          clearInterval(countdownInterval);
+          countdownInterval = null;
+          // Auto-start (enterprise safe: we only alert unless you wire learn engine)
+          startTraining(true, true);
+          return;
         }
+        cd.textContent = `Starting in ${countdownSeconds} seconds... (click to start now)`;
+      }, 1000);
+    }
 
-        // FIXED: Deterministic archetype selection (not random!)
-        function selectWeakestArchetypes(level, count) {
-            // Get allowed archetypes for this level
-            const allowedArchetypes = LEVEL_ARCHETYPE_MAP[level];
-            
-            // TODO: In production, get user's actual mastery data
-            // For now, simulate deterministic selection based on level
-            const mockMasteryData = allowedArchetypes.map(archKey => ({
-                archetype: archKey,
-                successRate: 0.50 + Math.random() * 0.30 // Mock: 50-80% success
-            }));
-            
-            // Sort by lowest success rate (weakest first)
-            mockMasteryData.sort((a, b) => a.successRate - b.successRate);
-            
-            // Return top N weakest archetypes
-            return mockMasteryData.slice(0, count).map(m => m.archetype);
-        }
+    async function generateTodaysPlan(level) {
+      hideError();
 
-        // EXPLAINABILITY: Generate reason for plan
-        function generatePlanReasoning(level, selectedArchetypes) {
-            const archetypeNames = selectedArchetypes.map(k => ARCHETYPES[k].name);
-            
-            // TODO: In production, use real user data
-            // For now, generate plausible explanation
-            return `Based on your ${level.replace('_', ' ')} level, we've selected ${archetypeNames[0]} and ${archetypeNames[1]} for today's focus. These thinking patterns will strengthen your core Olympiad skills.`;
-        }
+      if (!user) { redirectToLogin(); return; }
+      if (!selectedChildId) { openChildModal(); showError("Please select a child to generate a plan."); return; }
 
-        // Auto-start countdown
-        function startCountdown() {
-            let seconds = 3;
-            const countdownEl = document.getElementById('countdown');
-            
-            if (countdownTimer) clearInterval(countdownTimer);
-            
-            countdownTimer = setInterval(() => {
-                seconds--;
-                if (seconds > 0) {
-                    countdownEl.textContent = `Auto-starting in ${seconds} seconds... (click to start now)`;
-                } else {
-                    clearInterval(countdownTimer);
-                    countdownEl.textContent = 'Starting...';
-                    setTimeout(() => startTraining(), 500);
-                }
-            }, 1000);
-        }
+      const plan = buildPlan(level);
+      const archetypes = selectArchetypesDeterministic(level, 2);
 
-        // Start training
-        function startTraining() {
-            if (countdownTimer) clearInterval(countdownTimer);
-            alert(`Starting ${currentLevel} level training with ${currentMode} mode!\n\nIn production: This would load actual problems from database based on the generated plan.`);
-        }
+      const payload = {
+        version: "olympiad_plan_v1",
+        day: isoDayUTC(),
+        track: APP_TRACK,
+        user_id: user.id,
+        child_id: selectedChildId,
+        level,
+        mode: currentMode,
+        plan,
+        archetypes,
+        // P1.6: client_meta for session fingerprinting.
+        // Downstream pages that INSERT into the DB sessions table must include
+        // this as the client_meta column value so the fingerprint trigger fires.
+        // Usage: const { client_meta } = JSON.parse(sessionStorage.getItem('lp_olympiad_plan'));
+        //        await supabase.from('sessions').insert({ ..., client_meta });
+        client_meta: lpGetClientMeta()
+      };
+      sessionStorage.setItem("lp_olympiad_plan", JSON.stringify(payload));
 
-        // Switch mode
-        function switchMode(mode) {
-            if (countdownTimer) clearInterval(countdownTimer);
-            currentMode = mode;
-            
-            if (mode === 'bootcamp') {
-                alert('Skill Bootcamp mode selected!\n\nFocus on one skill with extra hints.');
-            } else if (mode === 'mock') {
-                switchSection('mocks');
-            }
-        }
+      renderPlanUI(level, plan, archetypes);
 
-        // Render difficulty badges with level-specific tooltips
-        function renderDifficultyBadges(level) {
-            const container = document.getElementById('difficultyBadges');
-            if (!container) return;
+      // Restore old auto countdown each time plan updates
+      armAutoStartCountdown();
+    }
 
-            const tiers = ['warmup', 'standard', 'challenge', 'contest', 'elite'];
-            let html = '';
+    function switchSection(sectionName) {
+      document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+      document.querySelectorAll(".nav-tabs .nav-tab").forEach(t => t.classList.remove("active"));
 
-            tiers.forEach(tier => {
-                const tooltip = TIER_TOOLTIPS[tier];
-                const example = tooltip.examples[level];
-                const atLevel = tooltip.atLevel[level];
+      const sec = document.getElementById(`section-${sectionName}`);
+      if (sec) sec.classList.add("active");
 
-                html += `
-                    <span class="difficulty-badge difficulty-${tier}">
-                        ${tooltip.title.split(' ')[0]} ${tier.charAt(0).toUpperCase() + tier.slice(1)}
-                        <span class="info-icon">ℹ️</span>
-                        <div class="tooltip">
-                            <div class="tooltip-title">${tooltip.title}</div>
-                            
-                            <div class="tooltip-section">
-                                <div class="tooltip-label">Purpose:</div>
-                                <div class="tooltip-value">${tooltip.purpose}</div>
-                            </div>
+      const btn = document.querySelector(`.nav-tabs .nav-tab[data-tab="${sectionName}"]`);
+      if (btn) btn.classList.add("active");
+    }
 
-                            <div class="tooltip-section">
-                                <div class="tooltip-label">Insights Required:</div>
-                                <div class="tooltip-value">${tooltip.insights}</div>
-                            </div>
+    function selectLevel(level) {
+      currentLevel = level;
+      document.querySelectorAll(".level-card").forEach(card => card.classList.remove("selected"));
+      const sel = document.querySelector(`[data-level="${level}"]`);
+      if (sel) sel.classList.add("selected");
+      generateTodaysPlan(level);
+    }
 
-                            <div class="tooltip-section">
-                                <div class="tooltip-label">Expected Time:</div>
-                                <div class="tooltip-value">${tooltip.time}</div>
-                            </div>
+    function switchMode(mode) {
+      currentMode = mode;
+      if (currentLevel) generateTodaysPlan(currentLevel);
+    }
 
-                            <div class="tooltip-section">
-                                <div class="tooltip-label">Success Rate:</div>
-                                <div class="tooltip-value">${tooltip.success}</div>
-                            </div>
+    // startTraining(manualClick=true/false, auto=false)
+    // P1.6: Creates a real DB session row before redirecting so
+    // the fingerprint trigger fires and session_id is consistent
+    // across all attempt rows logged in the Olympiad learn engine.
+    async function startTraining(manualClick, auto = false) {
+      hideError();
 
-                            <div class="tooltip-section">
-                                <div class="tooltip-label">Hints:</div>
-                                <div class="tooltip-value">${tooltip.hints}</div>
-                            </div>
+      // If user clicks, cancel countdown
+      if (manualClick && countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+      }
 
-                            <div class="tooltip-section">
-                                <div class="tooltip-label">Equivalent Level:</div>
-                                <div class="tooltip-value">${tooltip.equivalent}</div>
-                            </div>
+      if (!user) return redirectToLogin();
+      if (!selectedChildId) { showError("Select a child first."); return openChildModal(); }
+      if (!currentLevel) { showError("Select your level first."); return; }
 
-                            <div class="tooltip-section">
-                                <div class="tooltip-label">Example at ${level.replace('_', ' ')} level:</div>
-                                <div class="tooltip-example">${example}</div>
-                            </div>
+      const planRaw = sessionStorage.getItem("lp_olympiad_plan");
+      if (!planRaw) { showError("Plan missing. Please reselect your level."); return; }
 
-                            <div class="tooltip-at-level">
-                                <strong>At your level:</strong> ${atLevel}
-                            </div>
-                        </div>
-                    </span>
-                `;
-            });
+      // Disable start button to prevent double-submit
+      const startBtn = document.querySelector(".start-training-btn");
+      if (startBtn) { startBtn.disabled = true; startBtn.textContent = "Starting…"; }
 
-            container.innerHTML = html;
-        }
+      try {
+        // P1.6: Insert DB session row — fires trg_extract_session_fingerprint
+        // and trg_detect_session_sharing automatically.
+        const sessionId = await createDbSession(user.id, selectedChildId, currentLevel, currentMode);
 
-        // Mock Exam (ENFORCED: Contest/Elite only)
-        function startMockExam(mockType) {
-            // VALIDATOR: Enforce Contest/Elite only
-            const mockConfig = {
-                regional: {
-                    name: 'Regional Mock',
-                    contestPercent: 1.0,
-                    elitePercent: 0,
-                    problems: currentLevel === 'primary' ? '8-10' : '6-8',
-                    time: currentLevel === 'primary' ? '2-3 hours' : '3-4 hours'
-                },
-                national: {
-                    name: 'National Mock',
-                    contestPercent: 0.8,
-                    elitePercent: 0.2,
-                    problems: '6-8',
-                    time: '4 hours'
-                },
-                selection: {
-                    name: 'Selection Mock',
-                    contestPercent: 0.6,
-                    elitePercent: 0.4,
-                    problems: '4-6',
-                    time: '4 hours'
-                }
-            };
+        // Embed the real DB session UUID into the plan payload so the
+        // Olympiad learn engine can stamp it on every attempt row.
+        const plan = JSON.parse(planRaw);
+        plan.session_id = sessionId;
+        plan.client_meta = lpGetClientMeta(); // refresh — capture latest device state
+        sessionStorage.setItem("lp_olympiad_plan", JSON.stringify(plan));
 
-            const config = mockConfig[mockType];
-            
-            alert(`Starting ${config.name}!\n\n` +
-                  `Difficulty: ${Math.round(config.contestPercent * 100)}% Contest + ${Math.round(config.elitePercent * 100)}% Elite\n` +
-                  `Problems: ${config.problems}\n` +
-                  `Time: ${config.time}\n` +
-                  `No hints allowed!\n\n` +
-                  `VALIDATOR ENFORCED: Only Contest/Elite tier problems.`);
-        }
-
-        // Switch Leaderboard
-        function switchLeaderboard(type) {
-            document.querySelectorAll('.leaderboard-section').forEach(s => {
-                s.style.display = 'none';
-            });
-            document.getElementById(`leaderboard-${type}`).style.display = 'block';
-
-            const tabs = document.querySelectorAll('#section-leaderboard .nav-tab');
-            tabs.forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-        }
-
-        // Initialize
-        window.addEventListener('DOMContentLoaded', () => {
-            renderDifficultyBadges('junior');
+        // Redirect into Olympiad learn engine
+        // Pass session_id + level + mode as URL params for the learn page to consume
+        const params = new URLSearchParams({
+          track:      APP_TRACK,
+          level:      currentLevel,
+          mode:       currentMode,
+          session_id: sessionId,
+          child_id:   selectedChildId,
         });
-    </script>
+        window.location.href = `/learn.html?${params.toString()}`;
+      } catch (e) {
+        console.error("[Olympiad] startTraining failed:", e);
+        showError("Could not start training. Please try again.");
+        if (startBtn) { startBtn.disabled = false; startBtn.textContent = "Start Training"; }
+      }
+    }
+
+    async function startMockExam(type) {
+      if (!user) return redirectToLogin();
+      if (!selectedChildId) { showError("Select a child first."); return openChildModal(); }
+      if (!currentLevel) { showError("Select your level first."); return; }
+
+      // P1.6: Create DB session for mock exam — same fingerprint pipeline
+      const sessionId = await createDbSession(user.id, selectedChildId, currentLevel, 'exam');
+
+      // Stage mock exam plan in sessionStorage for the learn engine
+      const mockPayload = {
+        version:    "olympiad_mock_v1",
+        day:        isoDayUTC(),
+        track:      APP_TRACK,
+        user_id:    user.id,
+        child_id:   selectedChildId,
+        level:      currentLevel,
+        mode:       "exam",
+        exam_type:  type,       // "regional" | "national" | "selection"
+        session_id: sessionId,
+        client_meta: lpGetClientMeta(),
+      };
+      sessionStorage.setItem("lp_olympiad_plan", JSON.stringify(mockPayload));
+
+      // Redirect into Olympiad learn engine in exam mode
+      const params = new URLSearchParams({
+        track:      APP_TRACK,
+        level:      currentLevel,
+        mode:       "exam",
+        exam_type:  type,
+        session_id: sessionId,
+        child_id:   selectedChildId,
+      });
+      window.location.href = `/learn.html?${params.toString()}`;
+    }
+
+    function switchLeaderboard(type) {
+      document.querySelectorAll(".leaderboard-section").forEach(s => s.style.display = "none");
+      const el = document.getElementById(`leaderboard-${type}`);
+      if (el) el.style.display = "block";
+
+      // Fixed: window.event is non-standard and unreliable in Firefox.
+      // Tab active state is driven by data-leaderboard-tab attribute instead.
+      const tabs = document.querySelectorAll("#section-leaderboard .nav-tab");
+      tabs.forEach(t => {
+        t.classList.toggle("active", t.dataset.leaderboardTab === type);
+      });
+    }
+
+    async function boot() {
+      try {
+        hideError(); hideInfo();
+        await initSupabase();
+
+        const ok = await requireSession();
+        if (!ok) return;
+
+        sb.auth.onAuthStateChange((_event, newSession) => {
+          session = newSession;
+          user = newSession?.user || null;
+          if (!user) redirectToLogin();
+        });
+
+        await ensureChildSelected();
+
+        // If there is already a saved level, do nothing; user chooses.
+        resetCountdownUI();
+      } catch (e) {
+        console.error(e);
+        showError(String(e?.message || e));
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", boot);
+  </script>
 </body>
 </html>

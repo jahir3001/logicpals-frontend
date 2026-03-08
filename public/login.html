@@ -19,7 +19,6 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
 
     <style>
         :root { --primary: #2563EB; --bg: #EFF6FF; --text: #111827; }
@@ -42,7 +41,8 @@
         .footer-link a { color: var(--primary); text-decoration: none; font-weight: 600; }
         
         .error { color: #EF4444; font-size: 14px; text-align: center; margin-top: 15px; display: none; background: #FEF2F2; padding: 10px; border-radius: 6px; }
-    </style>  <script src="/assets/js/env-loader.js"></script>
+    </style>
+    <script src="/assets/js/env-loader.js"></script>
 </head>
 <body>
 
@@ -74,11 +74,49 @@
     </div>
 
     <script>
+        // ─────────────────────────────────────────────────────────
+        // P1.6 DEVICE FINGERPRINT SEEDING
+        // Seeds lp_device_id into localStorage as early as possible
+        // so any downstream page that writes to the DB sessions table
+        // can read it immediately without generating a new UUID.
+        //
+        // Why here: login.html is the first authenticated entry point.
+        // The device_id must exist BEFORE the session INSERT fires on
+        // dashboard/training pages — seeding at login achieves this.
+        // ─────────────────────────────────────────────────────────
+        function getOrCreateDeviceId() {
+            try {
+                let id = localStorage.getItem('lp_device_id');
+                if (!id) {
+                    id = crypto.randomUUID();
+                    localStorage.setItem('lp_device_id', id);
+                }
+                return id;
+            } catch (e) {
+                // localStorage blocked (private mode, iframe, etc.) — return ephemeral ID
+                return crypto.randomUUID();
+            }
+        }
+
+        // Seed immediately on page load — before auth resolves
+        getOrCreateDeviceId();
+
+        // Build client_meta payload and store it on window so any
+        // page that creates a DB session can call window.lpGetClientMeta()
+        window.lpGetClientMeta = function() {
+            return {
+                device_id:  getOrCreateDeviceId(),
+                user_agent: navigator.userAgent,
+                platform:   navigator.platform,
+                screen_res: `${screen.width}x${screen.height}`,
+                timezone:   Intl.DateTimeFormat().resolvedOptions().timeZone,
+            };
+        };
+
         (async () => {
           const errBox = document.getElementById('errorMessage');
           const btn = document.getElementById('submitBtn');
 
-          // Wait for env-loader (if present). No top-level await (browser-safe).
           try {
             await (window.__LP_ENV_READY || Promise.resolve());
           } catch (_) {}
@@ -106,7 +144,6 @@
 
           window.supabaseClient = supabaseClient;
 
-          // If already signed in, go straight to dashboard.
           try {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session?.user) {
@@ -117,7 +154,6 @@
             console.warn('getSession failed:', e);
           }
 
-          // Expose handler for inline onsubmit="handleLogin(event)"
           window.handleLogin = async function handleLogin(e) {
             e.preventDefault();
 
@@ -134,6 +170,10 @@
             try {
               const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
               if (error) throw error;
+
+              // Re-seed device_id on every successful login
+              // (covers the case where user cleared localStorage between sessions)
+              getOrCreateDeviceId();
 
               window.location.href = 'dashboard.html';
             } catch (error) {

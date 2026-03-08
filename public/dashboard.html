@@ -517,6 +517,9 @@
   $('olymModal').addEventListener('click',e=>{if(e.target.id==='olymModal')$('olymModal').style.display='none';});
   window.addEventListener('pageshow',e=>{if(e.persisted)location.reload();});
 
+  // escapeHtml: prevents XSS when rendering error messages as innerHTML
+  function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
   const runInit = () => init().catch((e)=>{
     console.error(e);
     try{

@@ -163,12 +163,64 @@
   const TRACK=LP_getTrack();
   const LOGIN_URL='/login.html?next='+encodeURIComponent(location.pathname+location.search);
 
+  // ── Constants that were missing (caused ReferenceError in production) ──
+  const DEBUG = false;          // set true locally to enable verbose attempt logging
+  const HINTS_ENABLED = true;   // global hints toggle
+
+  // ─────────────────────────────────────────────────────────
+  // P1.6 DEVICE FINGERPRINT
+  // Reads lp_device_id seeded by login.html/signup.html.
+  // Falls back to generating a new UUID if not present
+  // (e.g. user navigated directly or cleared localStorage).
+  // ─────────────────────────────────────────────────────────
+  function getOrCreateDeviceId(){
+    try{
+      let id=localStorage.getItem('lp_device_id');
+      if(!id){id=crypto.randomUUID();localStorage.setItem('lp_device_id',id);}
+      return id;
+    }catch(e){return crypto.randomUUID();}
+  }
+  function lpGetClientMeta(){
+    return{
+      device_id:  getOrCreateDeviceId(),
+      user_agent: navigator.userAgent,
+      platform:   navigator.platform,
+      screen_res: `${screen.width}x${screen.height}`,
+      timezone:   Intl.DateTimeFormat().resolvedOptions().timeZone,
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // P1.6 DB SESSION WRITE
+  // Inserts one row into public.sessions with client_meta.
+  // The trg_extract_session_fingerprint trigger fires on INSERT
+  // and populates session_fingerprints automatically.
+  // Returns the DB-assigned session UUID (used as sessionId
+  // for all attempt rows in this session).
+  // Fails gracefully — a fallback local UUID is always set.
+  // ─────────────────────────────────────────────────────────
+  async function createDbSession(userId, childId){
+    if(!sb||!userId) return uuid();
+    try{
+      const{data,error}=await sb.from('sessions').insert({
+        user_id:       userId,
+        mode:          TRACK==='olympiad'?'challenge':'practice',
+        product_track: TRACK,
+        status:        'draft',
+        client_meta:   lpGetClientMeta(),
+      }).select('id').single();
+      if(error){console.warn('[Learn] sessions INSERT failed:',error.message);return uuid();}
+      console.log('[Learn] DB session created:',data.id);
+      return data.id;
+    }catch(e){console.warn('[Learn] sessions INSERT exception:',e);return uuid();}
+  }
+
   let sb=null, currentProblem=null, currentChildId=null, currentUserId=null;
   let hintsUsed=0, chatLog=[], startTime=null, timerInt=null;
   let isProcessing=false, questionsAsked=0, userSubscription=null;
   let problemCount=0, sessionCorrect=0, sessionTotal=0;
   let firstInputTime=null; // tracks time_to_first_input
-  let sessionId=null;       // UUID for this practice session
+  let sessionId=null;       // UUID for this practice session — set from DB on boot
   let sessionTimes=[];      // track solve times for avg speed
   const UUID_RE=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   function isValidUUID(v){return typeof v==='string'&&UUID_RE.test(v);}
@@ -499,6 +551,8 @@
   // ═══ BOOT ═══
   window.addEventListener('load',async()=>{
     cacheDom();
+    // P1.6: sessionId will be replaced with the DB-assigned UUID after auth.
+    // Set a local fallback first so nothing is null during boot.
     sessionId=uuid();
 
     dom.exitBtn.addEventListener('click',clearStateAndExit);
@@ -546,6 +600,12 @@
         else console.warn('[Learn] No child profile:',error?.message);
       }catch(_){}
       if(!currentChildId) console.warn('[Learn] No child_id — will use user_id for attempts');
+
+      // P1.6: Create DB session row — fires trg_extract_session_fingerprint
+      // which populates session_fingerprints and then trg_detect_session_sharing.
+      // createDbSession() is graceful: falls back to local UUID on any error.
+      sessionId=await createDbSession(currentUserId, currentChildId);
+      console.log('[Learn] Session ID:',sessionId);
 
       // Responsive
       if(window.innerWidth>600)dom.toggleBtn.style.display='none';
