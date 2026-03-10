@@ -1383,7 +1383,7 @@
       try {
         const { data, error } = await sb
           .from('subscriptions')
-          .select('tier, status, current_period_end')
+          .select('tier, status, end_date')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -1392,8 +1392,8 @@
         if (error || !data) return false;
 
         const now = new Date();
-        const notExpired = !data.current_period_end || new Date(data.current_period_end) > now;
-        const activeStatus = ['active', 'trialing'].includes(data.status);
+        const notExpired = !data.end_date || new Date(data.end_date) > now;
+        const activeStatus = data.status === 'active';
         return OLYMPIAD_TIERS.includes(data.tier) && notExpired && activeStatus;
       } catch (_) {
         // If both methods fail, deny access — fail safe

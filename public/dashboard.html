@@ -164,7 +164,7 @@
           <div style="font-size:14px;font-weight:800;color:var(--accent);margin-bottom:4px;">Olympiad Training — Scholar &amp; Champion only</div>
           <div style="font-size:13px;color:var(--muted);line-height:1.6;">Olympiad Training covers BdMO competition tracks, advanced skill graphs, and mock Olympiad exams. Upgrade to Scholar or Champion to unlock it for your child.</div>
           <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-            <a href="/subscriptions.html" class="btn btn-accent btn-wide" style="font-size:13px;height:38px;">View Plans</a>
+            <a href="/upgrade.html" class="btn btn-accent btn-wide" style="font-size:13px;height:38px;">View Plans</a>
             <button id="dismissOlympiadBanner" class="btn btn-ghost" style="font-size:12px;height:38px;">Maybe later</button>
           </div>
         </div>
@@ -223,7 +223,7 @@
       <div class="foot">Regular Practice Dashboard · LogicPals</div>
     </div>
   </main>
-  <div class="modal-backdrop" id="olymModal"><div class="modal"><div class="modal-h"><div><b>Olympiad Track</b><div style="font-size:12px;color:var(--muted);margin-top:4px;">A separate advanced track.</div></div><button type="button" id="closeOlymp">&#10005;</button></div><div class="modal-b"><p>Olympiad is a separate advanced track. Upgrade to unlock it.</p><div class="modal-actions"><a class="btn btn-primary btn-wide" href="subscriptions.html">View plans</a><button class="btn btn-ghost btn-wide" id="olymCancelBtn" type="button">Not now</button></div></div></div></div>
+  <div class="modal-backdrop" id="olymModal"><div class="modal"><div class="modal-h"><div><b>Olympiad Track</b><div style="font-size:12px;color:var(--muted);margin-top:4px;">A separate advanced track.</div></div><button type="button" id="closeOlymp">&#10005;</button></div><div class="modal-b"><p>Olympiad is a separate advanced track. Upgrade to Scholar or Champion to unlock it.</p><div class="modal-actions"><a class="btn btn-primary btn-wide" href="/upgrade.html">View plans</a><button class="btn btn-ghost btn-wide" id="olymCancelBtn" type="button">Not now</button></div></div></div></div>
 <script>
 (function(){
   'use strict';
@@ -327,15 +327,15 @@
       try {
         const { data } = await sb
           .from('subscriptions')
-          .select('tier, status, current_period_end')
+          .select('tier, status, end_date')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(1)
           .single();
 
         if (data) {
-          const notExpired = !data.current_period_end || new Date(data.current_period_end) > new Date();
-          const active = ['active','trialing'].includes(data.status) && notExpired;
+          const notExpired = !data.end_date || new Date(data.end_date) > new Date();
+          const active = data.status === 'active' && notExpired;
           userTier = data.tier;
           if (active) {
             safe($('planText'), 'Active');
