@@ -1354,6 +1354,53 @@
       });
     }
 
+    // ─────────────────────────────────────────────────────────
+    // OLYMPIAD ACCESS GUARD
+    // Checks subscription tier. Only 'scholar' and 'champion'
+    // tiers may access this page.
+    // Layer 1 (cosmetic): dashboard.html button is locked/unlocked
+    // Layer 2 (functional): this guard — blocks direct URL access
+    // Layer 3 (enforced): Edge Function vision-tutor + problem RPC
+    //
+    // Fallback: if subscription-guard.js fails to load (CDN/network
+    // issue — common in Bangladesh), fall back to direct Supabase
+    // query so paying customers are never incorrectly blocked.
+    // ─────────────────────────────────────────────────────────
+    const OLYMPIAD_TIERS = ['scholar', 'champion'];
+
+    async function checkOlympiadAccess() {
+      // Try window.SubscriptionGuard first (already loaded via <script> tag)
+      if (window.SubscriptionGuard?.getUserSubscription) {
+        try {
+          const sub = await window.SubscriptionGuard.getUserSubscription();
+          if (sub && !sub.expired && OLYMPIAD_TIERS.includes(sub.tier)) return true;
+          if (sub && (sub.expired || !OLYMPIAD_TIERS.includes(sub.tier))) return false;
+        } catch (_) { /* fall through to direct query */ }
+      }
+
+      // Fallback: direct Supabase query if guard script failed to load
+      // or returned an unexpected result
+      try {
+        const { data, error } = await sb
+          .from('subscriptions')
+          .select('tier, status, current_period_end')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (error || !data) return false;
+
+        const now = new Date();
+        const notExpired = !data.current_period_end || new Date(data.current_period_end) > now;
+        const activeStatus = ['active', 'trialing'].includes(data.status);
+        return OLYMPIAD_TIERS.includes(data.tier) && notExpired && activeStatus;
+      } catch (_) {
+        // If both methods fail, deny access — fail safe
+        return false;
+      }
+    }
+
     async function boot() {
       try {
         hideError(); hideInfo();
@@ -1367,6 +1414,17 @@
           user = newSession?.user || null;
           if (!user) redirectToLogin();
         });
+
+        // ── LAYER 2: Olympiad access gate ──────────────────────
+        // Check tier AFTER auth, BEFORE rendering any content.
+        // Redirect to dashboard with ?blocked=olympiad so the
+        // dashboard can show a friendly upsell message.
+        const hasAccess = await checkOlympiadAccess();
+        if (!hasAccess) {
+          window.location.replace('/dashboard.html?blocked=olympiad');
+          return;
+        }
+        // ───────────────────────────────────────────────────────
 
         await ensureChildSelected();
 
