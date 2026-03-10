@@ -510,6 +510,229 @@ function validatePromptAssembly(assembled) {
   return validation;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// VISION MODES — Phase 4 (P4.3–P4.6)
+// assembleVisionPrompt() is separate from assemblePrompt() because:
+//   1. Brain A/B take images as input, not problem+studentState objects
+//   2. Vision modes bypass tier/mode/hint gating (not applicable)
+//   3. Brain B NEVER receives an image — enforced structurally here
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Assemble a vision pipeline prompt for Brain A or Brain B.
+ *
+ * @param {Object} config
+ * @param {string} config.vision_mode - 'VISION_VALIDATE' | 'VISION_GUIDANCE_A' | 'VISION_GUIDANCE_B' | 'VISION_FALLBACK'
+ * @param {string} [config.problem_description] - Human-readable problem text
+ * @param {number} [config.attempt_number] - 1-based attempt index
+ * @param {Object} [config.diagnosis_json] - Brain A output (Brain B only)
+ * @param {string} [config.language_register] - 'en' | 'bn' | 'banglish'
+ * @param {string[]} [config.typed_steps] - Student typed steps (VISION_FALLBACK only)
+ * @returns {Object} Prompt payload safe to pass to the AI provider
+ */
+function assembleVisionPrompt(config) {
+  const {
+    vision_mode,
+    problem_description,
+    attempt_number = 1,
+    diagnosis_json,
+    language_register = "en",
+    typed_steps = [],
+  } = config;
+
+  const VALID_VISION_MODES = [
+    "VISION_VALIDATE",
+    "VISION_GUIDANCE_A",
+    "VISION_GUIDANCE_B",
+    "VISION_FALLBACK",
+  ];
+
+  if (!VALID_VISION_MODES.includes(vision_mode)) {
+    throw new Error(
+      `Invalid vision_mode: ${vision_mode}. Must be one of: ${VALID_VISION_MODES.join(", ")}`
+    );
+  }
+
+  // ── Mode-specific prompt assembly ──────────────────────────────────────────
+  let systemContent;
+  let maxTokens;
+  let includesImage = false;
+
+  switch (vision_mode) {
+    case "VISION_VALIDATE":
+      // Stage 0 — image required, cheap gatekeeper
+      systemContent =
+        'You are an image validator for a math education platform. ' +
+        'Analyze this image and respond ONLY with a JSON object: ' +
+        '{"is_math": true/false, "confidence": 0.0-1.0, ' +
+        '"content_type": "handwritten_math"|"printed_math"|"not_math"|"unclear", ' +
+        '"quality": "good"|"acceptable"|"poor"}. ' +
+        'Do not explain. Only return JSON.';
+      maxTokens = 100;
+      includesImage = true;
+      break;
+
+    case "VISION_GUIDANCE_A":
+      // Brain A — image required, structured JSON analysis only
+      if (!problem_description) {
+        throw new Error("VISION_GUIDANCE_A requires problem_description");
+      }
+      systemContent =
+        `You are an expert math tutor analyzing a student's handwritten work.\n` +
+        `The student is working on: ${problem_description}\n` +
+        `This is attempt #${attempt_number} of this problem.\n` +
+        `Analyze the uploaded image and respond ONLY with this JSON structure:\n` +
+        `{\n` +
+        `  "steps_detected": [{"step": 1, "summary": "...", "confidence": 0.0-1.0}],\n` +
+        `  "errors": [{"step": N, "type": "...", "severity": "minor|major|critical"}],\n` +
+        `  "approach_detected": "name or null",\n` +
+        `  "overall_confidence": 0.0-1.0,\n` +
+        `  "language": "en|bn|banglish"\n` +
+        `}\n` +
+        `Error types: calculation_error, logic_gap, missing_step, wrong_approach, ` +
+        `incomplete_argument, notation_error\n` +
+        `Do NOT provide hints or solutions. Only analyze what the student wrote.`;
+      maxTokens = 400;
+      includesImage = true;
+      break;
+
+    case "VISION_GUIDANCE_B":
+      // Brain B — NO IMAGE EVER. Receives only diagnosis JSON.
+      if (!diagnosis_json) {
+        throw new Error("VISION_GUIDANCE_B requires diagnosis_json");
+      }
+      if (!problem_description) {
+        throw new Error("VISION_GUIDANCE_B requires problem_description");
+      }
+      systemContent =
+        `You are a Socratic math tutor helping a student who uploaded their work.\n` +
+        `You have received an analysis of their work (below).\n` +
+        `You do NOT have their image or the solution.\n` +
+        `Analysis: ${JSON.stringify(diagnosis_json)}\n` +
+        `Problem: ${problem_description}\n` +
+        `Attempt #: ${attempt_number}\n` +
+        `Language: ${language_register}\n` +
+        `Hint depth rules:\n` +
+        `- Attempt 1: Vague directional hint. "Think about what happens when..."\n` +
+        `- Attempt 2: More specific. "In step 3, check your factor..."\n` +
+        `- Attempt 3: Direct coaching. "Step 3 has a factoring error. Try..."\n` +
+        `NEVER reveal the full solution.\n` +
+        `NEVER say "the answer is...".\n` +
+        `Always reference specific steps: "In your step 2, you wrote..."\n` +
+        `If language is "banglish": use Bengali grammar with English math terms.`;
+      maxTokens = 300;
+      includesImage = false; // CRITICAL: Brain B never gets the image
+      break;
+
+    case "VISION_FALLBACK":
+      // Typed fallback — no image at all
+      if (!typed_steps || typed_steps.length === 0) {
+        throw new Error("VISION_FALLBACK requires typed_steps array");
+      }
+      if (!problem_description) {
+        throw new Error("VISION_FALLBACK requires problem_description");
+      }
+      const stepsText = typed_steps
+        .map((s, i) => `Step ${i + 1}: ${s}`)
+        .join("\n");
+      systemContent =
+        `You are a Socratic math tutor. A student has typed their solution steps ` +
+        `(they could not upload an image).\n` +
+        `Steps provided:\n${stepsText}\n` +
+        `Problem: ${problem_description}\n` +
+        `Attempt #: ${attempt_number}\n` +
+        `Language: ${language_register}\n` +
+        `Give ONE focused Socratic hint. Reference their step numbers.\n` +
+        `NEVER reveal the full solution or final answer.\n` +
+        `Keep response under 100 words.`;
+      maxTokens = 200;
+      includesImage = false;
+      break;
+  }
+
+  // ── Brain A/B separation safety check ─────────────────────────────────────
+  // Validate the prompt does not accidentally reference image for Brain B
+  if (vision_mode === "VISION_GUIDANCE_B" && includesImage) {
+    throw new Error(
+      "CRITICAL: Brain B prompt must never include image. Architecture violation."
+    );
+  }
+
+  const assembled = {
+    vision_mode,
+    system_prompt: systemContent,
+    max_tokens: maxTokens,
+    includes_image: includesImage,
+    metadata: {
+      vision_mode,
+      attempt_number,
+      language_register,
+      has_diagnosis: !!diagnosis_json,
+      has_typed_steps: typed_steps.length > 0,
+      brain_separation_enforced: vision_mode === "VISION_GUIDANCE_B" ? true : null,
+      prompt_version: "1.0.0",
+      assembled_at: new Date().toISOString(),
+    },
+    // Chat messages format (provider-agnostic)
+    chat_messages: [
+      { role: "system", content: systemContent },
+      { role: "user", content: "Please analyze and respond as instructed." },
+    ],
+  };
+
+  return assembled;
+}
+
+/**
+ * Validate a vision prompt assembly (mirrors validatePromptAssembly for vision)
+ *
+ * @param {Object} assembled - Result of assembleVisionPrompt()
+ * @returns {Object} - { valid, errors, warnings }
+ */
+function validateVisionPromptAssembly(assembled) {
+  const validation = { valid: true, errors: [], warnings: [] };
+
+  if (!assembled.vision_mode) {
+    validation.valid = false;
+    validation.errors.push("Missing vision_mode");
+  }
+
+  if (!assembled.system_prompt) {
+    validation.valid = false;
+    validation.errors.push("Missing system_prompt");
+  }
+
+  // Critical: Brain B must never include image
+  if (
+    assembled.vision_mode === "VISION_GUIDANCE_B" &&
+    assembled.includes_image
+  ) {
+    validation.valid = false;
+    validation.errors.push(
+      "CRITICAL: Brain B prompt has includes_image=true — architecture violation"
+    );
+  }
+
+  // Brain A/B must produce structured JSON
+  if (
+    ["VISION_VALIDATE", "VISION_GUIDANCE_A"].includes(assembled.vision_mode) &&
+    assembled.system_prompt &&
+    !assembled.system_prompt.includes("JSON")
+  ) {
+    validation.valid = false;
+    validation.errors.push(
+      `${assembled.vision_mode} must instruct model to return JSON`
+    );
+  }
+
+  // Warn if no metadata
+  if (!assembled.metadata) {
+    validation.warnings.push("Missing metadata");
+  }
+
+  return validation;
+}
+
 // Export functions
 module.exports = {
   assemblePrompt,
@@ -518,6 +741,10 @@ module.exports = {
   buildResponseTemplate,
   getPromptSummary,
   validatePromptAssembly,
+
+  // Phase 4: Vision modes
+  assembleVisionPrompt,
+  validateVisionPromptAssembly,
 
   // Export prompt objects for direct access if needed
   SYSTEM_PROMPT,
