@@ -146,7 +146,7 @@
       <div class="brand"><div class="logo">LP</div><div class="brand-title"><b>LogicPals</b><span>Student Dashboard</span></div></div>
       <div class="center-pill"><div class="track-pill"><span class="track-dot"></span>Regular Practice</div></div>
       <div class="actions">
-        <button id="btnOlympiad" class="btn btn-accent" type="button"><span>Olympiad</span><span>&#128274;</span></button>
+        <button id="btnOlympiad" class="btn btn-accent" type="button"><span>Olympiad</span><span id="olympiadLockIcon">&#128274;</span></button>
         <button id="btnSignOut" class="btn btn-ghost" type="button" disabled>Sign out</button>
       </div>
     </div>
@@ -156,6 +156,20 @@
     </div>
   </div>
   <main class="wrap">
+    <!-- FIX 6: ?blocked=olympiad upsell banner — shown when redirected from olympiad.html -->
+    <div id="blockedOlympiadBanner" style="display:none;margin-bottom:16px;padding:16px 20px;border-radius:14px;background:linear-gradient(135deg,rgba(254,202,87,.1),rgba(254,202,87,.05));border:1px solid rgba(254,202,87,.25);display:none;">
+      <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;">
+        <div style="font-size:28px;flex-shrink:0;">🏆</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:800;color:var(--accent);margin-bottom:4px;">Olympiad Training — Scholar &amp; Champion only</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.6;">Olympiad Training covers BdMO competition tracks, advanced skill graphs, and mock Olympiad exams. Upgrade to Scholar or Champion to unlock it for your child.</div>
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+            <a href="/subscriptions.html" class="btn btn-accent btn-wide" style="font-size:13px;height:38px;">View Plans</a>
+            <button id="dismissOlympiadBanner" class="btn btn-ghost" style="font-size:12px;height:38px;">Maybe later</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <div id="authNotice" class="notice" style="display:none;"><b>Sign-in required.</b>We couldn't find your session.<div style="margin-top:12px;"><button class="btn btn-primary btn-wide" id="btnGoLogin" type="button">Go to Login</button></div></div>
     <div id="loadingState" class="loading"><div class="spinner"></div><span>Loading dashboard…</span></div>
     <div id="content" style="display:none;">
@@ -277,10 +291,97 @@
 
     $('btnSignOut').addEventListener('click',async()=>{$('btnSignOut').disabled=true;setStatus('warn','Signing out…');try{await sb.auth.signOut({scope:'global'});}catch(_){}try{['','-code-verifier','-provider-token','-provider-refresh-token'].forEach(s=>localStorage.removeItem(STORAGE_KEY+s));}catch(_){}location.replace('/index.html');});
 
-    // Subscription
-    try{await new Promise((ok,no)=>{const s=document.createElement('script');s.src='/assets/js/subscription-guard.js';s.async=true;s.onload=ok;s.onerror=()=>no();document.head.appendChild(s);});
-      if(window.SubscriptionGuard){const sub=await SubscriptionGuard.getUserSubscription();if(sub&&!sub.expired){safe($('planText'),'Active');$('planDot').classList.remove('dot-warn','dot-bad');$('planDot').classList.add('dot-good');}else if(sub?.expired){safe($('planText'),'Expired');$('planDot').classList.remove('dot-good','dot-warn');$('planDot').classList.add('dot-bad');}}
-    }catch(_){}
+    // ── Subscription check + Olympiad access (FIX 3, 4, 6) ────
+    // FIX 4: If subscription-guard.js fails (CDN/network issue —
+    // common in Bangladesh), fall back to direct sb.from('subscriptions')
+    // query. Never let a script failure block paying customers.
+    let userTier = null;
+    let hasOlympiadAccess = false;
+
+    try {
+      await new Promise((ok,no)=>{
+        const s=document.createElement('script');
+        s.src='/assets/js/subscription-guard.js';
+        s.async=true;
+        s.onload=ok;
+        s.onerror=()=>no(new Error('guard_load_failed'));
+        document.head.appendChild(s);
+      });
+
+      if(window.SubscriptionGuard?.getUserSubscription){
+        const sub = await SubscriptionGuard.getUserSubscription();
+        if(sub && !sub.expired){
+          safe($('planText'), 'Active');
+          $('planDot').classList.remove('dot-warn','dot-bad');
+          $('planDot').classList.add('dot-good');
+          userTier = sub.tier;
+        } else if(sub?.expired){
+          safe($('planText'), 'Expired');
+          $('planDot').classList.remove('dot-good','dot-warn');
+          $('planDot').classList.add('dot-bad');
+        }
+      }
+    } catch(_) {
+      // FIX 4: Guard script failed — query subscriptions directly
+      console.warn('[Dashboard] subscription-guard.js failed, using direct query fallback');
+      try {
+        const { data } = await sb
+          .from('subscriptions')
+          .select('tier, status, current_period_end')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (data) {
+          const notExpired = !data.current_period_end || new Date(data.current_period_end) > new Date();
+          const active = ['active','trialing'].includes(data.status) && notExpired;
+          userTier = data.tier;
+          if (active) {
+            safe($('planText'), 'Active');
+            $('planDot').classList.remove('dot-warn','dot-bad');
+            $('planDot').classList.add('dot-good');
+          } else {
+            safe($('planText'), 'Expired');
+            $('planDot').classList.remove('dot-good','dot-warn');
+            $('planDot').classList.add('dot-bad');
+          }
+        }
+      } catch (_2) { /* silent — don't block dashboard load */ }
+    }
+
+    // FIX 3: Dynamic Olympiad button based on real tier
+    const olympiadEligible = ['scholar','champion'].includes(userTier);
+    hasOlympiadAccess = olympiadEligible;
+
+    const olympiadBtn = $('btnOlympiad');
+    const olympiadIcon = $('olympiadLockIcon');
+    if (hasOlympiadAccess) {
+      // Unlocked — go directly to olympiad.html
+      if (olympiadIcon) olympiadIcon.textContent = '🏆';
+      olympiadBtn.title = 'Go to Olympiad Training';
+      olympiadBtn.style.background = 'linear-gradient(135deg,rgba(254,202,87,.2),rgba(254,202,87,.1))';
+      olympiadBtn.addEventListener('click', () => location.assign('/olympiad.html'));
+    } else {
+      // Locked — show upgrade modal
+      if (olympiadIcon) olympiadIcon.textContent = '🔒';
+      olympiadBtn.title = 'Upgrade to Scholar or Champion to unlock';
+      olympiadBtn.addEventListener('click', () => $('olymModal').style.display = 'flex');
+    }
+
+    // FIX 6: Show ?blocked=olympiad upsell banner if redirected here
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('blocked') === 'olympiad') {
+      const banner = $('blockedOlympiadBanner');
+      if (banner) banner.style.display = 'block';
+      // Clean URL without reloading
+      history.replaceState({}, '', '/dashboard.html');
+    }
+    $('dismissOlympiadBanner')?.addEventListener('click', () => {
+      const b = $('blockedOlympiadBanner');
+      if(b) b.style.display = 'none';
+    });
+    // ───────────────────────────────────────────────────────────
 
     // Child + school_name
     let childId=null,childData=null;
@@ -511,7 +612,7 @@
 
   // Events
   $('btnGoLogin').addEventListener('click',()=>location.assign(LOGIN_URL));
-  $('btnOlympiad').addEventListener('click',()=>$('olymModal').style.display='flex');
+  // Note: btnOlympiad click is set dynamically in init() after tier check (FIX 3)
   $('closeOlymp').addEventListener('click',()=>$('olymModal').style.display='none');
   $('olymCancelBtn').addEventListener('click',()=>$('olymModal').style.display='none');
   $('olymModal').addEventListener('click',e=>{if(e.target.id==='olymModal')$('olymModal').style.display='none';});

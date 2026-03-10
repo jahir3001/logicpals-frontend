@@ -90,7 +90,7 @@
   <header>
     <div class="logo">&#129504; LogicPals</div>
     <div class="header-right">
-      <a href="olympiad.html" class="olympiad-btn">&#127942; Olympiad</a>
+      <a href="olympiad.html" class="olympiad-btn" id="olympiadHeaderBtn" style="display:none;">&#127942; Olympiad</a>
       <div class="timer-badge">&#9201;&#65039; <span id="timeDisplay">00:00</span></div>
       <button class="exit-btn" id="exitBtn">Exit</button>
     </div>
@@ -321,10 +321,59 @@
   function clearStateAndExit(){localStorage.removeItem('lp_state');location.href='dashboard.html';}
 
   // ═══ CORE: Load puzzle ═══
+  // ─────────────────────────────────────────────────────────
+  // SECURITY: If TRACK === 'olympiad', verify tier before fetching
+  // Olympiad problems. This blocks the direct URL exploit:
+  //   learn.html?track=olympiad  ← accessible to all without this check
+  // Redirects to dashboard.html?blocked=olympiad on access denial.
+  // Falls back to direct subscriptions query if guard script fails.
+  // ─────────────────────────────────────────────────────────
+  const LP_OLYMPIAD_TIERS = ['scholar', 'champion'];
+
+  async function lpCheckOlympiadTier() {
+    // Try SubscriptionGuard first
+    if (window.SubscriptionGuard?.getUserSubscription) {
+      try {
+        const sub = await window.SubscriptionGuard.getUserSubscription();
+        if (sub && !sub.expired && LP_OLYMPIAD_TIERS.includes(sub.tier)) return true;
+        if (sub) return false; // guard loaded and answered clearly
+      } catch (_) { /* fall through */ }
+    }
+    // Fallback: direct Supabase query
+    if (!sb || !currentUserId) return false;
+    try {
+      const { data } = await sb
+        .from('subscriptions')
+        .select('tier, status, current_period_end')
+        .eq('user_id', currentUserId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (!data) return false;
+      const notExpired = !data.current_period_end || new Date(data.current_period_end) > new Date();
+      return LP_OLYMPIAD_TIERS.includes(data.tier) && notExpired && ['active','trialing'].includes(data.status);
+    } catch (_) { return false; }
+  }
+
   async function loadNextPuzzle(clearMemory){
     if(userSubscription?.expired && window.SubscriptionGuard?.showUpgradeModal){
       SubscriptionGuard.showUpgradeModal('Your free trial has ended! Upgrade to continue.','champion');return;
     }
+
+    // ── Olympiad tier gate ────────────────────────────────────
+    // Only run when TRACK is olympiad AND we have a userId (auth complete).
+    // Skip on first boot (currentUserId not set yet) — boot() calls us
+    // after auth so this is always available when it matters.
+    if (TRACK === 'olympiad' && currentUserId) {
+      const allowed = await lpCheckOlympiadTier();
+      if (!allowed) {
+        console.warn('[Learn] Olympiad access denied — redirecting');
+        window.location.replace('/dashboard.html?blocked=olympiad');
+        return;
+      }
+    }
+    // ─────────────────────────────────────────────────────────
+
     if(clearMemory)localStorage.removeItem('lp_state');
     dom.successModal.style.display='none';
     dom.chatContainer.innerHTML='<div class="message system">Hi! Ready to solve this? Read the mystery above! \uD83D\uDC46</div>';
@@ -592,6 +641,15 @@
           }
         }
       }catch(_){}
+
+      // FIX 5: Show Olympiad header button only for eligible tiers.
+      // Uses lpCheckOlympiadTier() which is defined above loadNextPuzzle().
+      // Non-Olympiad subscribers never see the button — prevents confusion.
+      try {
+        const olympiadEligible = await lpCheckOlympiadTier();
+        const olympiadBtn = document.getElementById('olympiadHeaderBtn');
+        if (olympiadEligible && olympiadBtn) olympiadBtn.style.display = 'inline-block';
+      } catch(_) {}
 
       // Child ID
       try{
