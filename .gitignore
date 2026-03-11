@@ -12,3 +12,6 @@ node_modules/
 .env.local
 MERGE_MSG.txt
 backup_step8_html/
+.env
+.env.local
+*.env*
