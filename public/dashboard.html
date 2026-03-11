@@ -291,110 +291,145 @@
 
     $('btnSignOut').addEventListener('click',async()=>{$('btnSignOut').disabled=true;setStatus('warn','Signing out…');try{await sb.auth.signOut({scope:'global'});}catch(_){}try{['','-code-verifier','-provider-token','-provider-refresh-token'].forEach(s=>localStorage.removeItem(STORAGE_KEY+s));}catch(_){}location.replace('/index.html');});
 
-    // ── Subscription check + Olympiad access (FIX 3, 4, 6) ────
-    // Root cause: subscription-guard.js creates its own Supabase client
-    // without storageKey:'logicpals.auth', so getSession() returns null
-    // and the guard silently returns null (no error thrown).
-    // Fix: if guard returns null → fall through to direct sb query
-    // which uses the already-authenticated sb client that has the correct key.
-    let userTier = null;
+    // ═══════════════════════════════════════════════════════════════
+    // ENTERPRISE SUBSCRIPTION RESOLVER — Three-layer, RPC-first
+    //
+    // Layer 1: subscription-guard.js (uses own Supabase client)
+    //          Known issue: guard creates client WITHOUT storageKey
+    //          'logicpals.auth', so auth.uid() returns null on its
+    //          queries. Guard will return null. We detect this and
+    //          fall through — never block paying users on guard failure.
+    //
+    // Layer 2: get_my_subscription() RPC (SECURITY DEFINER)
+    //          Bypasses RLS entirely. JWT is forwarded automatically
+    //          by the authenticated sb client. This is the primary
+    //          reliable path for all subscription reads.
+    //
+    // Layer 3: direct table query (last resort)
+    //          Falls back if RPC doesn't exist yet (pre-migration).
+    //          Will fail on RLS if JWT isn't forwarded — that error
+    //          is caught and logged but never shown to the user.
+    //
+    // All layers are non-blocking: any failure → graceful degradation.
+    // ═══════════════════════════════════════════════════════════════
+    const OLYMPIAD_TIERS = ['scholar', 'champion'];
+    let userTier        = null;
+    let subExpired      = false;
     let hasOlympiadAccess = false;
 
-    // Step 1: Try subscription-guard.js
-    let guardSub = null;
-    try {
-      await new Promise((ok,no)=>{
-        const s=document.createElement('script');
-        s.src='/assets/js/subscription-guard.js';
-        s.async=true;
-        s.onload=ok;
-        s.onerror=()=>no(new Error('guard_load_failed'));
-        document.head.appendChild(s);
-      });
-      if(window.SubscriptionGuard?.getUserSubscription){
-        guardSub = await SubscriptionGuard.getUserSubscription();
-      }
-    } catch(_) {
-      console.warn('[Dashboard] subscription-guard.js failed to load, using direct query');
-    }
-
-    // Step 2: If guard returned a valid subscription, use it.
-    // If guard returned null (session key mismatch), fall through to direct query.
-    if (guardSub && !guardSub.expired) {
-      userTier = guardSub.tier;
-      safe($('planText'), 'Active');
-      $('planDot').classList.remove('dot-warn','dot-bad');
-      $('planDot').classList.add('dot-good');
-    } else if (guardSub && guardSub.expired) {
-      userTier = guardSub.tier;
-      safe($('planText'), 'Expired');
-      $('planDot').classList.remove('dot-good','dot-warn');
-      $('planDot').classList.add('dot-bad');
-    } else {
-      // Guard returned null — use direct query with the authenticated sb client
-      console.warn('[Dashboard] Guard returned null, using direct subscription query');
+    async function resolveSubscription() {
+      // ── Layer 1: subscription-guard.js ──────────────────────────
       try {
-        console.log('[Dashboard] Querying subscriptions for user:', user.id);
+        await new Promise((ok, no) => {
+          const s = document.createElement('script');
+          s.src = '/assets/js/subscription-guard.js';
+          s.async = true;
+          s.onload = ok;
+          s.onerror = () => no(new Error('guard_load_failed'));
+          document.head.appendChild(s);
+        });
+        const guardSub = await window.SubscriptionGuard?.getUserSubscription?.();
+        if (guardSub) {
+          console.log('[Dashboard] Layer 1 (guard) resolved tier:', guardSub.tier);
+          return guardSub; // guard gave us a valid object — use it
+        }
+        // guard returned null → fall through (storageKey mismatch)
+        console.warn('[Dashboard] Layer 1 (guard) returned null — falling to Layer 2 (RPC)');
+      } catch (_) {
+        console.warn('[Dashboard] Layer 1 (guard) failed to load — falling to Layer 2 (RPC)');
+      }
+
+      // ── Layer 2: get_my_subscription() RPC (SECURITY DEFINER) ───
+      // This is the correct enterprise path — RPC runs as function
+      // owner, bypasses RLS, resolves auth.uid() from the JWT.
+      try {
+        const { data: rows, error: rpcError } = await sb.rpc('get_my_subscription');
+        if (rpcError) throw rpcError;
+        const row = Array.isArray(rows) ? rows[0] : rows;
+        if (row) {
+          const now     = new Date();
+          const endDate = row.end_date ? new Date(row.end_date) : null;
+          const expired = endDate ? endDate < now : false;
+          console.log('[Dashboard] Layer 2 (RPC) resolved tier:', row.tier, '| expired:', expired);
+          return { ...row, expired };
+        }
+        console.warn('[Dashboard] Layer 2 (RPC) returned empty — no active subscription found');
+        return null; // legitimate empty — user has no subscription
+      } catch (rpcErr) {
+        console.warn('[Dashboard] Layer 2 (RPC) failed:', rpcErr?.message, '— falling to Layer 3');
+      }
+
+      // ── Layer 3: direct table query (pre-migration fallback) ────
+      try {
         const { data, error } = await sb
           .from('subscriptions')
           .select('tier, status, end_date')
           .eq('user_id', user.id)
+          .eq('status', 'active')
           .order('created_at', { ascending: false })
           .limit(1)
           .single();
-
-        console.log('[Dashboard] Subscription query result:', JSON.stringify(data), 'error:', error?.message);
-
+        if (error) throw error;
         if (data) {
-          const notExpired = !data.end_date || new Date(data.end_date) > new Date();
-          const active = data.status === 'active' && notExpired;
-          userTier = data.tier;
-          console.log('[Dashboard] tier:', data.tier, 'notExpired:', notExpired, 'active:', active);
-          if (active) {
-            safe($('planText'), 'Active');
-            $('planDot').classList.remove('dot-warn','dot-bad');
-            $('planDot').classList.add('dot-good');
-          } else {
-            safe($('planText'), 'Expired');
-            $('planDot').classList.remove('dot-good','dot-warn');
-            $('planDot').classList.add('dot-bad');
-          }
+          const now      = new Date();
+          const endDate  = data.end_date ? new Date(data.end_date) : null;
+          const expired  = endDate ? endDate < now : false;
+          console.log('[Dashboard] Layer 3 (direct) resolved tier:', data.tier, '| expired:', expired);
+          return { ...data, expired };
         }
-      } catch (_2) { console.warn('[Dashboard] Direct subscription query also failed:', _2); }
+      } catch (directErr) {
+        console.warn('[Dashboard] Layer 3 (direct) failed:', directErr?.message);
+      }
+
+      return null; // all layers exhausted — treat as no subscription
     }
 
-    // FIX 3: Dynamic Olympiad button based on real tier
-    const olympiadEligible = ['scholar','champion'].includes(userTier);
-    hasOlympiadAccess = olympiadEligible;
+    // ── Apply resolved subscription ──────────────────────────────
+    const sub = await resolveSubscription();
 
-    const olympiadBtn = $('btnOlympiad');
+    if (sub && !sub.expired) {
+      userTier = sub.tier;
+      safe($('planText'), 'Active');
+      $('planDot').classList.remove('dot-warn', 'dot-bad');
+      $('planDot').classList.add('dot-good');
+    } else if (sub && sub.expired) {
+      userTier = sub.tier;
+      subExpired = true;
+      safe($('planText'), 'Expired');
+      $('planDot').classList.remove('dot-good', 'dot-warn');
+      $('planDot').classList.add('dot-bad');
+    } else {
+      safe($('planText'), 'Free Trial');
+    }
+
+    // ── Olympiad button — dynamic per tier ──────────────────────
+    hasOlympiadAccess = OLYMPIAD_TIERS.includes(userTier) && !subExpired;
+    const olympiadBtn  = $('btnOlympiad');
     const olympiadIcon = $('olympiadLockIcon');
+
     if (hasOlympiadAccess) {
-      // Unlocked — go directly to olympiad.html
       if (olympiadIcon) olympiadIcon.textContent = '🏆';
       olympiadBtn.title = 'Go to Olympiad Training';
       olympiadBtn.style.background = 'linear-gradient(135deg,rgba(254,202,87,.2),rgba(254,202,87,.1))';
       olympiadBtn.addEventListener('click', () => location.assign('/olympiad.html'));
     } else {
-      // Locked — show upgrade modal
       if (olympiadIcon) olympiadIcon.textContent = '🔒';
       olympiadBtn.title = 'Upgrade to Scholar or Champion to unlock';
       olympiadBtn.addEventListener('click', () => $('olymModal').style.display = 'flex');
     }
 
-    // FIX 6: Show ?blocked=olympiad upsell banner if redirected here
+    // ── ?blocked=olympiad upsell banner ─────────────────────────
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('blocked') === 'olympiad') {
       const banner = $('blockedOlympiadBanner');
       if (banner) banner.style.display = 'block';
-      // Clean URL without reloading
       history.replaceState({}, '', '/dashboard.html');
     }
     $('dismissOlympiadBanner')?.addEventListener('click', () => {
       const b = $('blockedOlympiadBanner');
-      if(b) b.style.display = 'none';
+      if (b) b.style.display = 'none';
     });
-    // ───────────────────────────────────────────────────────────
+    // ════════════════════════════════════════════════════════════
 
     // Child + school_name
     let childId=null,childData=null;

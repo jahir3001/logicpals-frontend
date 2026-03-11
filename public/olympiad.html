@@ -1354,49 +1354,62 @@
       });
     }
 
-    // ─────────────────────────────────────────────────────────
-    // OLYMPIAD ACCESS GUARD
-    // Checks subscription tier. Only 'scholar' and 'champion'
-    // tiers may access this page.
-    // Layer 1 (cosmetic): dashboard.html button is locked/unlocked
-    // Layer 2 (functional): this guard — blocks direct URL access
-    // Layer 3 (enforced): Edge Function vision-tutor + problem RPC
-    //
-    // Fallback: if subscription-guard.js fails to load (CDN/network
-    // issue — common in Bangladesh), fall back to direct Supabase
-    // query so paying customers are never incorrectly blocked.
-    // ─────────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════
+    // ENTERPRISE OLYMPIAD ACCESS RESOLVER — RPC-first, three-layer
+    // Layer 1: subscription-guard.js  (storageKey mismatch → null)
+    // Layer 2: get_my_subscription() RPC  (SECURITY DEFINER — primary)
+    // Layer 3: direct table query  (pre-migration last resort)
+    // Fail-safe: any unresolvable error → deny access
+    // ═══════════════════════════════════════════════════════════════
     const OLYMPIAD_TIERS = ['scholar', 'champion'];
 
     async function checkOlympiadAccess() {
-      // Try window.SubscriptionGuard first (already loaded via <script> tag)
+      // Layer 1: guard (may return null due to storageKey mismatch)
       if (window.SubscriptionGuard?.getUserSubscription) {
         try {
           const sub = await window.SubscriptionGuard.getUserSubscription();
-          if (sub && !sub.expired && OLYMPIAD_TIERS.includes(sub.tier)) return true;
-          if (sub && (sub.expired || !OLYMPIAD_TIERS.includes(sub.tier))) return false;
-        } catch (_) { /* fall through to direct query */ }
+          if (sub) {
+            const ok = !sub.expired && OLYMPIAD_TIERS.includes(sub.tier);
+            console.log('[Olympiad] Layer 1 (guard) tier:', sub.tier, '| access:', ok);
+            return ok;
+          }
+          console.warn('[Olympiad] Layer 1 (guard) returned null — falling to Layer 2 (RPC)');
+        } catch (_) { /* fall through */ }
       }
 
-      // Fallback: direct Supabase query if guard script failed to load
-      // or returned an unexpected result
+      // Layer 2: get_my_subscription() RPC (SECURITY DEFINER — primary path)
+      try {
+        const { data: rows, error } = await sb.rpc('get_my_subscription');
+        if (error) throw error;
+        const row = Array.isArray(rows) ? rows[0] : rows;
+        if (row) {
+          const expired = row.end_date ? new Date(row.end_date) < new Date() : false;
+          const ok = OLYMPIAD_TIERS.includes(row.tier) && !expired;
+          console.log('[Olympiad] Layer 2 (RPC) tier:', row.tier, '| access:', ok);
+          return ok;
+        }
+        console.warn('[Olympiad] Layer 2 (RPC) returned empty — no active subscription');
+        return false;
+      } catch (rpcErr) {
+        console.warn('[Olympiad] Layer 2 (RPC) failed:', rpcErr?.message, '— falling to Layer 3');
+      }
+
+      // Layer 3: direct table query (last resort — may fail on RLS)
       try {
         const { data, error } = await sb
           .from('subscriptions')
           .select('tier, status, end_date')
           .eq('user_id', user.id)
+          .eq('status', 'active')
           .order('created_at', { ascending: false })
           .limit(1)
           .single();
-
-        if (error || !data) return false;
-
-        const now = new Date();
-        const notExpired = !data.end_date || new Date(data.end_date) > now;
-        const activeStatus = data.status === 'active';
-        return OLYMPIAD_TIERS.includes(data.tier) && notExpired && activeStatus;
+        if (error) throw error;
+        if (!data) return false;
+        const expired = data.end_date ? new Date(data.end_date) < new Date() : false;
+        return OLYMPIAD_TIERS.includes(data.tier) && !expired;
       } catch (_) {
-        // If both methods fail, deny access — fail safe
+        console.warn('[Olympiad] Layer 3 (direct) failed — denying access (fail-safe)');
         return false;
       }
     }

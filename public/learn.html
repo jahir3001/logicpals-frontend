@@ -321,37 +321,60 @@
   function clearStateAndExit(){localStorage.removeItem('lp_state');location.href='dashboard.html';}
 
   // ═══ CORE: Load puzzle ═══
-  // ─────────────────────────────────────────────────────────
-  // SECURITY: If TRACK === 'olympiad', verify tier before fetching
-  // Olympiad problems. This blocks the direct URL exploit:
-  //   learn.html?track=olympiad  ← accessible to all without this check
-  // Redirects to dashboard.html?blocked=olympiad on access denial.
-  // Falls back to direct subscriptions query if guard script fails.
-  // ─────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════
+  // ENTERPRISE OLYMPIAD TIER RESOLVER — RPC-first, three-layer
+  // Layer 1: subscription-guard.js  (storageKey mismatch → null)
+  // Layer 2: get_my_subscription() RPC  (SECURITY DEFINER — primary)
+  // Layer 3: direct table query  (pre-migration last resort)
+  // ═══════════════════════════════════════════════════════════════
   const LP_OLYMPIAD_TIERS = ['scholar', 'champion'];
 
   async function lpCheckOlympiadTier() {
-    // Try SubscriptionGuard first
+    // Layer 1: guard (may return null due to storageKey mismatch)
     if (window.SubscriptionGuard?.getUserSubscription) {
       try {
         const sub = await window.SubscriptionGuard.getUserSubscription();
-        if (sub && !sub.expired && LP_OLYMPIAD_TIERS.includes(sub.tier)) return true;
-        if (sub) return false; // guard loaded and answered clearly
+        if (sub) {
+          const ok = !sub.expired && LP_OLYMPIAD_TIERS.includes(sub.tier);
+          console.log('[Learn] Layer 1 (guard) tier:', sub.tier, '| allowed:', ok);
+          return ok;
+        }
+        console.warn('[Learn] Layer 1 (guard) returned null — falling to Layer 2 (RPC)');
       } catch (_) { /* fall through */ }
     }
-    // Fallback: direct Supabase query
+
+    // Layer 2: get_my_subscription() RPC (SECURITY DEFINER — bypasses RLS)
+    if (sb) {
+      try {
+        const { data: rows, error } = await sb.rpc('get_my_subscription');
+        if (error) throw error;
+        const row = Array.isArray(rows) ? rows[0] : rows;
+        if (row) {
+          const expired = row.end_date ? new Date(row.end_date) < new Date() : false;
+          const allowed = LP_OLYMPIAD_TIERS.includes(row.tier) && !expired;
+          console.log('[Learn] Layer 2 (RPC) tier:', row.tier, '| allowed:', allowed);
+          return allowed;
+        }
+        return false; // no active subscription
+      } catch (rpcErr) {
+        console.warn('[Learn] Layer 2 (RPC) failed:', rpcErr?.message, '— falling to Layer 3');
+      }
+    }
+
+    // Layer 3: direct table query (last resort)
     if (!sb || !currentUserId) return false;
     try {
       const { data } = await sb
         .from('subscriptions')
         .select('tier, status, end_date')
         .eq('user_id', currentUserId)
+        .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
       if (!data) return false;
-      const notExpired = !data.end_date || new Date(data.end_date) > new Date();
-      return LP_OLYMPIAD_TIERS.includes(data.tier) && notExpired && data.status === 'active';
+      const expired = data.end_date ? new Date(data.end_date) < new Date() : false;
+      return LP_OLYMPIAD_TIERS.includes(data.tier) && !expired;
     } catch (_) { return false; }
   }
 
