@@ -334,7 +334,8 @@
       // Guard returned null — use direct query with the authenticated sb client
       console.warn('[Dashboard] Guard returned null, using direct subscription query');
       try {
-        const { data } = await sb
+        console.log('[Dashboard] Querying subscriptions for user:', user.id);
+        const { data, error } = await sb
           .from('subscriptions')
           .select('tier, status, end_date')
           .eq('user_id', user.id)
@@ -342,10 +343,13 @@
           .limit(1)
           .single();
 
+        console.log('[Dashboard] Subscription query result:', JSON.stringify(data), 'error:', error?.message);
+
         if (data) {
           const notExpired = !data.end_date || new Date(data.end_date) > new Date();
           const active = data.status === 'active' && notExpired;
           userTier = data.tier;
+          console.log('[Dashboard] tier:', data.tier, 'notExpired:', notExpired, 'active:', active);
           if (active) {
             safe($('planText'), 'Active');
             $('planDot').classList.remove('dot-warn','dot-bad');
