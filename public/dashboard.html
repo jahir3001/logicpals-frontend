@@ -292,12 +292,16 @@
     $('btnSignOut').addEventListener('click',async()=>{$('btnSignOut').disabled=true;setStatus('warn','Signing out…');try{await sb.auth.signOut({scope:'global'});}catch(_){}try{['','-code-verifier','-provider-token','-provider-refresh-token'].forEach(s=>localStorage.removeItem(STORAGE_KEY+s));}catch(_){}location.replace('/index.html');});
 
     // ── Subscription check + Olympiad access (FIX 3, 4, 6) ────
-    // FIX 4: If subscription-guard.js fails (CDN/network issue —
-    // common in Bangladesh), fall back to direct sb.from('subscriptions')
-    // query. Never let a script failure block paying customers.
+    // Root cause: subscription-guard.js creates its own Supabase client
+    // without storageKey:'logicpals.auth', so getSession() returns null
+    // and the guard silently returns null (no error thrown).
+    // Fix: if guard returns null → fall through to direct sb query
+    // which uses the already-authenticated sb client that has the correct key.
     let userTier = null;
     let hasOlympiadAccess = false;
 
+    // Step 1: Try subscription-guard.js
+    let guardSub = null;
     try {
       await new Promise((ok,no)=>{
         const s=document.createElement('script');
@@ -307,23 +311,28 @@
         s.onerror=()=>no(new Error('guard_load_failed'));
         document.head.appendChild(s);
       });
-
       if(window.SubscriptionGuard?.getUserSubscription){
-        const sub = await SubscriptionGuard.getUserSubscription();
-        if(sub && !sub.expired){
-          safe($('planText'), 'Active');
-          $('planDot').classList.remove('dot-warn','dot-bad');
-          $('planDot').classList.add('dot-good');
-          userTier = sub.tier;
-        } else if(sub?.expired){
-          safe($('planText'), 'Expired');
-          $('planDot').classList.remove('dot-good','dot-warn');
-          $('planDot').classList.add('dot-bad');
-        }
+        guardSub = await SubscriptionGuard.getUserSubscription();
       }
     } catch(_) {
-      // FIX 4: Guard script failed — query subscriptions directly
-      console.warn('[Dashboard] subscription-guard.js failed, using direct query fallback');
+      console.warn('[Dashboard] subscription-guard.js failed to load, using direct query');
+    }
+
+    // Step 2: If guard returned a valid subscription, use it.
+    // If guard returned null (session key mismatch), fall through to direct query.
+    if (guardSub && !guardSub.expired) {
+      userTier = guardSub.tier;
+      safe($('planText'), 'Active');
+      $('planDot').classList.remove('dot-warn','dot-bad');
+      $('planDot').classList.add('dot-good');
+    } else if (guardSub && guardSub.expired) {
+      userTier = guardSub.tier;
+      safe($('planText'), 'Expired');
+      $('planDot').classList.remove('dot-good','dot-warn');
+      $('planDot').classList.add('dot-bad');
+    } else {
+      // Guard returned null — use direct query with the authenticated sb client
+      console.warn('[Dashboard] Guard returned null, using direct subscription query');
       try {
         const { data } = await sb
           .from('subscriptions')
@@ -347,7 +356,7 @@
             $('planDot').classList.add('dot-bad');
           }
         }
-      } catch (_2) { /* silent — don't block dashboard load */ }
+      } catch (_2) { console.warn('[Dashboard] Direct subscription query also failed:', _2); }
     }
 
     // FIX 3: Dynamic Olympiad button based on real tier
