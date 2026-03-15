@@ -5,9 +5,14 @@
 // Routes: POST /functions/v1/v1-router/rpc/{function_name}
 // Adds X-API-Version header to all responses.
 // Existing direct supabase.rpc() calls continue working (backward compat).
+//
+// PHASE 0B ADDITIONS:
+//   - Slack alerts on boundary violations (track/subscription)
+//   - Slack alerts on RPC errors (edge_function_error)
 // ============================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { notifySlack } from '../_shared/slack_alert.ts';
 
 const SUPABASE_URL     = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -21,6 +26,24 @@ const baseHeaders = {
   'X-API-Version': API_VERSION,
   'X-Powered-By':  'LogicPals-API',
 };
+
+// ── Phase 0B: Boundary violation keywords ────────────────────
+// If an RPC error contains these patterns, it's likely a
+// subscription/track boundary violation — fire an alert.
+const BOUNDARY_PATTERNS = [
+  'olympiad',
+  'unauthorized',
+  'subscription',
+  'tier',
+  'boundary',
+  'access denied',
+  'upgrade required',
+];
+
+function looksLikeBoundaryViolation(errorMsg: string): boolean {
+  const lower = errorMsg.toLowerCase();
+  return BOUNDARY_PATTERNS.some(p => lower.includes(p));
+}
 
 Deno.serve(async (req) => {
 
@@ -83,6 +106,20 @@ Deno.serve(async (req) => {
       })
     : supabase;
 
+  // ── Extract user ID from JWT for alerting context ─────────
+  let callerId = 'anonymous';
+  if (authHeader) {
+    try {
+      const tokenParts = authHeader.replace('Bearer ', '').split('.');
+      if (tokenParts[1]) {
+        const payload = JSON.parse(atob(tokenParts[1]));
+        callerId = payload.sub || 'unknown';
+      }
+    } catch {
+      // Non-fatal — just use anonymous
+    }
+  }
+
   // ── Check v1 registry ────────────────────────────────────
   const { data: registry } = await supabase
     .from('api_version_registry')
@@ -120,6 +157,28 @@ Deno.serve(async (req) => {
 
   if (error) {
     console.error(`[v1-router] RPC error: ${functionName}`, error);
+
+    // ── Phase 0B: Fire Slack alerts on RPC errors ────────
+    const errorMsg = error.message || '';
+
+    if (looksLikeBoundaryViolation(errorMsg)) {
+      // Track/subscription boundary violation detected at server layer
+      notifySlack('boundary_violation', {
+        user_id:         callerId,
+        track:           String(args.p_intended_track || args.p_track || 'unknown'),
+        attempted_track: String(args.p_intended_track || args.p_track || 'unknown'),
+        endpoint:        `v1-router/rpc/${functionName}`,
+        reason:          errorMsg.slice(0, 200),
+      });
+    } else {
+      // General RPC error — fire edge_function_error
+      notifySlack('edge_function_error', {
+        function_name: `v1-router/rpc/${functionName}`,
+        error_msg:     errorMsg.slice(0, 200),
+        invocation_id: callerId,
+      });
+    }
+
     return new Response(
       JSON.stringify({
         error:      error.code ?? 'RPC_ERROR',

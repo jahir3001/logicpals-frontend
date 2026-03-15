@@ -15,3 +15,4 @@ backup_step8_html/
 .env
 .env.local
 *.env*
+.env.slack

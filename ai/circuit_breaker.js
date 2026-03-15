@@ -16,6 +16,11 @@
  *   await cb.recordSuccess(latencyMs);
  *   // or on failure:
  *   await cb.recordFailure(latencyMs, error.message);
+ *
+ * PHASE 0B ADDITION:
+ *   Slack alerts fire automatically on state transitions:
+ *   - TRIPPED: when withBreaker() detects transition to OPEN
+ *   - RECOVERED: when withBreaker() detects HALF_OPEN → success
  */
 
 const { createClient } = require('@supabase/supabase-js');
@@ -27,6 +32,27 @@ const supabase = createClient(
 );
 
 const PROVIDER = 'openai';
+
+// ── Phase 0B: Slack alert helper (CJS → ESM bridge) ─────────
+// Uses dynamic import() because this file is CommonJS but
+// monitoring.js is ESM. Fire-and-forget — never blocks.
+function fireSlackTripped({ consecutive_failures, threshold }) {
+  import('../backend/alerts/monitoring.js')
+    .then(m => m.recordCircuitBreakerTripped({
+      provider:             PROVIDER,
+      consecutive_failures,
+      threshold,
+    }))
+    .catch(err => console.warn('[circuit-breaker] Slack alert failed (tripped):', err.message));
+}
+
+function fireSlackRecovered() {
+  import('../backend/alerts/monitoring.js')
+    .then(m => m.recordCircuitBreakerRecovered({
+      provider: PROVIDER,
+    }))
+    .catch(err => console.warn('[circuit-breaker] Slack alert failed (recovered):', err.message));
+}
 
 // ── Check: call before every OpenAI request ──────────────────
 async function check() {
@@ -117,6 +143,9 @@ async function withBreaker(fn, options = {}) {
     return { ok: false, fallback: fallbackResponse(gate) };
   }
 
+  // Remember pre-call state for transition detection
+  const preCallState = gate.state; // 'CLOSED' or 'HALF_OPEN'
+
   // 2. Execute the call
   try {
     const result = await fn();
@@ -124,6 +153,12 @@ async function withBreaker(fn, options = {}) {
 
     // 3a. Record success
     await recordSuccess(latencyMs);
+
+    // Phase 0B: If we were in HALF_OPEN and succeeded → breaker recovered
+    if (preCallState === 'HALF_OPEN') {
+      console.log('[circuit-breaker] HALF_OPEN → success → RECOVERED');
+      fireSlackRecovered();
+    }
 
     return { ok: true, data: result, latency_ms: latencyMs };
 
@@ -135,6 +170,22 @@ async function withBreaker(fn, options = {}) {
 
     // 3b. Record failure
     await recordFailure(latencyMs, errorMsg);
+
+    // Phase 0B: Check if breaker just tripped (state transitioned to OPEN)
+    if (preCallState !== 'OPEN') {
+      try {
+        const postGate = await check();
+        if (postGate.state === 'OPEN') {
+          console.log('[circuit-breaker] State transition → OPEN (TRIPPED)');
+          fireSlackTripped({
+            consecutive_failures: 5,   // failure_threshold from ai_circuit_breaker table
+            threshold:            5,
+          });
+        }
+      } catch (_) {
+        // Don't let the transition check break the flow
+      }
+    }
 
     return {
       ok:      false,

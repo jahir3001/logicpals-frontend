@@ -2,9 +2,15 @@
 // P0.10: Synthetic Session Monitor
 // LogicPals Phase 0 — Week 2
 // File: supabase/functions/synthetic-monitor/index.ts
+//
+// PHASE 0B ADDITIONS:
+//   - Slack alert on pipeline failure (synthetic_monitor_failed)
+//   - Slack alert on recovery (synthetic_monitor_recovered)
+//   - Previous-run tracking for recovery detection
 // ============================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { notifySlack } from '../_shared/slack_alert.ts';
 
 const SUPABASE_URL     = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -36,7 +42,6 @@ async function checkDBConnectivity(): Promise<StepResult> {
 }
 
 // ── Step 2: Problem Fetch ─────────────────────────────────────
-// Uses correct column names: title, problem_text (not statement)
 async function checkProblemFetch(): Promise<StepResult> {
   const start = Date.now();
   try {
@@ -171,7 +176,6 @@ async function checkCostLedgerWrite(): Promise<StepResult> {
 }
 
 // ── Step 6: Rate Limit RPC ────────────────────────────────────
-// Correct params: p_route text, p_limit integer, p_window_seconds integer
 async function checkRateLimitRPC(): Promise<StepResult> {
   const start = Date.now();
   try {
@@ -243,6 +247,22 @@ async function checkSessionComposerRPC(): Promise<StepResult> {
   }
 }
 
+// ── Phase 0B: Check if previous run failed (for recovery detection) ──
+async function didPreviousRunFail(): Promise<boolean> {
+  try {
+    const { data } = await supabase
+      .from('synthetic_monitor_runs')
+      .select('passed')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    return data ? !data.passed : false;
+  } catch {
+    return false; // If we can't check, assume no previous failure
+  }
+}
+
 // ── Log run to DB ─────────────────────────────────────────────
 async function logSyntheticRun(runId: string, overallPassed: boolean, steps: StepResult[], totalMs: number) {
   const failedSteps = steps.filter(s => !s.passed).map(s => s.step);
@@ -260,7 +280,7 @@ async function logSyntheticRun(runId: string, overallPassed: boolean, steps: Ste
 
   if (!overallPassed) {
     await supabase.from('alert_log').insert({
-      alert_type: 'session_composer_failure',
+      alert_type: 'synthetic_monitor_failed',
       severity:   'critical',
       message:    `Synthetic monitor failed: ${failedSteps.join(', ')}`,
       metadata:   { run_id: runId, failed_steps: failedSteps, total_ms: totalMs }
@@ -279,6 +299,9 @@ Deno.serve(async (req) => {
 
   console.log(`[synthetic-monitor] Starting run ${runId}`);
 
+  // Phase 0B: Check previous run state BEFORE this run
+  const previousFailed = await didPreviousRunFail();
+
   const steps: StepResult[] = [];
   steps.push(await checkDBConnectivity());
   steps.push(await checkProblemFetch());
@@ -291,15 +314,36 @@ Deno.serve(async (req) => {
 
   const totalMs       = Date.now() - runStart;
   const failedSteps   = steps.filter(s => !s.passed);
+  const passedSteps   = steps.filter(s => s.passed);
   const overallPassed = failedSteps.length === 0;
 
   await logSyntheticRun(runId, overallPassed, steps, totalMs);
+
+  // ── Phase 0B: Slack alerts on state transitions ────────────
+  if (!overallPassed) {
+    // 🔴 Pipeline failed — fire Slack alert
+    const firstFailure = failedSteps[0];
+    notifySlack('synthetic_monitor_failed', {
+      monitor_name: 'logicpals-synthetic',
+      failed_step:  firstFailure.step,
+      steps_passed: passedSteps.length,
+      steps_failed: failedSteps.length,
+      environment:  'production',
+      details:      `${firstFailure.detail}${firstFailure.error ? ': ' + firstFailure.error : ''}`.slice(0, 300),
+    });
+  } else if (overallPassed && previousFailed) {
+    // 🟢 Recovery — all steps pass after a previous failure
+    notifySlack('synthetic_monitor_recovered', {
+      monitor_name: 'logicpals-synthetic',
+      steps_passed: passedSteps.length,
+    });
+  }
 
   const summary = {
     run_id:         runId,
     passed:         overallPassed,
     total_ms:       totalMs,
-    steps_passed:   steps.filter(s => s.passed).length,
+    steps_passed:   passedSteps.length,
     steps_failed:   failedSteps.length,
     failed_steps:   failedSteps.map(s => ({ step: s.step, error: s.error })),
     step_latencies: Object.fromEntries(steps.map(s => [s.step, s.latency_ms])),
