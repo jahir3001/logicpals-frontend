@@ -674,6 +674,16 @@
                 <a href="#faq">FAQ</a>
             </nav>
             <div class="nav-buttons">
+                <!-- Admin Console link: hidden by default, revealed only when lp_admin_auth session is valid -->
+                <a
+                  id="lp-admin-nav-link"
+                  href="/admin.html"
+                  style="display:none; padding:8px 14px; border-radius:999px; border:1px solid rgba(79,70,229,0.28); color:#4338ca; font-weight:600; font-size:14px; background:rgba(79,70,229,0.06); transition:background 0.15s ease;"
+                  onmouseover="this.style.background='rgba(79,70,229,0.12)'"
+                  onmouseout="this.style.background='rgba(79,70,229,0.06)'"
+                >
+                  ⚙ Admin
+                </a>
                 <a href="login.html">Login</a>
                 <a href="signup.html" class="btn btn-primary">Try Free for 7 Days</a>
             </div>
@@ -1058,7 +1068,7 @@
                 <span>✓ Cancel in one click</span>
             </div>
             <div style="font-size: 14px; opacity: 0.8;">
-                Have questions? Email: hello@logicpals.com
+                Have questions? Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="90f8f5fcfcffd0fcfff7f9f3e0f1fce3bef3fffd">[email&#160;protected]</a>
             </div>
         </div>
     </section>
@@ -1105,7 +1115,7 @@
         </div>
     </footer>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         // FAQ Accordion
         const faqItems = document.querySelectorAll('.faq-item');
         faqItems.forEach(item => {
@@ -1189,50 +1199,105 @@
     </script>
 
 <script>
-/* LP_BACK_TO_ADMIN v1
-   Shows "Back to Admin" link when arriving from admin console.
-   Also keeps an "Admin Console" link in the top nav for convenience.
+/* LP_BACK_TO_ADMIN v2
+   - Admin Console nav link: ONLY shown when lp_admin_auth holds a
+     valid, non-expired Supabase session. Invisible to all regular users.
+   - "Back to Admin" floating bar: shown only when ?from=admin|console
+     is present in the URL (set by admin.html "Visit Site" button).
 */
-(function(){
-  try{
-    const params = new URLSearchParams(location.search);
-    const fromAdmin = params.get('from') === 'admin' || params.get('from') === 'console';
-    const adminHref = '/admin.html';
-    // 1) Add top-right "Admin Console" link if a nav exists and link not already present
-    const existing = Array.from(document.querySelectorAll('a')).some(a => (a.getAttribute('href')||'').includes('admin.html'));
-    if(!existing){
-      const nav = document.querySelector('nav') || document.querySelector('header') || document.body;
-      const a = document.createElement('a');
-      a.href = adminHref;
-      a.textContent = 'Admin Console';
-      a.style.cssText = 'margin-left:14px; padding:10px 14px; border-radius:999px; border:1px solid rgba(0,0,0,0.12); text-decoration:none; font-weight:600;';
-      // try to place near existing login button
-      const loginLink = Array.from(nav.querySelectorAll('a,button')).find(el => /login/i.test(el.textContent||''));
-      if(loginLink && loginLink.parentElement){
-        loginLink.parentElement.insertBefore(a, loginLink.nextSibling);
-      } else {
-        nav.appendChild(a);
-      }
+(function () {
+  'use strict';
+
+  const ADMIN_HREF  = '/admin.html';
+  const STORAGE_KEY = 'lp_admin_auth';
+
+  /* ── 1. Check for a valid admin session in localStorage ─────── */
+  function hasValidAdminSession() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      // Supabase v2 stores session directly at the key
+      // expires_at is a Unix timestamp in seconds
+      const expiresAt = data?.expires_at;
+      if (!expiresAt) return false;
+      // Give 60s of grace to account for clock skew
+      return (Date.now() / 1000) < (expiresAt - 60);
+    } catch (_) {
+      return false;
     }
-    // 2) Show "Back to Admin" banner if coming from admin
-    if(fromAdmin){
-      const bar = document.createElement('div');
-      bar.setAttribute('role','region');
-      bar.style.cssText = 'position:fixed; top:12px; right:12px; z-index:9999; background:rgba(255,255,255,0.96); border:1px solid rgba(0,0,0,0.12); border-radius:999px; padding:10px 12px; box-shadow:0 8px 24px rgba(0,0,0,0.08); display:flex; gap:10px; align-items:center;';
-      const badge = document.createElement('span');
-      badge.textContent = 'From Admin';
-      badge.style.cssText = 'font-size:12px; opacity:0.75;';
-      const back = document.createElement('a');
-      back.href = adminHref;
-      back.textContent = 'Back to Admin';
-      back.style.cssText = 'padding:8px 12px; border-radius:999px; background:#6d5efc; color:#fff; text-decoration:none; font-weight:700;';
-      bar.appendChild(badge);
-      bar.appendChild(back);
-      document.body.appendChild(bar);
-    }
-  }catch(e){}
+  }
+
+  /* ── 2. Reveal the pre-declared hidden admin nav link ───────── */
+  if (hasValidAdminSession()) {
+    const link = document.getElementById('lp-admin-nav-link');
+    if (link) link.style.display = 'inline-flex';
+  }
+
+  /* ── 3. "Back to Admin" floating bar (only when ?from=admin) ── */
+  const params   = new URLSearchParams(location.search);
+  const fromAdmin = params.get('from') === 'admin' || params.get('from') === 'console';
+
+  if (fromAdmin) {
+    const bar = document.createElement('div');
+    bar.setAttribute('role', 'region');
+    bar.setAttribute('aria-label', 'Return to admin console');
+    bar.style.cssText = [
+      'position:fixed', 'top:14px', 'right:14px', 'z-index:9999',
+      'background:rgba(255,255,255,0.97)',
+      'border:1px solid rgba(79,70,229,0.22)',
+      'border-radius:999px',
+      'padding:9px 14px',
+      'box-shadow:0 8px 28px rgba(10,14,28,0.12)',
+      'display:flex', 'gap:10px', 'align-items:center',
+      'backdrop-filter:blur(8px)',
+      '-webkit-backdrop-filter:blur(8px)',
+      'font-family:Inter,system-ui,sans-serif',
+    ].join(';');
+
+    const badge = document.createElement('span');
+    badge.textContent = '⚙ Admin';
+    badge.style.cssText = 'font-size:11px;font-weight:700;color:#6366f1;opacity:0.85;';
+
+    const back = document.createElement('a');
+    back.href = ADMIN_HREF;
+    back.textContent = 'Back to Console';
+    back.style.cssText = [
+      'padding:7px 13px',
+      'border-radius:999px',
+      'background:linear-gradient(135deg,#4f46e5,#0891b2)',
+      'color:#fff',
+      'font-size:13px',
+      'font-weight:700',
+      'text-decoration:none',
+      'white-space:nowrap',
+      'transition:opacity 0.15s',
+    ].join(';');
+    back.onmouseover = () => { back.style.opacity = '0.85'; };
+    back.onmouseout  = () => { back.style.opacity = '1';    };
+
+    const dismiss = document.createElement('button');
+    dismiss.textContent = '✕';
+    dismiss.setAttribute('aria-label', 'Dismiss');
+    dismiss.style.cssText = [
+      'background:none', 'border:none', 'cursor:pointer',
+      'color:#94a3b8', 'font-size:13px', 'padding:2px 4px',
+      'border-radius:4px', 'line-height:1',
+    ].join(';');
+    dismiss.onclick = () => bar.remove();
+
+    bar.appendChild(badge);
+    bar.appendChild(back);
+    bar.appendChild(dismiss);
+    document.body.appendChild(bar);
+
+    // Auto-dismiss after 12 seconds
+    setTimeout(() => {
+      bar.style.transition = 'opacity 0.4s ease';
+      bar.style.opacity    = '0';
+      setTimeout(() => bar.remove(), 450);
+    }, 12000);
+  }
+
 })();
 </script>
-
-</body>
-</html>

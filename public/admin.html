@@ -5,583 +5,771 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LogicPals Admin Console</title>
 
-  <!-- BFCache/Back button hardening -->
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
+  <meta http-equiv="Pragma"        content="no-cache" />
+  <meta http-equiv="Expires"       content="0" />
+
+  <link rel="stylesheet" href="/assets/css/admin.css" />
+  <script src="/assets/js/env-loader.js"></script>
+  <script src="/assets/js/admin-auth.js"></script>
 
   <style>
-    :root{
-      --bg:#f6f7fb; --card:#ffffff; --text:#0f172a; --muted:#64748b; --line:#e5e7eb;
-      --primary:#4f46e5; --primary-weak:#eef2ff;
-      --success:#10b981; --warn:#f59e0b; --danger:#ef4444;
-      --shadow:0 18px 45px rgba(15,23,42,.08);
-      --radius:18px; --radius-sm:12px;
-      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family:var(--font); color:var(--text);
-      background:radial-gradient(900px 600px at 18% 12%, rgba(79,70,229,.10), transparent 60%),
-                 radial-gradient(900px 600px at 82% 20%, rgba(16,185,129,.08), transparent 60%),
-                 var(--bg);
-    }
-    .shell{max-width:1180px;margin:22px auto;padding:0 18px;}
-    .topbar{
-      display:flex;align-items:center;justify-content:space-between;gap:14px;
-      padding:16px 18px;background:rgba(255,255,255,.9);border:1px solid var(--line);
-      border-radius:22px;box-shadow:var(--shadow);backdrop-filter:saturate(140%) blur(12px);
-    }
-    .brand{display:flex;align-items:center;gap:12px;min-width:240px;}
-    .logo{
-      width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#6366f1,#8b5cf6);
-      display:grid;place-items:center;color:#fff;font-weight:800;letter-spacing:.5px;
-      box-shadow:0 14px 28px rgba(79,70,229,.25);
-    }
-    .brand h1{margin:0;font-size:15px;line-height:1.15}
-    .brand p{margin:2px 0 0;color:var(--muted);font-size:12px}
+    /* ─── Page-specific overrides ──────────────────────────────── */
 
-    .actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
-    .pill{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:10px 12px;border:1px solid var(--line);border-radius:999px;
-      background:#fff;color:var(--muted);font-size:12px;
+    /* Tab bar */
+    .lp-tabs {
+      display: flex;
+      gap: 2px;
+      border-bottom: 1px solid var(--lp-border);
+      padding: 0 22px;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
-    .dot{width:8px;height:8px;border-radius:999px;background:#cbd5e1;}
-    .dot.ok{background:var(--success)}
-    .dot.warn{background:var(--warn)}
-    .dot.err{background:var(--danger)}
+    .lp-tabs::-webkit-scrollbar { display: none; }
 
-    .btn{
-      border:1px solid var(--line);background:#fff;color:var(--text);
-      padding:10px 14px;border-radius:999px;font-weight:700;font-size:13px;cursor:pointer;
-      transition:transform .06s ease, box-shadow .12s ease, background .12s ease, opacity .12s ease;
+    .lp-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 14px 11px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--lp-muted);
+      border: none;
+      border-bottom: 2px solid transparent;
+      background: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition:
+        color var(--lp-t-fast),
+        border-color var(--lp-t-fast);
+      margin-bottom: -1px;
     }
-    .btn:hover{box-shadow:0 10px 22px rgba(15,23,42,.08)}
-    .btn:active{transform:translateY(1px)}
-    .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
-    .btn.primary:hover{box-shadow:0 14px 26px rgba(79,70,229,.22)}
-    .btn.ghost{background:transparent}
-    .btn[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none}
-    .btn.danger{border-color:rgba(239,68,68,.30); color:#991b1b; background:rgba(239,68,68,.06)}
-    .btn.danger:hover{box-shadow:0 10px 22px rgba(239,68,68,.12)}
 
-    .grid{display:grid;grid-template-columns:360px 1fr;gap:16px;margin-top:16px;}
-    @media (max-width: 980px){.grid{grid-template-columns:1fr}}
+    .lp-tab:hover { color: var(--lp-text-2); }
 
-    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
-    .card .hd{padding:18px 18px 12px;border-bottom:1px solid var(--line);}
-    .card .hd h2{margin:0;font-size:16px}
-    .card .hd small{color:var(--muted)}
-    .card .bd{padding:16px 18px;}
-    .kv{display:grid;grid-template-columns:120px 1fr;row-gap:10px;column-gap:12px;margin-top:10px;font-size:13px}
-    .k{color:var(--muted)}
-
-    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 0;}
-    .tab{padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:700;font-size:13px}
-    .tab.active{background:var(--primary-weak);border-color:rgba(79,70,229,.30);color:#1e1b4b}
-    .panel{display:none}
-    .panel.active{display:block}
-
-    .banner{
-      display:flex;gap:10px;align-items:flex-start;
-      padding:12px 14px;border-radius:14px;border:1px solid rgba(16,185,129,.25);
-      background:rgba(16,185,129,.08);color:#064e3b;font-size:13px;
+    .lp-tab.active {
+      color: var(--lp-indigo);
+      border-bottom-color: var(--lp-indigo);
     }
-    .banner.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.12);color:#7c2d12}
-    .banner.danger{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);color:#7f1d1d}
 
-    .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px;}
-    @media (max-width: 980px){.cards{grid-template-columns:1fr}}
-    .mini{border:1px solid var(--line);border-radius:var(--radius-sm);background:#fff;padding:14px;}
-    .mini h3{margin:0 0 6px;font-size:14px}
-    .mini p{margin:0;color:var(--muted);font-size:13px;line-height:1.35}
-    .mini .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .lp-tab-icon {
+      width: 15px;
+      height: 15px;
+      opacity: 0.75;
+    }
 
-    dialog{
-      width:min(520px, calc(100% - 24px));
-      border:none;border-radius:18px;box-shadow:0 30px 80px rgba(2,6,23,.35);
-      padding:0;overflow:hidden;
-    }
-    dialog::backdrop{background:rgba(2,6,23,.45)}
-    .modal-hd{padding:16px 18px;border-bottom:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:space-between}
-    .modal-hd strong{font-size:14px}
-    .modal-bd{padding:16px 18px;background:#fff}
-    .field{display:grid;gap:6px;margin:10px 0}
-    .field label{font-size:12px;color:var(--muted);font-weight:700}
-    .input{
-      padding:12px 12px;border-radius:12px;border:1px solid var(--line);
-      background:#fff;font-size:14px;outline:none;
-    }
-    .input:focus{border-color:rgba(79,70,229,.55);box-shadow:0 0 0 4px rgba(79,70,229,.10)}
-    .help{color:var(--muted);font-size:12px;line-height:1.35}
-    .out{margin-top:12px;padding:12px;border-radius:12px;border:1px dashed var(--line);background:#fafafa;color:#0f172a;white-space:pre-wrap;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-size:12px;min-height:56px}
+    .lp-tab.active .lp-tab-icon { opacity: 1; }
 
-    .gate-overlay{
-      display:none; position:absolute; inset:0;
-      background:rgba(246,247,251,.78);
-      backdrop-filter: blur(6px);
-      border-radius: var(--radius);
-      border:1px dashed rgba(100,116,139,.35);
-      align-items:center; justify-content:center;
-      padding:18px;
+    .lp-panel { display: none; }
+    .lp-panel.active { display: block; }
+
+    /* Action cards (mini cards) */
+    .lp-action-card {
+      background: var(--lp-card);
+      border: 1px solid var(--lp-border);
+      border-radius: var(--lp-r-lg);
+      padding: 18px 20px 16px;
+      transition:
+        box-shadow var(--lp-t),
+        border-color var(--lp-t),
+        transform var(--lp-t);
     }
-    .gate-overlay.active{display:flex}
-    .gate-box{
-      max-width:520px;
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:18px;
-      box-shadow:0 24px 60px rgba(2,6,23,.20);
-      padding:16px 16px 14px;
+
+    .lp-action-card:hover {
+      box-shadow: var(--lp-shadow-md);
+      border-color: var(--lp-border-2);
+      transform: translateY(-1px);
     }
-    .gate-box h3{margin:0 0 6px;font-size:14px}
-    .gate-box p{margin:0;color:var(--muted);font-size:13px;line-height:1.35}
-    .gate-box .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+
+    .lp-action-card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+
+    .lp-action-card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--lp-text);
+      margin-bottom: 4px;
+      letter-spacing: -0.01em;
+    }
+
+    .lp-action-card-desc {
+      font-size: 12.5px;
+      color: var(--lp-muted);
+      line-height: 1.45;
+      margin-bottom: 14px;
+    }
+
+    .lp-action-card-btns {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Gate overlay — full-card lock screen */
+    .lp-gate {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(247, 248, 252, 0.82);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: inherit;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 10;
+    }
+
+    .lp-gate.active { display: flex; }
+
+    .lp-gate-box {
+      max-width: 440px;
+      width: 100%;
+      background: var(--lp-card);
+      border: 1px solid var(--lp-border);
+      border-radius: var(--lp-r-xl);
+      box-shadow: var(--lp-shadow-xl);
+      padding: 26px 24px 22px;
+      text-align: center;
+      animation: lp-dialog-in 0.22s var(--lp-ease-spring) both;
+    }
+
+    .lp-gate-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: var(--lp-danger-bg);
+      border: 1px solid var(--lp-danger-border);
+      display: grid;
+      place-items: center;
+      margin: 0 auto 14px;
+      color: var(--lp-danger);
+    }
+
+    .lp-gate-title {
+      font-family: var(--lp-font-display);
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--lp-text);
+      margin-bottom: 6px;
+      letter-spacing: -0.015em;
+    }
+
+    .lp-gate-msg {
+      font-size: 13px;
+      color: var(--lp-muted);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .lp-gate-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* KV panel inside the sidebar-info card */
+    .lp-system-card {
+      background: var(--lp-card);
+      border: 1px solid var(--lp-border);
+      border-radius: var(--lp-r-xl);
+      overflow: hidden;
+      box-shadow: var(--lp-shadow-sm);
+    }
+
+    /* Stat card accent line */
+    .lp-stat-accent-indigo { border-top: 3px solid var(--lp-indigo); }
+    .lp-stat-accent-teal   { border-top: 3px solid var(--lp-teal);   }
+    .lp-stat-accent-violet { border-top: 3px solid #7c3aed;          }
+    .lp-stat-accent-green  { border-top: 3px solid var(--lp-success);}
+
+    /* Content + Access panels placeholder */
+    .lp-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      text-align: center;
+      gap: 12px;
+      color: var(--lp-muted);
+    }
+
+    .lp-placeholder-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: var(--lp-surface-2);
+      border: 1px solid var(--lp-border);
+      display: grid;
+      place-items: center;
+      color: var(--lp-subtle);
+    }
+
+    /* Responsive workspace grid */
+    .lp-workspace-grid {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+      .lp-workspace-grid { grid-template-columns: 1fr; }
+    }
   </style>
-
-  <!-- keep if you already use it; we do NOT depend on it exclusively -->
-  <script src="/assets/js/env-loader.js"></script>
 </head>
 
 <body>
-  <div class="shell">
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo">LP</div>
-        <div>
-          <h1>LogicPals Console</h1>
-          <p>Enterprise Admin System</p>
+
+  <div class="admin-app" id="adminApp">
+
+    <!-- ── Sidebar (rendered by LPAdmin.init) ── -->
+    <aside class="admin-sidebar" id="sidebar"></aside>
+    <div class="admin-sidebar-backdrop" id="lp-sb-backdrop"></div>
+
+    <div class="admin-main">
+
+      <!-- ── Topbar ── -->
+      <header class="admin-topbar">
+        <div class="admin-topbar-left">
+          <!-- Mobile toggle -->
+          <button class="admin-menu-toggle" id="lp-menu-toggle" aria-label="Open menu">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+          <!-- Breadcrumb -->
+          <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+            <span>LogicPals</span>
+            <span class="admin-breadcrumb-sep">›</span>
+            <span class="admin-breadcrumb-current">Admin Console</span>
+          </nav>
         </div>
-      </div>
-
-      <div class="actions">
-        <div class="pill" id="statusPill"><span class="dot" id="statusDot"></span><span id="statusText">Loading…</span></div>
-        <button class="btn" id="btnVisit" type="button">Visit Site</button>
-        <button class="btn" id="btnDashboard" type="button">Dashboard</button>
-        <button class="btn danger" id="btnTopLogout" type="button" style="display:none">Sign out</button>
-        <button class="btn primary" id="btnAuth" type="button">Sign in</button>
-      </div>
-    </header>
-
-    <div class="grid">
-      <aside class="card">
-        <div class="hd">
-          <h2>Console Status</h2>
-          <small>Access controlled via DB roles + RPC gates (Step 7)</small>
+        <div class="admin-topbar-right">
+          <span class="admin-pill" id="statusPill">
+            <span class="admin-dot" id="dot"></span>
+            <span id="statusTxt">Loading…</span>
+          </span>
+          <a class="admin-btn admin-btn-secondary admin-btn-sm" href="/">Visit Site</a>
+          <a class="admin-btn admin-btn-secondary admin-btn-sm" href="/dashboard.html">Dashboard</a>
         </div>
-        <div class="bd">
-          <div class="kv">
-            <div class="k">Project</div><div>LogicPals-App</div>
-            <div class="k">Auth state</div><div id="kvAuth">unknown</div>
-            <div class="k">Role</div><div id="kvRole">unknown</div>
-            <div class="k">User</div><div id="kvUser">—</div>
-          </div>
+      </header>
 
-          <div class="banner warn" style="margin-top:14px" id="roleHint">
-            <div>Sign in to load admin capabilities. If your role is <b>super_admin</b>, you can assign roles and manage monetization.</div>
-          </div>
+      <!-- ── Main content ── -->
+      <main class="admin-content">
 
-          <div class="banner" style="margin-top:12px">
-            <div><b>Roadmap contract:</b> Admin UI never directly writes protected tables. All mutations go through <b>RPC</b> + <b>audit events</b>.</div>
+        <!-- Page header -->
+        <div class="admin-page-header">
+          <div>
+            <h1 class="admin-page-title">Admin Console</h1>
+            <p class="admin-page-desc">Enterprise workspace — all mutations go through RPC + audit trail. No direct table writes.</p>
           </div>
-
-          <div class="banner danger" style="margin-top:12px; display:none" id="logoutWarn">
-            <div><b>Security:</b> You are signed out. Admin workspace is locked until you sign in again.</div>
-          </div>
-        </div>
-      </aside>
-
-      <main class="card" id="workspaceCard" style="position:relative">
-        <div class="hd">
-          <h2>Admin Workspace</h2>
-          <small>Clean controls with hard boundaries for Regular vs Olympiad</small>
-          <div class="tabs" style="margin-top:12px">
-            <button class="tab active" data-tab="overview" type="button">Overview</button>
-            <button class="tab" data-tab="content" type="button">Content</button>
-            <button class="tab" data-tab="monetization" type="button">Monetization</button>
-            <button class="tab" data-tab="access" type="button">Access</button>
+          <div class="admin-page-actions">
+            <div id="who" style="font-size:12.5px;color:var(--lp-muted);font-weight:500;"></div>
           </div>
         </div>
 
-        <div class="bd" id="workspaceBody">
-          <section class="panel active" id="tab-overview">
-            <div class="banner" style="margin-bottom:14px">
-              <div><b>Step 7 readiness:</b> Explainability events + receipts are working. Next: surface trustworthy admin views + immutable audit.</div>
+        <!-- ── Platform stats row ── -->
+        <div class="admin-grid admin-grid-4" style="margin-bottom:24px">
+
+          <div class="admin-stat-card lp-stat-accent-indigo">
+            <div class="admin-stat-label">Total Problems</div>
+            <div class="admin-stat-value" id="statProblems">567</div>
+            <div class="admin-stat-delta flat">Regular + Olympiad</div>
+          </div>
+
+          <div class="admin-stat-card lp-stat-accent-teal">
+            <div class="admin-stat-label">Olympiad Tracks</div>
+            <div class="admin-stat-value" id="statTracks">7</div>
+            <div class="admin-stat-delta flat">Active skill tracks</div>
+          </div>
+
+          <div class="admin-stat-card lp-stat-accent-violet">
+            <div class="admin-stat-label">Schema Version</div>
+            <div class="admin-stat-value" style="font-size:18px;font-family:var(--lp-font-mono)" id="statSchema">—</div>
+            <div class="admin-stat-delta flat" id="statSchemaDate">Loading…</div>
+          </div>
+
+          <div class="admin-stat-card lp-stat-accent-green">
+            <div class="admin-stat-label">QC Score</div>
+            <div class="admin-stat-value" id="statQC">100</div>
+            <div class="admin-stat-delta up">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+              P0–P4 all gates
             </div>
-            <div class="cards">
-              <div class="mini">
-                <h3>Regular Review</h3>
-                <p>Content management for standard curriculum (admin_regular, super_admin).</p>
-                <div class="row">
-                  <button class="btn gated" id="btnRegUpload" type="button">Upload / Seed</button>
-                  <button class="btn gated" id="btnRegQueue" type="button">Review Queue</button>
+          </div>
+
+        </div>
+
+        <!-- ── Workspace card ── -->
+        <div class="lp-system-card" id="workspaceCard" style="position:relative">
+
+          <!-- Tab bar -->
+          <div class="lp-tabs" role="tablist" aria-label="Admin workspace">
+            <button class="lp-tab active" data-tab="overview" role="tab" aria-selected="true" type="button">
+              <svg class="lp-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+              Overview
+            </button>
+            <button class="lp-tab" data-tab="content" role="tab" aria-selected="false" type="button">
+              <svg class="lp-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Content
+            </button>
+            <button class="lp-tab" data-tab="monetization" role="tab" aria-selected="false" type="button">
+              <svg class="lp-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
+              Monetization
+            </button>
+            <button class="lp-tab" data-tab="access" role="tab" aria-selected="false" type="button">
+              <svg class="lp-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              Access
+            </button>
+          </div>
+
+          <!-- ── Panel: Overview ── -->
+          <div class="lp-panel active" id="tab-overview" role="tabpanel">
+            <div class="lp-workspace-grid" style="padding:22px">
+
+              <!-- Left: system status card -->
+              <div style="display:flex;flex-direction:column;gap:14px">
+
+                <!-- System status -->
+                <div>
+                  <h3 class="admin-subheading" style="margin-bottom:12px">System Status</h3>
+                  <div class="admin-kv-list">
+                    <div class="admin-kv-row">
+                      <span class="admin-kv-key">Project</span>
+                      <span class="admin-kv-value admin-font-mono" style="font-size:12px">LogicPals-App</span>
+                    </div>
+                    <div class="admin-kv-row">
+                      <span class="admin-kv-key">Auth state</span>
+                      <span class="admin-kv-value" id="kvAuth">unknown</span>
+                    </div>
+                    <div class="admin-kv-row">
+                      <span class="admin-kv-key">Role</span>
+                      <span class="admin-kv-value" id="kvRole">unknown</span>
+                    </div>
+                    <div class="admin-kv-row">
+                      <span class="admin-kv-key">User</span>
+                      <span class="admin-kv-value admin-truncate" id="kvUser">—</span>
+                    </div>
+                    <div class="admin-kv-row">
+                      <span class="admin-kv-key">Phase</span>
+                      <span class="admin-kv-value">P5 unlocked</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Architecture note -->
+                <div class="admin-banner admin-banner-info">
+                  <svg class="admin-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+                  <div class="admin-banner-body">
+                    <div class="admin-banner-title">Architecture contract</div>
+                    Admin UI never directly writes protected tables. All mutations go through <strong>RPC + audit events</strong>.
+                  </div>
+                </div>
+
+                <!-- Locked banner (shown when signed out) -->
+                <div class="admin-banner admin-banner-danger" id="logoutWarn" style="display:none">
+                  <svg class="admin-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                  <div class="admin-banner-body">
+                    <div class="admin-banner-title">Workspace locked</div>
+                    You are signed out. Sign in to access admin actions.
+                  </div>
+                </div>
+
+              </div>
+              <!-- /left -->
+
+              <!-- Right: action cards grid -->
+              <div>
+                <h3 class="admin-subheading" style="margin-bottom:14px">Quick Actions</h3>
+                <div class="admin-grid admin-grid-2" style="gap:12px">
+
+                  <!-- Regular Review -->
+                  <div class="lp-action-card">
+                    <div class="lp-action-card-icon" style="background:rgba(79,70,229,0.1);color:var(--lp-indigo)">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <div class="lp-action-card-title">Regular Review</div>
+                    <div class="lp-action-card-desc">Standard curriculum content management. Roles: admin_regular, super_admin.</div>
+                    <div class="lp-action-card-btns">
+                      <button class="admin-btn admin-btn-secondary admin-btn-sm gated" id="btnRegUpload" type="button">Upload / Seed</button>
+                      <button class="admin-btn admin-btn-ghost admin-btn-sm gated" id="btnRegQueue" type="button">Review Queue</button>
+                    </div>
+                  </div>
+
+                  <!-- Olympiad Review -->
+                  <div class="lp-action-card">
+                    <div class="lp-action-card-icon" style="background:rgba(8,145,178,0.1);color:var(--lp-teal)">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                    </div>
+                    <div class="lp-action-card-title">Olympiad Review</div>
+                    <div class="lp-action-card-desc">Competition prep content. Strict separation. Roles: admin_olympiad, super_admin.</div>
+                    <div class="lp-action-card-btns">
+                      <button class="admin-btn admin-btn-secondary admin-btn-sm gated" id="btnOlyUpload" type="button">Upload / Seed</button>
+                      <button class="admin-btn admin-btn-ghost admin-btn-sm gated" id="btnOlyQueue" type="button">Failed Queue</button>
+                    </div>
+                  </div>
+
+                  <!-- Monetization -->
+                  <div class="lp-action-card">
+                    <div class="lp-action-card-icon" style="background:rgba(5,150,105,0.1);color:var(--lp-success)">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
+                    </div>
+                    <div class="lp-action-card-title">Monetization</div>
+                    <div class="lp-action-card-desc">Payments + subscriptions. Manual activation, refunds, reconciliation via RPC.</div>
+                    <div class="lp-action-card-btns">
+                      <button class="admin-btn admin-btn-secondary admin-btn-sm gated" id="btnPayments" type="button">Payments</button>
+                      <button class="admin-btn admin-btn-ghost admin-btn-sm gated" id="btnSubs" type="button">Subscriptions</button>
+                    </div>
+                  </div>
+
+                  <!-- Role Management -->
+                  <div class="lp-action-card" id="rolesCard">
+                    <div class="lp-action-card-icon" style="background:rgba(124,58,237,0.1);color:#7c3aed">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <div class="lp-action-card-title">Role Management</div>
+                    <div class="lp-action-card-desc">Assign admin roles with audit trail + Slack alerts to #ops. <strong>super_admin only.</strong></div>
+                    <div class="lp-action-card-btns">
+                      <button class="admin-btn admin-btn-secondary admin-btn-sm gated" id="btnRoles" type="button">Role Manager</button>
+                      <button class="admin-btn admin-btn-ghost admin-btn-sm gated" id="btnAudit" type="button">Audit Log</button>
+                    </div>
+                  </div>
+
                 </div>
               </div>
-              <div class="mini">
-                <h3>Olympiad Review</h3>
-                <p>Competition prep (admin_olympiad, super_admin). Strict separation.</p>
-                <div class="row">
-                  <button class="btn gated" id="btnOlyUpload" type="button">Upload / Seed</button>
-                  <button class="btn gated" id="btnOlyQueue" type="button">Failed Criteria Queue</button>
-                </div>
-              </div>
-              <div class="mini">
-                <h3>Role Management</h3>
-                <p>Assign admin roles (super_admin only). Uses RPC + RLS. Audit required.</p>
-                <div class="row">
-                  <button class="btn gated" id="btnRoles" type="button">Open Role Manager</button>
-                  <button class="btn gated" id="btnAudit" type="button">View Admin Audit</button>
-                </div>
-              </div>
-              <div class="mini">
-                <h3>Monetization</h3>
-                <p>Payments + subscriptions (manual activation / refunds). RPC-only with receipts.</p>
-                <div class="row">
-                  <button class="btn gated" id="btnPayments" type="button">Payments</button>
-                  <button class="btn gated" id="btnSubs" type="button">Subscriptions</button>
-                </div>
-              </div>
-            </div>
-          </section>
+              <!-- /right -->
 
-          <section class="panel" id="tab-content">
-            <div class="banner warn" style="margin-bottom:14px">
-              <div><b>Note:</b> UI is ready. We enable actions after admin RPCs are confirmed.</div>
-            </div>
-            <div class="out">Content tools will be wired to your existing RPCs next. (No direct table writes.)</div>
-          </section>
-
-          <section class="panel" id="tab-monetization">
-            <div class="cards">
-              <div class="mini">
-                <h3>Payments</h3>
-                <p>Refund / charge / reconcile. Admin-only RPC calls.</p>
-                <div class="row"><button class="btn gated" id="goPayments" type="button">Open Payments</button></div>
-              </div>
-              <div class="mini">
-                <h3>Subscriptions</h3>
-                <p>List / extend / cancel. Admin-only RPC calls.</p>
-                <div class="row"><button class="btn gated" id="goSubs" type="button">Open Subscriptions</button></div>
-              </div>
-            </div>
-          </section>
-
-          <section class="panel" id="tab-access">
-            <div class="banner warn" style="margin-bottom:14px">
-              <div><b>Role assignment</b> must be <b>super_admin</b> only. Non-super_admin stays read-only.</div>
-            </div>
-            <div class="out">Access tools will be wired to your admin RPCs next.</div>
-          </section>
-        </div>
-
-        <div class="gate-overlay" id="gateOverlay" aria-live="polite">
-          <div class="gate-box">
-            <h3>Admin workspace locked</h3>
-            <p id="gateMsg">You are signed out. For security, all admin actions and navigation are disabled until you sign in again.</p>
-            <div class="row">
-              <button class="btn primary" id="btnGateSignIn" type="button">Sign in</button>
-              <button class="btn" id="btnGateReload" type="button">Reload</button>
             </div>
           </div>
+          <!-- /tab-overview -->
+
+          <!-- ── Panel: Content ── -->
+          <div class="lp-panel" id="tab-content" role="tabpanel">
+            <div style="padding:22px">
+              <div class="admin-banner admin-banner-warn" style="margin-bottom:18px">
+                <svg class="admin-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                <div class="admin-banner-body">
+                  <div class="admin-banner-title">Content tools pending</div>
+                  UI scaffolding is complete. Actions will be wired to admin RPCs after confirmation. No direct table writes.
+                </div>
+              </div>
+
+              <div class="admin-grid admin-grid-2" style="gap:12px">
+                <div class="lp-action-card">
+                  <div class="lp-action-card-title">Regular Content</div>
+                  <div class="lp-action-card-desc">Upload, review, and publish problems for the regular track. Supports 567 published problems today.</div>
+                  <div class="lp-action-card-btns">
+                    <button class="admin-btn admin-btn-secondary admin-btn-sm gated" type="button" disabled>Upload Problems</button>
+                    <button class="admin-btn admin-btn-ghost admin-btn-sm gated" type="button" disabled>Review Queue</button>
+                  </div>
+                </div>
+                <div class="lp-action-card">
+                  <div class="lp-action-card-title">Olympiad Content</div>
+                  <div class="lp-action-card-desc">Manage 7 skill tracks across competition levels. Strict admin_olympiad / super_admin gate.</div>
+                  <div class="lp-action-card-btns">
+                    <button class="admin-btn admin-btn-secondary admin-btn-sm gated" type="button" disabled>Upload Problems</button>
+                    <button class="admin-btn admin-btn-ghost admin-btn-sm gated" type="button" disabled>Skill Tracks</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /tab-content -->
+
+          <!-- ── Panel: Monetization ── -->
+          <div class="lp-panel" id="tab-monetization" role="tabpanel">
+            <div style="padding:22px">
+              <div class="admin-banner admin-banner-info" style="margin-bottom:18px">
+                <svg class="admin-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+                <div class="admin-banner-body">
+                  <div class="admin-banner-title">RPC-only operations</div>
+                  All payment and subscription changes go through admin RPCs with audit logging. Manual bKash activation supported.
+                </div>
+              </div>
+
+              <div class="admin-grid admin-grid-2" style="gap:12px">
+                <div class="lp-action-card">
+                  <div class="lp-action-card-icon" style="background:rgba(5,150,105,0.1);color:var(--lp-success)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/></svg>
+                  </div>
+                  <div class="lp-action-card-title">Payments</div>
+                  <div class="lp-action-card-desc">List, refund, and reconcile payments. RPCs: <code>admin_list_payments</code>, <code>admin_refund_payment</code>, <code>admin_reconcile_payment</code>.</div>
+                  <div class="lp-action-card-btns">
+                    <button class="admin-btn admin-btn-primary admin-btn-sm gated" id="goPayments" type="button">Open Payments Console</button>
+                  </div>
+                </div>
+                <div class="lp-action-card">
+                  <div class="lp-action-card-icon" style="background:rgba(79,70,229,0.1);color:var(--lp-indigo)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                  </div>
+                  <div class="lp-action-card-title">Subscriptions</div>
+                  <div class="lp-action-card-desc">List, extend, and cancel subscriptions. Tiers: free_trial → thinker → scholar → champion (৳399–১৭৯৯/mo).</div>
+                  <div class="lp-action-card-btns">
+                    <button class="admin-btn admin-btn-primary admin-btn-sm gated" id="goSubs" type="button">Open Subscriptions Console</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /tab-monetization -->
+
+          <!-- ── Panel: Access ── -->
+          <div class="lp-panel" id="tab-access" role="tabpanel">
+            <div style="padding:22px">
+              <div class="admin-banner admin-banner-danger" style="margin-bottom:18px">
+                <svg class="admin-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                <div class="admin-banner-body">
+                  <div class="admin-banner-title">super_admin only</div>
+                  Role assignment requires super_admin. Non-super_admin users see this panel as read-only. All changes are logged to <code>audit_log</code> and posted to <strong>#ops</strong> in Slack.
+                </div>
+              </div>
+
+              <div class="admin-grid admin-grid-2" style="gap:12px">
+                <div class="lp-action-card">
+                  <div class="lp-action-card-icon" style="background:rgba(124,58,237,0.1);color:#7c3aed">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                  </div>
+                  <div class="lp-action-card-title">Role Manager</div>
+                  <div class="lp-action-card-desc">Assign or revoke roles: super_admin · admin_regular · admin_olympiad · support_readonly · reviewer. Full audit trail.</div>
+                  <div class="lp-action-card-btns">
+                    <button class="admin-btn admin-btn-secondary admin-btn-sm gated" id="btnRolesAccess" type="button">Open Role Manager</button>
+                  </div>
+                </div>
+                <div class="lp-action-card">
+                  <div class="lp-action-card-icon" style="background:rgba(245,158,11,0.1);color:var(--lp-warning)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                  </div>
+                  <div class="lp-action-card-title">Audit Log</div>
+                  <div class="lp-action-card-desc">Immutable record of all admin actions. Role changes, content mutations, and session events written to <code>audit_log</code>.</div>
+                  <div class="lp-action-card-btns">
+                    <button class="admin-btn admin-btn-secondary admin-btn-sm gated" id="btnAuditAccess" type="button" disabled>View Audit Log</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /tab-access -->
+
+          <!-- ── Gate overlay (locked when signed out) ── -->
+          <div class="lp-gate" id="gateOverlay" aria-live="polite" aria-label="Workspace locked">
+            <div class="lp-gate-box">
+              <div class="lp-gate-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0110 0v4"/>
+                </svg>
+              </div>
+              <div class="lp-gate-title">Workspace locked</div>
+              <p class="lp-gate-msg" id="gateMsg">You are signed out. For security, all admin actions are disabled until you sign in again.</p>
+              <div class="lp-gate-actions">
+                <button class="admin-btn admin-btn-primary" id="btnGateSignIn" type="button">Sign In</button>
+                <button class="admin-btn admin-btn-secondary" id="btnGateReload" type="button">Reload</button>
+              </div>
+            </div>
+          </div>
+
         </div>
+        <!-- /workspaceCard -->
+
       </main>
     </div>
-  </div>
+    <!-- /admin-main -->
 
-  <dialog id="dlgLogin">
-    <div class="modal-hd">
-      <strong>LogicPals Admin Account</strong>
-      <button class="btn ghost" id="btnCloseDlg" type="button">✕</button>
-    </div>
-    <div class="modal-bd">
-      <form id="loginForm">
-        <div class="field">
-          <label for="email">Email</label>
-          <input class="input" id="email" type="email" placeholder="admin@example.com" autocomplete="email" required />
-        </div>
-        <div class="field">
-          <label for="password">Password</label>
-          <input class="input" id="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
-        </div>
-        <div class="help">Admin console is email + password only.</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-          <button class="btn primary" id="btnDoLogin" type="submit">Sign in</button>
-          <button class="btn danger" id="btnDoLogout" type="button" style="display:none">Sign out</button>
-        </div>
-      </form>
-      <div class="out" id="authOut">Waiting…</div>
-    </div>
-  </dialog>
+  </div>
+  <!-- /admin-app -->
 
   <script>
-  (function(){
-    "use strict";
+  /* ── Admin Console bootstrap ──────────────────────────────────────
+     Uses LPAdmin.init() from /assets/js/admin-auth.js.
+     All auth, sidebar, toast, and role handling is managed there.
+     This script handles only page-specific logic:
+       — Tab switching
+       — Workspace gate (lock/unlock)
+       — Schema version fetch
+       — Role-aware button visibility
+       — Navigation wiring
+  ────────────────────────────────────────────────────────────────── */
+  (function () {
+    'use strict';
 
-    const ADMIN_ROLES = new Set(["super_admin","admin_regular","admin_olympiad"]);
-
-    const UI = {
-      statusDot: document.getElementById("statusDot"),
-      statusText: document.getElementById("statusText"),
-      kvAuth: document.getElementById("kvAuth"),
-      kvRole: document.getElementById("kvRole"),
-      kvUser: document.getElementById("kvUser"),
-      btnAuth: document.getElementById("btnAuth"),
-      btnTopLogout: document.getElementById("btnTopLogout"),
-      logoutWarn: document.getElementById("logoutWarn"),
-      roleHint: document.getElementById("roleHint"),
-
-      gateOverlay: document.getElementById("gateOverlay"),
-      gateMsg: document.getElementById("gateMsg"),
-      btnGateSignIn: document.getElementById("btnGateSignIn"),
-      btnGateReload: document.getElementById("btnGateReload"),
-
-      dlg: document.getElementById("dlgLogin"),
-      btnCloseDlg: document.getElementById("btnCloseDlg"),
-      loginForm: document.getElementById("loginForm"),
-      email: document.getElementById("email"),
-      password: document.getElementById("password"),
-      btnDoLogout: document.getElementById("btnDoLogout"),
-      authOut: document.getElementById("authOut"),
-
-      btnVisit: document.getElementById("btnVisit"),
-      btnDashboard: document.getElementById("btnDashboard"),
-
-      btnRoles: document.getElementById("btnRoles"),
-      btnPayments: document.getElementById("btnPayments"),
-      btnSubs: document.getElementById("btnSubs"),
-      goPayments: document.getElementById("goPayments"),
-      goSubs: document.getElementById("goSubs"),
-    };
-
-    function setStatus(kind, text){
-      UI.statusDot.classList.remove("ok","warn","err");
-      UI.statusDot.classList.add(kind);
-      UI.statusText.textContent = text;
-    }
-
-    async function loadSupabaseLib(){
-      if (window.supabase && window.supabase.createClient) return window.supabase;
-      if (window.__LP_SUPABASE_LIB_PROMISE) return window.__LP_SUPABASE_LIB_PROMISE;
-      window.__LP_SUPABASE_LIB_PROMISE = new Promise((resolve, reject) => {
-        const existing = document.querySelector('script[data-lp-supabase-umd="1"]');
-        if (existing) return resolve(window.supabase);
-        const s = document.createElement("script");
-        s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
-        s.async = true;
-        s.defer = true;
-        s.setAttribute("data-lp-supabase-umd","1");
-        s.onload = () => (window.supabase && window.supabase.createClient) ? resolve(window.supabase) : reject(new Error("supabase_umd_load_failed"));
-        s.onerror = () => reject(new Error("supabase_umd_load_failed"));
-        document.head.appendChild(s);
-      });
-      return window.__LP_SUPABASE_LIB_PROMISE;
-    }
-
-    async function getEnv(){
-      if (window.__LP_ENV && (window.__LP_ENV.SUPABASE_URL || window.__LP_ENV.supabase_url)) return window.__LP_ENV;
-      const res = await fetch("/api/env", { cache: "no-store" });
-      if (!res.ok) throw new Error("env_fetch_failed_" + res.status);
-      const env = await res.json();
-      window.__LP_ENV = env;
-      return env;
-    }
-
-    async function getSupabase(){
-      if (window.__LP_ADMIN_SB) return window.__LP_ADMIN_SB;
-      const env = await getEnv();
-      const url = env.supabase_url || env.SUPABASE_URL;
-      const anon = env.supabase_anon_key || env.SUPABASE_ANON_KEY;
-      if (!url || !anon) throw new Error("env_missing_supabase");
-      const lib = await loadSupabaseLib();
-
-      // IMPORTANT: reduce GoTrue lock contention by disabling auto refresh in admin UIs
-      const sb = lib.createClient(url, anon, {
-        auth: {
-          storageKey: "lp_admin_auth",
-          persistSession: true,
-          autoRefreshToken: false,
-          detectSessionInUrl: false
-        }
-      });
-
-      window.__LP_ADMIN_SB = sb;
-      return sb;
-    }
-
-    function isAdminRole(role){
-      return ADMIN_ROLES.has(String(role||"").trim());
-    }
-
-    async function resolveRole(sb){
-      // Your DB shows get_my_role exists (and many rp_* helpers), so try a safe list.
-      const candidates = [
-        "get_my_role",
-        "rp_get_my_role",
-        "admin_get_role",
-        "rp_admin_get_user_role",
-        "get_current_user_role",
-        "current_role" // ONLY if you created it (not postgres builtin)
-      ];
-
-      for (const fn of candidates){
-        try{
-          const { data, error } = await sb.rpc(fn);
-          if (!error){
-            if (typeof data === "string") return data;
-            if (data && typeof data === "object"){
-              return String(data.role || data.current_role || data.name || "no_role");
-            }
-            return "no_role";
-          }
-        }catch(_e){}
-      }
-      return "no_role";
-    }
-
-    function lockWorkspace(message){
-      UI.gateOverlay.classList.add("active");
-      UI.gateMsg.textContent = message || "Admin workspace locked.";
-      UI.logoutWarn.style.display = "block";
-      UI.btnTopLogout.style.display = "none";
-      UI.btnAuth.style.display = "inline-flex";
-    }
-
-    function unlockWorkspace(){
-      UI.gateOverlay.classList.remove("active");
-      UI.logoutWarn.style.display = "none";
-      UI.btnTopLogout.style.display = "inline-flex";
-      UI.btnAuth.style.display = "none";
-    }
-
-    function openLogin(){
-      UI.dlg.showModal();
-    }
-    function closeLogin(){
-      try{ UI.dlg.close(); }catch(_e){}
-    }
-
-    async function refresh(){
-      const sb = await getSupabase();
-      const { data: { session } } = await sb.auth.getSession();
-
-      UI.kvAuth.textContent = session ? "authenticated" : "signed_out";
-      UI.kvUser.textContent = session?.user?.email || "—";
-
-      if (!session){
-        UI.kvRole.textContent = "no_role";
-        setStatus("warn","Sign-in required");
-        lockWorkspace("You are signed out. Please sign in.");
-        UI.btnDoLogout.style.display = "none";
-        UI.authOut.textContent = "Please sign in with an admin account.";
-        openLogin();
-        return;
-      }
-
-      const role = await resolveRole(sb);
-      UI.kvRole.textContent = role || "no_role";
-
-      if (!isAdminRole(role)){
-        // Enterprise rule: non-admins cannot stay signed-in on admin surfaces
-        try{ await sb.auth.signOut(); }catch(_e){}
-        setStatus("err","Access denied (admin only)");
-        lockWorkspace("Access denied: your account is not an admin. You were signed out.");
-        UI.authOut.textContent = "Not an admin account. You have been signed out.";
-        openLogin();
-        return;
-      }
-
-      // OK
-      setStatus("ok","Ready");
-      unlockWorkspace();
-      UI.btnDoLogout.style.display = "inline-flex";
-      UI.authOut.textContent = "Signed in as admin. Role: " + role;
-      closeLogin();
-    }
-
-    async function signIn(email, password){
-      const sb = await getSupabase();
-      setStatus("warn","Signing in…");
-      UI.authOut.textContent = "Signing in…";
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
-      if (error){
-        setStatus("err","Sign in failed");
-        UI.authOut.textContent = error.message || "Sign in failed.";
-        return;
-      }
-      // Immediately enforce admin-only
-      await refresh();
-    }
-
-    async function signOut(){
-      const sb = await getSupabase();
-      setStatus("warn","Signing out…");
-      try{ await sb.auth.signOut(); }catch(_e){}
-      await refresh();
-    }
-
-    function wireTabs(){
-      const tabs = Array.from(document.querySelectorAll(".tab"));
+    /* ── Tab switcher ─────────────────────────────────────────── */
+    function wireTabs() {
+      const tabs   = Array.from(document.querySelectorAll('.lp-tab'));
       const panels = {
-        overview: document.getElementById("tab-overview"),
-        content: document.getElementById("tab-content"),
-        monetization: document.getElementById("tab-monetization"),
-        access: document.getElementById("tab-access"),
+        overview:     document.getElementById('tab-overview'),
+        content:      document.getElementById('tab-content'),
+        monetization: document.getElementById('tab-monetization'),
+        access:       document.getElementById('tab-access'),
       };
-      tabs.forEach(t => t.addEventListener("click", () => {
-        tabs.forEach(x => x.classList.remove("active"));
-        t.classList.add("active");
-        Object.values(panels).forEach(p => p.classList.remove("active"));
-        const key = t.getAttribute("data-tab");
-        if (panels[key]) panels[key].classList.add("active");
-      }));
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => {
+            t.classList.remove('active');
+            t.setAttribute('aria-selected', 'false');
+          });
+          tab.classList.add('active');
+          tab.setAttribute('aria-selected', 'true');
+
+          Object.values(panels).forEach(p => p?.classList.remove('active'));
+          const key = tab.getAttribute('data-tab');
+          panels[key]?.classList.add('active');
+        });
+      });
     }
 
-    async function bootstrap(){
-      try{
-        setStatus("warn","Loading…");
-        wireTabs();
+    /* ── Workspace gate ───────────────────────────────────────── */
+    function lockWorkspace(message) {
+      document.getElementById('gateOverlay').classList.add('active');
+      const m = document.getElementById('gateMsg');
+      if (m && message) m.textContent = message;
+      document.getElementById('logoutWarn').style.display = 'flex';
+      document.getElementById('kvAuth').textContent = 'signed_out';
+    }
 
-        UI.btnVisit.addEventListener("click", () => location.href = "/");
-        UI.btnDashboard.addEventListener("click", () => location.href = "/dashboard.html");
-        UI.btnAuth.addEventListener("click", () => openLogin());
-        UI.btnTopLogout.addEventListener("click", () => signOut());
-        UI.btnDoLogout.addEventListener("click", () => signOut());
+    function unlockWorkspace() {
+      document.getElementById('gateOverlay').classList.remove('active');
+      document.getElementById('logoutWarn').style.display = 'none';
+    }
 
-        UI.btnCloseDlg.addEventListener("click", () => closeLogin());
-        UI.btnGateSignIn.addEventListener("click", () => openLogin());
-        UI.btnGateReload.addEventListener("click", () => location.reload());
+    /* ── Schema version fetch ─────────────────────────────────── */
+    async function fetchSchema(sb) {
+      try {
+        const { data, error } = await sb
+          .from('schema_versions')
+          .select('version, applied_at')
+          .order('applied_at', { ascending: false })
+          .limit(1)
+          .single();
 
-        UI.btnPayments.addEventListener("click", () => location.href = "/admin/admin-payments.html");
-        UI.btnSubs.addEventListener("click", () => location.href = "/admin/admin-subscriptions.html");
-        UI.btnRoles.addEventListener("click", () => location.href = "/admin/admin-roles.html");
-        UI.goPayments.addEventListener("click", () => location.href = "/admin/admin-payments.html");
-        UI.goSubs.addEventListener("click", () => location.href = "/admin/admin-subscriptions.html");
-
-        UI.loginForm.addEventListener("submit", (e) => {
-          e.preventDefault();
-          signIn((UI.email.value||"").trim(), UI.password.value||"");
-        });
-
-        const sb = await getSupabase();
-        if (!window.__LP_ADMIN_AUTH_SUB){
-          window.__LP_ADMIN_AUTH_SUB = sb.auth.onAuthStateChange(() => {
-            // schedule refresh; never block handler
-            setTimeout(() => refresh().catch(()=>{}), 0);
-          });
+        if (!error && data) {
+          const el = document.getElementById('statSchema');
+          const dt = document.getElementById('statSchemaDate');
+          if (el) el.textContent = data.version || '—';
+          if (dt) dt.textContent = data.applied_at
+            ? new Date(data.applied_at).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })
+            : '—';
         }
-
-        await refresh();
-      }catch(e){
-        setStatus("err","Boot error");
-        UI.authOut.textContent = String(e?.message || e);
-        lockWorkspace("Boot error. Open Sign in and check message.");
-        openLogin();
+      } catch (_) {
+        const el = document.getElementById('statSchema');
+        if (el) el.textContent = '—';
+        const dt = document.getElementById('statSchemaDate');
+        if (dt) dt.textContent = 'Schema table unavailable';
       }
     }
 
-    bootstrap();
+    /* ── Role-aware UI adjustments ────────────────────────────── */
+    function applyRoleUX(role) {
+      // Update KV panel
+      const kvAuth = document.getElementById('kvAuth');
+      const kvRole = document.getElementById('kvRole');
+      const kvUser = document.getElementById('kvUser');
+
+      if (kvAuth) kvAuth.textContent = 'authenticated';
+      if (kvRole) {
+        const badge = document.createElement('span');
+        badge.className = role === 'super_admin'
+          ? 'admin-badge admin-badge-indigo'
+          : role.startsWith('admin_')
+          ? 'admin-badge admin-badge-teal'
+          : 'admin-badge admin-badge-amber';
+        badge.textContent = role;
+        kvRole.innerHTML = '';
+        kvRole.appendChild(badge);
+      }
+
+      // Hide Role Manager card for non-super_admin
+      if (role !== 'super_admin') {
+        const rolesCard = document.getElementById('rolesCard');
+        if (rolesCard) {
+          rolesCard.style.opacity = '0.45';
+          rolesCard.style.pointerEvents = 'none';
+          const desc = rolesCard.querySelector('.lp-action-card-desc');
+          if (desc) desc.textContent = 'Requires super_admin role. Contact your system administrator.';
+        }
+        const btnRolesAccess = document.getElementById('btnRolesAccess');
+        if (btnRolesAccess) {
+          btnRolesAccess.disabled = true;
+          btnRolesAccess.title = 'super_admin required';
+        }
+      }
+    }
+
+    /* ── Wire navigation buttons ──────────────────────────────── */
+    function wireNav() {
+      const go = (id, url) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', () => window.location.href = url);
+      };
+
+      go('btnPayments',     '/admin/admin-payments.html');
+      go('btnSubs',         '/admin/admin-subscriptions.html');
+      go('btnRoles',        '/admin/admin-roles.html');
+      go('goPayments',      '/admin/admin-payments.html');
+      go('goSubs',          '/admin/admin-subscriptions.html');
+      go('btnRolesAccess',  '/admin/admin-roles.html');
+
+      // Gate overlay buttons
+      document.getElementById('btnGateSignIn')?.addEventListener('click', () => {
+        if (window.LPAdmin) LPAdmin.openLogin();
+      });
+      document.getElementById('btnGateReload')?.addEventListener('click', () => {
+        window.location.reload();
+      });
+
+      // Non-functional buttons (content management — future phases)
+      ['btnRegUpload','btnRegQueue','btnOlyUpload','btnOlyQueue','btnAudit','btnAuditAccess'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', () => {
+          if (window.LPAdmin) LPAdmin.toast('This action will be wired in an upcoming phase.', 'info', 3000);
+        });
+      });
+    }
+
+    /* ── Main bootstrap ───────────────────────────────────────── */
+    wireTabs();
+    wireNav();
+
+    LPAdmin.init({
+      page:         'overview',
+      allowedRoles: ['super_admin', 'admin_regular', 'admin_olympiad', 'support_readonly', 'reviewer'],
+      dotEl:        'dot',
+      statusEl:     'statusTxt',
+      whoEl:        'who',
+
+      onAuth: async (session, role, sb) => {
+        // Update KV user field
+        const kvUser = document.getElementById('kvUser');
+        if (kvUser) kvUser.textContent = session.user.email;
+
+        // Role-gated UI
+        applyRoleUX(role);
+
+        // Unlock workspace
+        unlockWorkspace();
+
+        // Fetch schema version from DB
+        fetchSchema(sb);
+      },
+    }).then(result => {
+      if (!result.ok) {
+        lockWorkspace('You are signed out. All admin actions are disabled until you sign in.');
+      }
+    }).catch(err => {
+      lockWorkspace(`Boot error: ${err?.message || err}`);
+    });
+
   })();
   </script>
 </body>

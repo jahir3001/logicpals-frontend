@@ -3,578 +3,898 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LogicPals — A/B Dashboard (Enterprise)</title>
+  <title>A/B Dashboard — LogicPals Admin</title>
 
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
+  <meta http-equiv="Pragma"        content="no-cache" />
+  <meta http-equiv="Expires"       content="0" />
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="/assets/css/admin.css" />
+  <script src="/assets/js/env-loader.js"></script>
+  <script src="/assets/js/admin-auth.js"></script>
 
   <style>
-    :root{
-      --bg:#0b1220; --card:rgba(255,255,255,.06); --card2:rgba(255,255,255,.10);
-      --text:#e5e7eb; --muted:#94a3b8; --line:rgba(148,163,184,.22);
-      --good:#22c55e; --warn:#f59e0b; --bad:#ef4444;
-      --accent:#8b5cf6; --accent2:#06b6d4;
-      --r:18px;
-      --shadow: 0 18px 45px rgba(2,6,23,.55);
-      --font: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:var(--font);
-      color:var(--text);
-      background:
-        radial-gradient(900px 600px at 15% 12%, rgba(139,92,246,.18), transparent 60%),
-        radial-gradient(900px 600px at 85% 18%, rgba(6,182,212,.12), transparent 60%),
-        var(--bg);
-    }
-    code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
-    a{color:inherit; text-decoration:none}
-    .shell{max-width:1180px;margin:20px auto;padding:0 18px;}
-    .top{
-      display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
-      padding:14px 16px;border:1px solid var(--line);border-radius:22px;
-      background:rgba(255,255,255,.04);
-      box-shadow:var(--shadow);
-      backdrop-filter:saturate(140%) blur(10px);
-    }
-    .brand{display:flex;align-items:center;gap:12px}
-    .logo{
-      width:40px;height:40px;border-radius:14px;
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      display:grid;place-items:center;font-weight:900;color:#0b1220;
-    }
-    .title{font-weight:900}
-    .sub{font-size:12px;color:var(--muted);margin-top:2px}
-    .right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-    .chip{
-      display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;
-      border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--muted);font-size:12px;
-    }
-    .dot{width:8px;height:8px;border-radius:999px;background:#64748b}
-    .btn{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      padding:10px 12px;border-radius:999px;
-      font-weight:800; cursor:pointer;
-    }
-    .btn.primary{background:rgba(139,92,246,.18); border-color:rgba(139,92,246,.35)}
-    .btn.alt{background:rgba(6,182,212,.14); border-color:rgba(6,182,212,.28)}
-    .btn.danger{background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.28)}
-    .btn:disabled{opacity:.55;cursor:not-allowed}
-    .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
-    .card{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      border-radius:var(--r);
-      box-shadow:var(--shadow);
-      padding:14px;
-    }
-    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
-    label{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:12px;font-weight:800}
-    input,select{
-      min-width:240px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.05);
-      color:var(--text);
-      padding:10px 12px;border-radius:12px;
-      outline:none;
-      font-weight:700;
-    }
-    input[type="number"]{min-width:120px;width:120px}
-    .muted{color:var(--muted)}
-    .err{color:#fecaca}
-    .ok{color:#bbf7d0}
-
-    .cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:12px}
-    @media (max-width: 980px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media (max-width: 560px){.cards{grid-template-columns:1fr}}
-    .mini{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      border-radius:16px;
-      padding:12px;
-    }
-    .mini .k{font-size:12px;color:var(--muted);font-weight:800}
-    .mini .v{font-size:22px;font-weight:900;margin-top:6px}
-
-    table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden}
-    th,td{padding:10px 10px;border-bottom:1px solid rgba(148,163,184,.14);font-size:13px}
-    th{color:var(--muted);text-align:left;font-weight:900}
-    tr:hover td{background:rgba(255,255,255,.03)}
-    .pill{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:6px 10px;border-radius:999px;border:1px solid var(--line);
-      background:rgba(255,255,255,.03); font-size:12px; font-weight:900;
-    }
-    .pill.good{border-color:rgba(34,197,94,.28); background:rgba(34,197,94,.10); color:#bbf7d0}
-    .pill.warn{border-color:rgba(245,158,11,.28); background:rgba(245,158,11,.10); color:#fde68a}
-    .pill.bad{border-color:rgba(239,68,68,.28); background:rgba(239,68,68,.10); color:#fecaca}
-
-    pre{
-      margin:0;
-      border:1px solid var(--line);
-      background:rgba(0,0,0,.35);
-      color:#d1fae5;
-      padding:12px;
-      border-radius:16px;
-      overflow:auto;
-      font-size:12px;
-      min-height:200px;
+    /* ─── Conversion bar ─────────────────────────────────────── */
+    .lp-conv-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    dialog{border:none;border-radius:16px;max-width:420px;width:calc(100% - 24px);padding:0;box-shadow:0 25px 90px rgba(2,6,23,.65)}
+    .lp-conv-bar-track {
+      flex: 1;
+      height: 6px;
+      background: var(--lp-surface-2);
+      border-radius: var(--lp-r-full);
+      overflow: hidden;
+      min-width: 60px;
+    }
+
+    .lp-conv-bar-fill {
+      height: 100%;
+      border-radius: var(--lp-r-full);
+      background: linear-gradient(90deg, var(--lp-indigo) 0%, var(--lp-teal) 100%);
+      transition: width 0.6s var(--lp-ease-out);
+    }
+
+    .lp-conv-bar-fill.good  { background: linear-gradient(90deg, #059669, #34d399); }
+    .lp-conv-bar-fill.warn  { background: linear-gradient(90deg, #d97706, #fbbf24); }
+    .lp-conv-bar-fill.low   { background: linear-gradient(90deg, var(--lp-indigo), var(--lp-teal)); }
+
+    .lp-conv-val {
+      font-family: var(--lp-font-mono);
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--lp-text-2);
+      min-width: 44px;
+      text-align: right;
+    }
+
+    /* ─── Variant badge ──────────────────────────────────────── */
+    .lp-variant-a {
+      background: rgba(79,70,229,.1);
+      color: var(--lp-indigo-dark);
+      border: 1px solid rgba(79,70,229,.2);
+    }
+
+    .lp-variant-b {
+      background: rgba(8,145,178,.1);
+      color: var(--lp-teal);
+      border: 1px solid rgba(8,145,178,.2);
+    }
+
+    .lp-variant-other {
+      background: var(--lp-surface-2);
+      color: var(--lp-muted);
+      border: 1px solid var(--lp-border);
+    }
+
+    /* ─── Track chip ─────────────────────────────────────────── */
+    .lp-track-regular  { background: rgba(79,70,229,.08); color: var(--lp-indigo-dark); }
+    .lp-track-olympiad { background: rgba(8,145,178,.08); color: #0e7490; }
+
+    /* ─── Experiment status pill ─────────────────────────────── */
+    .lp-exp-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: var(--lp-r-full);
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+
+    .lp-exp-status.running  { background: var(--lp-success-bg); color: var(--lp-success-text); border: 1px solid var(--lp-success-border); }
+    .lp-exp-status.paused   { background: var(--lp-warning-bg); color: var(--lp-warning-text); border: 1px solid var(--lp-warning-border); }
+    .lp-exp-status.stopped  { background: var(--lp-danger-bg);  color: var(--lp-danger-text);  border: 1px solid var(--lp-danger-border); }
+    .lp-exp-status.unknown  { background: var(--lp-surface-2);  color: var(--lp-muted);         border: 1px solid var(--lp-border); }
+
+    /* ─── Control bar ────────────────────────────────────────── */
+    .lp-control-bar {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .lp-control-bar .admin-field { flex: 1; min-width: 180px; }
+    .lp-control-bar .admin-field.narrow { flex: 0 0 110px; min-width: 110px; }
+
+    /* ─── Auto-refresh toggle ─────────────────────────────────── */
+    .lp-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      color: var(--lp-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .lp-toggle input[type="checkbox"] {
+      width: 32px;
+      height: 18px;
+      appearance: none;
+      background: var(--lp-surface-2);
+      border: 1px solid var(--lp-border-2);
+      border-radius: var(--lp-r-full);
+      cursor: pointer;
+      transition: background var(--lp-t-fast), border-color var(--lp-t-fast);
+      position: relative;
+    }
+
+    .lp-toggle input[type="checkbox"]::after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--lp-subtle);
+      top: 2px;
+      left: 2px;
+      transition: transform var(--lp-t-fast), background var(--lp-t-fast);
+    }
+
+    .lp-toggle input[type="checkbox"]:checked {
+      background: var(--lp-indigo);
+      border-color: var(--lp-indigo);
+    }
+
+    .lp-toggle input[type="checkbox"]:checked::after {
+      transform: translateX(14px);
+      background: #fff;
+    }
+
+    /* ─── Skeleton rows ──────────────────────────────────────── */
+    .lp-skeleton-row td {
+      padding: 12px 16px;
+    }
+
+    /* ─── Killswitch badge ───────────────────────────────────── */
+    .lp-killswitch-on {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--lp-danger-bg);
+      color: var(--lp-danger);
+      border: 1px solid var(--lp-danger-border);
+      padding: 2px 8px;
+      border-radius: var(--lp-r-full);
+    }
+
+    /* ─── Stat card accent ───────────────────────────────────── */
+    .lp-stat-accent-ab   { border-top: 3px solid var(--lp-indigo); }
+    .lp-stat-accent-conv { border-top: 3px solid var(--lp-success); }
+    .lp-stat-accent-win  { border-top: 3px solid var(--lp-teal); }
+    .lp-stat-accent-days { border-top: 3px solid #7c3aed; }
+
+    /* ─── Experiment meta strip ──────────────────────────────── */
+    .lp-exp-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 10px 0 4px;
+      min-height: 34px;
+    }
+
+    .lp-exp-meta-key {
+      font-family: var(--lp-font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--lp-text);
+    }
+
+    /* ─── Timestamp ──────────────────────────────────────────── */
+    .lp-timestamp {
+      font-size: 11.5px;
+      color: var(--lp-subtle);
+      font-family: var(--lp-font-mono);
+    }
+
+    /* ─── Two-col layout ──────────────────────────────────────── */
+    .lp-ab-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    @media (max-width: 1000px) { .lp-ab-grid { grid-template-columns: 1fr; } }
+
+    /* ─── Winner highlight row ───────────────────────────────── */
+    .lp-winner-row td:first-child::before {
+      content: '★ ';
+      color: var(--lp-warning);
+    }
+
+    .lp-winner-row td { background: rgba(5,150,105,0.04); }
   </style>
 </head>
 
 <body>
-  <div class="shell">
-    <header class="top">
-      <div class="brand">
-        <div class="logo">LP</div>
-        <div>
-          <div class="title">A/B Dashboard</div>
-          <div class="sub">Enterprise admin aggregates via Vercel → Supabase RPC (Step 8)</div>
+  <div class="admin-app" id="adminApp">
+
+    <aside class="admin-sidebar" id="sidebar"></aside>
+    <div class="admin-sidebar-backdrop" id="lp-sb-backdrop"></div>
+
+    <div class="admin-main">
+
+      <!-- Topbar -->
+      <header class="admin-topbar">
+        <div class="admin-topbar-left">
+          <button class="admin-menu-toggle" id="lp-menu-toggle" aria-label="Open menu">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <nav class="admin-breadcrumb">
+            <a href="/admin.html">Console</a>
+            <span class="admin-breadcrumb-sep">›</span>
+            <span class="admin-breadcrumb-current">A/B Dashboard</span>
+          </nav>
         </div>
-      </div>
+        <div class="admin-topbar-right">
+          <span class="admin-pill">
+            <span class="admin-dot" id="dot"></span>
+            <span id="statusTxt">Loading…</span>
+          </span>
+          <div id="who" style="font-size:12px;color:var(--lp-muted);font-weight:500;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+        </div>
+      </header>
 
-      <div class="right">
-        <span class="chip"><span class="dot" id="dot"></span><span id="status">Booting…</span></span>
-        <a class="btn" href="/admin.html">Back to Admin</a>
-        <button class="btn primary" id="btnSignIn">Sign in</button>
-        <button class="btn danger" id="btnSignOut" style="display:none">Sign out</button>
-      </div>
-    </header>
+      <!-- Content -->
+      <main class="admin-content">
 
-    <section class="card">
-      <div class="row">
-        <label>Experiment key
-          <input id="experimentKey" value="lp_hint_cards_v1" />
-        </label>
+        <!-- Page header -->
+        <div class="admin-page-header">
+          <div>
+            <h1 class="admin-page-title">A/B Experiments</h1>
+            <p class="admin-page-desc">Live variant performance via <code>ab_dash_admin_bundle</code> RPC. Fallback to <code>metrics-summary</code> if bundle unavailable.</p>
+          </div>
+          <div class="admin-page-actions">
+            <span class="admin-badge admin-badge-indigo" style="font-size:11px;padding:4px 10px;">
+              Step 8 · Enterprise
+            </span>
+          </div>
+        </div>
 
-        <label>Track
-          <select id="track">
-            <option value="both" selected>both (regular + olympiad)</option>
-            <option value="regular">regular</option>
-            <option value="olympiad">olympiad</option>
-          </select>
-        </label>
+        <!-- ── Control card ── -->
+        <div class="admin-card" style="margin-bottom:20px">
+          <div class="admin-card-header">
+            <div>
+              <div class="admin-card-title">Query Controls</div>
+              <div class="admin-card-subtitle">Configure the experiment, track, and time window</div>
+            </div>
+            <div class="admin-row" style="gap:10px">
+              <!-- Auto-refresh toggle -->
+              <label class="lp-toggle" title="Auto-refresh every 30 seconds">
+                <input type="checkbox" id="autoRefresh" />
+                <span id="autoRefreshLabel">Auto 30s</span>
+              </label>
+              <span class="lp-timestamp" id="lastRefreshed" style="display:none">—</span>
+            </div>
+          </div>
+          <div class="admin-card-body">
+            <div class="lp-control-bar">
 
-        <label>Days
-          <input id="days" type="number" value="14" min="1" max="90" />
-        </label>
+              <div class="admin-field" style="flex:2;min-width:220px">
+                <label class="admin-label" for="experimentKey">Experiment Key</label>
+                <div style="display:flex;gap:6px">
+                  <input
+                    class="admin-input"
+                    id="experimentKey"
+                    type="text"
+                    value="lp_hint_cards_v1"
+                    placeholder="e.g. lp_hint_cards_v1"
+                    autocomplete="off"
+                    style="flex:1"
+                  />
+                  <select class="admin-select" id="expPreset" title="Load a preset" style="width:38px;padding-left:8px;padding-right:4px;flex:0 0 38px">
+                    <option value="" disabled selected>▾</option>
+                    <option value="lp_hint_cards_v1">lp_hint_cards_v1</option>
+                    <option value="lp_socratic_depth_v1">lp_socratic_depth_v1</option>
+                    <option value="lp_session_length_v1">lp_session_length_v1</option>
+                    <option value="lp_difficulty_ramp_v1">lp_difficulty_ramp_v1</option>
+                    <option value="lp_bkt_threshold_v1">lp_bkt_threshold_v1</option>
+                  </select>
+                </div>
+              </div>
 
-        <button class="btn primary" id="btnRefresh">Refresh</button>
-        <button class="btn alt" id="btnRefreshDb" title="Calls /api/ab/refresh-dashboards (admin-only)">Refresh DB dashboards</button>
-      </div>
+              <div class="admin-field">
+                <label class="admin-label" for="track">Track</label>
+                <select class="admin-select" id="track">
+                  <option value="both" selected>Both tracks</option>
+                  <option value="regular">Regular only</option>
+                  <option value="olympiad">Olympiad only</option>
+                </select>
+              </div>
 
-      <div class="muted" style="margin-top:10px" id="who">—</div>
+              <div class="admin-field narrow">
+                <label class="admin-label" for="days">
+                  Window
+                  <span class="admin-label-hint">days</span>
+                </label>
+                <input
+                  class="admin-input"
+                  id="days"
+                  type="number"
+                  value="14"
+                  min="1"
+                  max="90"
+                />
+              </div>
 
-      <div class="cards" id="cards" style="margin-top:12px"></div>
-    </section>
+              <div style="display:flex;gap:8px;align-items:flex-end;padding-bottom:1px">
+                <button class="admin-btn admin-btn-primary" id="btnRefresh" type="button">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                  Refresh
+                </button>
+                <button class="admin-btn admin-btn-secondary" id="btnRefreshDb" type="button" title="Calls POST /api/ab/refresh-dashboards">
+                  Refresh DB
+                </button>
+              </div>
 
-    <section class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <div style="font-weight:900">Variant table</div>
-        <div class="muted">Derived summary from API result (read-only)</div>
-      </div>
+            </div>
+          </div>
+        </div>
 
-      <div style="margin-top:10px;overflow:auto">
-        <table>
-          <thead>
-            <tr>
-              <th>Track</th>
-              <th>Variant</th>
-              <th>Exposed users</th>
-              <th>Metric users</th>
-              <th>Events</th>
-              <th>Conversion</th>
-            </tr>
-          </thead>
-          <tbody id="tbody">
-            <tr><td colspan="6" class="muted">No data yet.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+        <!-- ── Experiment meta + stat cards ── -->
+        <div class="lp-exp-meta" id="expMeta" style="margin-bottom:8px">
+          <!-- Populated by JS after load -->
+        </div>
 
-    <section class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <div style="font-weight:900">Raw JSON (audit)</div>
-        <div class="muted">Exact payload returned by the API endpoint</div>
-      </div>
-      <div style="margin-top:10px">
-        <pre id="raw">{}</pre>
-      </div>
-    </section>
+        <div class="admin-grid admin-grid-4" style="margin-bottom:20px" id="statCards">
+          <!-- Skeleton placeholders until data loads -->
+          <div class="admin-stat-card lp-stat-accent-ab">
+            <div class="admin-stat-label">Experiment</div>
+            <div class="admin-skeleton admin-skeleton-text w-3/4" style="height:28px;margin-top:8px;border-radius:6px"></div>
+            <div class="admin-skeleton admin-skeleton-text w-1/2" style="height:12px;margin-top:8px;border-radius:4px"></div>
+          </div>
+          <div class="admin-stat-card lp-stat-accent-conv">
+            <div class="admin-stat-label">Total Exposed</div>
+            <div class="admin-skeleton admin-skeleton-text w-3/4" style="height:28px;margin-top:8px;border-radius:6px"></div>
+            <div class="admin-skeleton admin-skeleton-text w-1/2" style="height:12px;margin-top:8px;border-radius:4px"></div>
+          </div>
+          <div class="admin-stat-card lp-stat-accent-win">
+            <div class="admin-stat-label">Best Conversion</div>
+            <div class="admin-skeleton admin-skeleton-text w-3/4" style="height:28px;margin-top:8px;border-radius:6px"></div>
+            <div class="admin-skeleton admin-skeleton-text w-1/2" style="height:12px;margin-top:8px;border-radius:4px"></div>
+          </div>
+          <div class="admin-stat-card lp-stat-accent-days">
+            <div class="admin-stat-label">Variants · Rows</div>
+            <div class="admin-skeleton admin-skeleton-text w-3/4" style="height:28px;margin-top:8px;border-radius:6px"></div>
+            <div class="admin-skeleton admin-skeleton-text w-1/2" style="height:12px;margin-top:8px;border-radius:4px"></div>
+          </div>
+        </div>
+
+        <!-- ── Variant table + Raw output ── -->
+        <div class="lp-ab-grid">
+
+          <!-- Variant performance table -->
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <div class="admin-card-title">Variant Performance</div>
+                <div class="admin-card-subtitle">Derived from API result · read-only</div>
+              </div>
+              <span class="admin-badge admin-badge-gray" id="rowCountBadge" style="display:none"></span>
+            </div>
+            <div class="admin-card-body" style="padding:0">
+              <div class="admin-table-wrap" style="border:none;border-radius:0 0 20px 20px">
+                <table class="admin-table" id="variantTable">
+                  <thead>
+                    <tr>
+                      <th>Track</th>
+                      <th>Variant</th>
+                      <th>Exposed</th>
+                      <th>Metric</th>
+                      <th>Events</th>
+                      <th>Conversion</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody">
+                    <tr class="lp-skeleton-row">
+                      <td colspan="6">
+                        <div class="admin-skeleton admin-skeleton-text w-full" style="height:13px;border-radius:4px;margin-bottom:6px"></div>
+                        <div class="admin-skeleton admin-skeleton-text w-3/4" style="height:13px;border-radius:4px"></div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Raw JSON output -->
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <div class="admin-card-title">Raw API Response</div>
+                <div class="admin-card-subtitle">Exact payload from <code>/api/ab/admin-bundle</code></div>
+              </div>
+              <div class="admin-row" style="gap:6px">
+                <span class="admin-badge" id="apiBadge" style="display:none"></span>
+                <button class="admin-output-copy" id="copyBtn" type="button" style="font-size:11px">Copy</button>
+              </div>
+            </div>
+            <div class="admin-card-body" style="padding:0">
+              <div class="admin-output-block" style="border:none;border-radius:0 0 20px 20px">
+                <div class="admin-output-header">
+                  <span class="admin-output-label" id="outputLabel">awaiting load</span>
+                </div>
+                <textarea
+                  class="admin-output-area"
+                  id="raw"
+                  readonly
+                  spellcheck="false"
+                  style="min-height:360px"
+                >{}</textarea>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /.lp-ab-grid -->
+
+      </main>
+    </div>
   </div>
 
-  <dialog id="dlg">
-    <form method="dialog" style="padding:16px 16px 14px;background:#0b1220;border:1px solid rgba(148,163,184,.22);border-radius:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-        <div style="font-weight:900">Admin sign-in</div>
-        <button class="btn" value="cancel" style="padding:8px 10px">✕</button>
-      </div>
-      <div style="margin-top:12px">
-        <label>Email</label>
-        <input id="inEmail" autocomplete="email" />
-      </div>
-      <div style="margin-top:10px">
-        <label>Password</label>
-        <input id="inPass" type="password" autocomplete="current-password" />
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-        <button class="btn primary" id="btnDoLogin" value="default" type="button">Sign in</button>
-        <button class="btn" value="cancel">Cancel</button>
-      </div>
-      <div class="muted" style="margin-top:10px;font-size:12px">Email/password for staff accounts only.</div>
-      <div class="muted" style="margin-top:8px;font-size:12px" id="authOut"></div>
-    </form>
-  </dialog>
+  <script>
+  (function () {
+    'use strict';
 
-<script>
-(() => {
-  'use strict';
+    /* ── Constants ───────────────────────────────────────────── */
+    const ALLOWED_ROLES  = ['super_admin', 'admin_regular', 'admin_olympiad', 'admin'];
+    const AUTO_REFRESH_MS = 30_000;
 
-  const STORAGE_KEY = 'logicpals.auth';
-  const ENV_ENDPOINT = '/api/env';
+    /* ── State ───────────────────────────────────────────────── */
+    let _autoTimer = null;
 
-  const $ = (id) => document.getElementById(id);
+    /* ── DOM helpers ─────────────────────────────────────────── */
+    const $id = id => document.getElementById(id);
 
-  function setStatus(kind, msg){
-    $('status').textContent = msg;
-    $('dot').style.background =
-      kind === 'good' ? 'var(--good)' :
-      kind === 'bad' ? 'var(--bad)' :
-      kind === 'warn' ? 'var(--warn)' : '#64748b';
-  }
-
-  function escapeHtml(s){
-    return String(s)
-      .replaceAll('&','&amp;')
-      .replaceAll('<','&lt;')
-      .replaceAll('>','&gt;')
-      .replaceAll('"','&quot;')
-      .replaceAll("'","&#039;");
-  }
-
-  async function fetchEnv(){
-    const res = await fetch(ENV_ENDPOINT, { cache: 'no-store' });
-    if(!res.ok) throw new Error('ENV_ENDPOINT failed: ' + res.status);
-    const data = await res.json();
-    const supabaseUrl = data.supabaseUrl || data.SUPABASE_URL || data.url;
-    const supabaseAnonKey = data.supabaseAnonKey || data.SUPABASE_ANON_KEY || data.anonKey;
-    if(!supabaseUrl || !supabaseAnonKey) throw new Error('Missing Supabase config from ' + ENV_ENDPOINT);
-    return { supabaseUrl, supabaseAnonKey };
-  }
-
-  let sb = null;
-
-  async function getRoleFailClosed(){
-    // Prefer rpc_lp_my_role (your metrics-summary expects this) :contentReference[oaicite:6]{index=6}
-    const fns = ['rpc_lp_my_role','get_my_role','my_role','get_current_role'];
-    for(const fn of fns){
-      try{
-        const { data, error } = await sb.rpc(fn);
-        if(!error && data) return String(data);
-      }catch(_){}
-    }
-    return null;
-  }
-
-  function openDlg(){ $('dlg').showModal(); }
-  function closeDlg(){ $('dlg').close(); }
-
-  async function refreshAuthUI(){
-    const { data:{ session } } = await sb.auth.getSession();
-    const signedIn = !!session?.user;
-
-    $('btnSignIn').style.display = signedIn ? 'none' : 'inline-flex';
-    $('btnSignOut').style.display = signedIn ? 'inline-flex' : 'none';
-
-    if(!signedIn){
-      $('who').innerHTML = '<span class="err">Sign-in required.</span> Admin-only dashboard.';
-      setStatus('warn','Sign in required');
-      return { session:null, role:null };
+    function esc(s) {
+      return String(s ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    setStatus('warn','Verifying access…');
-    const role = await getRoleFailClosed();
-    if(!role){
-      $('who').innerHTML = `<span class="err">Locked:</span> role RPC missing. Expected <code>rpc_lp_my_role</code>.`;
-      setStatus('bad','Locked');
-      return { session, role:null };
+    /* ── Status helpers ──────────────────────────────────────── */
+    function setOutput(data, endpoint) {
+      $id('raw').value        = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+      $id('outputLabel').textContent = `${endpoint} · ${new Date().toLocaleTimeString()}`;
     }
 
-    const allowed = ['super_admin','admin_regular','admin_olympiad','admin'].includes(role);
-    if(!allowed){
-      $('who').innerHTML = `<span class="err">Locked:</span> role="${escapeHtml(role)}" is not admin.`;
-      setStatus('bad','Locked');
-      return { session, role };
+    function setApiBadge(ok, label) {
+      const b = $id('apiBadge');
+      b.style.display = 'inline-flex';
+      b.className     = ok ? 'admin-badge admin-badge-success' : 'admin-badge admin-badge-danger';
+      b.textContent   = label || (ok ? '✓ OK' : '✗ Error');
     }
 
-    $('who').textContent = `Signed in: ${session.user.email || session.user.id}  •  role: ${role}`;
-    setStatus('good','Ready');
-    return { session, role };
-  }
-
-  function setCards(payload){
-    const cards = $('cards');
-    cards.innerHTML = '';
-
-    const expKey = $('experimentKey').value.trim();
-    const track = $('track').value;
-    const days = Number($('days').value || 14);
-
-    let status = '—';
-    let killswitched = '—';
-    let variants = 0;
-    let rows = 0;
-
-    // Try to infer from metrics-summary format (rows[]) if present
-    if (payload && payload.ok && Array.isArray(payload.rows)) {
-      rows = payload.rows.length;
-      variants = rows;
-      status = payload.status ?? '—';
-      killswitched = String(!!payload.is_killswitched);
+    function setLastRefreshed() {
+      const el = $id('lastRefreshed');
+      el.style.display = 'inline';
+      el.textContent   = `Updated ${new Date().toLocaleTimeString()}`;
     }
 
-    // Try to infer from admin-bundle "result" object if present
-    if (payload && payload.ok && payload.result) {
-      // If "both tracks", payload.result.tracks.{regular,olympiad} is likely
-      if (payload.result.tracks) {
-        const r = payload.result.tracks.regular;
-        const o = payload.result.tracks.olympiad;
-        variants = (Array.isArray(r?.rows) ? r.rows.length : 0) + (Array.isArray(o?.rows) ? o.rows.length : 0);
-        status = (r?.status || o?.status || status);
-        killswitched = String(!!(r?.is_killswitched || o?.is_killswitched));
-        rows = variants;
+    /* ── Stat cards ──────────────────────────────────────────── */
+    function renderStatCards(expKey, track, days, payload) {
+      let status       = '—';
+      let killswitched = false;
+      let variants     = 0;
+      let totalExposed = 0;
+      let bestConv     = null;
+      let allRows      = [];
+
+      if (payload?.ok && Array.isArray(payload.rows)) {
+        allRows      = payload.rows;
+        variants     = allRows.length;
+        status       = payload.status      ?? '—';
+        killswitched = !!payload.is_killswitched;
+        totalExposed = allRows.reduce((s, r) => s + (r.exposed_users ?? 0), 0);
+        const convs  = allRows.map(r => Number(r.conversion ?? 0)).filter(v => !isNaN(v));
+        bestConv     = convs.length ? Math.max(...convs) : null;
       }
-    }
 
-    const items = [
-      ['Experiment', expKey],
-      ['Track', track],
-      ['Window (days)', String(days)],
-      ['Variants/Rows', String(rows)],
-    ];
+      if (payload?.ok && payload.result?.tracks) {
+        const r = payload.result.tracks.regular  || {};
+        const o = payload.result.tracks.olympiad || {};
+        status       = r.status || o.status || '—';
+        killswitched = !!(r.is_killswitched || o.is_killswitched);
+        const rRows  = Array.isArray(r.rows) ? r.rows : [];
+        const oRows  = Array.isArray(o.rows) ? o.rows : [];
+        allRows      = [...rRows, ...oRows];
+        variants     = allRows.length;
+        totalExposed = allRows.reduce((s, row) => s + (row.exposed_users ?? 0), 0);
+        const convs  = allRows.map(row => Number(row.conversion ?? 0)).filter(v => !isNaN(v));
+        bestConv     = convs.length ? Math.max(...convs) : null;
+      }
 
-    for(const [k,v] of items){
-      const d = document.createElement('div');
-      d.className = 'mini';
-      d.innerHTML = '<div class="k">'+escapeHtml(k)+'</div><div class="v">'+escapeHtml(String(v))+'</div>';
-      cards.appendChild(d);
-    }
-
-    // Status pill appended to who line
-    const pill = document.createElement('span');
-    pill.className = 'pill ' + (status === 'running' ? 'good' : (status === 'paused' ? 'warn' : 'bad'));
-    pill.textContent = `status: ${status} • killswitched: ${killswitched}`;
-    $('who').appendChild(document.createElement('br'));
-    $('who').appendChild(pill);
-  }
-
-  function renderTableFromRows(trackLabel, rows){
-    const tbody = $('tbody');
-    if (!rows || !rows.length) return;
-
-    for (const r of rows) {
-      const tr = document.createElement('tr');
-      const conv = (r.conversion === null || r.conversion === undefined)
-        ? '—'
-        : (Number(r.conversion) * 100).toFixed(2) + '%';
-
-      tr.innerHTML = `
-        <td>${escapeHtml(trackLabel)}</td>
-        <td><b>${escapeHtml(r.variant_key || '—')}</b></td>
-        <td>${escapeHtml(String(r.exposed_users ?? 0))}</td>
-        <td>${escapeHtml(String(r.metric_users ?? 0))}</td>
-        <td>${escapeHtml(String(r.events ?? 0))}</td>
-        <td>${escapeHtml(conv)}</td>
+      // Experiment meta strip
+      const statusCls = status === 'running' ? 'running' : status === 'paused' ? 'paused' : status === 'stopped' ? 'stopped' : 'unknown';
+      $id('expMeta').innerHTML = `
+        <span class="lp-exp-meta-key">${esc(expKey)}</span>
+        <span class="lp-exp-status ${statusCls}">${esc(status)}</span>
+        ${killswitched ? '<span class="lp-killswitch-on">⚡ killswitched</span>' : ''}
+        <span style="font-size:12px;color:var(--lp-muted)">track: ${esc(track)} · ${esc(String(days))}d window</span>
       `;
-      tbody.appendChild(tr);
+
+      // Stat cards
+      const bestConvStr = bestConv !== null ? (bestConv * 100).toFixed(2) + '%' : '—';
+      const winnerRow   = allRows.length
+        ? allRows.reduce((best, r) => (!best || (r.conversion ?? 0) > (best.conversion ?? 0)) ? r : best, null)
+        : null;
+
+      $id('statCards').innerHTML = `
+        <div class="admin-stat-card lp-stat-accent-ab">
+          <div class="admin-stat-label">Experiment</div>
+          <div class="admin-stat-value" style="font-family:var(--lp-font-mono);font-size:14px;word-break:break-all">${esc(expKey)}</div>
+          <div class="admin-stat-delta flat" style="margin-top:6px">${esc(track)} · ${esc(String(days))} days</div>
+        </div>
+        <div class="admin-stat-card lp-stat-accent-conv">
+          <div class="admin-stat-label">Total Exposed</div>
+          <div class="admin-stat-value">${totalExposed.toLocaleString()}</div>
+          <div class="admin-stat-delta flat">${variants} variant${variants !== 1 ? 's' : ''}</div>
+        </div>
+        <div class="admin-stat-card lp-stat-accent-win">
+          <div class="admin-stat-label">Best Conversion</div>
+          <div class="admin-stat-value">${esc(bestConvStr)}</div>
+          <div class="admin-stat-delta ${bestConv !== null && bestConv > 0.1 ? 'up' : 'flat'}">
+            ${winnerRow ? `winner: ${esc(winnerRow.variant_key || '—')}` : '—'}
+          </div>
+        </div>
+        <div class="admin-stat-card lp-stat-accent-days">
+          <div class="admin-stat-label">Variants · Rows</div>
+          <div class="admin-stat-value">${variants}</div>
+          <div class="admin-stat-delta flat">Status: ${esc(status)}</div>
+        </div>
+      `;
     }
-  }
 
-  function clearTable(){
-    $('tbody').innerHTML = '<tr><td colspan="6" class="muted">No data yet.</td></tr>';
-  }
+    /* ── Variant table ───────────────────────────────────────── */
+    function clearTable() {
+      $id('tbody').innerHTML = `
+        <tr><td colspan="6" style="padding:20px 16px;color:var(--lp-muted);font-size:13px">No data loaded.</td></tr>
+      `;
+      $id('rowCountBadge').style.display = 'none';
+    }
 
-  async function callAdminBundle(jwt, experiment_key, track, days){
-    // admin-bundle is POST-only and requires Bearer JWT (admin gate in function) :contentReference[oaicite:7]{index=7}
-    const res = await fetch('/api/ab/admin-bundle', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + jwt },
-      body: JSON.stringify({
-        experiment_key,
-        // NOTE: per admin-bundle.js, omitting track returns both tracks.
-        ...(track === 'both' ? {} : { track }),
-        days
-      })
-    });
+    function variantBadgeCls(key) {
+      const k = String(key || '').toLowerCase();
+      if (k.includes('control') || k.endsWith('_a') || k === 'a') return 'admin-badge lp-variant-a';
+      if (k.endsWith('_b') || k === 'b' || k.includes('treatment')) return 'admin-badge lp-variant-b';
+      return 'admin-badge lp-variant-other';
+    }
 
-    const json = await res.json().catch(()=> ({}));
-    return { ok: res.ok, status: res.status, json };
-  }
+    function renderTableRows(trackLabel, rows, winnerKey) {
+      if (!rows?.length) return;
+      const tbody = $id('tbody');
 
-  async function callMetricsSummary(jwt, experiment_key, track, days){
-    // metrics-summary expects { experiment_key, track, window_days } POST + Bearer JWT :contentReference[oaicite:8]{index=8}
-    const res = await fetch('/api/ab/metrics-summary', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + jwt },
-      body: JSON.stringify({ experiment_key, track, window_days: days })
-    });
+      // Compute max conversion for bar scaling
+      const maxConv = Math.max(...rows.map(r => Number(r.conversion ?? 0)).filter(v => !isNaN(v)), 0.001);
 
-    const json = await res.json().catch(()=> ({}));
-    return { ok: res.ok, status: res.status, json };
-  }
+      for (const r of rows) {
+        const conv    = (r.conversion === null || r.conversion === undefined)
+          ? null
+          : Number(r.conversion);
+        const convStr = conv !== null ? (conv * 100).toFixed(2) + '%' : '—';
+        const pct     = conv !== null ? Math.min(100, (conv / maxConv) * 100) : 0;
+        const barCls  = conv !== null && conv > 0.15 ? 'good' : conv !== null && conv > 0.05 ? 'warn' : 'low';
+        const isWinner = r.variant_key === winnerKey;
 
-  async function load(){
-    const auth = await refreshAuthUI();
-    if(!auth.session) return;
+        const tr = document.createElement('tr');
+        if (isWinner) tr.classList.add('lp-winner-row');
 
-    setStatus('warn','Loading…');
-
-    const experiment_key = $('experimentKey').value.trim();
-    const track = $('track').value;
-    const days = Math.max(1, Math.min(90, Number($('days').value || 14)));
-
-    const jwt = auth.session.access_token;
-
-    clearTable();
-
-    // Strategy:
-    // 1) Try admin-bundle (best, supports both tracks + your Step 8 admin RPC bundle)
-    // 2) If admin-bundle fails or not deployed, fall back to metrics-summary (single track only)
-    let payload = null;
-
-    const b = await callAdminBundle(jwt, experiment_key, track, days);
-    if (b.ok) {
-      payload = b.json;
-      $('raw').textContent = JSON.stringify(payload, null, 2);
-
-      // Fill table if the bundle includes track rows
-      $('tbody').innerHTML = '';
-      if (track === 'both') {
-        const reg = payload?.result?.tracks?.regular;
-        const oly = payload?.result?.tracks?.olympiad;
-        renderTableFromRows('regular', reg?.rows || []);
-        renderTableFromRows('olympiad', oly?.rows || []);
-      } else {
-        const one = payload?.result;
-        renderTableFromRows(track, one?.rows || []);
+        tr.innerHTML = `
+          <td>
+            <span class="admin-badge admin-text-xs" style="font-size:11px;padding:2px 7px;border-radius:4px;${trackLabel === 'regular' ? 'background:rgba(79,70,229,.08);color:var(--lp-indigo-dark)' : 'background:rgba(8,145,178,.08);color:#0e7490'}">
+              ${esc(trackLabel)}
+            </span>
+          </td>
+          <td>
+            <span class="${variantBadgeCls(r.variant_key)}" style="font-size:11.5px;padding:3px 8px;">
+              ${esc(r.variant_key || '—')}
+            </span>
+          </td>
+          <td style="font-family:var(--lp-font-mono);font-size:12.5px">${esc(String(r.exposed_users ?? 0))}</td>
+          <td style="font-family:var(--lp-font-mono);font-size:12.5px">${esc(String(r.metric_users  ?? 0))}</td>
+          <td style="font-family:var(--lp-font-mono);font-size:12.5px">${esc(String(r.events        ?? 0))}</td>
+          <td style="min-width:130px">
+            <div class="lp-conv-bar-wrap">
+              <div class="lp-conv-bar-track">
+                <div class="lp-conv-bar-fill ${barCls}" style="width:${pct.toFixed(1)}%"></div>
+              </div>
+              <span class="lp-conv-val">${esc(convStr)}</span>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
       }
-
-      setCards(payload);
-      setStatus('good','Ready');
-      return;
     }
 
-    // Fallback: metrics-summary
-    if (track !== 'both') {
-      const m = await callMetricsSummary(jwt, experiment_key, track, days);
-      payload = m.json;
-      $('raw').textContent = JSON.stringify({ admin_bundle_error: b.json, metrics_summary: payload }, null, 2);
+    /* ── API calls ───────────────────────────────────────────── */
+    async function callAdminBundle(jwt, experimentKey, track, days) {
+      const res = await fetch('/api/ab/admin-bundle', {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${jwt}`,
+        },
+        body: JSON.stringify({
+          experiment_key: experimentKey,
+          ...(track === 'both' ? {} : { track }),
+          days,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      return { ok: res.ok, status: res.status, json };
+    }
 
-      if (!m.ok) {
-        setStatus('bad','Error');
-        $('who').innerHTML = $('who').innerHTML + `<br/><span class="err">metrics-summary error:</span> ${escapeHtml(payload?.detail || payload?.error || ('HTTP '+m.status))}`;
+    async function callMetricsSummary(jwt, experimentKey, track, days) {
+      const res = await fetch('/api/ab/metrics-summary', {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${jwt}`,
+        },
+        body: JSON.stringify({ experiment_key: experimentKey, track, window_days: days }),
+      });
+      const json = await res.json().catch(() => ({}));
+      return { ok: res.ok, status: res.status, json };
+    }
+
+    /* ── Main load ───────────────────────────────────────────── */
+    async function load() {
+      const btnRefresh   = $id('btnRefresh');
+      btnRefresh.classList.add('loading');
+      btnRefresh.disabled = true;
+
+      // Gate check
+      const gate = await LPAdmin.requireRole(ALLOWED_ROLES);
+      if (!gate.ok) {
+        btnRefresh.classList.remove('loading');
+        btnRefresh.disabled = false;
         return;
       }
 
-      $('tbody').innerHTML = '';
-      renderTableFromRows(track, payload.rows || []);
-      setCards(payload);
-      setStatus('good','Ready (fallback)');
-      return;
+      LPAdmin.setStatus('warn', 'Loading…');
+
+      const experimentKey = ($id('experimentKey').value || '').trim();
+      const track         = $id('track').value;
+      const days          = Math.max(1, Math.min(90, Number($id('days').value || 14)));
+      const jwt           = gate.token;
+
+      clearTable();
+      $id('tbody').innerHTML = `
+        <tr class="lp-skeleton-row">
+          <td colspan="6" style="padding:16px">
+            <div class="admin-skeleton admin-skeleton-text w-full" style="height:12px;border-radius:4px;margin-bottom:8px"></div>
+            <div class="admin-skeleton admin-skeleton-text w-3/4" style="height:12px;border-radius:4px;margin-bottom:8px"></div>
+            <div class="admin-skeleton admin-skeleton-text w-1/2" style="height:12px;border-radius:4px"></div>
+          </td>
+        </tr>
+      `;
+
+      try {
+        // Strategy 1: admin-bundle (best path — both tracks, admin RPC gate)
+        const b = await callAdminBundle(jwt, experimentKey, track, days);
+
+        if (b.ok) {
+          setOutput(b.json, '/api/ab/admin-bundle');
+          setApiBadge(true, '✓ admin-bundle');
+
+          $id('tbody').innerHTML = '';
+          let allRows = [];
+
+          if (track === 'both') {
+            const reg = b.json?.result?.tracks?.regular;
+            const oly = b.json?.result?.tracks?.olympiad;
+            const regRows = reg?.rows || [];
+            const olyRows = oly?.rows || [];
+            allRows = [...regRows, ...olyRows];
+
+            const regWinner = regRows.length
+              ? regRows.reduce((best, r) => (r.conversion ?? 0) > (best.conversion ?? 0) ? r : best).variant_key
+              : null;
+            const olyWinner = olyRows.length
+              ? olyRows.reduce((best, r) => (r.conversion ?? 0) > (best.conversion ?? 0) ? r : best).variant_key
+              : null;
+
+            renderTableRows('regular',  regRows, regWinner);
+            renderTableRows('olympiad', olyRows, olyWinner);
+          } else {
+            const rows   = b.json?.result?.rows || [];
+            allRows      = rows;
+            const winner = rows.length
+              ? rows.reduce((best, r) => (r.conversion ?? 0) > (best.conversion ?? 0) ? r : best).variant_key
+              : null;
+            renderTableRows(track, rows, winner);
+          }
+
+          if (!allRows.length) {
+            $id('tbody').innerHTML = `
+              <tr><td colspan="6" style="padding:20px 16px;color:var(--lp-muted);font-size:13px">
+                No variant rows returned. The experiment key may not exist or has no data in this window.
+              </td></tr>
+            `;
+          }
+
+          renderStatCards(experimentKey, track, days, b.json);
+          updateRowCountBadge(allRows.length);
+          setLastRefreshed();
+          LPAdmin.setStatus('ok', 'Ready');
+          LPAdmin.toast({ title: 'Data loaded', message: `${allRows.length} variant row${allRows.length !== 1 ? 's' : ''} via admin-bundle` }, 'success', 3000);
+          return;
+        }
+
+        // Strategy 2: fallback to metrics-summary (single track only)
+        if (track !== 'both') {
+          const m = await callMetricsSummary(jwt, experimentKey, track, days);
+          setOutput(
+            { admin_bundle_error: b.json, metrics_summary: m.json },
+            '/api/ab/metrics-summary (fallback)'
+          );
+
+          if (!m.ok) {
+            setApiBadge(false, '✗ Both failed');
+            LPAdmin.setStatus('err', 'Error');
+            LPAdmin.toast(
+              { title: 'Load failed', message: m.json?.error || `HTTP ${m.status}` },
+              'error'
+            );
+            clearTable();
+            return;
+          }
+
+          $id('tbody').innerHTML = '';
+          const rows = m.json.rows || [];
+          const winner = rows.length
+            ? rows.reduce((best, r) => (r.conversion ?? 0) > (best.conversion ?? 0) ? r : best).variant_key
+            : null;
+          renderTableRows(track, rows, winner);
+          renderStatCards(experimentKey, track, days, m.json);
+          updateRowCountBadge(rows.length);
+          setApiBadge(true, '✓ fallback');
+          setLastRefreshed();
+          LPAdmin.setStatus('ok', 'Ready (fallback)');
+          LPAdmin.toast({ title: 'Loaded via fallback', message: 'admin-bundle unavailable; used metrics-summary.' }, 'info', 4000);
+          return;
+        }
+
+        // Both failed for "both" track mode
+        setOutput(b.json, '/api/ab/admin-bundle');
+        setApiBadge(false, '✗ Error');
+        clearTable();
+        LPAdmin.setStatus('err', 'Error');
+        LPAdmin.toast(
+          { title: 'admin-bundle error', message: b.json?.details || b.json?.error || `HTTP ${b.status}` },
+          'error'
+        );
+
+      } catch (err) {
+        setOutput({ error: err?.message || String(err) }, 'error');
+        setApiBadge(false, '✗ Error');
+        clearTable();
+        LPAdmin.setStatus('err', 'Error');
+        LPAdmin.toast({ title: 'Request failed', message: err?.message }, 'error');
+      } finally {
+        btnRefresh.classList.remove('loading');
+        btnRefresh.disabled = false;
+      }
     }
 
-    // Both failed
-    setStatus('bad','Error');
-    $('raw').textContent = JSON.stringify(b.json, null, 2);
-    $('who').innerHTML = $('who').innerHTML + `<br/><span class="err">admin-bundle error:</span> ${escapeHtml(b.json?.details || b.json?.detail || b.json?.error || ('HTTP '+b.status))}`;
-  }
+    /* ── DB dashboard refresh ────────────────────────────────── */
+    async function refreshDashboards() {
+      const btn = $id('btnRefreshDb');
+      btn.classList.add('loading');
+      btn.disabled = true;
+      LPAdmin.setStatus('warn', 'Refreshing DB…');
 
-  async function refreshDashboards(){
-    const auth = await refreshAuthUI();
-    if(!auth.session) return;
+      const gate = await LPAdmin.requireRole(ALLOWED_ROLES);
+      if (!gate.ok) {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        return;
+      }
 
-    setStatus('warn','Refreshing DB dashboards…');
-    const jwt = auth.session.access_token;
+      try {
+        const res  = await fetch('/api/ab/refresh-dashboards', {
+          method: 'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${gate.token}`,
+          },
+          body: JSON.stringify({}),
+        });
+        const json = await res.json().catch(() => ({}));
+        setOutput(json, '/api/ab/refresh-dashboards');
 
-    const res = await fetch('/api/ab/refresh-dashboards', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + jwt },
-      body: JSON.stringify({})
+        if (!res.ok) {
+          LPAdmin.setStatus('err', 'Refresh failed');
+          LPAdmin.toast({ title: 'DB refresh failed', message: json?.error || `HTTP ${res.status}` }, 'error');
+          return;
+        }
+
+        LPAdmin.setStatus('ok', 'DB refreshed');
+        LPAdmin.toast({ title: 'DB dashboards refreshed', message: 'Materialized views have been updated.' }, 'success', 4000);
+
+      } catch (err) {
+        LPAdmin.setStatus('err', 'Error');
+        LPAdmin.toast({ title: 'Refresh failed', message: err?.message }, 'error');
+      } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    }
+
+    /* ── Row count badge ─────────────────────────────────────── */
+    function updateRowCountBadge(count) {
+      const b = $id('rowCountBadge');
+      b.style.display = 'inline-flex';
+      b.className     = 'admin-badge admin-badge-gray';
+      b.textContent   = `${count} row${count !== 1 ? 's' : ''}`;
+    }
+
+    /* ── Copy button ─────────────────────────────────────────── */
+    $id('copyBtn').addEventListener('click', () => {
+      const text = $id('raw').value;
+      if (!text || text === '{}') return;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = $id('copyBtn');
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      }).catch(() => { $id('raw').select(); document.execCommand('copy'); });
     });
 
-    const json = await res.json().catch(()=> ({}));
-    $('raw').textContent = JSON.stringify(json, null, 2);
-
-    if (!res.ok) {
-      setStatus('bad','Refresh failed');
-      $('who').innerHTML = $('who').innerHTML + `<br/><span class="err">refresh-dashboards error:</span> ${escapeHtml(json?.details || json?.detail || json?.error || ('HTTP '+res.status))}`;
-      return;
-    }
-
-    setStatus('good','DB dashboards refreshed');
-  }
-
-  async function init(){
-    setStatus('', 'Booting…');
-
-    let env;
-    try { env = await fetchEnv(); }
-    catch(e){
-      setStatus('bad','Missing env');
-      $('who').innerHTML = '<span class="err">Missing Supabase config from /api/env.</span>';
-      $('raw').textContent = JSON.stringify({ error: String(e?.message || e) }, null, 2);
-      return;
-    }
-
-    sb = window.supabase.createClient(env.supabaseUrl, env.supabaseAnonKey, {
-      auth: { storageKey: STORAGE_KEY, persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
+    /* ── Preset selector ─────────────────────────────────────── */
+    $id('expPreset').addEventListener('change', e => {
+      if (e.target.value) {
+        $id('experimentKey').value = e.target.value;
+        e.target.value = '';       // reset to placeholder
+      }
     });
 
-    $('btnSignIn').onclick = openDlg;
-    $('btnSignOut').onclick = async ()=>{
-      setStatus('warn','Signing out…');
-      try{ await sb.auth.signOut({ scope:'local' }); }catch(_){}
-      await refreshAuthUI();
-    };
+    /* ── Auto-refresh toggle ─────────────────────────────────── */
+    $id('autoRefresh').addEventListener('change', e => {
+      if (e.target.checked) {
+        _autoTimer = setInterval(load, AUTO_REFRESH_MS);
+        $id('autoRefreshLabel').textContent = 'Auto 30s ●';
+        LPAdmin.toast({ title: 'Auto-refresh on', message: 'Will reload every 30 seconds.' }, 'info', 2500);
+      } else {
+        clearInterval(_autoTimer);
+        _autoTimer = null;
+        $id('autoRefreshLabel').textContent = 'Auto 30s';
+      }
+    });
 
-    $('btnDoLogin').onclick = async ()=>{
-      $('authOut').textContent = 'Signing in…';
-      const email = $('inEmail').value.trim();
-      const password = $('inPass').value;
-      if(!email || !password){ $('authOut').textContent = 'Enter email + password.'; return; }
-      const { error } = await sb.auth.signInWithPassword({ email, password });
-      if(error){ $('authOut').textContent = error.message; return; }
-      $('authOut').textContent = '';
-      closeDlg();
-      await load();
-    };
+    /* ── BFCache hardening ───────────────────────────────────── */
+    window.addEventListener('pageshow', e => {
+      if (e.persisted) window.location.reload();
+    });
 
-    $('btnRefresh').onclick = load;
-    $('btnRefreshDb').onclick = refreshDashboards;
+    /* ── Enter key on experimentKey fires load ───────────────── */
+    $id('experimentKey').addEventListener('keydown', e => {
+      if (e.key === 'Enter') load();
+    });
 
-    // BFCache hardening
-    window.addEventListener('pageshow', (e)=>{ if(e.persisted) location.reload(); });
+    /* ── Button wiring ───────────────────────────────────────── */
+    $id('btnRefresh').addEventListener('click', load);
+    $id('btnRefreshDb').addEventListener('click', refreshDashboards);
 
-    sb.auth.onAuthStateChange(()=> refreshAuthUI());
+    /* ── Boot ────────────────────────────────────────────────── */
+    LPAdmin.init({
+      page:         'ab',
+      allowedRoles: ALLOWED_ROLES,
+      dotEl:        'dot',
+      statusEl:     'statusTxt',
+      whoEl:        'who',
+      onAuth: () => load(),      // auto-load once auth succeeds
+    });
 
-    await refreshAuthUI();
-    const { data:{ session } } = await sb.auth.getSession();
-    if(session) await load();
-  }
-
-  init();
-})();
-</script>
+  })();
+  </script>
 </body>
 </html>

@@ -3,339 +3,386 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LogicPals Admin — Payments</title>
+  <title>Payments — LogicPals Admin</title>
 
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
+  <meta http-equiv="Pragma"        content="no-cache" />
+  <meta http-equiv="Expires"       content="0" />
+
+  <link rel="stylesheet" href="/assets/css/admin.css" />
+  <script src="/assets/js/env-loader.js"></script>
+  <script src="/assets/js/admin-auth.js"></script>
 
   <style>
-    :root{--bg:#f6f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e5e7eb;--accent:#4f46e5;--accent2:#06b6d4;--good:#16a34a;--warn:#b45309;--bad:#dc2626;--shadow:0 18px 45px rgba(2,6,23,.08);--r:18px}
-    *{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--text);background:linear-gradient(180deg,#ffffff 0%, #f6f7fb 100%)}
-    a{color:inherit;text-decoration:none}
-    .shell{max-width:1200px;margin:28px auto;padding:0 18px}
-    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px 16px;box-shadow:var(--shadow)}
-    .brand{display:flex;align-items:center;gap:12px}
-    .logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;color:#fff;font-weight:800}
-    .bt{font-size:14px;font-weight:800;margin:0}.st{font-size:12px;color:var(--muted);margin:0}
-    .right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-    .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 10px;font-size:13px;color:var(--muted)}
-    .dot{width:8px;height:8px;border-radius:999px;background:#94a3b8}
-    .dot.ok{background:var(--good)} .dot.warn{background:#f59e0b} .dot.err{background:var(--bad)}
-    .btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer}
-    .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-    .btn:disabled{opacity:.55;cursor:not-allowed}
-    .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:18px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}
-    .h{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .h h2{margin:0;font-size:18px}.hint{color:var(--muted);font-size:13px}
-    .form{display:grid;grid-template-columns:1.3fr .7fr;gap:12px;margin-top:12px}
-    .field{display:flex;flex-direction:column;gap:6px}
-    label{font-size:12px;color:var(--muted);font-weight:700}
-    input,select{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px;outline:none}
-    textarea{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;min-height:180px;resize:vertical;outline:none;font-family:ui-monospace,Menlo,Consolas,monospace}
-    .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
-    .note{margin-top:8px;font-size:12px;color:var(--muted)}
-    @media (max-width:900px){.form{grid-template-columns:1fr}}
-  </style>
+    /* ── Action selector tabs ─────────────────────────────────── */
+    .lp-action-tabs {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--lp-border-2);
+      border-radius: var(--lp-r);
+      overflow: hidden;
+      width: fit-content;
+    }
 
-  <script src="/assets/js/env-loader.js"></script>
+    .lp-action-tab {
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--lp-muted);
+      background: var(--lp-card);
+      border: none;
+      border-right: 1px solid var(--lp-border-2);
+      cursor: pointer;
+      transition:
+        background var(--lp-t-fast),
+        color var(--lp-t-fast);
+      white-space: nowrap;
+    }
+
+    .lp-action-tab:last-child { border-right: none; }
+
+    .lp-action-tab:hover {
+      background: var(--lp-surface);
+      color: var(--lp-text-2);
+    }
+
+    .lp-action-tab.active {
+      background: var(--lp-indigo);
+      color: #fff;
+    }
+
+    /* ── Conditional field (shown/hidden per action) ──────────── */
+    .lp-conditional { display: none; }
+    .lp-conditional.visible { display: flex; }
+
+    /* ── Result meta strip ────────────────────────────────────── */
+    .lp-result-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--lp-surface);
+      border: 1px solid var(--lp-border);
+      border-radius: var(--lp-r);
+      font-size: 12.5px;
+      color: var(--lp-muted);
+      margin-bottom: 10px;
+    }
+
+    .lp-result-meta strong { color: var(--lp-text-2); }
+
+    /* ── Two-column layout ────────────────────────────────────── */
+    .lp-op-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .lp-op-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 
 <body>
-  <div class="shell">
-    <header class="top">
-      <div class="brand">
-        <div class="logo">LP</div>
-        <div>
-          <p class="bt">Payments</p>
-          <p class="st">Admin-only — list / refund / reconcile (RPC-only)</p>
+  <div class="admin-app" id="adminApp">
+
+    <aside class="admin-sidebar" id="sidebar"></aside>
+    <div class="admin-sidebar-backdrop" id="lp-sb-backdrop"></div>
+
+    <div class="admin-main">
+
+      <!-- Topbar -->
+      <header class="admin-topbar">
+        <div class="admin-topbar-left">
+          <button class="admin-menu-toggle" id="lp-menu-toggle" aria-label="Open menu">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <nav class="admin-breadcrumb">
+            <a href="/admin.html">Console</a>
+            <span class="admin-breadcrumb-sep">›</span>
+            <span class="admin-breadcrumb-current">Payments</span>
+          </nav>
         </div>
-      </div>
-      <div class="right">
-        <span class="pill" id="status"><span class="dot" id="dot"></span><span id="statusTxt">Loading…</span></span>
-        <a class="btn" href="/admin.html">Back to Admin</a>
-        <button class="btn primary" id="btnOpenLogin">Sign in</button>
-        <button class="btn" id="btnSignOut" style="display:none">Sign out</button>
-      </div>
-    </header>
-
-    <div class="grid">
-      <section class="card">
-        <div class="h">
-          <h2>Payment Operations</h2>
-          <div class="hint" id="who">—</div>
+        <div class="admin-topbar-right">
+          <span class="admin-pill">
+            <span class="admin-dot" id="dot"></span>
+            <span id="statusTxt">Loading…</span>
+          </span>
+          <div id="who" style="font-size:12px;color:var(--lp-muted);font-weight:500;"></div>
         </div>
+      </header>
 
-        <div class="form">
-          <div class="field">
-            <label>Customer email</label>
-            <input id="customerEmail" placeholder="student_or_parent@email.com" autocomplete="email" />
-          </div>
-          <div class="field">
-            <label>Track</label>
-            <select id="track">
-              <option value="regular">Regular</option>
-              <option value="olympiad">Olympiad</option>
-            </select>
-          </div>
+      <!-- Content -->
+      <main class="admin-content">
 
-          <div class="field">
-            <label>Action</label>
-            <select id="action">
-              <option value="list">List payments</option>
-              <option value="refund">Refund payment</option>
-              <option value="reconcile">Reconcile payment</option>
-            </select>
+        <div class="admin-page-header">
+          <div>
+            <h1 class="admin-page-title">Payments</h1>
+            <p class="admin-page-desc">List, refund, and reconcile payments. All operations go through RPC — no direct table writes.</p>
           </div>
-          <div class="field">
-            <label>Reference (receipt/txn id)</label>
-            <input id="reference" placeholder="required for refund/reconcile" />
+          <div class="admin-page-actions">
+            <span class="admin-badge admin-badge-indigo" style="font-size:11px;padding:4px 10px;">
+              RPC-only · Audit logged
+            </span>
           </div>
         </div>
 
-        <div class="actions">
-          <button class="btn primary" id="btnRun">Run</button>
+        <!-- Banner: role note -->
+        <div class="admin-banner admin-banner-info" style="margin-bottom:20px">
+          <svg class="admin-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+          <div class="admin-banner-body">
+            Required roles: <strong>super_admin</strong>, <strong>admin_regular</strong>, or <strong>admin_olympiad</strong>.
+            RPCs: <code>admin_list_payments</code> · <code>admin_refund_payment</code> · <code>admin_reconcile_payment</code>
+          </div>
         </div>
 
-        <p class="note">
-          Expected RPCs: <code>admin_list_payments</code>, <code>admin_refund_payment</code>, <code>admin_reconcile_payment</code>.
-        </p>
-      </section>
+        <div class="lp-op-grid">
 
-      <section class="card">
-        <div class="h"><h2>Output</h2><div class="hint">RPC responses + errors</div></div>
-        <textarea id="out" readonly>Waiting…</textarea>
-      </section>
+          <!-- ── Left: Operation panel ── -->
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <div class="admin-card-title">Payment Operations</div>
+                <div class="admin-card-subtitle">Select an action, fill in the fields, then run.</div>
+              </div>
+            </div>
+            <div class="admin-card-body">
+
+              <!-- Action selector -->
+              <div class="admin-field" style="margin-bottom:18px">
+                <label class="admin-label">Action</label>
+                <div class="lp-action-tabs" id="actionTabs" role="tablist">
+                  <button class="lp-action-tab active" data-action="list"      role="tab" type="button">List</button>
+                  <button class="lp-action-tab"        data-action="refund"    role="tab" type="button">Refund</button>
+                  <button class="lp-action-tab"        data-action="reconcile" role="tab" type="button">Reconcile</button>
+                </div>
+              </div>
+
+              <!-- Fields -->
+              <div class="admin-form-grid">
+
+                <div class="admin-field">
+                  <label class="admin-label" for="customerEmail">Customer Email</label>
+                  <input
+                    class="admin-input"
+                    id="customerEmail"
+                    type="email"
+                    placeholder="student@email.com"
+                    autocomplete="off"
+                  />
+                  <span class="admin-field-help">Optional for list. Required for refund / reconcile.</span>
+                </div>
+
+                <div class="admin-field">
+                  <label class="admin-label" for="track">Track</label>
+                  <select class="admin-select" id="track">
+                    <option value="regular">Regular</option>
+                    <option value="olympiad">Olympiad</option>
+                  </select>
+                </div>
+
+                <!-- Conditional: reference (refund + reconcile only) -->
+                <div class="admin-field admin-field lp-conditional" id="fieldReference" style="grid-column:1/-1">
+                  <label class="admin-label" for="reference">
+                    Reference
+                    <span class="admin-label-hint">receipt / transaction ID</span>
+                  </label>
+                  <input
+                    class="admin-input"
+                    id="reference"
+                    type="text"
+                    placeholder="e.g. bkash_txn_XXXXXXXX"
+                    autocomplete="off"
+                  />
+                  <span class="admin-field-help">Required for refund and reconcile operations.</span>
+                </div>
+
+              </div><!-- /.admin-form-grid -->
+
+            </div><!-- /.admin-card-body -->
+
+            <div class="admin-card-footer">
+              <div style="font-size:12px;color:var(--lp-muted);" id="actionHint">
+                Will call <code>admin_list_payments</code>
+              </div>
+              <button class="admin-btn admin-btn-primary" id="btnRun" type="button">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Run
+              </button>
+            </div>
+          </div>
+          <!-- /left -->
+
+          <!-- ── Right: Output panel ── -->
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <div class="admin-card-title">Output</div>
+                <div class="admin-card-subtitle">RPC response · JSON</div>
+              </div>
+              <div id="resultMeta" style="display:none" class="admin-row">
+                <span class="admin-badge" id="resultBadge"></span>
+              </div>
+            </div>
+            <div class="admin-card-body" style="padding:0">
+              <div class="admin-output-block" style="border:none;border-radius:0 0 20px 20px">
+                <div class="admin-output-header">
+                  <span class="admin-output-label" id="outputLabel">waiting for run</span>
+                  <button class="admin-output-copy" id="copyBtn" type="button">Copy</button>
+                </div>
+                <textarea
+                  class="admin-output-area"
+                  id="out"
+                  readonly
+                  spellcheck="false"
+                  style="min-height:320px"
+                >Waiting for operation…</textarea>
+              </div>
+            </div>
+          </div>
+          <!-- /right -->
+
+        </div><!-- /.lp-op-grid -->
+
+      </main>
     </div>
   </div>
 
-  <dialog id="dlg">
-    <div style="padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff">
-      <strong>Admin sign in</strong>
-      <button class="btn" id="btnCloseDlg" type="button">✕</button>
-    </div>
-    <div style="padding:16px 18px;background:#fff">
-      <form id="loginForm">
-        <div class="field"><label>Email</label><input id="lgEmail" type="email" autocomplete="email" required placeholder="admin@email.com"/></div>
-        <div class="field"><label>Password</label><input id="lgPass" type="password" autocomplete="current-password" required /></div>
-        <button class="btn primary" type="submit">Sign in</button>
-      </form>
-      <div class="hint" id="authOut" style="margin-top:10px">Waiting…</div>
-    </div>
-  </dialog>
-
   <script>
-  (function(){
-    "use strict";
+  (function () {
+    'use strict';
 
-    const ADMIN_ROLES = new Set(["super_admin","admin_regular","admin_olympiad"]);
-
-    const UI = {
-      dot: document.getElementById("dot"),
-      statusTxt: document.getElementById("statusTxt"),
-      who: document.getElementById("who"),
-      btnOpenLogin: document.getElementById("btnOpenLogin"),
-      btnSignOut: document.getElementById("btnSignOut"),
-      btnRun: document.getElementById("btnRun"),
-      out: document.getElementById("out"),
-      track: document.getElementById("track"),
-      action: document.getElementById("action"),
-      customerEmail: document.getElementById("customerEmail"),
-      reference: document.getElementById("reference"),
-      dlg: document.getElementById("dlg"),
-      btnCloseDlg: document.getElementById("btnCloseDlg"),
-      loginForm: document.getElementById("loginForm"),
-      lgEmail: document.getElementById("lgEmail"),
-      lgPass: document.getElementById("lgPass"),
-      authOut: document.getElementById("authOut"),
+    const ALLOWED_ROLES  = ['super_admin', 'admin_regular', 'admin_olympiad'];
+    const RPC_MAP = {
+      list:       'admin_list_payments',
+      refund:     'admin_refund_payment',
+      reconcile:  'admin_reconcile_payment',
     };
 
-    function setStatus(kind, txt){
-      UI.dot.classList.remove("ok","warn","err");
-      UI.dot.classList.add(kind);
-      UI.statusTxt.textContent = txt;
+    const HINT_MAP = {
+      list:       'Will call <code>admin_list_payments</code>',
+      refund:     'Will call <code>admin_refund_payment</code> — requires reference',
+      reconcile:  'Will call <code>admin_reconcile_payment</code> — requires reference',
+    };
+
+    /* ── State ───────────────────────────────────────────────── */
+    let currentAction = 'list';
+
+    /* ── DOM ─────────────────────────────────────────────────── */
+    const $id = id => document.getElementById(id);
+    const fieldRef    = $id('fieldReference');
+    const actionHint  = $id('actionHint');
+    const outputLabel = $id('outputLabel');
+    const resultMeta  = $id('resultMeta');
+    const resultBadge = $id('resultBadge');
+
+    /* ── Action tab switching ────────────────────────────────── */
+    $id('actionTabs').addEventListener('click', e => {
+      const tab = e.target.closest('.lp-action-tab');
+      if (!tab) return;
+
+      document.querySelectorAll('.lp-action-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      currentAction = tab.dataset.action;
+      actionHint.innerHTML = HINT_MAP[currentAction] || '';
+
+      // Show reference field for refund + reconcile
+      fieldRef.classList.toggle('visible', currentAction !== 'list');
+    });
+
+    /* ── Copy button ─────────────────────────────────────────── */
+    $id('copyBtn').addEventListener('click', () => {
+      const text = $id('out').value;
+      if (!text || text === 'Waiting for operation…') return;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = $id('copyBtn');
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      }).catch(() => { $id('out').select(); document.execCommand('copy'); });
+    });
+
+    /* ── Helpers ─────────────────────────────────────────────── */
+    function setOutput(data, action, ok) {
+      const text = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+      $id('out').value = text;
+      outputLabel.textContent = `${RPC_MAP[action] || action} · ${new Date().toLocaleTimeString()}`;
+
+      resultMeta.style.display = 'flex';
+      resultBadge.className    = ok ? 'admin-badge admin-badge-success' : 'admin-badge admin-badge-danger';
+      resultBadge.textContent  = ok ? '✓ Success' : '✗ Error';
     }
 
-    async function loadSupabaseLib(){
-      if (window.supabase && window.supabase.createClient) return window.supabase;
-      if (window.__LP_SUPABASE_LIB_PROMISE) return window.__LP_SUPABASE_LIB_PROMISE;
-      window.__LP_SUPABASE_LIB_PROMISE = new Promise((resolve, reject) => {
-        const s = document.createElement("script");
-        s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
-        s.async = true; s.defer = true;
-        s.onload = () => (window.supabase && window.supabase.createClient) ? resolve(window.supabase) : reject(new Error("supabase_umd_load_failed"));
-        s.onerror = () => reject(new Error("supabase_umd_load_failed"));
-        document.head.appendChild(s);
-      });
-      return window.__LP_SUPABASE_LIB_PROMISE;
-    }
+    /* ── Run operation ───────────────────────────────────────── */
+    async function run() {
+      const btn = $id('btnRun');
+      btn.classList.add('loading');
+      btn.disabled = true;
 
-    async function getEnv(){
-      if (window.__LP_ENV && (window.__LP_ENV.SUPABASE_URL || window.__LP_ENV.supabase_url)) return window.__LP_ENV;
-      const res = await fetch("/api/env",{cache:"no-store"});
-      if(!res.ok) throw new Error("env_fetch_failed_"+res.status);
-      const env = await res.json();
-      window.__LP_ENV = env;
-      return env;
-    }
-
-    async function getSupabase(){
-      if (window.__LP_ADMIN_SB) return window.__LP_ADMIN_SB;
-      const env = await getEnv();
-      const url = env.supabase_url || env.SUPABASE_URL;
-      const anon = env.supabase_anon_key || env.SUPABASE_ANON_KEY;
-      if (!url || !anon) throw new Error("env_missing_supabase");
-      const lib = await loadSupabaseLib();
-      const sb = lib.createClient(url, anon, {
-        auth: {
-          storageKey: "lp_admin_auth",
-          persistSession: true,
-          autoRefreshToken: false,
-          detectSessionInUrl: false
-        }
-      });
-      window.__LP_ADMIN_SB = sb;
-      return sb;
-    }
-
-    function isAdminRole(role){
-      return ADMIN_ROLES.has(String(role||"").trim());
-    }
-
-    async function resolveRole(sb){
-      const candidates = ["get_my_role","rp_get_my_role","admin_get_role","rp_admin_get_user_role","get_current_user_role","current_role"];
-      for (const fn of candidates){
-        try{
-          const { data, error } = await sb.rpc(fn);
-          if (!error){
-            if (typeof data === "string") return data;
-            if (data && typeof data === "object") return String(data.role || data.current_role || data.name || "no_role");
-            return "no_role";
-          }
-        }catch(_e){}
-      }
-      return "no_role";
-    }
-
-    function openDlg(){ UI.dlg.showModal(); }
-    function closeDlg(){ try{ UI.dlg.close(); }catch(_e){} }
-
-    function appendOut(obj){
-      UI.out.value = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
-    }
-
-    async function enforceAdmin(){
-      const sb = await getSupabase();
-      const { data:{session} } = await sb.auth.getSession();
-      if (!session){
-        setStatus("warn","Sign-in required");
-        UI.who.textContent = "—";
-        UI.btnSignOut.style.display = "none";
-        UI.btnOpenLogin.style.display = "inline-flex";
-        UI.authOut.textContent = "Please sign in with an admin account.";
-        openDlg();
-        return { ok:false };
-      }
-
-      const role = await resolveRole(sb);
-      UI.who.textContent = `Signed in: ${session.user.email}  •  Role: ${role}`;
-      UI.btnSignOut.style.display = "inline-flex";
-      UI.btnOpenLogin.style.display = "none";
-
-      if (!isAdminRole(role)){
-        try{ await sb.auth.signOut(); }catch(_e){}
-        setStatus("err","Access denied (admin only)");
-        UI.authOut.textContent = "Not an admin account. Signed out.";
-        openDlg();
-        return { ok:false };
-      }
-
-      setStatus("ok","Ready");
-      return { ok:true, sb };
-    }
-
-    async function signIn(email, password){
-      const sb = await getSupabase();
-      setStatus("warn","Signing in…");
-      UI.authOut.textContent = "Signing in…";
-      const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error){
-        setStatus("err","Sign in failed");
-        UI.authOut.textContent = error.message || "Sign in failed";
+      // Gate check
+      const gate = await LPAdmin.requireRole(ALLOWED_ROLES);
+      if (!gate.ok) {
+        btn.classList.remove('loading');
+        btn.disabled = false;
         return;
       }
-      await enforceAdmin();
-      closeDlg();
-    }
 
-    async function signOut(){
-      const sb = await getSupabase();
-      setStatus("warn","Signing out…");
-      try{ await sb.auth.signOut(); }catch(_e){}
-      await enforceAdmin();
-    }
+      const sb        = gate.sb;
+      const action    = currentAction;
+      const email     = ($id('customerEmail').value || '').trim() || null;
+      const track     = $id('track').value;
+      const reference = ($id('reference').value || '').trim() || null;
 
-    async function run(){
-      UI.out.value = "Running…";
-      const gate = await enforceAdmin();
-      if (!gate.ok) return;
-
-      const sb = gate.sb;
-      const action = UI.action.value;
-      const track = UI.track.value;
-      const email = (UI.customerEmail.value || "").trim() || null;
-      const reference = (UI.reference.value || "").trim() || null;
-
-      try{
+      try {
         let data;
-        if (action === "list"){
-          data = await sb.rpc("admin_list_payments", { p_email: email, p_track: track }).then(r => { if(r.error) throw r.error; return r.data; });
-        } else if (action === "refund"){
-          if (!reference) throw new Error("Reference required for refund");
-          data = await sb.rpc("admin_refund_payment", { p_reference: reference, p_email: email, p_track: track }).then(r => { if(r.error) throw r.error; return r.data; });
-        } else if (action === "reconcile"){
-          if (!reference) throw new Error("Reference required for reconcile");
-          data = await sb.rpc("admin_reconcile_payment", { p_reference: reference, p_email: email, p_track: track }).then(r => { if(r.error) throw r.error; return r.data; });
-        } else {
-          throw new Error("Unknown action");
+
+        if (action === 'list') {
+          const r = await sb.rpc('admin_list_payments', { p_email: email, p_track: track });
+          if (r.error) throw r.error;
+          data = r.data;
+
+        } else if (action === 'refund') {
+          if (!reference) throw new Error('Reference is required for refund.');
+          const r = await sb.rpc('admin_refund_payment', { p_reference: reference, p_email: email, p_track: track });
+          if (r.error) throw r.error;
+          data = r.data;
+
+        } else if (action === 'reconcile') {
+          if (!reference) throw new Error('Reference is required for reconcile.');
+          const r = await sb.rpc('admin_reconcile_payment', { p_reference: reference, p_email: email, p_track: track });
+          if (r.error) throw r.error;
+          data = r.data;
         }
-        appendOut(data);
-        setStatus("ok","Done");
-      }catch(e){
-        appendOut(String(e?.message || e));
-        setStatus("err","Error");
+
+        setOutput(data, action, true);
+        LPAdmin.setStatus('ok', 'Done');
+        LPAdmin.toast({ title: 'Operation complete', message: RPC_MAP[action] + ' returned successfully.' }, 'success');
+
+      } catch (err) {
+        const msg = err?.message || String(err);
+        setOutput(`Error: ${msg}`, action, false);
+        LPAdmin.setStatus('err', 'Error');
+        LPAdmin.toast({ title: 'RPC error', message: msg }, 'error');
+      } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
       }
     }
 
-    async function bootstrap(){
-      try{
-        setStatus("warn","Loading…");
+    /* ── Boot ────────────────────────────────────────────────── */
+    $id('btnRun').addEventListener('click', run);
 
-        UI.btnOpenLogin.addEventListener("click", openDlg);
-        UI.btnCloseDlg.addEventListener("click", closeDlg);
-        UI.btnSignOut.addEventListener("click", signOut);
-        UI.btnRun.addEventListener("click", run);
+    LPAdmin.init({
+      page:         'payments',
+      allowedRoles: ALLOWED_ROLES,
+      dotEl:        'dot',
+      statusEl:     'statusTxt',
+      whoEl:        'who',
+    });
 
-        UI.loginForm.addEventListener("submit", (e) => {
-          e.preventDefault();
-          signIn((UI.lgEmail.value||"").trim(), UI.lgPass.value||"");
-        });
-
-        const sb = await getSupabase();
-        if (!window.__LP_ADMIN_AUTH_SUB){
-          window.__LP_ADMIN_AUTH_SUB = sb.auth.onAuthStateChange(() => setTimeout(() => enforceAdmin().catch(()=>{}), 0));
-        }
-
-        await enforceAdmin();
-      }catch(e){
-        setStatus("err","Boot error");
-        appendOut(String(e?.message || e));
-        openDlg();
-      }
-    }
-
-    bootstrap();
   })();
   </script>
 </body>
