@@ -481,6 +481,304 @@
       .tooltip { width: 280px; }
       .today-plan-card { padding: 24px; }
     }
+
+    /* ── P5 ARENA SECTION ────────────────────────────────────── */
+    .arena-hero {
+      background: white;
+      border: 3px solid var(--gold-400);
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 900px;
+      margin: 0 auto 40px;
+      box-shadow: 0 16px 48px rgba(245,158,11,0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    .arena-hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, var(--gold-500), #dc2626, var(--gold-500));
+    }
+    .arena-elo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      margin: 28px 0;
+    }
+    .arena-stat-card {
+      background: var(--gray-50);
+      border: 2px solid var(--gold-200);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .arena-stat-num {
+      font-family: var(--font-display);
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--gray-900);
+      line-height: 1;
+    }
+    .arena-stat-num.elo-num { color: var(--gold-700); font-size: 44px; }
+    .arena-stat-num.wins-num { color: #059669; }
+    .arena-stat-num.losses-num { color: #dc2626; }
+    .arena-stat-label {
+      font-size: 12px;
+      color: var(--gray-700);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+    .arena-enter-btn {
+      background: linear-gradient(135deg, #dc2626, #991b1b);
+      color: white;
+      border: none;
+      padding: 18px 48px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-family: var(--font-body);
+      margin-bottom: 10px;
+    }
+    .arena-enter-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(220,38,38,0.4);
+    }
+    .arena-enter-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .guardrail-alert {
+      background: #fef2f2;
+      border: 2px solid #fca5a5;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: #991b1b;
+      margin-bottom: 16px;
+      line-height: 1.5;
+      display: none;
+    }
+    .guardrail-alert.show { display: block; }
+    .guardrail-alert.prompt {
+      background: var(--gold-50);
+      border-color: var(--gold-300);
+      color: var(--gold-800);
+    }
+    .arena-history-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .arena-match-card {
+      background: white;
+      border: 2px solid var(--gold-200);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .arena-match-result {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .arena-match-result.win  { color: #059669; }
+    .arena-match-result.loss { color: #dc2626; }
+    .arena-match-result.draw { color: var(--gray-700); }
+    .arena-match-result.ghost { color: var(--gold-700); }
+    .arena-match-meta { font-size: 12px; color: var(--gray-700); line-height: 1.6; }
+    .elo-change-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .elo-change-badge.pos { background: #d1fae5; color: #065f46; }
+    .elo-change-badge.neg { background: #fee2e2; color: #991b1b; }
+    .elo-change-badge.neu { background: var(--gray-100); color: var(--gray-700); }
+
+    /* ── P5 PROGRESS SECTION ADDITIONS ──────────────────────── */
+    .progress-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .progress-card {
+      background: white;
+      border: 2px solid var(--gold-200);
+      border-radius: 16px;
+      padding: 28px;
+    }
+    .progress-card-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--gray-900);
+    }
+    /* Skill graph nodes */
+    .skill-graph-wrap {
+      position: relative;
+      height: 260px;
+      width: 100%;
+    }
+    .skill-node-outer {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .skill-node-outer:hover { transform: scale(1.08); }
+    .skill-node-circle {
+      width: 54px; height: 54px;
+      border-radius: 50%;
+      border: 3px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.2;
+    }
+    .skill-node-circle.MASTERED  { border-color: #059669; background: #d1fae5; color: #065f46; }
+    .skill-node-circle.VERIFIED  { border-color: var(--gold-600); background: var(--gold-50); color: var(--gold-800); }
+    .skill-node-circle.STABLE    { border-color: var(--gold-400); background: #fffbeb; color: var(--gold-700); }
+    .skill-node-circle.PRACTICING{ border-color: #f97316; background: #fff7ed; color: #c2410c; }
+    .skill-node-circle.LOCKED    { border-color: var(--gray-300); background: var(--gray-100); color: var(--gray-700); }
+    .skill-node-label { font-size: 10px; color: var(--gray-700); text-align: center; max-width: 64px; line-height: 1.2; }
+    .skill-graph-legend {
+      display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px;
+    }
+    .sg-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--gray-700); }
+    .sg-legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+    /* Badges */
+    .badge-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+    .badge-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--gold-50);
+      border: 1px solid var(--gold-200);
+      border-radius: 20px;
+      padding: 7px 14px;
+      font-size: 13px;
+      color: var(--gold-800);
+      font-weight: 600;
+    }
+    /* Worksheet row */
+    .ws-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .ws-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--gold-50);
+      border: 1px solid var(--gold-200);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      color: var(--gold-700);
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .ws-link:hover { background: var(--gold-100); border-color: var(--gold-400); }
+    /* Mock results in Progress */
+    .mock-result-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gold-100);
+    }
+    .mock-result-row:last-child { border-bottom: none; }
+    .mock-score-bubble {
+      width: 48px; height: 48px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 15px; font-weight: 900;
+      border: 3px solid; flex-shrink: 0;
+    }
+    .mock-score-bubble.high { border-color: #059669; background: #d1fae5; color: #065f46; }
+    .mock-score-bubble.mid  { border-color: var(--gold-500); background: var(--gold-50); color: var(--gold-800); }
+    .mock-score-bubble.low  { border-color: #dc2626; background: #fee2e2; color: #991b1b; }
+    .integrity-chip {
+      font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .integrity-chip.clean { background: #d1fae5; color: #065f46; }
+    .integrity-chip.flagged { background: var(--gold-100); color: var(--gold-800); }
+    .integrity-chip.suspicious { background: #fee2e2; color: #991b1b; }
+    .integrity-chip.pending { background: var(--gray-100); color: var(--gray-700); }
+
+    /* ── P5 LEADERBOARD REAL DATA ────────────────────────────── */
+    .lb-my-rank-banner {
+      background: linear-gradient(135deg, var(--gold-50), white);
+      border: 2px solid var(--gold-300);
+      border-radius: 14px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      max-width: 800px;
+      margin-left: auto; margin-right: auto;
+    }
+    .lb-rank-scope { text-align: center; }
+    .lb-rank-num {
+      font-family: var(--font-display); font-size: 30px;
+      font-weight: 900; color: var(--gray-900);
+    }
+    .lb-rank-num sub { font-size: 14px; color: var(--gray-700); font-weight: 400; }
+    .lb-rank-label { font-size: 11px; color: var(--gray-700); font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+    .lb-table {
+      width: 100%; max-width: 800px; margin: 0 auto;
+      border-collapse: collapse;
+    }
+    .lb-table th {
+      text-align: left; font-size: 12px; color: var(--gray-700);
+      font-weight: 700; padding: 8px 12px; border-bottom: 2px solid var(--gold-200);
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .lb-table td {
+      padding: 10px 12px; font-size: 14px; border-bottom: 1px solid var(--gold-100);
+    }
+    .lb-table tr.is-me td { background: var(--gold-50); font-weight: 700; }
+    .lb-table tr:hover td { background: var(--gray-50); }
+    .lb-rank-medal { font-size: 16px; }
+    .lb-empty { text-align: center; color: var(--gray-700); padding: 40px; font-style: italic; }
+
+    /* ── MOCK EVENTS (P5.6 wired) ──────────────────────────── */
+    .mock-event-live-badge {
+      display: inline-block;
+      background: #dc2626; color: white;
+      border-radius: 20px; padding: 3px 10px;
+      font-size: 11px; font-weight: 700;
+      animation: pulse-red 1.5s infinite;
+    }
+    @keyframes pulse-red {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .mock-card-footer {
+      margin-top: 12px; padding-top: 12px;
+      border-top: 1px solid var(--gray-200);
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; color: var(--gray-700);
+    }
+
+    @media (max-width: 768px) {
+      .arena-elo-grid { grid-template-columns: 1fr 1fr; }
+      .progress-grid { grid-template-columns: 1fr; }
+      .lb-my-rank-banner { grid-template-columns: 1fr 1fr; }
+    }
   </style>
 </head>
 
@@ -495,9 +793,10 @@
       <div class="nav-tabs" aria-label="Olympiad navigation">
         <button class="nav-tab active" data-tab="training" onclick="switchSection('training')">Start Training</button>
         <button class="nav-tab" data-tab="skills" onclick="switchSection('skills')">Skill Tracks</button>
-        <button class="nav-tab" data-tab="mocks" onclick="switchSection('mocks')">Mock Olympiads</button>
-        <button class="nav-tab" data-tab="progress" onclick="switchSection('progress')">Progress</button>
-        <button class="nav-tab" data-tab="leaderboard" onclick="switchSection('leaderboard')">Leaderboard</button>
+        <button class="nav-tab" data-tab="arena" onclick="switchSection('arena', loadArenaSection)">⚔️ Arena</button>
+        <button class="nav-tab" data-tab="mocks" onclick="switchSection('mocks', loadMockSection)">Mock Olympiads</button>
+        <button class="nav-tab" data-tab="progress" onclick="switchSection('progress', loadProgressSection)">Progress</button>
+        <button class="nav-tab" data-tab="leaderboard" onclick="switchSection('leaderboard', loadLeaderboardSection)">Leaderboard</button>
       </div>
     </div>
   </div>
@@ -605,6 +904,74 @@
       </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════════════════
+         P5.4 ARENA SECTION
+         Data: get_arena_rating (P5.1) · get_guardrail_status (P5.9)
+               arena_ratings table (P5.1) · arena-engine Edge Fn (P5.4)
+         ═══════════════════════════════════════════════════════ -->
+    <div class="section" id="section-arena">
+      <h2 style="font-family:var(--font-display);font-size:36px;margin-bottom:8px;text-align:center;">
+        ⚔️ Arena Duels
+      </h2>
+      <p style="text-align:center;font-size:16px;color:var(--gray-700);max-width:600px;margin:0 auto 40px;">
+        2-minute head-to-head matches. Compete, earn Elo, climb the global rankings.
+        Ghost matches available 24/7 when no live opponent is found.
+      </p>
+
+      <div class="arena-hero" id="arenaHero">
+        <!-- Guardrail alert (P5.9 check_pedagogy_guardrails) -->
+        <div class="guardrail-alert" id="arenaGuardrailAlert"></div>
+
+        <!-- Elo + stats grid (P5.1 arena_ratings) -->
+        <div class="arena-elo-grid">
+          <div class="arena-stat-card">
+            <div class="arena-stat-num elo-num" id="arenaElo">1200</div>
+            <div class="arena-stat-label">Elo Rating</div>
+          </div>
+          <div class="arena-stat-card">
+            <div style="display:flex;justify-content:center;gap:20px;margin-bottom:4px;">
+              <div>
+                <div class="arena-stat-num wins-num" id="arenaWins">0</div>
+                <div class="arena-stat-label">Wins</div>
+              </div>
+              <div>
+                <div class="arena-stat-num losses-num" id="arenaLosses">0</div>
+                <div class="arena-stat-label">Losses</div>
+              </div>
+            </div>
+          </div>
+          <div class="arena-stat-card">
+            <div class="arena-stat-num" id="arenaStreak">—</div>
+            <div class="arena-stat-label" id="arenaStreakLabel">Win Streak</div>
+          </div>
+        </div>
+
+        <!-- Daily limit (P5.9 get_guardrail_status) -->
+        <p style="text-align:center;font-size:13px;color:var(--gray-700);margin-bottom:16px;" id="arenaLimitText"></p>
+
+        <!-- Enter Arena button (→ arena-engine Edge Function P5.4 /arena/join) -->
+        <button class="arena-enter-btn" id="arenaEnterBtn" onclick="enterArena()">
+          ⚔️ ENTER ARENA
+        </button>
+        <button class="btn btn-secondary" style="width:100%;padding:12px;"
+          onclick="window.location.href='learn.html?track=olympiad&mode=practice&child_id='+selectedChildId">
+          Practice Instead
+        </button>
+      </div>
+
+      <!-- Recent match history (arena_matches table, P5.1) -->
+      <div style="max-width:900px;margin:0 auto;">
+        <h3 style="font-family:var(--font-display);font-size:22px;margin-bottom:16px;text-align:center;">
+          Recent Matches
+        </h3>
+        <div class="arena-history-grid" id="arenaHistory">
+          <p style="text-align:center;color:var(--gray-700);font-style:italic;grid-column:1/-1;">
+            No matches yet. Enter your first Arena duel!
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- Skills -->
     <div class="section" id="section-skills">
       <h2 style="font-family: var(--font-display); font-size: 36px; margin-bottom: 16px; text-align: center;">
@@ -630,69 +997,183 @@
 
     <!-- Mocks -->
     <div class="section" id="section-mocks">
-      <h2 style="font-family: var(--font-display); font-size: 36px; margin-bottom: 16px; text-align: center;">
+      <h2 style="font-family:var(--font-display);font-size:36px;margin-bottom:16px;text-align:center;">
         Mock Olympiad Exams
       </h2>
-      <p style="text-align: center; font-size: 18px; color: var(--gray-700); max-width: 700px; margin: 0 auto 48px;">
+      <p style="text-align:center;font-size:18px;color:var(--gray-700);max-width:700px;margin:0 auto 32px;">
         Simulate real BdMO experience. <strong>Contest-level difficulty only.</strong> No hints allowed.
+        Countdown timer — exactly like the real exam.
       </p>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; max-width: 1200px; margin: 0 auto;">
-        <div class="mock-card" onclick="startMockExam('regional')">
-          <div class="mock-icon">📝</div>
-          <div class="mock-title">Regional Mock</div>
-          <div class="mock-desc">Beginner-friendly format with BdMO-style problems</div>
-          <div class="mock-details">
-            <div class="mock-detail">⏱️ <span>BdMO-style timing (varies by level)</span></div>
-            <div class="mock-detail">📊 <span>8-10 problems (Primary), 6-8 (Secondary)</span></div>
-            <div class="mock-detail"><span class="mock-badge">100% 🔴 Contest Tier</span></div>
-            <div class="mock-detail">🚫 <span>No hints allowed</span></div>
-          </div>
+      <!-- ── Scheduled live events from DB (P5.6 mock_olympiad_events) ── -->
+      <div style="max-width:1200px;margin:0 auto 40px;">
+        <h3 style="font-family:var(--font-display);font-size:22px;margin-bottom:16px;">📅 Scheduled Events</h3>
+        <div id="mockEventsList" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;">
+          <p style="color:var(--gray-700);font-style:italic;">Loading scheduled events…</p>
         </div>
+      </div>
 
-        <div class="mock-card" onclick="startMockExam('national')">
-          <div class="mock-icon">🏆</div>
-          <div class="mock-title">National Mock</div>
-          <div class="mock-desc">Intermediate challenge matching National Round difficulty</div>
-          <div class="mock-details">
-            <div class="mock-detail">⏱️ <span>BdMO-style timing (varies by level)</span></div>
-            <div class="mock-detail">📊 <span>6-8 problems (varies by level)</span></div>
-            <div class="mock-detail"><span class="mock-badge">80% 🔴 Contest + 20% ⚫ Elite</span></div>
-            <div class="mock-detail">🚫 <span>No hints allowed</span></div>
+      <!-- ── Practice mock cards (existing UX, always available) ── -->
+      <div style="max-width:1200px;margin:0 auto;">
+        <h3 style="font-family:var(--font-display);font-size:22px;margin-bottom:16px;">🎯 Practice Anytime</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:32px;">
+          <div class="mock-card" onclick="startMockExam('regional')">
+            <div class="mock-icon">📝</div>
+            <div class="mock-title">Regional Mock</div>
+            <div class="mock-desc">Beginner-friendly format with BdMO-style problems</div>
+            <div class="mock-details">
+              <div class="mock-detail">⏱️ <span>60 minutes · Countdown timer</span></div>
+              <div class="mock-detail">📊 <span>8-10 problems</span></div>
+              <div class="mock-detail"><span class="mock-badge">100% 🔴 Contest Tier</span></div>
+              <div class="mock-detail">🚫 <span>No hints allowed</span></div>
+            </div>
           </div>
-        </div>
-
-        <div class="mock-card" onclick="startMockExam('selection')">
-          <div class="mock-icon">🥇</div>
-          <div class="mock-title">Selection Mock</div>
-          <div class="mock-desc">Advanced IMO preparation for top performers</div>
-          <div class="mock-details">
-            <div class="mock-detail">⏱️ <span>BdMO-style timing (varies by level)</span></div>
-            <div class="mock-detail">📊 <span>4-6 problems (IMO-style)</span></div>
-            <div class="mock-detail"><span class="mock-badge">60% 🔴 Contest + 40% ⚫ Elite</span></div>
-            <div class="mock-detail">🚫 <span>No hints allowed</span></div>
+          <div class="mock-card" onclick="startMockExam('national')">
+            <div class="mock-icon">🏆</div>
+            <div class="mock-title">National Mock</div>
+            <div class="mock-desc">Intermediate challenge matching National Round difficulty</div>
+            <div class="mock-details">
+              <div class="mock-detail">⏱️ <span>90 minutes · Countdown timer</span></div>
+              <div class="mock-detail">📊 <span>6-8 problems</span></div>
+              <div class="mock-detail"><span class="mock-badge">80% 🔴 Contest + 20% ⚫ Elite</span></div>
+              <div class="mock-detail">🚫 <span>No hints allowed</span></div>
+            </div>
+          </div>
+          <div class="mock-card" onclick="startMockExam('selection')">
+            <div class="mock-icon">🥇</div>
+            <div class="mock-title">Selection Mock</div>
+            <div class="mock-desc">Advanced IMO preparation for top performers</div>
+            <div class="mock-details">
+              <div class="mock-detail">⏱️ <span>120 minutes · Countdown timer</span></div>
+              <div class="mock-detail">📊 <span>4-6 problems (IMO-style)</span></div>
+              <div class="mock-detail"><span class="mock-badge">60% 🔴 Contest + 40% ⚫ Elite</span></div>
+              <div class="mock-detail">🚫 <span>No hints allowed</span></div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Progress -->
+    <!-- ═══════════════════════════════════════════════════════
+         P5 PROGRESS SECTION
+         Skill graph: get_student_skill_map (P3)
+         Mock results: mock_olympiad_results (P5.6)
+         Badges: student_badges table (P5.5)
+         Worksheets: get_worksheet_history (P5.8) + worksheet-generator Edge Fn
+         ═══════════════════════════════════════════════════════ -->
     <div class="section" id="section-progress">
-      <h2 style="font-family: var(--font-display); font-size: 36px; text-align: center; margin-bottom: 48px;">
-        Your Progress & Stats
+      <h2 style="font-family:var(--font-display);font-size:36px;text-align:center;margin-bottom:40px;">
+        Your Progress &amp; Stats
       </h2>
-      <p style="text-align: center; color: var(--gray-700); font-size: 16px;">
-        Complete your first training session to see your progress dashboard!
-      </p>
+
+      <div class="progress-grid">
+
+        <!-- Skill Graph (P3 get_student_skill_map) -->
+        <div class="progress-card">
+          <div class="progress-card-title">🧠 Skill Graph</div>
+          <p style="font-size:13px;color:var(--gray-700);margin-bottom:16px;" id="skillProgressSummary">
+            Complete sessions to build your skill graph.
+          </p>
+          <div class="skill-graph-wrap" id="skillGraphWrap">
+            <p style="text-align:center;color:var(--gray-700);padding-top:80px;font-style:italic;">Loading…</p>
+          </div>
+          <div class="skill-graph-legend">
+            <div class="sg-legend-item"><div class="sg-legend-dot" style="background:#059669"></div>Mastered</div>
+            <div class="sg-legend-item"><div class="sg-legend-dot" style="background:var(--gold-600)"></div>Verified</div>
+            <div class="sg-legend-item"><div class="sg-legend-dot" style="background:#f97316"></div>Practicing</div>
+            <div class="sg-legend-item"><div class="sg-legend-dot" style="background:var(--gray-400)"></div>Locked</div>
+          </div>
+        </div>
+
+        <!-- Recent Mock Results (P5.6 mock_olympiad_results + predictive scoring) -->
+        <div class="progress-card">
+          <div class="progress-card-title">📊 Mock Olympiad Results</div>
+          <div id="progressMockResults">
+            <p style="color:var(--gray-700);font-style:italic;">No mock results yet.</p>
+          </div>
+        </div>
+
+        <!-- Badges (P5.5 student_badges) -->
+        <div class="progress-card">
+          <div class="progress-card-title">🎖️ Achievement Badges</div>
+          <div class="badge-grid" id="progressBadges">
+            <p style="color:var(--gray-700);font-style:italic;font-size:13px;">
+              Compete in the Arena to earn badges.
+            </p>
+          </div>
+        </div>
+
+        <!-- Practice Worksheets (P5.8 generate_worksheet + get_worksheet_history) -->
+        <div class="progress-card">
+          <div class="progress-card-title">📄 Practice Worksheets</div>
+          <p style="font-size:13px;color:var(--gray-700);margin-bottom:16px;">
+            Non-repeating problems. Never shows a problem you've already seen. PDFs expire after 7 days.
+          </p>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+            <select id="wsSkill" style="padding:8px;border-radius:8px;border:2px solid var(--gold-200);font-family:var(--font-body);font-size:12px;background:white;">
+              <option value="">All Skills</option>
+              <option value="counting">Counting</option>
+              <option value="divisibility">Divisibility</option>
+              <option value="geometry">Geometry</option>
+              <option value="constraints">Constraints</option>
+              <option value="invariants">Invariants</option>
+              <option value="worst_case">Worst Case</option>
+              <option value="mixed">Mixed</option>
+            </select>
+            <select id="wsDifficulty" style="padding:8px;border-radius:8px;border:2px solid var(--gold-200);font-family:var(--font-body);font-size:12px;background:white;">
+              <option value="">Mixed</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+            <select id="wsCount" style="padding:8px;border-radius:8px;border:2px solid var(--gold-200);font-family:var(--font-body);font-size:12px;background:white;">
+              <option value="5">5 Problems</option>
+              <option value="10" selected>10 Problems</option>
+              <option value="15">15 Problems</option>
+              <option value="20">20 Problems</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" id="wsGenerateBtn" onclick="generateWorksheet()"
+            style="width:100%;padding:12px;margin-bottom:14px;">
+            Generate PDF Worksheet
+          </button>
+          <div class="ws-row" id="wsHistory">
+            <span style="font-size:12px;color:var(--gray-700);font-style:italic;">Loading history…</span>
+          </div>
+        </div>
+
+      </div>
     </div>
 
-    <!-- Leaderboards -->
+    <!-- ═══════════════════════════════════════════════════════
+         P5.5 LEADERBOARD SECTION
+         My positions: get_my_leaderboard_positions (P5.5)
+         Global board: get_global_leaderboard (P5.5)
+         Skill board:  get_skill_leaderboard (P5.5)
+         ═══════════════════════════════════════════════════════ -->
     <div class="section" id="section-leaderboard">
-      <h2 style="font-family: var(--font-display); font-size: 36px; text-align: center; margin-bottom: 24px;">
+      <h2 style="font-family:var(--font-display);font-size:36px;text-align:center;margin-bottom:24px;">
         Leaderboards
       </h2>
 
-      <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 32px; flex-wrap: wrap;">
+      <!-- My rank banner -->
+      <div class="lb-my-rank-banner" id="lbMyRankBanner" style="display:none;">
+        <div class="lb-rank-scope">
+          <div class="lb-rank-num" id="lbGlobalRank">—</div>
+          <div class="lb-rank-label">Global</div>
+        </div>
+        <div class="lb-rank-scope">
+          <div class="lb-rank-num" id="lbRegionalRank">—</div>
+          <div class="lb-rank-label">Regional</div>
+        </div>
+        <div class="lb-rank-scope">
+          <div class="lb-rank-num" id="lbSchoolRank">—</div>
+          <div class="lb-rank-label">School</div>
+        </div>
+      </div>
+
+      <!-- Sub-tabs -->
+      <div style="display:flex;gap:12px;justify-content:center;margin-bottom:32px;flex-wrap:wrap;">
         <button class="nav-tab active" data-leaderboard-tab="overall" onclick="switchLeaderboard('overall')">Overall</button>
         <button class="nav-tab" data-leaderboard-tab="level" onclick="switchLeaderboard('level')">My Level</button>
         <button class="nav-tab" data-leaderboard-tab="skills" onclick="switchLeaderboard('skills')">Skills</button>
@@ -700,29 +1181,35 @@
         <button class="nav-tab" data-leaderboard-tab="growth" onclick="switchLeaderboard('growth')">Growth (30 Days)</button>
       </div>
 
+      <!-- Overall (P5.5 get_global_leaderboard) -->
       <div id="leaderboard-overall" class="leaderboard-section" style="display:block;">
-        <h3 style="text-align: center; margin-bottom: 24px;">Overall Olympiad Rankings</h3>
-        <p style="text-align: center; color: var(--gray-700);">Complete training to join the leaderboard!</p>
+        <div id="lbOverallContent" class="lb-empty">Loading rankings…</div>
       </div>
 
+      <!-- Level (filtered by profiles.olympiad_level) -->
       <div id="leaderboard-level" class="leaderboard-section" style="display:none;">
-        <h3 style="text-align: center; margin-bottom: 24px;">My Level Rankings</h3>
-        <p style="text-align: center; color: var(--gray-700);">Fair competition with same-age peers!</p>
+        <h3 style="text-align:center;margin-bottom:24px;">My Level Rankings</h3>
+        <p style="text-align:center;color:var(--gray-700);">Fair competition with same-age peers!</p>
       </div>
 
+      <!-- Skills (P5.5 get_skill_leaderboard) -->
       <div id="leaderboard-skills" class="leaderboard-section" style="display:none;">
-        <h3 style="text-align: center; margin-bottom: 24px;">Skill Track Champions</h3>
-        <p style="text-align: center; color: var(--gray-700);">7 separate leaderboards for each thinking skill!</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:24px;" id="skillTabRow">
+          <!-- Skill tabs injected by JS -->
+        </div>
+        <div id="lbSkillContent" class="lb-empty">Select a skill above.</div>
       </div>
 
+      <!-- Mock Prestige -->
       <div id="leaderboard-mocks" class="leaderboard-section" style="display:none;">
-        <h3 style="text-align: center; margin-bottom: 24px;">Mock Exam Prestige Board</h3>
-        <p style="text-align: center; color: var(--gray-700);">Based on timed mock performance only - most credible ranking!</p>
+        <h3 style="text-align:center;margin-bottom:24px;">Mock Exam Prestige Board</h3>
+        <div id="lbMockContent" class="lb-empty">Loading mock rankings…</div>
       </div>
 
+      <!-- Growth -->
       <div id="leaderboard-growth" class="leaderboard-section" style="display:none;">
-        <h3 style="text-align: center; margin-bottom: 24px;">Growth Leaderboard (Last 30 Days)</h3>
-        <p style="text-align: center; color: var(--gray-700);">Who improved the most recently? New students welcomed!</p>
+        <h3 style="text-align:center;margin-bottom:24px;">Growth Leaderboard (Last 30 Days)</h3>
+        <p style="text-align:center;color:var(--gray-700);">Who improved the most recently? New students welcomed!</p>
       </div>
     </div>
   </div>
@@ -1229,7 +1716,7 @@
       armAutoStartCountdown();
     }
 
-    function switchSection(sectionName) {
+    function switchSection(sectionName, onShowCallback) {
       document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
       document.querySelectorAll(".nav-tabs .nav-tab").forEach(t => t.classList.remove("active"));
 
@@ -1238,6 +1725,8 @@
 
       const btn = document.querySelector(`.nav-tabs .nav-tab[data-tab="${sectionName}"]`);
       if (btn) btn.classList.add("active");
+
+      if (typeof onShowCallback === 'function') onShowCallback();
     }
 
     function selectLevel(level) {
@@ -1450,6 +1939,457 @@
     }
 
     window.addEventListener("DOMContentLoaded", boot);
+
+    /* ═══════════════════════════════════════════════════════════
+       P5 ARENA SECTION
+       get_arena_rating      — P5.1: Elo, matches_played
+       arena_ratings table   — P5.1: wins/losses/streak
+       get_guardrail_status  — P5.9: allowed, message, daily limit
+       arena-engine Edge Fn  — P5.4: /arena/join
+       ═══════════════════════════════════════════════════════════ */
+
+    let arenaLoaded = false;
+
+    async function loadArenaSection() {
+      if (arenaLoaded || !sb || !user) return;
+      arenaLoaded = true;
+
+      // 1. Arena rating (P5.1)
+      const { data: ratingRows } = await sb
+        .rpc('get_arena_rating', { p_user_id: selectedChildId || user.id, p_track: 'olympiad' });
+      const elo = ratingRows?.[0]?.rating ?? 1200;
+      document.getElementById('arenaElo').textContent = elo;
+
+      // 2. Arena stats from table (P5.1 arena_ratings)
+      const { data: ar } = await sb
+        .from('arena_ratings')
+        .select('wins, losses, draws, win_streak, best_rating')
+        .eq('user_id', selectedChildId || user.id)
+        .eq('track', 'olympiad')
+        .maybeSingle();
+
+      if (ar) {
+        document.getElementById('arenaWins').textContent   = ar.wins;
+        document.getElementById('arenaLosses').textContent = ar.losses;
+        if (ar.win_streak > 1) {
+          document.getElementById('arenaStreak').textContent      = ar.win_streak;
+          document.getElementById('arenaStreakLabel').textContent  = '🔥 Win Streak';
+        } else {
+          document.getElementById('arenaStreak').textContent      = ar.best_rating;
+          document.getElementById('arenaStreakLabel').textContent  = 'Best Rating';
+        }
+      }
+
+      // 3. Guardrail check (P5.9 get_guardrail_status)
+      const { data: gRows } = await sb
+        .rpc('get_guardrail_status', { p_user_id: selectedChildId || user.id, p_track: 'olympiad' });
+      const g = gRows?.[0];
+      const alertEl = document.getElementById('arenaGuardrailAlert');
+      const enterBtn = document.getElementById('arenaEnterBtn');
+
+      if (g) {
+        const remaining = (g.daily_limit ?? 5) - (g.arena_today ?? 0);
+        document.getElementById('arenaLimitText').textContent =
+          `${g.arena_today ?? 0} matches today · ${remaining} remaining`;
+
+        if (!g.arena_allowed && g.message) {
+          alertEl.textContent = g.message;
+          alertEl.classList.add('show');
+          if (g.guardrail_active !== 'arena_practice_ratio') {
+            enterBtn.disabled = true;
+            enterBtn.textContent = '⏸ Arena Paused';
+          }
+        } else if (g.arena_allowed && g.message) {
+          alertEl.textContent = g.message;
+          alertEl.classList.add('show', 'prompt');
+        }
+      }
+
+      // 4. Recent match history (P5.1 arena_matches)
+      const uid = selectedChildId || user.id;
+      const { data: matches } = await sb
+        .from('arena_matches')
+        .select('id, status, match_type, winner_id, player_a_score, player_b_score, rating_change_a, completed_at')
+        .or(`player_a_id.eq.${uid},player_b_id.eq.${uid}`)
+        .eq('track', 'olympiad')
+        .eq('status', 'completed')
+        .order('completed_at', { ascending: false })
+        .limit(6);
+
+      if (matches?.length) {
+        const grid = document.getElementById('arenaHistory');
+        grid.innerHTML = matches.map(m => {
+          const isWin  = m.winner_id === uid;
+          const isDraw = !m.winner_id;
+          const isGhost = m.match_type === 'ghost';
+          const result = isGhost ? 'ghost' : isDraw ? 'draw' : isWin ? 'win' : 'loss';
+          const resultLabel = isGhost ? '👻 Practice' : isDraw ? 'Draw' : isWin ? '✅ Win' : '❌ Loss';
+          const delta = m.rating_change_a;
+          const deltaClass = !delta ? 'neu' : delta > 0 ? 'pos' : 'neg';
+          const deltaStr = !delta ? '±0' : delta > 0 ? `+${delta}` : `${delta}`;
+          const date = m.completed_at ? new Date(m.completed_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '';
+          return `
+            <div class="arena-match-card">
+              <div class="arena-match-result ${result}">${resultLabel}</div>
+              <div class="arena-match-meta">
+                Score: ${m.player_a_score} – ${m.player_b_score} &nbsp;
+                <span class="elo-change-badge ${deltaClass}">${deltaStr} Elo</span><br/>
+                <span style="font-size:11px;color:var(--gray-700)">${isGhost ? 'Practice Match' : 'Live Match'} · ${date}</span>
+              </div>
+            </div>`;
+        }).join('');
+      }
+    }
+
+    async function enterArena() {
+      if (!selectedChildId && !user) { showError('Select a child first.'); return openChildModal(); }
+      const params = new URLSearchParams({
+        track: 'olympiad', mode: 'arena',
+        child_id: selectedChildId || user.id,
+      });
+      window.location.href = `/learn.html?${params.toString()}`;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       P5.6 MOCK SECTION — load scheduled events from DB
+       mock_olympiad_events table (P5.6)
+       join_mock_olympiad RPC (P5.6) called via learn.html
+       ═══════════════════════════════════════════════════════════ */
+
+    let mockSectionLoaded = false;
+
+    async function loadMockSection() {
+      if (mockSectionLoaded || !sb) return;
+      mockSectionLoaded = true;
+
+      const now = new Date().toISOString();
+      const { data: events } = await sb
+        .from('mock_olympiad_events')
+        .select('id, name, event_type, time_limit_minutes, scheduled_start, scheduled_end, problem_count')
+        .eq('is_active', true)
+        .gte('scheduled_end', now)
+        .order('scheduled_start', { ascending: true })
+        .limit(6);
+
+      const container = document.getElementById('mockEventsList');
+      if (!events?.length) {
+        container.innerHTML = '<p style="color:var(--gray-700);font-style:italic;grid-column:1/-1;">No scheduled events right now. Use the practice mocks below.</p>';
+        return;
+      }
+
+      const typeColors = { regional: '#059669', national: '#d97706', selection: '#dc2626' };
+      container.innerHTML = events.map(ev => {
+        const start   = new Date(ev.scheduled_start);
+        const isLive  = new Date() >= start;
+        const color   = typeColors[ev.event_type] || '#6b7280';
+        const badge   = isLive
+          ? '<span class="mock-event-live-badge">● LIVE NOW</span>'
+          : `<span style="font-size:12px;color:var(--gray-700)">Starts ${start.toLocaleDateString('en-GB',{day:'numeric',month:'short'})} at ${start.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</span>`;
+        return `
+          <div class="mock-card" style="border-color:${color}" onclick="enterScheduledMock('${ev.id}')">
+            <div class="mock-icon">${ev.event_type === 'selection' ? '🥇' : ev.event_type === 'national' ? '🏆' : '📝'}</div>
+            <div class="mock-title">${ev.name}</div>
+            <div class="mock-desc">${ev.event_type.charAt(0).toUpperCase()+ev.event_type.slice(1)} round simulation</div>
+            <div class="mock-details">
+              <div class="mock-detail">⏱️ <span>${ev.time_limit_minutes} minutes · Countdown timer</span></div>
+              <div class="mock-detail">📊 <span>${ev.problem_count} problems</span></div>
+              <div class="mock-detail">🚫 <span>No hints allowed</span></div>
+            </div>
+            <div class="mock-card-footer">${badge}</div>
+          </div>`;
+      }).join('');
+    }
+
+    async function enterScheduledMock(eventId) {
+      if (!selectedChildId && !user) { showError('Select a child first.'); return openChildModal(); }
+      const params = new URLSearchParams({
+        track: 'olympiad', mode: 'scheduled_mock',
+        event_id: eventId,
+        child_id: selectedChildId || user.id,
+      });
+      window.location.href = `/learn.html?${params.toString()}`;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       P5 PROGRESS SECTION
+       get_student_skill_map  — P3: skill nodes + mastery states
+       mock_olympiad_results  — P5.6: scores, rank, integrity
+       student_badges         — P5.5: badges earned
+       get_worksheet_history  — P5.8: PDF download links
+       worksheet-generator    — P5.8: Edge Function
+       ═══════════════════════════════════════════════════════════ */
+
+    let progressLoaded = false;
+
+    async function loadProgressSection() {
+      if (progressLoaded || !sb || !user) return;
+      progressLoaded = true;
+      const uid = selectedChildId || user.id;
+
+      await Promise.all([
+        loadSkillGraph(uid),
+        loadMockResults(uid),
+        loadBadges(uid),
+        loadWsHistory(uid),
+      ]);
+    }
+
+    async function loadSkillGraph(uid) {
+      const { data: skillMap } = await sb
+        .rpc('get_student_skill_map', { p_user_id: uid });
+
+      const wrap = document.getElementById('skillGraphWrap');
+      if (!skillMap?.length) {
+        wrap.innerHTML = '<p style="text-align:center;color:var(--gray-700);padding-top:80px;font-style:italic;">Complete sessions to unlock your skill graph.</p>';
+        return;
+      }
+
+      const mastered = skillMap.filter(s => s.mastery_state === 'MASTERED').length;
+      document.getElementById('skillProgressSummary').textContent =
+        `${mastered} / ${skillMap.length} skills mastered · Path to BdMO: keep practising!`;
+
+      // 7-node hexagonal layout
+      const positions = [
+        {x:48,y:8},{x:82,y:26},{x:82,y:64},{x:48,y:82},{x:14,y:64},{x:14,y:26},{x:48,y:45}
+      ];
+      const abbrs = { counting:'CNT', divisibility:'DIV', geometry:'GEO',
+                      constraints:'CON', invariants:'INV', worst_case:'WC', mixed:'MIX' };
+      wrap.innerHTML = '';
+      skillMap.forEach((skill, i) => {
+        const pos  = positions[i] || { x: 10+(i*14), y: 40 };
+        const abbr = abbrs[skill.skill_key] || skill.skill_key.slice(0,3).toUpperCase();
+        const name = skill.skill_key.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+        const node = document.createElement('div');
+        node.className = 'skill-node-outer';
+        node.style.left = pos.x + '%';
+        node.style.top  = pos.y + '%';
+        node.style.transform = 'translate(-50%,-50%)';
+        node.title = `${name}: ${skill.mastery_state}`;
+        node.innerHTML = `
+          <div class="skill-node-circle ${skill.mastery_state}">${abbr}</div>
+          <div class="skill-node-label">${name}</div>`;
+        node.onclick = () => {
+          const params = new URLSearchParams({ track:'olympiad', skill: skill.skill_key,
+            child_id: selectedChildId || user.id });
+          window.location.href = `/learn.html?${params.toString()}`;
+        };
+        wrap.appendChild(node);
+      });
+    }
+
+    async function loadMockResults(uid) {
+      const { data: results } = await sb
+        .from('mock_olympiad_results')
+        .select(`id, score, total_time_seconds, integrity_status, rank_in_event, percentile, completed_at,
+                 mock_olympiad_events(name, problem_count, event_type)`)
+        .eq('user_id', uid)
+        .not('completed_at', 'is', null)
+        .order('completed_at', { ascending: false })
+        .limit(4);
+
+      const el = document.getElementById('progressMockResults');
+      if (!results?.length) {
+        el.innerHTML = '<p style="color:var(--gray-700);font-style:italic;">Enter a Mock Olympiad to see results here.</p>';
+        return;
+      }
+
+      el.innerHTML = results.map(r => {
+        const ev   = r.mock_olympiad_events;
+        const pct  = r.score / (ev?.problem_count || 1);
+        const cls  = pct >= 0.7 ? 'high' : pct >= 0.4 ? 'mid' : 'low';
+        const date = new Date(r.completed_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+        return `
+          <div class="mock-result-row">
+            <div class="mock-score-bubble ${cls}">${r.score}/${ev?.problem_count ?? '?'}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:700;font-size:14px;color:var(--gray-900);">${ev?.name ?? 'Mock Olympiad'}</div>
+              <div style="font-size:12px;color:var(--gray-700);">
+                Rank #${r.rank_in_event ?? '—'}
+                ${r.percentile ? ' · ' + r.percentile + '%ile' : ''}
+                · ${date}
+              </div>
+            </div>
+            <span class="integrity-chip ${r.integrity_status ?? 'pending'}">${r.integrity_status ?? 'pending'}</span>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadBadges(uid) {
+      const { data: badges } = await sb
+        .from('student_badges')
+        .select('badge_type, track, awarded_at')
+        .eq('user_id', uid)
+        .order('awarded_at', { ascending: false })
+        .limit(10);
+
+      const el = document.getElementById('progressBadges');
+      if (!badges?.length) return;
+
+      const BADGE_INFO = {
+        top10_national:  { icon: '🥇', label: 'Top 10 National' },
+        school_champion: { icon: '🏆', label: 'School Champion' },
+        rising_star:     { icon: '⭐', label: 'Rising Star' },
+        perfect_match:   { icon: '💯', label: 'Perfect Match' },
+        first_win:       { icon: '🎉', label: 'First Win' },
+        win_streak_5:    { icon: '🔥', label: '5-Win Streak' },
+        win_streak_10:   { icon: '⚡', label: '10-Win Streak' },
+      };
+      el.innerHTML = badges.map(b => {
+        const info = BADGE_INFO[b.badge_type] ?? { icon: '🎖️', label: b.badge_type };
+        return `<div class="badge-pill" title="Earned ${new Date(b.awarded_at).toLocaleDateString()}">${info.icon} ${info.label}</div>`;
+      }).join('');
+    }
+
+    async function loadWsHistory(uid) {
+      const { data: history } = await sb
+        .rpc('get_worksheet_history', { p_user_id: uid, p_limit: 6 });
+
+      const el = document.getElementById('wsHistory');
+      const ready = (history || []).filter(w => w.status === 'ready' && w.pdf_url);
+      if (!ready.length) {
+        el.innerHTML = '<span style="font-size:12px;color:var(--gray-700);font-style:italic;">No worksheets yet.</span>';
+        return;
+      }
+      el.innerHTML = ready.map(w =>
+        `<a href="${w.pdf_url}" target="_blank" class="ws-link">
+           📄 ${w.skill_track ? w.skill_track.replace(/_/g,' ') : 'Mixed'} · ${w.problem_count}q
+         </a>`
+      ).join('');
+    }
+
+    async function generateWorksheet() {
+      const uid = selectedChildId || user?.id;
+      if (!uid) { showError('Select a child first.'); return openChildModal(); }
+
+      const btn = document.getElementById('wsGenerateBtn');
+      btn.disabled = true; btn.textContent = 'Generating…';
+
+      try {
+        const env  = await ensureEnv();
+        const { data: { session: s } } = await sb.auth.getSession();
+        const res  = await fetch(`${env.SUPABASE_URL}/functions/v1/worksheet-generator/worksheet/generate`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${s.access_token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            track:        'olympiad',
+            skill_track:  document.getElementById('wsSkill').value       || undefined,
+            difficulty:   document.getElementById('wsDifficulty').value  || undefined,
+            count:        parseInt(document.getElementById('wsCount').value),
+            for_user_id:  uid,
+          }),
+        });
+        const result = await res.json();
+        if (result.pdf_url) {
+          window.open(result.pdf_url, '_blank');
+          await loadWsHistory(uid);
+        } else {
+          showError('Worksheet generation failed: ' + (result.error ?? 'Unknown error'));
+        }
+      } catch (e) {
+        showError('Could not generate worksheet.');
+        console.error(e);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Generate PDF Worksheet';
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       P5.5 LEADERBOARD SECTION
+       get_my_leaderboard_positions — P5.5: my global/regional/school rank
+       get_global_leaderboard       — P5.5: top 20 ranked players
+       get_skill_leaderboard        — P5.5: per skill_track top list
+       ═══════════════════════════════════════════════════════════ */
+
+    let leaderboardLoaded = false;
+
+    async function loadLeaderboardSection() {
+      if (leaderboardLoaded || !sb || !user) return;
+      leaderboardLoaded = true;
+
+      const uid = selectedChildId || user.id;
+
+      // My positions across all scopes (P5.5)
+      const { data: posRows } = await sb
+        .rpc('get_my_leaderboard_positions', { p_track: 'olympiad' });
+
+      if (posRows?.length) {
+        document.getElementById('lbMyRankBanner').style.display = 'grid';
+        posRows.forEach(pos => {
+          const id = pos.scope === 'global'   ? 'lbGlobalRank' :
+                     pos.scope === 'regional' ? 'lbRegionalRank' : 'lbSchoolRank';
+          const el = document.getElementById(id);
+          if (el) el.innerHTML = `#${pos.rank}<sub> / ${pos.total_in_scope}</sub>`;
+        });
+      }
+
+      // Global top 20 (P5.5 get_global_leaderboard)
+      const { data: topRows } = await sb
+        .rpc('get_global_leaderboard', { p_track: 'olympiad', p_limit: 20, p_offset: 0 });
+
+      const el = document.getElementById('lbOverallContent');
+      if (!topRows?.length) {
+        el.textContent = 'No ranked players yet — complete 10+ live arena matches to appear.';
+        return;
+      }
+
+      el.innerHTML = `
+        <table class="lb-table">
+          <thead><tr>
+            <th>#</th><th>Student</th><th>Rating</th><th>W</th><th>L</th><th>Best</th>
+          </tr></thead>
+          <tbody>
+            ${topRows.map((r,i) => `
+              <tr class="${r.is_current_user ? 'is-me' : ''}">
+                <td><span class="lb-rank-medal">${i===0?'🥇':i===1?'🥈':i===2?'🥉':r.rank}</span></td>
+                <td>${r.display_name}${r.is_current_user ? ' ← you' : ''}</td>
+                <td><strong>${r.rating}</strong></td>
+                <td style="color:#059669">${r.wins}</td>
+                <td style="color:#dc2626">${r.matches_played - r.wins}</td>
+                <td style="color:var(--gold-700)">${r.best_rating}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+
+      // Skill tab row for skills leaderboard
+      const SKILL_TRACKS = ['counting','divisibility','geometry','constraints','invariants','worst_case','mixed'];
+      const skillTabRow = document.getElementById('skillTabRow');
+      skillTabRow.innerHTML = SKILL_TRACKS.map(s =>
+        `<button class="nav-tab" onclick="loadSkillBoard('${s}',this)">
+           ${s.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}
+         </button>`
+      ).join('');
+    }
+
+    async function loadSkillBoard(skillTrack, btn) {
+      document.querySelectorAll('#skillTabRow .nav-tab').forEach(t => t.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      const el = document.getElementById('lbSkillContent');
+      el.textContent = 'Loading…';
+
+      // P5.5 get_skill_leaderboard
+      const { data: rows } = await sb
+        .rpc('get_skill_leaderboard', { p_skill_track: skillTrack, p_limit: 15, p_offset: 0 });
+
+      if (!rows?.length) {
+        el.innerHTML = `<div class="lb-empty">No ranked players for this skill yet.</div>`;
+        return;
+      }
+
+      el.innerHTML = `
+        <table class="lb-table" style="max-width:700px;margin:0 auto;">
+          <thead><tr><th>#</th><th>Student</th><th>Elo</th><th>Matches</th><th>Wins</th></tr></thead>
+          <tbody>${rows.map((r,i)=>`
+            <tr class="${r.is_current_user?'is-me':''}">
+              <td>${i===0?'🥇':i===1?'🥈':i===2?'🥉':r.rank}</td>
+              <td>${r.display_name}${r.is_current_user?' ← you':''}</td>
+              <td><strong>${r.elo_rating}</strong></td>
+              <td>${r.skill_matches}</td>
+              <td style="color:#059669">${r.skill_wins}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`;
+    }
   </script>
 </body>
 </html>
