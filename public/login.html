@@ -1,190 +1,478 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - LogicPals</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2563EB">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/brain--v1.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log In — LogicPals</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#2563EB" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/brain--v1.png" />
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js');
-            });
-        }
-    </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+      });
+    }
+  </script>
 
-    <style>
-        :root { --primary: #2563EB; --bg: #EFF6FF; --text: #111827; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        
-        .card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
-        h1 { color: var(--text); text-align: center; margin-bottom: 8px; }
-        .subtitle { text-align: center; color: #6B7280; margin-bottom: 30px; font-size: 14px; }
-        
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: #374151; }
-        input { width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 16px; transition: 0.2s; }
-        input:focus { border-color: var(--primary); outline: none; ring: 2px solid #BFDBFE; }
-        
-        .btn { width: 100%; background: var(--primary); color: white; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
-        .btn:hover { background: #1D4ED8; }
-        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
-        
-        .footer-link { text-align: center; margin-top: 20px; font-size: 14px; color: #6B7280; }
-        .footer-link a { color: var(--primary); text-decoration: none; font-weight: 600; }
-        
-        .error { color: #EF4444; font-size: 14px; text-align: center; margin-top: 15px; display: none; background: #FEF2F2; padding: 10px; border-radius: 6px; }
-    </style>
-    <script src="/assets/js/env-loader.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/env-loader.js"></script>
+
+  <style>
+    :root {
+      --primary:    #2563eb;
+      --primary-d:  #1d4ed8;
+      --primary-s:  #eff6ff;
+      --accent:     #6c5ce7;
+      --success:    #059669;
+      --danger:     #dc2626;
+      --text:       #111827;
+      --text-2:     #374151;
+      --muted:      #6b7280;
+      --line:       #e5e7eb;
+      --bg:         #f0f4ff;
+      --card:       #ffffff;
+      --r:          16px;
+      --font:       'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-d:     'Outfit', 'Plus Jakarta Sans', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      background:
+        radial-gradient(ellipse 900px 500px at 10% 0%,   rgba(37,99,235,.10) 0%, transparent 55%),
+        radial-gradient(ellipse 700px 400px at 90% 15%,  rgba(108,92,231,.08) 0%, transparent 55%),
+        radial-gradient(ellipse 600px 350px at 50% 100%, rgba(5,150,105,.06)  0%, transparent 60%),
+        linear-gradient(180deg, #eef4ff 0%, #e8f0fe 100%);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Wrap ─────────────────────────────────────────────── */
+    .wrap {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    /* ── Brand ────────────────────────────────────────────── */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    .brand-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 8px 24px rgba(37,99,235,.3);
+    }
+
+    .brand-logo svg { display: block; }
+
+    .brand-text { line-height: 1.15; }
+    .brand-name {
+      font-family: var(--font-d);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -.02em;
+    }
+    .brand-sub {
+      font-size: 11.5px;
+      color: var(--muted);
+      font-weight: 500;
+      letter-spacing: .03em;
+    }
+
+    /* ── Card ─────────────────────────────────────────────── */
+    .card {
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(229,231,235,.9);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow:
+        0 20px 60px rgba(17,24,39,.09),
+        0 1px 0 rgba(255,255,255,.8) inset;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .card-title {
+      font-family: var(--font-d);
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -.02em;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .card-subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      text-align: center;
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    /* ── Form fields ──────────────────────────────────────── */
+    .fields { display: flex; flex-direction: column; gap: 16px; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+
+    .field label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-2);
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+
+    .field input {
+      padding: 11px 14px;
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 15px;
+      color: var(--text);
+      background: var(--card);
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    .field input::placeholder { color: #c4c9d4; }
+
+    .field input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.14);
+    }
+
+    .field input.error {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(220,38,38,.1);
+    }
+
+    /* ── Primary button ───────────────────────────────────── */
+    .btn-login {
+      width: 100%;
+      padding: 13px;
+      margin-top: 20px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      color: #fff;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(37,99,235,.3);
+      transition: opacity .15s, transform .12s, box-shadow .15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-login:hover {
+      box-shadow: 0 6px 28px rgba(37,99,235,.38);
+      transform: translateY(-1px);
+    }
+
+    .btn-login:active { transform: translateY(0); }
+
+    .btn-login:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Spinner inside button */
+    .btn-login.loading { color: transparent; }
+    .btn-login.loading::after {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      animation: spin .6s linear infinite;
+    }
+    @keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+
+    /* ── Error/success message ────────────────────────────── */
+    .msg {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      line-height: 1.45;
+      display: none;
+      border: 1px solid;
+    }
+
+    .msg.err {
+      display: block;
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #7f1d1d;
+    }
+
+    .msg.ok {
+      display: block;
+      background: #ecfdf5;
+      border-color: #a7f3d0;
+      color: #065f46;
+    }
+
+    /* ── Footer links ─────────────────────────────────────── */
+    .footer-links {
+      margin-top: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--muted);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .footer-links a {
+      color: var(--primary);
+      font-weight: 700;
+      text-decoration: none;
+      transition: color .15s;
+    }
+
+    .footer-links a:hover { color: var(--primary-d); }
+
+    /* ── Trust row ────────────────────────────────────────── */
+    .trust {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .trust-item svg { color: var(--success); flex-shrink: 0; }
+  </style>
 </head>
 <body>
+  <div class="wrap">
 
-    <div class="card">
-        <h1>Welcome Back 👋</h1>
-        <p class="subtitle">Log in to continue your learning journey.</p>
-
-        <form id="loginForm" onsubmit="handleLogin(event)">
-            
-            <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" id="email" required placeholder="parent@example.com">
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="password" required placeholder="******">
-            </div>
-
-            <button type="submit" id="submitBtn" class="btn">Log In</button>
-            <div class="error" id="errorMessage"></div>
-
-            <div class="footer-link">
-                Don't have an account? <a href="signup.html">Sign Up Free</a>
-            </div>
-            <div class="footer-link" style="margin-top: 10px;">
-                <a href="index.html">← Back to Home</a>
-            </div>
-        </form>
+    <!-- Brand -->
+    <div class="brand">
+      <div class="brand-logo">
+        <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+          <path d="M10 10H14V22H22V10H26" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">LogicPals</div>
+        <div class="brand-sub">AI Critical Thinking for Kids</div>
+      </div>
     </div>
 
-    <script>
-        // ─────────────────────────────────────────────────────────
-        // P1.6 DEVICE FINGERPRINT SEEDING
-        // Seeds lp_device_id into localStorage as early as possible
-        // so any downstream page that writes to the DB sessions table
-        // can read it immediately without generating a new UUID.
-        //
-        // Why here: login.html is the first authenticated entry point.
-        // The device_id must exist BEFORE the session INSERT fires on
-        // dashboard/training pages — seeding at login achieves this.
-        // ─────────────────────────────────────────────────────────
-        function getOrCreateDeviceId() {
-            try {
-                let id = localStorage.getItem('lp_device_id');
-                if (!id) {
-                    id = crypto.randomUUID();
-                    localStorage.setItem('lp_device_id', id);
-                }
-                return id;
-            } catch (e) {
-                // localStorage blocked (private mode, iframe, etc.) — return ephemeral ID
-                return crypto.randomUUID();
-            }
+    <!-- Card -->
+    <div class="card">
+      <h1 class="card-title">Welcome back 👋</h1>
+      <p class="card-subtitle">Log in to continue your learning journey.</p>
+
+      <form id="loginForm" novalidate>
+        <div class="fields">
+          <div class="field">
+            <label for="email">Email Address</label>
+            <input
+              id="email"
+              type="email"
+              placeholder="parent@example.com"
+              autocomplete="username"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+        </div>
+
+        <button class="btn-login" id="submitBtn" type="submit">Log In</button>
+        <div class="msg" id="msgBox"></div>
+      </form>
+
+      <div class="footer-links">
+        <span>Don't have an account? <a href="signup.html">Sign Up Free</a></span>
+        <a href="index.html">← Back to Home</a>
+      </div>
+    </div>
+
+    <!-- Trust signals -->
+    <div class="trust">
+      <div class="trust-item">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        500+ Bangladesh families
+      </div>
+      <div class="trust-item">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        Secure &amp; private
+      </div>
+      <div class="trust-item">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        Cancel anytime
+      </div>
+    </div>
+
+  </div><!-- /.wrap -->
+
+  <script>
+    /* ── P1.6: Device fingerprint seeding ─────────────────── */
+    function getOrCreateDeviceId() {
+      try {
+        let id = localStorage.getItem('lp_device_id');
+        if (!id) { id = crypto.randomUUID(); localStorage.setItem('lp_device_id', id); }
+        return id;
+      } catch (_) { return crypto.randomUUID(); }
+    }
+
+    getOrCreateDeviceId();
+
+    window.lpGetClientMeta = function () {
+      return {
+        device_id:  getOrCreateDeviceId(),
+        user_agent: navigator.userAgent,
+        platform:   navigator.platform,
+        screen_res: `${screen.width}x${screen.height}`,
+        timezone:   Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+    };
+
+    /* ── Main ─────────────────────────────────────────────── */
+    (async () => {
+      const msgBox   = document.getElementById('msgBox');
+      const submitBtn = document.getElementById('submitBtn');
+      const emailEl  = document.getElementById('email');
+      const passEl   = document.getElementById('password');
+
+      function showMsg(type, text) {
+        msgBox.className = 'msg ' + type;
+        msgBox.textContent = text;
+      }
+
+      function clearMsg() {
+        msgBox.className = 'msg';
+        msgBox.textContent = '';
+      }
+
+      // Wait for env-loader
+      try { await (window.__LP_ENV_READY || Promise.resolve()); } catch (_) {}
+
+      const env = window.__LP_ENV || {};
+      const supabaseUrl     = env.SUPABASE_URL     || env.supabaseUrl;
+      const supabaseAnonKey = env.SUPABASE_ANON_KEY || env.supabaseAnonKey;
+
+      if (!supabaseUrl || !supabaseAnonKey) {
+        showMsg('err', 'Configuration error. Please refresh the page or contact support.');
+        submitBtn.disabled = true;
+        return;
+      }
+
+      const sb = supabase.createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          storageKey:         'logicpals.auth',
+          persistSession:     true,
+          autoRefreshToken:   true,
+          detectSessionInUrl: true,
+        },
+      });
+
+      window.supabaseClient = sb;
+
+      // Already signed in?
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (session?.user) { window.location.replace('dashboard.html'); return; }
+      } catch (_) {}
+
+      /* ── Form submit ───────────────────────────────────── */
+      document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearMsg();
+
+        const email    = emailEl.value.trim();
+        const password = passEl.value;
+
+        if (!email || !password) {
+          showMsg('err', 'Please enter your email and password.');
+          return;
         }
 
-        // Seed immediately on page load — before auth resolves
-        getOrCreateDeviceId();
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
 
-        // Build client_meta payload and store it on window so any
-        // page that creates a DB session can call window.lpGetClientMeta()
-        window.lpGetClientMeta = function() {
-            return {
-                device_id:  getOrCreateDeviceId(),
-                user_agent: navigator.userAgent,
-                platform:   navigator.platform,
-                screen_res: `${screen.width}x${screen.height}`,
-                timezone:   Intl.DateTimeFormat().resolvedOptions().timeZone,
-            };
-        };
+        try {
+          const { error } = await sb.auth.signInWithPassword({ email, password });
+          if (error) throw error;
 
-        (async () => {
-          const errBox = document.getElementById('errorMessage');
-          const btn = document.getElementById('submitBtn');
+          getOrCreateDeviceId(); // re-seed on login
+          showMsg('ok', 'Signed in! Redirecting…');
+          setTimeout(() => window.location.href = 'dashboard.html', 500);
+        } catch (err) {
+          showMsg('err', err?.message || 'Login failed. Please check your credentials.');
+          emailEl.classList.add('error');
+          passEl.classList.add('error');
+        } finally {
+          submitBtn.classList.remove('loading');
+          submitBtn.disabled = false;
+        }
+      });
 
-          try {
-            await (window.__LP_ENV_READY || Promise.resolve());
-          } catch (_) {}
+      // Clear error state on input
+      [emailEl, passEl].forEach(el => {
+        el.addEventListener('input', () => {
+          el.classList.remove('error');
+          clearMsg();
+        });
+      });
 
-          const env = (window.__LP_ENV || {});
-          const supabaseUrl = env.SUPABASE_URL || env.supabaseUrl || env.url;
-          const supabaseAnonKey = env.SUPABASE_ANON_KEY || env.supabaseAnonKey || env.anonKey;
+      // Enter on email → move to password
+      emailEl.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); passEl.focus(); }
+      });
 
-          if (!supabaseUrl || !supabaseAnonKey) {
-            const msg = 'Missing Supabase config. Ensure /api/env is deployed and reachable.';
-            console.error(msg, env);
-            if (errBox) { errBox.innerText = msg; errBox.style.display = 'block'; }
-            if (btn) { btn.disabled = true; btn.innerText = 'Config missing'; }
-            return;
-          }
-
-          const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey, {
-            auth: {
-              persistSession: true,
-              autoRefreshToken: true,
-              detectSessionInUrl: true,
-              storageKey: 'logicpals.auth'
-            }
-          });
-
-          window.supabaseClient = supabaseClient;
-
-          try {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session?.user) {
-              window.location.replace('dashboard.html');
-              return;
-            }
-          } catch (e) {
-            console.warn('getSession failed:', e);
-          }
-
-          window.handleLogin = async function handleLogin(e) {
-            e.preventDefault();
-
-            const btn = document.getElementById('submitBtn');
-            const err = document.getElementById('errorMessage');
-
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-
-            btn.innerText = 'Logging in...';
-            btn.disabled = true;
-            err.style.display = 'none';
-
-            try {
-              const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-              if (error) throw error;
-
-              // Re-seed device_id on every successful login
-              // (covers the case where user cleared localStorage between sessions)
-              getOrCreateDeviceId();
-
-              window.location.href = 'dashboard.html';
-            } catch (error) {
-              console.error(error);
-              err.innerText = 'Login Failed: ' + (error?.message || String(error));
-              err.style.display = 'block';
-              btn.innerText = 'Log In';
-              btn.disabled = false;
-            }
-          };
-        })();
-    </script>
+    })();
+  </script>
 </body>
 </html>

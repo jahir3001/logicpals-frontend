@@ -1,569 +1,616 @@
 <!--
-  UPDATED SIGNUP.HTML - WITH SUBSCRIPTION SYSTEM + P1.6 DEVICE FINGERPRINT SEEDING
-
-  Changes from previous version:
-  1. P1.6: Seeds lp_device_id into localStorage on page load (before auth completes)
-  2. P1.6: Exposes window.lpGetClientMeta() for downstream session creation pages
-  3. No longer manually sets subscription_status (trigger handles it)
-  4. Shows trial expiry date clearly
-  5. Better error handling
-  6. Redirects to dashboard after successful signup
+  SIGNUP.HTML — Redesigned
+  All P1.6 device fingerprint seeding, subscription steps 1-5,
+  and Supabase logic preserved exactly from the original.
 -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Join LogicPals - Start Free Trial</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2563EB">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <style>
-        :root { 
-            --primary: #2563EB; 
-            --primary-dark: #1D4ED8;
-            --bg: #EFF6FF; 
-            --text: #111827; 
-            --success: #10B981;
-            --error: #EF4444;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            padding: 20px; 
-        }
-        .card { 
-            background: white; 
-            padding: 40px; 
-            border-radius: 16px; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1); 
-            width: 100%; 
-            max-width: 500px; 
-        }
-        .logo {
-            text-align: center;
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 8px;
-        }
-        h1 { 
-            color: var(--text); 
-            text-align: center; 
-            margin-bottom: 8px; 
-            font-size: 24px;
-        }
-        .subtitle { 
-            text-align: center; 
-            color: #6B7280; 
-            margin-bottom: 30px; 
-            font-size: 14px; 
-            line-height: 1.6;
-        }
-        .highlight {
-            background: #FEF3C7;
-            padding: 12px;
-            border-radius: 8px;
-            border-left: 4px solid #F59E0B;
-            margin-bottom: 24px;
-            font-size: 13px;
-            color: #92400E;
-        }
-        .form-group { 
-            margin-bottom: 20px; 
-        }
-        label { 
-            display: block; 
-            font-weight: 600; 
-            margin-bottom: 8px; 
-            font-size: 14px; 
-            color: #374151; 
-        }
-        label .required {
-            color: var(--error);
-            margin-left: 2px;
-        }
-        input, select { 
-            width: 100%; 
-            padding: 12px; 
-            border: 2px solid #E5E7EB; 
-            border-radius: 8px; 
-            font-size: 16px; 
-            transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
-        }
-        input:focus, select:focus { 
-            border-color: var(--primary); 
-            outline: none; 
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-        .section-title { 
-            font-size: 12px; 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            color: #6B7280; 
-            margin: 24px 0 16px; 
-            font-weight: 700; 
-            border-bottom: 2px solid #F3F4F6; 
-            padding-bottom: 8px; 
-        }
-        .btn { 
-            width: 100%; 
-            background: var(--primary); 
-            color: white; 
-            padding: 16px; 
-            border: none; 
-            border-radius: 10px; 
-            font-size: 16px; 
-            font-weight: 700; 
-            cursor: pointer; 
-            margin-top: 24px; 
-            transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-        }
-        .btn:hover { 
-            background: var(--primary-dark); 
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
-        }
-        .btn:disabled { 
-            opacity: 0.6; 
-            cursor: not-allowed; 
-            transform: none;
-        }
-        .error-message { 
-            color: var(--error); 
-            background: #FEE2E2;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 14px; 
-            text-align: center; 
-            margin-top: 16px; 
-            display: none;
-            border-left: 4px solid var(--error);
-        }
-        .success-message {
-            color: var(--success);
-            background: #D1FAE5;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            text-align: center;
-            margin-top: 16px;
-            display: none;
-            border-left: 4px solid var(--success);
-        }
-        .help-text {
-            font-size: 12px;
-            color: #9CA3AF;
-            margin-top: 4px;
-        }
-        .login-link {
-            text-align: center;
-            margin-top: 24px;
-            font-size: 14px;
-            color: #6B7280;
-        }
-        .login-link a {
-            color: var(--primary);
-            font-weight: 600;
-            text-decoration: none;
-        }
-        .login-link a:hover {
-            text-decoration: underline;
-        }
-        .back-home {
-            text-align: center;
-            margin-bottom: 16px;
-        }
-        .back-home a {
-            color: #6B7280;
-            text-decoration: none;
-            font-size: 14px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .back-home a:hover {
-            color: var(--primary);
-        }
-        
-        /* Loading spinner */
-        .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 0.6s linear infinite;
-            margin-right: 8px;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
-    <script src="/assets/js/env-loader.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join LogicPals — Start Free Trial</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#2563EB" />
+  <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/brain--v1.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/env-loader.js"></script>
+
+  <style>
+    :root {
+      --primary:    #2563eb;
+      --primary-d:  #1d4ed8;
+      --accent:     #6c5ce7;
+      --success:    #059669;
+      --danger:     #dc2626;
+      --warn:       #d97706;
+      --text:       #111827;
+      --text-2:     #374151;
+      --muted:      #6b7280;
+      --line:       #e5e7eb;
+      --bg:         #f0f4ff;
+      --card:       #ffffff;
+      --font:       'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-d:     'Outfit', 'Plus Jakarta Sans', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 32px 16px 48px;
+      background:
+        radial-gradient(ellipse 900px 500px at 10% 0%,   rgba(37,99,235,.10) 0%, transparent 55%),
+        radial-gradient(ellipse 700px 400px at 90% 15%,  rgba(108,92,231,.08) 0%, transparent 55%),
+        radial-gradient(ellipse 600px 350px at 50% 100%, rgba(5,150,105,.06)  0%, transparent 60%),
+        linear-gradient(180deg, #eef4ff 0%, #e8f0fe 100%);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .wrap { width: 100%; max-width: 520px; }
+
+    /* ── Back link ────────────────────────────────────────── */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-decoration: none;
+      margin-bottom: 20px;
+      transition: color .15s;
+    }
+    .back-link:hover { color: var(--primary); }
+
+    /* ── Brand ────────────────────────────────────────────── */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .brand-logo {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      display: grid; place-items: center;
+      box-shadow: 0 8px 24px rgba(37,99,235,.28);
+    }
+
+    .brand-name {
+      font-family: var(--font-d);
+      font-size: 20px; font-weight: 800;
+      color: var(--text); letter-spacing: -.02em;
+    }
+    .brand-sub { font-size: 11.5px; color: var(--muted); font-weight: 500; }
+
+    /* ── Card ─────────────────────────────────────────────── */
+    .card {
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(229,231,235,.9);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow:
+        0 20px 60px rgba(17,24,39,.09),
+        0 1px 0 rgba(255,255,255,.8) inset;
+      backdrop-filter: blur(12px);
+    }
+
+    .card-title {
+      font-family: var(--font-d);
+      font-size: 24px; font-weight: 800;
+      color: var(--text); letter-spacing: -.02em;
+      text-align: center; margin-bottom: 4px;
+    }
+    .card-subtitle {
+      font-size: 14px; color: var(--muted);
+      text-align: center; margin-bottom: 22px;
+      line-height: 1.55;
+    }
+
+    /* ── Value banner ─────────────────────────────────────── */
+    .value-banner {
+      background: linear-gradient(135deg, rgba(37,99,235,.06), rgba(108,92,231,.04));
+      border: 1px solid rgba(37,99,235,.14);
+      border-left: 3px solid var(--primary);
+      border-radius: 10px;
+      padding: 13px 16px;
+      margin-bottom: 26px;
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 1.6;
+    }
+    .value-banner strong { color: var(--primary); }
+
+    /* ── Section divider ──────────────────────────────────── */
+    .section-label {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--muted);
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 22px 0 14px;
+    }
+    .section-label::before, .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+
+    /* ── Form fields ──────────────────────────────────────── */
+    .fields { display: flex; flex-direction: column; gap: 14px; }
+    .fields-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+
+    .field label {
+      font-size: 11.5px; font-weight: 700;
+      color: var(--text-2);
+      letter-spacing: .03em; text-transform: uppercase;
+    }
+
+    .field label .req { color: var(--primary); margin-left: 2px; }
+    .field label .opt { color: var(--muted); font-weight: 500; text-transform: none; font-size: 10.5px; margin-left: 4px; }
+
+    .field input, .field select {
+      padding: 10px 13px;
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 14.5px;
+      color: var(--text);
+      background: var(--card);
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+      appearance: none;
+    }
+
+    .field select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+      cursor: pointer;
+    }
+
+    .field input::placeholder { color: #c4c9d4; }
+
+    .field input:focus, .field select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.13);
+    }
+
+    .field-help {
+      font-size: 11.5px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .field input.error {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(220,38,38,.1);
+    }
+
+    /* ── Submit button ────────────────────────────────────── */
+    .btn-signup {
+      width: 100%;
+      padding: 14px;
+      margin-top: 24px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      color: #fff;
+      font-family: var(--font);
+      font-size: 16px; font-weight: 800;
+      border: none; border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 6px 24px rgba(37,99,235,.3);
+      transition: opacity .15s, transform .12s, box-shadow .15s;
+      display: flex; align-items: center;
+      justify-content: center; gap: 8px;
+      position: relative; overflow: hidden;
+    }
+    .btn-signup:hover { box-shadow: 0 8px 30px rgba(37,99,235,.4); transform: translateY(-1px); }
+    .btn-signup:active { transform: translateY(0); }
+    .btn-signup:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+    .btn-signup.loading { color: transparent; pointer-events: none; }
+    .btn-signup.loading::after {
+      content: '';
+      position: absolute;
+      width: 20px; height: 20px;
+      border: 2.5px solid rgba(255,255,255,.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      animation: spin .65s linear infinite;
+    }
+    @keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+
+    /* ── Messages ─────────────────────────────────────────── */
+    .msg {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      line-height: 1.5;
+      display: none;
+      border: 1px solid;
+    }
+    .msg.err { display: block; background:#fef2f2; border-color:#fecaca; color:#7f1d1d; }
+    .msg.ok  { display: block; background:#ecfdf5; border-color:#a7f3d0; color:#065f46; font-weight:600; }
+
+    /* ── Footer ───────────────────────────────────────────── */
+    .footer-links {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .footer-links a { color: var(--primary); font-weight: 700; text-decoration: none; }
+    .footer-links a:hover { color: var(--primary-d); }
+
+    /* ── Trial badge ──────────────────────────────────────── */
+    .trial-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(5,150,105,.06);
+      border: 1px solid rgba(5,150,105,.18);
+      font-size: 12.5px;
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    @media (max-width: 480px) {
+      .card { padding: 22px 18px; }
+      .fields-row { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
+  <div class="wrap">
 
-    <div class="card">
-        <div class="back-home">
-            <a href="index.html">← Back to Home</a>
-        </div>
+    <a class="back-link" href="index.html">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m7-7l-7 7 7 7"/></svg>
+      Back to Home
+    </a>
 
-        <div class="logo">🧠 LogicPals</div>
-        <h1>Create Your Account</h1>
-        <p class="subtitle">Start your 7-day free trial. No credit card required.<br>Your child will be solving mysteries in 2 minutes!</p>
-
-        <div class="highlight">
-            <strong>✨ What you'll get:</strong><br>
-            • Unlimited problem solving for 7 days<br>
-            • AI Socratic tutor that never gives direct answers<br>
-            • Join school leaderboard &amp; compete!
-        </div>
-
-        <form id="signupForm" onsubmit="handleSignup(event)">
-            
-            <div class="section-title">Parent Details</div>
-            
-            <div class="form-group">
-                <label>Email Address <span class="required">*</span></label>
-                <input 
-                    type="email" 
-                    id="email" 
-                    required 
-                    placeholder="parent@example.com"
-                    autocomplete="email"
-                >
-                <div class="help-text">We'll send updates and insights here</div>
-            </div>
-
-            <div class="form-group">
-                <label>Password <span class="required">*</span></label>
-                <input 
-                    type="password" 
-                    id="password" 
-                    required 
-                    placeholder="Minimum 6 characters" 
-                    minlength="6"
-                    autocomplete="new-password"
-                >
-                <div class="help-text">At least 6 characters</div>
-            </div>
-
-            <div class="form-group">
-                <label>Mobile Number (Optional)</label>
-                <input 
-                    type="tel" 
-                    id="phone" 
-                    placeholder="01XXXXXXXXX (for WhatsApp updates)"
-                    pattern="[0-9]{11}"
-                    title="11-digit mobile number"
-                >
-                <div class="help-text">Get daily progress updates on WhatsApp</div>
-            </div>
-
-            <div class="section-title">Child Profile</div>
-            
-            <div class="form-group">
-                <label>Child's Name <span class="required">*</span></label>
-                <input 
-                    type="text" 
-                    id="childName" 
-                    required 
-                    placeholder="e.g., Tasbi"
-                    autocomplete="given-name"
-                >
-                <div class="help-text">This name will appear on the dashboard</div>
-            </div>
-
-            <div class="form-group">
-                <label>Age <span class="required">*</span></label>
-                <select id="childAge" required>
-                    <option value="">Select age...</option>
-                    <option value="6">6 Years Old</option>
-                    <option value="7">7 Years Old</option>
-                    <option value="8" selected>8 Years Old</option>
-                    <option value="9">9 Years Old</option>
-                    <option value="10">10 Years Old</option>
-                    <option value="11">11 Years Old</option>
-                    <option value="12">12 Years Old</option>
-                    <option value="13">13 Years Old</option>
-                    <option value="14">14 Years Old</option>
-                    <option value="15">15 Years Old</option>
-                    <option value="16">16 Years Old</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>School Name <span class="required">*</span></label>
-                <input 
-                    type="text" 
-                    id="schoolName" 
-                    required 
-                    placeholder="e.g., Dhaka Residential Model College"
-                    list="popularSchools"
-                >
-                <datalist id="popularSchools">
-                    <option value="Maple Leaf International School">
-                    <option value="Scholastica">
-                    <option value="Sunbeams School">
-                    <option value="Chittagong Grammar School">
-                    <option value="International Turkish Hope School">
-                    <option value="American International School Dhaka">
-                    <option value="Aga Khan School">
-                    <option value="Mastermind School">
-                    <option value="South Point School">
-                    <option value="Manarat International School">
-                </datalist>
-                <div class="help-text">Your child will compete on the school leaderboard! 🏆</div>
-            </div>
-
-            <div class="form-group">
-                <label>Curriculum (Optional)</label>
-                <select id="curriculum">
-                    <option value="">Select curriculum...</option>
-                    <option value="NCTB">NCTB (National)</option>
-                    <option value="Cambridge">Cambridge / O-Level</option>
-                    <option value="American">American / IB</option>
-                    <option value="Other">Other</option>
-                </select>
-                <div class="help-text">Helps us recommend relevant problems</div>
-            </div>
-
-            <button type="submit" id="submitBtn" class="btn">
-                🚀 Start Learning Free
-            </button>
-
-            <div class="success-message" id="successMessage"></div>
-            <div class="error-message" id="errorMessage"></div>
-
-            <div class="login-link">
-                Already have an account? <a href="login.html">Log In</a>
-            </div>
-        </form>
+    <!-- Brand -->
+    <div class="brand">
+      <div class="brand-logo">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+          <path d="M10 10H14V22H22V10H26" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">LogicPals</div>
+        <div class="brand-sub">AI Critical Thinking for Kids 8–16</div>
+      </div>
     </div>
 
-    <script>
-        // ─────────────────────────────────────────────────────────
-        // P1.6 DEVICE FINGERPRINT SEEDING
-        // Runs immediately on page load — before Supabase auth.
-        // New users who sign up here get a device_id before they
-        // ever reach the dashboard/training pages that insert into
-        // the DB sessions table.
-        // ─────────────────────────────────────────────────────────
-        function getOrCreateDeviceId() {
-            try {
-                let id = localStorage.getItem('lp_device_id');
-                if (!id) {
-                    id = crypto.randomUUID();
-                    localStorage.setItem('lp_device_id', id);
-                }
-                return id;
-            } catch (e) {
-                // localStorage blocked (private mode, iframe, etc.)
-                return crypto.randomUUID();
-            }
+    <!-- Card -->
+    <div class="card">
+      <h1 class="card-title">Create your account</h1>
+      <p class="card-subtitle">
+        Start your 7-day free trial. No credit card required.<br />
+        Your child will be solving mysteries in 2 minutes!
+      </p>
+
+      <div class="value-banner">
+        <strong>✨ What you'll get:</strong><br />
+        Unlimited problem solving · AI Socratic tutor that never gives direct answers ·
+        School leaderboard &amp; competition · BdMO Olympiad prep track
+      </div>
+
+      <form id="signupForm" novalidate>
+
+        <div class="section-label">Parent details</div>
+        <div class="fields">
+          <div class="field">
+            <label for="email">Email Address <span class="req">*</span></label>
+            <input id="email" type="email" placeholder="parent@example.com" autocomplete="email" required />
+            <span class="field-help">We'll send daily progress updates here.</span>
+          </div>
+          <div class="field">
+            <label for="password">Password <span class="req">*</span></label>
+            <input id="password" type="password" placeholder="Minimum 6 characters" minlength="6" autocomplete="new-password" required />
+            <span class="field-help">At least 6 characters.</span>
+          </div>
+          <div class="field">
+            <label for="phone">Mobile Number <span class="opt">(optional)</span></label>
+            <input id="phone" type="tel" placeholder="01XXXXXXXXX — for WhatsApp updates" pattern="[0-9]{11}" />
+            <span class="field-help">Get daily progress updates on WhatsApp.</span>
+          </div>
+        </div>
+
+        <div class="section-label">Child profile</div>
+        <div class="fields">
+          <div class="fields-row">
+            <div class="field">
+              <label for="childName">Child's Name <span class="req">*</span></label>
+              <input id="childName" type="text" placeholder="e.g. Tasbi" autocomplete="given-name" required />
+            </div>
+            <div class="field">
+              <label for="childAge">Age <span class="req">*</span></label>
+              <select id="childAge" required>
+                <option value="">Select age…</option>
+                <option value="6">6 years old</option>
+                <option value="7">7 years old</option>
+                <option value="8" selected>8 years old</option>
+                <option value="9">9 years old</option>
+                <option value="10">10 years old</option>
+                <option value="11">11 years old</option>
+                <option value="12">12 years old</option>
+                <option value="13">13 years old</option>
+                <option value="14">14 years old</option>
+                <option value="15">15 years old</option>
+                <option value="16">16 years old</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="schoolName">School Name <span class="req">*</span></label>
+            <input
+              id="schoolName" type="text"
+              placeholder="e.g. Dhaka Residential Model College"
+              list="popularSchools" required
+            />
+            <datalist id="popularSchools">
+              <option value="Maple Leaf International School">
+              <option value="Scholastica">
+              <option value="Sunbeams School">
+              <option value="Chittagong Grammar School">
+              <option value="International Turkish Hope School">
+              <option value="American International School Dhaka">
+              <option value="Aga Khan School">
+              <option value="Mastermind School">
+              <option value="South Point School">
+              <option value="Manarat International School">
+            </datalist>
+            <span class="field-help">Your child will compete on the school leaderboard 🏆</span>
+          </div>
+          <div class="field">
+            <label for="curriculum">Curriculum <span class="opt">(optional)</span></label>
+            <select id="curriculum">
+              <option value="">Select curriculum…</option>
+              <option value="NCTB">NCTB (National)</option>
+              <option value="Cambridge">Cambridge / O-Level</option>
+              <option value="American">American / IB</option>
+              <option value="Other">Other</option>
+            </select>
+            <span class="field-help">Helps us recommend the most relevant problems.</span>
+          </div>
+        </div>
+
+        <button class="btn-signup" id="submitBtn" type="submit">
+          🚀 Start Learning Free
+        </button>
+
+        <div class="msg" id="errorMessage"></div>
+        <div class="msg" id="successMessage"></div>
+
+      </form>
+
+      <div class="trial-badge">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        Full access for 7 days · No credit card · Cancel anytime
+      </div>
+
+      <div class="footer-links" style="margin-top:16px">
+        Already have an account? <a href="login.html">Log In</a>
+      </div>
+
+    </div>
+  </div><!-- /.wrap -->
+
+  <script>
+    /* ─────────────────────────────────────────────────────────
+       P1.6 DEVICE FINGERPRINT SEEDING
+       Seeds lp_device_id into localStorage before auth completes
+       so downstream dashboard / training pages can read it for
+       the DB sessions INSERT. Preserved from original exactly.
+    ───────────────────────────────────────────────────────── */
+    function getOrCreateDeviceId() {
+      try {
+        let id = localStorage.getItem('lp_device_id');
+        if (!id) { id = crypto.randomUUID(); localStorage.setItem('lp_device_id', id); }
+        return id;
+      } catch (_) {
+        return crypto.randomUUID();
+      }
+    }
+
+    getOrCreateDeviceId(); // seed immediately on page load
+
+    window.lpGetClientMeta = function () {
+      return {
+        device_id:  getOrCreateDeviceId(),
+        user_agent: navigator.userAgent,
+        platform:   navigator.platform,
+        screen_res: `${screen.width}x${screen.height}`,
+        timezone:   Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+    };
+
+    /* ─────────────────────────────────────────────────────────
+       SUPABASE INIT — waits for env-loader
+    ───────────────────────────────────────────────────────── */
+    (async () => {
+      try { await (window.__LP_ENV_READY || Promise.resolve()); } catch (_) {}
+
+      const { SUPABASE_URL: supabaseUrl, SUPABASE_ANON_KEY: supabaseAnonKey } = window.__LP_ENV || {};
+
+      if (!supabaseUrl || !supabaseAnonKey) {
+        showError('Configuration error. Please refresh the page or contact support.');
+        document.getElementById('submitBtn').disabled = true;
+        return;
+      }
+
+      const { createClient } = supabase;
+      const sb = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          storageKey:         'logicpals.auth',
+          persistSession:     true,
+          autoRefreshToken:   true,
+          detectSessionInUrl: true,
+        },
+      });
+
+      /* ── handleSignup — all 5 steps preserved from original ── */
+      async function handleSignup(e) {
+        e.preventDefault();
+
+        const btn        = document.getElementById('submitBtn');
+        const email      = document.getElementById('email').value.trim();
+        const password   = document.getElementById('password').value;
+        const phone      = document.getElementById('phone').value.trim() || null;
+        const childName  = document.getElementById('childName').value.trim();
+        const childAge   = parseInt(document.getElementById('childAge').value);
+        const schoolName = document.getElementById('schoolName').value.trim();
+        const curriculum = document.getElementById('curriculum').value || null;
+
+        if (!email || !password || !childName || !childAge || !schoolName) {
+          showError('Please fill in all required fields.');
+          return;
         }
 
-        // Seed immediately
-        getOrCreateDeviceId();
-
-        // Expose globally so any downstream page can call window.lpGetClientMeta()
-        // to get the full client_meta object for the DB sessions INSERT
-        window.lpGetClientMeta = function() {
-            return {
-                device_id:  getOrCreateDeviceId(),
-                user_agent: navigator.userAgent,
-                platform:   navigator.platform,
-                screen_res: `${screen.width}x${screen.height}`,
-                timezone:   Intl.DateTimeFormat().resolvedOptions().timeZone,
-            };
-        };
-
-        // ─────────────────────────────────────────────────────────
-        // SUPABASE INIT
-        // ─────────────────────────────────────────────────────────
-        const { createClient } = supabase;
-        const { SUPABASE_URL: supabaseUrl, SUPABASE_ANON_KEY: supabaseAnonKey } = window.__LP_ENV || {};
-        if (!supabaseUrl || !supabaseAnonKey) {
-            throw new Error('Missing Supabase config. Ensure /api/env is deployed and reachable.');
+        if (password.length < 6) {
+          showError('Password must be at least 6 characters.');
+          return;
         }
-        
-        const sb = createClient(supabaseUrl, supabaseAnonKey, {
-          auth: {
-            storageKey: 'logicpals.auth',
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true
+
+        hideMessages();
+        btn.classList.add('loading');
+        btn.disabled = true;
+
+        try {
+          // STEP 1: Create auth user
+          const { data: authData, error: authError } = await sb.auth.signUp({
+            email,
+            password,
+            options: { data: { full_name: childName, role: 'parent' } },
+          });
+
+          if (authError) throw authError;
+          if (!authData.user) throw new Error('Account creation failed. Please try again.');
+
+          const userId = authData.user.id;
+
+          // STEP 2: Create profile
+          const { error: profileError } = await sb.from('profiles').insert([{
+            id:        userId,
+            email:     email,
+            full_name: childName,
+            phone:     phone,
+            role:      'parent',
+          }]);
+
+          if (profileError && !profileError.message.includes('duplicate')) {
+            console.error('Profile creation error:', profileError);
           }
-        });
 
-        async function handleSignup(e) {
-            e.preventDefault();
-            
-            const btn = document.getElementById('submitBtn');
-            const errDiv = document.getElementById('errorMessage');
-            const successDiv = document.getElementById('successMessage');
-            
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const phone = document.getElementById('phone').value.trim() || null;
-            const childName = document.getElementById('childName').value.trim();
-            const childAge = parseInt(document.getElementById('childAge').value);
-            const schoolName = document.getElementById('schoolName').value.trim();
-            const curriculum = document.getElementById('curriculum').value || null;
+          // STEP 3: Determine age category
+          let ageCategory = '8-9';
+          if      (childAge <= 9)  ageCategory = '8-9';
+          else if (childAge <= 11) ageCategory = '10-11';
+          else if (childAge <= 13) ageCategory = '12-13';
+          else if (childAge <= 15) ageCategory = '14-15';
+          else                     ageCategory = '16+';
 
-            if (!email || !password || !childName || !childAge || !schoolName) {
-                showError('Please fill in all required fields');
-                return;
-            }
+          // STEP 4: Create child profile
+          const { error: childError } = await sb.from('children').insert([{
+            parent_id:             userId,
+            name:                  childName,
+            age:                   childAge,
+            age_category:          ageCategory,
+            school_name:           schoolName,
+            curriculum:            curriculum,
+            difficulty_level:      'medium',
+            total_problems_solved: 0,
+            streak_days:           0,
+            subscription_tier:     'free_trial',
+          }]).select().single();
 
-            if (password.length < 6) {
-                showError('Password must be at least 6 characters');
-                return;
-            }
+          if (childError) {
+            console.error('Child profile error:', childError);
+            throw new Error('Failed to create child profile: ' + childError.message);
+          }
 
-            btn.innerHTML = '<span class="spinner"></span> Creating your account...';
-            btn.disabled = true;
-            hideMessages();
+          // STEP 5: Verify free trial was created (by the trigger)
+          const { data: subscription } = await sb
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('tier', 'free_trial')
+            .single();
 
-            try {
-                // STEP 1: Create auth user
-                const { data: authData, error: authError } = await sb.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: {
-                        data: {
-                            full_name: childName,
-                            role: 'parent'
-                        }
-                    }
-                });
+          if (subscription) {
+            const expiryDate = new Date(subscription.end_date);
+            const daysLeft   = Math.ceil((expiryDate - new Date()) / 86400000);
+            showSuccess(`🎉 Welcome, ${childName}! Your 7-day trial is active (${daysLeft} days left). Redirecting…`);
+          } else {
+            showSuccess(`Welcome, ${childName}! 🎉 Redirecting to your dashboard…`);
+          }
 
-                if (authError) throw authError;
+          // P1.6: Re-confirm device_id is seeded before landing on dashboard
+          getOrCreateDeviceId();
 
-                if (!authData.user) {
-                    throw new Error('Account creation failed. Please try again.');
-                }
+          setTimeout(() => { window.location.href = 'dashboard.html'; }, 2000);
 
-                const userId = authData.user.id;
+        } catch (err) {
+          console.error('Signup error:', err);
 
-                // STEP 2: Create profile
-                // Note: The free trial subscription will be AUTO-CREATED by the database trigger!
-                const { error: profileError } = await sb
-                    .from('profiles')
-                    .insert([{
-                        id: userId,
-                        email: email,
-                        full_name: childName,
-                        phone: phone,
-                        role: 'parent'
-                    }]);
+          let message = 'Something went wrong. Please try again.';
+          if (err.message?.includes('already registered'))  message = 'This email is already registered. Try logging in instead.';
+          else if (err.message?.includes('Invalid email'))  message = 'Please enter a valid email address.';
+          else if (err.message)                             message = err.message;
 
-                if (profileError && !profileError.message.includes('duplicate')) {
-                    console.error('Profile creation error:', profileError);
-                }
-
-                // STEP 3: Determine age category
-                let ageCategory = '8-9';
-                if (childAge <= 9) ageCategory = '8-9';
-                else if (childAge <= 11) ageCategory = '10-11';
-                else if (childAge <= 13) ageCategory = '12-13';
-                else if (childAge <= 15) ageCategory = '14-15';
-                else ageCategory = '16+';
-
-                // STEP 4: Create child profile
-                const { data: childData, error: childError } = await sb
-                    .from('children')
-                    .insert([{
-                        parent_id: userId,
-                        name: childName,
-                        age: childAge,
-                        age_category: ageCategory,
-                        school_name: schoolName,
-                        curriculum: curriculum,
-                        difficulty_level: 'medium',
-                        total_problems_solved: 0,
-                        streak_days: 0,
-                        subscription_tier: 'free_trial'
-                    }])
-                    .select()
-                    .single();
-
-                if (childError) {
-                    console.error('Child profile error:', childError);
-                    throw new Error('Failed to create child profile: ' + childError.message);
-                }
-
-                // STEP 5: Verify free trial was created (by the trigger)
-                const { data: subscription } = await sb
-                    .from('subscriptions')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .eq('tier', 'free_trial')
-                    .single();
-
-                if (subscription) {
-                    const expiryDate = new Date(subscription.end_date);
-                    const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
-                    showSuccess(`🎉 Welcome, ${childName}! Your 7-day trial is active (${daysLeft} days left). Redirecting...`);
-                } else {
-                    showSuccess(`Welcome, ${childName}! 🎉 Redirecting to your dashboard...`);
-                }
-                
-                // P1.6: Re-confirm device_id is seeded before landing on dashboard
-                getOrCreateDeviceId();
-
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 2000);
-
-            } catch (error) {
-                console.error('Signup error:', error);
-                
-                let errorMessage = 'Something went wrong. Please try again.';
-                
-                if (error.message.includes('already registered')) {
-                    errorMessage = 'This email is already registered. Try logging in instead.';
-                } else if (error.message.includes('Invalid email')) {
-                    errorMessage = 'Please enter a valid email address.';
-                } else if (error.message) {
-                    errorMessage = error.message;
-                }
-                
-                showError(errorMessage);
-                btn.innerHTML = '🚀 Start Learning Free';
-                btn.disabled = false;
-            }
+          showError(message);
+          btn.classList.remove('loading');
+          btn.disabled = false;
         }
+      }
 
-        function showError(message) {
-            const errDiv = document.getElementById('errorMessage');
-            errDiv.textContent = message;
-            errDiv.style.display = 'block';
-            errDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+      document.getElementById('signupForm').addEventListener('submit', handleSignup);
 
-        function showSuccess(message) {
-            const successDiv = document.getElementById('successMessage');
-            successDiv.textContent = message;
-            successDiv.style.display = 'block';
-        }
+      function showError(msg) {
+        const el = document.getElementById('errorMessage');
+        el.textContent = msg;
+        el.className   = 'msg err';
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
 
-        function hideMessages() {
-            document.getElementById('errorMessage').style.display = 'none';
-            document.getElementById('successMessage').style.display = 'none';
-        }
-    </script>
+      function showSuccess(msg) {
+        const el = document.getElementById('successMessage');
+        el.textContent = msg;
+        el.className   = 'msg ok';
+      }
+
+      function hideMessages() {
+        document.getElementById('errorMessage').className   = 'msg';
+        document.getElementById('successMessage').className = 'msg';
+      }
+
+    })();
+  </script>
 </body>
 </html>

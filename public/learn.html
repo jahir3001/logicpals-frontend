@@ -648,6 +648,22 @@
       let user=null;
       try{const{data}=await sb.auth.getSession();if(data?.session?.user)user=data.session.user;}catch(_){}
       if(!user){try{const{data}=await sb.auth.getUser();if(data?.user)user=data.user;}catch(_){}}
+
+      // Admin bridge: preview learn.html from admin console without re-login
+      if(!user){
+        try{
+          const sbAdmin=supabase.createClient(env.SUPABASE_URL,env.SUPABASE_ANON_KEY,{
+            auth:{storageKey:'lp_admin_auth',persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
+          });
+          const{data:ad}=await sbAdmin.auth.getSession();
+          if(ad?.session?.access_token){
+            await sb.auth.setSession({access_token:ad.session.access_token,refresh_token:ad.session.refresh_token});
+            const{data:bd}=await sb.auth.getSession();
+            if(bd?.session?.user){user=bd.session.user;console.log('[Learn] Admin preview mode — bridged from lp_admin_auth');}
+          }
+        }catch(_){}
+      }
+
       if(!user){dom.authGate.classList.add('show');return;}
       currentUserId=user.id;
       console.log('[Learn] Auth OK:',user.id,user.email);
