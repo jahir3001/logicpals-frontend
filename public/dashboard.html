@@ -283,24 +283,27 @@
     let user=null;
     try{const{data}=await sb.auth.getSession();if(data?.session?.user)user=data.session.user;}catch(_){}
     if(!user){try{const{data}=await sb.auth.getUser();if(data?.user)user=data.user;}catch(_){}}
-
-    // Admin bridge: if no logicpals.auth session but lp_admin_auth is valid,
-    // bridge the session so admins can preview the dashboard without re-logging in.
-    // This is read-only bridging — it does not promote the admin to a student role.
+    // Admin preview bridge — read lp_admin_auth directly from localStorage.
+    // Root cause of previous attempt: creating a second client with persistSession:false
+    // uses in-memory storage only, so getSession() always returns null.
+    // Direct localStorage read + setSession() is the reliable path.
     if(!user){
       try{
-        const sbAdmin=supabase.createClient(env.SUPABASE_URL,env.SUPABASE_ANON_KEY,{
-          auth:{storageKey:'lp_admin_auth',persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
-        });
-        const{data:ad}=await sbAdmin.auth.getSession();
-        if(ad?.session?.access_token){
-          await sb.auth.setSession({access_token:ad.session.access_token,refresh_token:ad.session.refresh_token});
-          const{data:bd}=await sb.auth.getSession();
-          if(bd?.session?.user){user=bd.session.user;console.log('[Dashboard] Admin preview mode — bridged from lp_admin_auth');}
+        const raw=localStorage.getItem('lp_admin_auth');
+        if(raw){
+          const stored=JSON.parse(raw);
+          const at=stored?.access_token;
+          const rt=stored?.refresh_token;
+          if(at){
+            const{data:sd,error:se}=await sb.auth.setSession({access_token:at,refresh_token:rt||at});
+            if(!se&&sd?.session?.user){
+              user=sd.session.user;
+              console.log('[Dashboard] Admin preview — bridged from lp_admin_auth');
+            }
+          }
         }
       }catch(_){}
     }
-
     if(!user){setStatus('bad','Signed out');showAuth();return;}
 
     setStatus('good','Signed in');$('btnSignOut').disabled=false;
