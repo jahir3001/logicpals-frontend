@@ -8,7 +8,315 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
-    :root{--primary:#6c5ce7;--success:#00d2a0;--warning:#feca57;--bg:#0c0e1a;--card:rgba(20,24,52,.55);--border:rgba(255,255,255,.06);--text:#f0f0f5;--text2:#9899b3;--muted:#5d5f7e;--bad:#ff6b6b;--as:rgba(108,92,231,.12);--ys:rgba(254,202,87,.10);--glow:rgba(108,92,231,.35);--font:'Plus Jakarta Sans',-apple-system,sans-serif;--font-d:'Outfit',-apple-system,sans-serif;--font-m:'JetBrains Mono',monospace;}
+    /* ─── Base variables (Regular track) ─────────────────── */
+    :root{
+      --primary:#6c5ce7;--success:#00d2a0;--warning:#feca57;
+      --bg:#0c0e1a;--card:rgba(20,24,52,.55);--border:rgba(255,255,255,.06);
+      --text:#f0f0f5;--text2:#9899b3;--muted:#5d5f7e;--bad:#ff6b6b;
+      --as:rgba(108,92,231,.12);--ys:rgba(254,202,87,.10);--glow:rgba(108,92,231,.35);
+      --font:'Plus Jakarta Sans',-apple-system,sans-serif;
+      --font-d:'Outfit',-apple-system,sans-serif;
+      --font-m:'JetBrains Mono',monospace;
+    }
+
+    /* ─── Olympiad track theme override ──────────────────── */
+    body.olympiad-mode{
+      --primary:#3d5afe;        /* deep competition indigo */
+      --primary-alt:#7c4dff;
+      --success:#26c6da;        /* teal */
+      --glow:rgba(61,90,254,.35);
+      --as:rgba(61,90,254,.13);
+      --oly-gold:#f9a825;
+      --oly-gold-soft:rgba(249,168,37,.12);
+      --bg:#080b18;
+    }
+    body.olympiad-mode .problem-card::before{
+      background:linear-gradient(90deg,#3d5afe,#7c4dff,#26c6da);
+    }
+    body.olympiad-mode .problem-text{
+      background:linear-gradient(135deg,rgba(61,90,254,.07),rgba(38,198,218,.04));
+      border-left:4px solid rgba(61,90,254,.45);
+    }
+    body.olympiad-mode .send-btn{
+      background:linear-gradient(135deg,#3d5afe,#7c4dff);
+    }
+    body.olympiad-mode .message.user{
+      background:linear-gradient(135deg,#3d5afe,#7c4dff);
+    }
+
+    /* ─── Olympiad track header strip ────────────────────── */
+    .oly-header-strip{
+      display:none;background:linear-gradient(90deg,rgba(61,90,254,.12),rgba(38,198,218,.08));
+      border-bottom:1px solid rgba(61,90,254,.2);padding:8px 16px;
+      flex-shrink:0;z-index:18;
+    }
+    .oly-header-strip.show{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .oly-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;
+      font-size:11px;font-weight:700;letter-spacing:.03em;}
+    .oly-chip.skill{background:rgba(61,90,254,.15);color:#82b1ff;border:1px solid rgba(61,90,254,.25);}
+    .oly-chip.mastery{background:rgba(38,198,218,.12);color:#80deea;border:1px solid rgba(38,198,218,.22);}
+    .oly-chip.tier-warmup{background:rgba(224,224,224,.1);color:#bdbdbd;border:1px solid rgba(200,200,200,.2);}
+    .oly-chip.tier-standard{background:rgba(252,211,77,.1);color:#f9a825;border:1px solid rgba(252,211,77,.25);}
+    .oly-chip.tier-challenge{background:rgba(251,146,60,.12);color:#fb8c00;border:1px solid rgba(251,146,60,.25);}
+    .oly-chip.tier-contest{background:rgba(220,38,38,.1);color:#ef9a9a;border:1px solid rgba(220,38,38,.2);}
+    .oly-chip.proof-on{background:rgba(156,39,176,.12);color:#ce93d8;border:1px solid rgba(156,39,176,.25);}
+
+    /* ─── Diagram box ─────────────────────────────────────── */
+    .diagram-box{
+      display:none;margin-top:10px;background:rgba(255,255,255,.03);
+      border:1px dashed rgba(255,255,255,.12);border-radius:12px;padding:12px;
+    }
+    .diagram-box.show{display:block;}
+    .diagram-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;
+      letter-spacing:.05em;margin-bottom:8px;}
+    .diagram-img{max-width:100%;border-radius:8px;display:block;margin:0 auto;}
+    .diagram-desc{font-size:13px;color:var(--text2);line-height:1.5;font-style:italic;}
+
+    /* ─── Proof panel ─────────────────────────────────────── */
+    .proof-area{
+      display:none;background:rgba(12,14,26,.9);backdrop-filter:blur(16px);
+      border-top:1px solid var(--border);flex-shrink:0;
+      padding:10px 16px;z-index:20;padding-bottom:env(safe-area-inset-bottom,10px);
+    }
+    .proof-area.show{display:block;}
+
+    /* Format tabs */
+    .proof-format-row{display:flex;gap:6px;margin-bottom:8px;max-width:800px;margin-left:auto;margin-right:auto;}
+    .fmt-tab{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;
+      background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--border);
+      transition:.12s;font-family:var(--font);}
+    .fmt-tab.active{background:rgba(61,90,254,.18);color:#82b1ff;border-color:rgba(61,90,254,.35);}
+
+    /* Proof textarea */
+    .proof-textarea{
+      width:100%;background:rgba(255,255,255,.04);border:1.5px solid var(--border);
+      border-radius:14px;padding:13px 16px;color:var(--text);font-family:var(--font-m);
+      font-size:13.5px;line-height:1.65;resize:vertical;min-height:90px;max-height:260px;
+      outline:none;transition:border-color .15s;
+      max-width:800px;display:block;margin:0 auto;
+    }
+    .proof-textarea:focus{border-color:rgba(61,90,254,.45);box-shadow:0 0 0 3px rgba(61,90,254,.08);}
+    .proof-textarea::placeholder{color:var(--muted);}
+
+    /* LaTeX live preview */
+    .latex-preview{
+      display:none;margin:6px auto 0;max-width:800px;
+      background:rgba(255,255,255,.03);border:1px solid var(--border);
+      border-radius:10px;padding:10px 14px;color:var(--text);
+      font-size:13px;line-height:1.6;min-height:32px;
+    }
+    .latex-preview.show{display:block;}
+    .latex-preview-label{font-size:10px;font-weight:700;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+
+    /* Proof action row */
+    .proof-action-row{display:flex;gap:8px;margin-top:8px;align-items:center;
+      max-width:800px;margin-left:auto;margin-right:auto;flex-wrap:wrap;}
+    .proof-submit-btn{
+      background:linear-gradient(135deg,#3d5afe,#7c4dff);color:#fff;border:none;
+      padding:10px 22px;border-radius:12px;font:700 14px var(--font);cursor:pointer;
+      box-shadow:0 3px 12px rgba(61,90,254,.3);transition:.12s;flex-shrink:0;
+    }
+    .proof-submit-btn:hover{box-shadow:0 5px 18px rgba(61,90,254,.42);transform:translateY(-1px);}
+    .proof-submit-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+    .proof-submit-btn.loading{color:transparent;position:relative;}
+    .proof-submit-btn.loading::after{
+      content:'';position:absolute;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);
+      border-top-color:#fff;border-radius:50%;top:50%;left:50%;
+      transform:translate(-50%,-50%);animation:lpSpin .6s linear infinite;
+    }
+    .proof-char-count{font-size:11px;color:var(--muted);flex:1;text-align:right;font-family:var(--font-m);}
+
+    /* Hint cascade (inside proof area) */
+    .proof-hint-row{
+      display:flex;gap:6px;align-items:center;margin-top:8px;
+      max-width:800px;margin-left:auto;margin-right:auto;flex-wrap:wrap;
+    }
+    .proof-hint-label{font-size:11px;color:var(--muted);font-weight:600;flex-shrink:0;}
+    .hint-cascade-btn{
+      padding:5px 11px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;
+      border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text2);
+      font-family:var(--font);transition:.12s;
+    }
+    .hint-cascade-btn:hover{background:rgba(255,255,255,.08);color:var(--text);}
+    .hint-cascade-btn.used{opacity:.38;cursor:not-allowed;}
+    .hint-cascade-btn.active{background:rgba(254,202,87,.12);color:var(--warning);
+      border-color:rgba(254,202,87,.25);}
+    .hint-cascade-btn[data-cap]{position:relative;}
+    .hint-level-display{font-size:11px;color:var(--muted);font-family:var(--font-m);margin-left:4px;}
+    .max-score-badge{
+      font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;
+      background:rgba(255,107,107,.12);color:#ff8a80;border:1px solid rgba(255,107,107,.2);
+      font-family:var(--font-m);margin-left:4px;
+    }
+
+    /* Plagiarism warning */
+    .plagiarism-banner{
+      display:none;margin-top:8px;max-width:800px;margin-left:auto;margin-right:auto;
+      background:rgba(254,202,87,.08);border:1px solid rgba(254,202,87,.25);
+      border-radius:10px;padding:10px 14px;color:var(--warning);font-size:12px;font-weight:600;
+    }
+    .plagiarism-banner.show{display:block;}
+
+    /* ─── IMO score message (inside chat) ─────────────────── */
+    .message.imo-score{
+      align-self:stretch;background:rgba(61,90,254,.06);
+      border:1px solid rgba(61,90,254,.18);border-radius:16px;
+      padding:16px 18px;color:var(--text);width:95%;margin:4px auto;
+      animation:popIn .35s ease;
+    }
+    .imo-score-header{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
+    .imo-score-badge{
+      font-family:var(--font-d);font-size:36px;font-weight:800;
+      width:64px;height:64px;border-radius:14px;display:grid;place-items:center;
+      flex-shrink:0;line-height:1;
+    }
+    .imo-score-badge.score-0,.imo-score-badge.score-1{background:rgba(239,68,68,.18);color:#f87171;}
+    .imo-score-badge.score-2,.imo-score-badge.score-3{background:rgba(249,115,22,.18);color:#fb923c;}
+    .imo-score-badge.score-4,.imo-score-badge.score-5{background:rgba(234,179,8,.18);color:#facc15;}
+    .imo-score-badge.score-6,.imo-score-badge.score-7{background:rgba(34,197,94,.18);color:#4ade80;}
+    .imo-score-label{flex:1;}
+    .imo-score-title{font-family:var(--font-d);font-size:15px;font-weight:800;color:var(--text);}
+    .imo-score-subtitle{font-size:12px;color:var(--muted);margin-top:2px;}
+    .imo-bar-wrap{position:relative;height:8px;background:rgba(255,255,255,.06);border-radius:99px;margin-bottom:10px;overflow:hidden;}
+    .imo-bar-fill{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.34,1.56,.64,1);}
+    .imo-bar-fill.s01{background:linear-gradient(90deg,#ef4444,#f87171);}
+    .imo-bar-fill.s23{background:linear-gradient(90deg,#f97316,#fb923c);}
+    .imo-bar-fill.s45{background:linear-gradient(90deg,#eab308,#facc15);}
+    .imo-bar-fill.s67{background:linear-gradient(90deg,#22c55e,#4ade80);}
+    .imo-breakdown{display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
+    .imo-breakdown.show{display:block;}
+    .breakdown-row{display:flex;justify-content:space-between;align-items:center;
+      padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;}
+    .breakdown-row:last-child{border-bottom:none;}
+    .breakdown-key{color:var(--muted);font-weight:600;}
+    .breakdown-val{color:var(--text);font-family:var(--font-m);font-weight:700;}
+    .imo-breakdown-toggle{
+      background:none;border:none;color:var(--muted);font-size:11px;font-weight:700;
+      cursor:pointer;font-family:var(--font);padding:0;margin-top:6px;
+      text-decoration:underline dotted;
+    }
+    .imo-feedback-text{
+      font-size:13.5px;color:var(--text2);line-height:1.6;margin-bottom:10px;
+    }
+    .revise-btn{
+      background:rgba(61,90,254,.14);color:#82b1ff;border:1px solid rgba(61,90,254,.28);
+      padding:8px 18px;border-radius:10px;font:700 13px var(--font);cursor:pointer;margin-top:8px;
+      transition:.12s;
+    }
+    .revise-btn:hover{background:rgba(61,90,254,.22);}
+    .prev-score-note{font-size:11px;color:var(--muted);margin-top:6px;}
+
+    /* ─── Vision panel ────────────────────────────────────── */
+    .vision-fab{
+      display:none;position:fixed;bottom:80px;right:16px;z-index:50;
+      width:48px;height:48px;border-radius:50%;
+      background:linear-gradient(135deg,#26c6da,#00acc1);
+      color:#fff;font-size:20px;border:none;cursor:pointer;
+      box-shadow:0 4px 18px rgba(38,198,218,.4);transition:.15s;
+      display:none;align-items:center;justify-content:center;
+    }
+    .vision-fab.show{display:flex;}
+    .vision-fab:hover{transform:scale(1.07);box-shadow:0 6px 24px rgba(38,198,218,.5);}
+
+    .vision-panel{
+      display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;
+      background:rgba(10,13,28,.96);backdrop-filter:blur(20px);
+      border-top:1px solid var(--border);padding:16px;
+      animation:slideUp .25s ease;
+    }
+    .vision-panel.show{display:block;}
+    @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+    .vision-panel-inner{max-width:800px;margin:0 auto;}
+    .vision-panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+    .vision-panel-title{font-family:var(--font-d);font-size:15px;font-weight:700;color:var(--text);}
+    .vision-close-btn{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px;}
+
+    .vision-upload-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+    .vision-upload-btn{
+      display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:12px;
+      background:rgba(38,198,218,.12);color:#80deea;border:1px solid rgba(38,198,218,.25);
+      font:700 13px var(--font);cursor:pointer;transition:.12s;
+    }
+    .vision-upload-btn:hover{background:rgba(38,198,218,.2);}
+    .vision-upload-btn input[type=file]{display:none;}
+    .vision-preview{display:none;margin-bottom:10px;}
+    .vision-preview img{max-width:100%;max-height:160px;border-radius:10px;border:1px solid var(--border);}
+    .vision-preview.show{display:block;}
+
+    /* Typed fallback */
+    .vision-typed-label{font-size:11px;font-weight:700;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+    .vision-typed-area{
+      width:100%;background:rgba(255,255,255,.04);border:1.5px solid var(--border);
+      border-radius:12px;padding:11px 14px;color:var(--text);font-family:var(--font-m);
+      font-size:13px;line-height:1.6;resize:vertical;min-height:64px;
+      outline:none;transition:border-color .15s;
+    }
+    .vision-typed-area:focus{border-color:rgba(38,198,218,.4);box-shadow:0 0 0 3px rgba(38,198,218,.08);}
+    .vision-send-btn{
+      margin-top:8px;background:linear-gradient(135deg,#26c6da,#00acc1);color:#fff;
+      border:none;padding:9px 20px;border-radius:11px;font:700 13px var(--font);
+      cursor:pointer;box-shadow:0 2px 10px rgba(38,198,218,.3);transition:.12s;
+    }
+    .vision-send-btn:disabled{opacity:.5;cursor:not-allowed;}
+    .vision-processing{font-size:12px;color:var(--muted);margin-top:8px;display:none;}
+    .vision-processing.show{display:block;}
+
+    /* ─── Hint cap warning modal ──────────────────────────── */
+    .hint-cap-modal{
+      display:none;position:fixed;inset:0;background:rgba(8,10,22,.75);
+      backdrop-filter:blur(8px);align-items:center;justify-content:center;z-index:1500;
+    }
+    .hint-cap-modal.show{display:flex;}
+    .hint-cap-box{
+      background:rgba(20,24,52,.9);backdrop-filter:blur(20px);border:1px solid var(--border);
+      border-radius:20px;padding:28px 24px;width:90%;max-width:360px;text-align:center;
+      animation:popUp .3s ease;
+    }
+    .hint-cap-icon{font-size:40px;margin-bottom:12px;}
+    .hint-cap-title{font-family:var(--font-d);font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px;}
+    .hint-cap-msg{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:16px;}
+    .hint-cap-score{
+      display:inline-block;padding:6px 16px;border-radius:10px;
+      background:rgba(254,202,87,.12);color:var(--warning);border:1px solid rgba(254,202,87,.25);
+      font-family:var(--font-m);font-weight:700;font-size:14px;margin-bottom:16px;
+    }
+    .hint-cap-btns{display:flex;gap:8px;}
+    .hint-cap-yes{flex:1;background:var(--warning);color:#111;border:none;padding:11px;
+      border-radius:12px;font:700 14px var(--font);cursor:pointer;}
+    .hint-cap-no{flex:1;background:rgba(255,255,255,.06);color:var(--text2);border:1px solid var(--border);
+      padding:11px;border-radius:12px;font:700 14px var(--font);cursor:pointer;}
+
+    /* ─── Session explanation (first chat message style) ─── */
+    .message.session-plan{
+      align-self:stretch;width:95%;margin:0 auto;
+      background:linear-gradient(135deg,rgba(61,90,254,.08),rgba(38,198,218,.05));
+      border:1px solid rgba(61,90,254,.18);border-radius:16px;
+      color:var(--text);padding:14px 16px;font-size:13.5px;line-height:1.6;
+    }
+    .session-plan-title{font-family:var(--font-d);font-weight:800;font-size:14px;
+      color:#82b1ff;margin-bottom:6px;}
+
+    /* ─── Mastery feedback (in finish modal) ──────────────── */
+    .mastery-feedback-box{
+      display:none;margin:12px 0 0;background:rgba(38,198,218,.08);
+      border:1px solid rgba(38,198,218,.18);border-radius:12px;padding:12px 14px;text-align:left;
+    }
+    .mastery-feedback-box.show{display:block;}
+    .mastery-feedback-title{font-size:11px;font-weight:700;color:#80deea;
+      text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;}
+    .mastery-row{display:flex;justify-content:space-between;align-items:center;
+      font-size:12px;padding:4px 0;}
+    .mastery-skill-name{color:var(--text2);}
+    .mastery-delta{font-family:var(--font-m);font-weight:700;font-size:12px;}
+    .mastery-delta.up{color:#4ade80;}
+    .mastery-delta.down{color:#f87171;}
+    .mastery-delta.flat{color:var(--muted);}
+    .mastery-state-badge{font-size:10px;padding:2px 7px;border-radius:6px;
+      background:rgba(61,90,254,.15);color:#82b1ff;margin-left:6px;}
+
+    /* ─── Unchanged base styles ───────────────────────────── */
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dvh;display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased;}
     .subscription-banner{background:linear-gradient(135deg,rgba(254,202,87,.15),rgba(254,202,87,.08));border-bottom:2px solid rgba(254,202,87,.2);padding:12px 20px;text-align:center;font-weight:700;font-size:13px;color:var(--warning);display:none;animation:slideDown .3s ease;}
@@ -18,7 +326,11 @@
     header{background:rgba(12,14,26,.75);backdrop-filter:blur(24px) saturate(1.6);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);z-index:20;flex-shrink:0;}
     .logo{font-family:var(--font-d);font-weight:800;color:#b8b0f0;font-size:18px;letter-spacing:-.3px;}
     .header-right{display:flex;align-items:center;gap:8px;}
-    .timer-badge{background:var(--card);color:var(--text2);font-weight:600;padding:6px 12px;border-radius:100px;font-size:13px;font-family:var(--font-m);border:1px solid var(--border);}
+    .timer-badge{background:var(--card);color:var(--text2);font-weight:600;padding:6px 12px;border-radius:100px;font-size:13px;font-family:var(--font-m);border:1px solid var(--border);cursor:pointer;transition:.15s;}
+    .timer-badge.hidden-mode{opacity:0;pointer-events:none;}
+    .timer-badge.countdown{background:rgba(239,68,68,.12);color:#f87171;border-color:rgba(239,68,68,.25);}
+    .timer-badge.countdown.urgent{animation:countdownPulse 1s ease infinite;}
+    @keyframes countdownPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.3);}50%{box-shadow:0 0 0 6px rgba(239,68,68,0);}}
     .exit-btn{background:rgba(255,255,255,.04);color:var(--text2);padding:6px 12px;border-radius:10px;font-size:12px;font-weight:700;border:1px solid var(--border);cursor:pointer;font-family:var(--font);}
     .exit-btn:hover{background:rgba(255,255,255,.08);color:var(--text);}
     .olympiad-btn{background:var(--ys);color:var(--warning);padding:6px 12px;border-radius:10px;font-size:12px;font-weight:700;border:1px solid rgba(254,202,87,.2);cursor:pointer;text-decoration:none;display:inline-block;}
@@ -34,7 +346,7 @@
     .badge{padding:4px 10px;border-radius:100px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;}
     .badge.difficulty{background:var(--ys);color:var(--warning);border:1px solid rgba(254,202,87,.15);}
     .badge.category{background:var(--as);color:#b8b0f0;border:1px solid rgba(108,92,231,.15);margin-left:5px;}
-    .problem-text{font-family:var(--font-d);font-size:16px;font-weight:700;color:var(--text);line-height:1.5;background:linear-gradient(135deg,rgba(254,202,87,.06),rgba(254,202,87,.03));padding:14px;border-radius:12px;border-left:4px solid rgba(254,202,87,.4);}
+    .problem-text{font-family:var(--font-d);font-size:16px;font-weight:700;color:var(--text);line-height:1.55;white-space:pre-wrap;word-break:break-word;background:linear-gradient(135deg,rgba(254,202,87,.06),rgba(254,202,87,.03));padding:14px;border-radius:12px;border-left:4px solid rgba(254,202,87,.4);}
     .toggle-btn{display:none;width:100%;background:rgba(12,14,26,.6);border:none;border-bottom:1px solid var(--border);color:var(--muted);font:600 12px var(--font);padding:7px;cursor:pointer;flex-shrink:0;}
     .problem-card.minimized .problem-text{display:none;}
     .problem-card.minimized{padding:10px;}
@@ -76,7 +388,16 @@
     .auth-gate p{color:var(--muted);font-size:14px;max-width:320px;text-align:center;line-height:1.5;}
     .auth-gate .login-btn{background:linear-gradient(135deg,var(--primary),#8b7cf6);color:#fff;border:none;padding:14px 32px;border-radius:14px;font:700 15px var(--font);cursor:pointer;box-shadow:0 4px 20px var(--glow);}
     @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,107,107,.4);}70%{box-shadow:0 0 0 12px rgba(255,107,107,0);}100%{box-shadow:0 0 0 0 rgba(255,107,107,0);}}
-    @media(max-width:600px){.toggle-btn{display:block;}.problem-container{padding:0 10px;}.problem-card{border-radius:0 0 16px 16px;border-top:none;}.problem-card::before{border-radius:0;}.problem-card.minimized{display:none;}.status-bar{padding:5px;gap:10px;}.chat-container{padding:10px;}.input-area{padding:8px 12px;}}
+    @keyframes lpSpin{to{transform:translate(-50%,-50%) rotate(360deg);}}
+    @media(max-width:600px){
+      .toggle-btn{display:block;}.problem-container{padding:0 10px;}
+      .problem-card{border-radius:0 0 16px 16px;border-top:none;}
+      .problem-card::before{border-radius:0;}.problem-card.minimized{display:none;}
+      .status-bar{padding:5px;gap:10px;}.chat-container{padding:10px;}
+      .input-area{padding:8px 12px;}
+      .proof-textarea{min-height:70px;}
+      .vision-fab{bottom:70px;}
+    }
     @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
   </style>
 </head>
@@ -87,11 +408,22 @@
     <button class="login-btn" id="authLoginBtn">Go to Login</button>
   </div>
   <div class="subscription-banner" id="subscriptionBanner"><span id="bannerText"></span><span class="banner-link" id="bannerLink">Take Action &#8594;</span></div>
+
+  <!-- A18: Olympiad track header strip -->
+  <div class="oly-header-strip" id="olyHeaderStrip">
+    <span style="font-size:12px;color:var(--muted);font-weight:600;">&#127942; Olympiad</span>
+    <span class="oly-chip skill" id="olySkillChip">Loading track…</span>
+    <span class="oly-chip mastery" id="olyMasteryChip" style="display:none"></span>
+    <span class="oly-chip tier-standard" id="olyTierChip" style="display:none"></span>
+    <span class="oly-chip proof-on" id="olyProofChip" style="display:none">&#128196; Proof required</span>
+  </div>
+
   <header>
     <div class="logo">&#129504; LogicPals</div>
     <div class="header-right">
       <a href="olympiad.html" class="olympiad-btn" id="olympiadHeaderBtn" style="display:none;">&#127942; Olympiad</a>
-      <div class="timer-badge">&#9201;&#65039; <span id="timeDisplay">00:00</span></div>
+      <!-- A13: timer-badge now click-to-toggle and mode-aware -->
+      <div class="timer-badge" id="timerBadge" title="Click to toggle timer">&#9201;&#65039; <span id="timeDisplay">00:00</span></div>
       <button class="exit-btn" id="exitBtn">Exit</button>
     </div>
   </header>
@@ -104,17 +436,28 @@
     <div class="problem-container">
       <div class="problem-card" id="problemCard">
         <div class="problem-header">
-          <div><span class="badge difficulty" id="diffBadge">MEDIUM</span><span class="badge category" id="catBadge">LOGIC</span></div>
+          <div>
+            <span class="badge difficulty" id="diffBadge">MEDIUM</span>
+            <span class="badge category" id="catBadge">LOGIC</span>
+          </div>
           <div style="font-size:12px;font-weight:700;color:var(--muted)">Problem <span id="probNum">1</span>/10</div>
         </div>
         <div class="problem-text" id="problemText">Loading mystery...</div>
+        <!-- A14: Diagram box -->
+        <div class="diagram-box" id="diagramBox">
+          <div class="diagram-label">&#128444; Diagram</div>
+          <img class="diagram-img" id="diagramImg" src="" alt="Problem diagram" style="display:none" />
+          <div class="diagram-desc" id="diagramDesc"></div>
+        </div>
       </div>
     </div>
     <div class="chat-container" id="chatContainer">
       <div class="message system">Hi! Ready to solve this mystery? Read the problem above! &#128070;</div>
     </div>
   </div>
-  <div class="input-area">
+
+  <!-- Regular input area (hidden when proof mode active) -->
+  <div class="input-area" id="regularInputArea">
     <div class="typing-indicator" id="typing">LogicPals is thinking...</div>
     <div class="input-wrapper">
       <button class="round-btn hint-btn" id="hintBtn" title="Hint">&#128161;</button>
@@ -123,6 +466,82 @@
       <button class="round-btn send-btn" id="sendBtn" title="Send">&#10148;</button>
     </div>
   </div>
+
+  <!-- A5/A6/A7/A10: Proof submission panel -->
+  <div class="proof-area" id="proofArea">
+    <div style="max-width:800px;margin:0 auto 6px;">
+      <div class="proof-format-row">
+        <span style="font-size:11px;color:var(--muted);font-weight:600;align-self:center;flex-shrink:0;">Format:</span>
+        <button class="fmt-tab active" data-fmt="plain" type="button">Plain text</button>
+        <button class="fmt-tab" data-fmt="latex" type="button">LaTeX</button>
+        <button class="fmt-tab" data-fmt="mixed" type="button">Mixed</button>
+      </div>
+    </div>
+    <textarea class="proof-textarea" id="proofTextarea" placeholder="Write your proof or solution here. Show all your steps and reasoning..." rows="4"></textarea>
+    <!-- A15: LaTeX live preview -->
+    <div class="latex-preview" id="latexPreview">
+      <div class="latex-preview-label">Preview</div>
+      <div id="latexPreviewContent"></div>
+    </div>
+    <!-- Plagiarism banner -->
+    <div class="plagiarism-banner" id="plagiarismBanner">&#128680; Your proof is similar to a known solution. Try to express the reasoning in your own words.</div>
+    <!-- A10: Hint cascade -->
+    <div class="proof-hint-row">
+      <span class="proof-hint-label">&#128161; Hints:</span>
+      <button class="hint-cascade-btn" data-level="1" data-cap="7" title="Vague direction hint — no score cap" type="button">Level 1</button>
+      <button class="hint-cascade-btn" data-level="2" data-cap="4" title="Strategy hint — max score 4/7" type="button">Level 2</button>
+      <button class="hint-cascade-btn" data-level="3" data-cap="3" title="Key step hint — max score 3/7" type="button">Level 3</button>
+      <button class="hint-cascade-btn" data-level="4" data-cap="2" title="Insight reveal — max score 2/7" type="button">Level 4</button>
+      <span class="hint-level-display" id="hintLevelDisplay"></span>
+      <span class="max-score-badge" id="maxScoreBadge" style="display:none"></span>
+    </div>
+    <!-- Submit row -->
+    <div class="proof-action-row">
+      <button class="proof-submit-btn" id="proofSubmitBtn" type="button">&#128196; Submit Proof</button>
+      <span class="proof-char-count" id="proofCharCount">0 chars</span>
+    </div>
+  </div>
+
+  <!-- A11/A12: Vision FAB + panel -->
+  <button class="vision-fab" id="visionFab" title="Show My Work — upload photo or type steps">&#128247;</button>
+  <div class="vision-panel" id="visionPanel">
+    <div class="vision-panel-inner">
+      <div class="vision-panel-header">
+        <div class="vision-panel-title">&#128247; Show My Work</div>
+        <button class="vision-close-btn" id="visionCloseBtn" type="button">&#10005;</button>
+      </div>
+      <div class="vision-upload-row">
+        <label class="vision-upload-btn">
+          &#128247; Take / Upload Photo
+          <input type="file" id="visionFileInput" accept="image/*" capture="environment" />
+        </label>
+      </div>
+      <div class="vision-preview" id="visionPreview">
+        <img id="visionPreviewImg" src="" alt="Your work" />
+      </div>
+      <!-- A12: Typed fallback -->
+      <div class="vision-typed-label">Or type your solution steps</div>
+      <textarea class="vision-typed-area" id="visionTypedArea" placeholder="Step 1: ...&#10;Step 2: ...&#10;Step 3: ..." rows="3"></textarea>
+      <button class="vision-send-btn" id="visionSendBtn" type="button">&#128640; Send for Feedback</button>
+      <div class="vision-processing" id="visionProcessing">&#129302; Analyzing your work…</div>
+    </div>
+  </div>
+
+  <!-- A10: Hint cap warning modal -->
+  <div class="hint-cap-modal" id="hintCapModal">
+    <div class="hint-cap-box">
+      <div class="hint-cap-icon">&#128161;</div>
+      <div class="hint-cap-title" id="hintCapTitle">Use this hint?</div>
+      <div class="hint-cap-msg" id="hintCapMsg">This hint gives you specific guidance on the approach.</div>
+      <div class="hint-cap-score" id="hintCapScore">Max score: 4/7</div>
+      <div class="hint-cap-btns">
+        <button class="hint-cap-no" id="hintCapNo" type="button">Cancel</button>
+        <button class="hint-cap-yes" id="hintCapYes" type="button">Yes, get hint</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success modal (enhanced with A17: mastery feedback) -->
   <div class="modal-overlay" id="successModal">
     <div class="modal-content">
       <div style="font-size:50px;margin-bottom:10px;" id="modalEmoji">&#127881;</div>
@@ -135,7 +554,12 @@
       <div class="summary-stats">
         <div class="summary-stat"><div class="val" id="sessionSolved">0</div><div class="lbl">Solved</div></div>
         <div class="summary-stat"><div class="val" id="sessionAcc">0%</div><div class="lbl">Accuracy</div></div>
-        <div class="summary-stat"><div class="val" id="sessionSpeed">—</div><div class="lbl">Avg time</div></div>
+        <div class="summary-stat"><div class="val" id="sessionSpeed">&#8212;</div><div class="lbl">Avg time</div></div>
+      </div>
+      <!-- A17: Mastery feedback -->
+      <div class="mastery-feedback-box" id="masteryFeedbackBox">
+        <div class="mastery-feedback-title">&#129504; Skill Mastery Update</div>
+        <div id="masteryFeedbackRows"></div>
       </div>
       <button class="next-btn" id="nextBtn">Next Mystery &#128640;</button>
     </div>
@@ -249,11 +673,20 @@
   function cacheDom(){
     ['problemText','diffBadge','catBadge','probNum','problemCard','toggleBtn',
      'chatContainer','textInput','sendBtn','hintBtn','micBtn','typing',
-     'hintCount','questionCount','timeDisplay',
+     'hintCount','questionCount','timeDisplay','timerBadge',
      'successModal','modalTitle','modalEmoji','finalTime','finalHints','learningInsight','insightBox',
      'nextBtn','sessionSolved','sessionAcc','sessionSpeed',
      'subscriptionBanner','bannerText','bannerLink',
-     'authGate','authLoginBtn','exitBtn'
+     'authGate','authLoginBtn','exitBtn',
+     // New elements
+     'olyHeaderStrip','olySkillChip','olyMasteryChip','olyTierChip','olyProofChip',
+     'diagramBox','diagramImg','diagramDesc',
+     'regularInputArea','proofArea','proofTextarea','latexPreview','latexPreviewContent',
+     'plagiarismBanner','hintLevelDisplay','maxScoreBadge','proofSubmitBtn','proofCharCount',
+     'visionFab','visionPanel','visionCloseBtn','visionFileInput','visionPreview','visionPreviewImg',
+     'visionTypedArea','visionSendBtn','visionProcessing',
+     'hintCapModal','hintCapTitle','hintCapMsg','hintCapScore','hintCapNo','hintCapYes',
+     'masteryFeedbackBox','masteryFeedbackRows',
     ].forEach(id=>{dom[id]=$(id);});
   }
 
@@ -274,23 +707,255 @@
   }
   function renderProblem(){
     if(!currentProblem)return;
-    dom.problemText.innerText=currentProblem.problem_text||'Mystery loading...';
-    dom.diffBadge.innerText=(currentProblem.difficulty||'MEDIUM').toUpperCase();
-    dom.catBadge.innerText=(currentProblem.category||'LOGIC').toUpperCase();
-    dom.probNum.innerText=String(problemCount||1);
-    if(window.innerWidth<=600){dom.problemCard.classList.remove('minimized');dom.toggleBtn.innerText='Hide Mystery \uD83D\uDD3C';}
+
+    // A3: long text safe with white-space:pre-wrap (CSS set)
+    dom.problemText.innerText = currentProblem.problem_text || 'Mystery loading...';
+
+    dom.diffBadge.innerText  = (currentProblem.difficulty_tier || currentProblem.difficulty || 'MEDIUM').toUpperCase();
+
+    // A3 fix: use skill_track for Olympiad, category for Regular
+    const catLabel = TRACK === 'olympiad'
+      ? (currentProblem.skill_track || currentProblem.category || 'OLYMPIAD')
+          .replace(/_/g,' ').toUpperCase()
+      : (currentProblem.category || 'LOGIC').toUpperCase();
+    dom.catBadge.innerText = catLabel;
+    dom.probNum.innerText  = String(problemCount || 1);
+
+    // A14: Diagram rendering
+    const dUrl  = currentProblem.diagram_url;
+    const dDesc = currentProblem.diagram_description;
+    if(dUrl || dDesc){
+      dom.diagramBox.classList.add('show');
+      if(dUrl){ dom.diagramImg.src=dUrl; dom.diagramImg.style.display='block'; }
+      else { dom.diagramImg.style.display='none'; }
+      dom.diagramDesc.textContent = dDesc || '';
+    } else {
+      dom.diagramBox.classList.remove('show');
+    }
+
+    // A15: LaTeX rendering (KaTeX auto-render)
+    if(window.renderMathInElement){
+      try{ renderMathInElement(dom.problemText,{
+        delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},
+                    {left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],
+        throwOnError:false
+      }); }catch(_){}
+    }
+
+    // A18: Olympiad header strip
+    if(TRACK === 'olympiad'){
+      dom.olyHeaderStrip.classList.add('show');
+      const sk = currentProblem.skill_track || 'Olympiad Track';
+      dom.olySkillChip.textContent = '🎯 ' + sk.replace(/_/g,' ');
+
+      // Difficulty tier chip
+      const tier = (currentProblem.difficulty_tier || 'standard').toLowerCase();
+      dom.olyTierChip.className = 'oly-chip tier-' + tier;
+      dom.olyTierChip.textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
+      dom.olyTierChip.style.display = '';
+
+      // Proof indicator
+      if(currentProblem.proof_required){
+        dom.olyProofChip.style.display='';
+      } else {
+        dom.olyProofChip.style.display='none';
+      }
+    }
+
+    // A5/A6: Show proof panel for proof_required problems
+    const isProof = TRACK === 'olympiad' && !!currentProblem.proof_required;
+    setProofMode(isProof);
+
+    // A4: Update placeholder hint based on answer_format
+    const fmt = currentProblem.answer_format || 'word';
+    const placeholders = {
+      integer: 'Enter an integer answer…',
+      fraction: 'e.g. 3/4 or 0.75…',
+      expression: 'Enter your expression…',
+      set: 'e.g. {1, 3, 7}…',
+      word: 'Type your answer…',
+      multi_step: 'Explain your reasoning step by step…',
+    };
+    if(dom.textInput) dom.textInput.placeholder = placeholders[fmt] || 'Type your answer…';
+
+    if(window.innerWidth<=600){
+      dom.problemCard.classList.remove('minimized');
+      dom.toggleBtn.innerText='Hide Mystery \uD83D\uDD3C';
+    }
+  }
+
+  // A5: Toggle between regular input and proof panel
+  let _proofMode = false;
+  function setProofMode(on){
+    _proofMode = on;
+    if(dom.regularInputArea) dom.regularInputArea.style.display = on ? 'none' : '';
+    if(dom.proofArea){
+      if(on) dom.proofArea.classList.add('show');
+      else   dom.proofArea.classList.remove('show');
+    }
+    if(dom.hintBtn) dom.hintBtn.style.display = on ? 'none' : '';
+    // Reset proof state
+    if(on){
+      if(dom.proofTextarea) dom.proofTextarea.value='';
+      if(dom.latexPreview)  dom.latexPreview.classList.remove('show');
+      if(dom.plagiarismBanner) dom.plagiarismBanner.classList.remove('show');
+      proofHintLevel = 0; proofMaxScore = 7; proofSubmissionNumber = 1;
+      updateProofHintUI();
+    }
   }
   function toggleProblem(){
     const h=dom.problemCard.classList.toggle('minimized');
     dom.toggleBtn.innerText=h?'Show Mystery \uD83D\uDD3D':'Hide Mystery \uD83D\uDD3C';
   }
+  // ═══ A13: TIMER MODES ═══
+  // timerMode: 'count_up' (default) | 'hidden' | 'countdown'
+  let timerMode = 'count_up';
+  let countdownMax = 0;       // seconds for countdown
+  let timerVisible = true;
+
+  function detectTimerMode(){
+    const p = new URLSearchParams(location.search);
+    const m = p.get('timer');
+    if(m === 'hidden')   { timerMode='hidden'; }
+    else if(m === 'countdown'){ timerMode='countdown'; countdownMax=parseInt(p.get('duration')||'3600'); }
+    else { timerMode='count_up'; }
+
+    if(TRACK === 'olympiad'){
+      // Olympiad practice always shows timer
+      if(timerMode === 'hidden') timerMode = 'count_up';
+    }
+
+    if(timerMode === 'hidden'){
+      dom.timerBadge.classList.add('hidden-mode');
+      timerVisible = false;
+    } else if(timerMode === 'countdown'){
+      dom.timerBadge.classList.add('countdown');
+    }
+
+    // Click to toggle visibility (Olympiad can hide if desired)
+    dom.timerBadge.addEventListener('click', ()=>{
+      timerVisible = !timerVisible;
+      dom.timerBadge.style.opacity = timerVisible ? '' : '0.12';
+    });
+  }
+
   function startTimer(){
-    if(timerInt)clearInterval(timerInt);
-    timerInt=setInterval(()=>{
-      if(!startTime)return;
-      const d=Math.floor((Date.now()-startTime)/1000);
-      dom.timeDisplay.innerText=String(Math.floor(d/60)).padStart(2,'0')+':'+String(d%60).padStart(2,'0');
-    },1000);
+    if(timerInt) clearInterval(timerInt);
+    timerInt = setInterval(()=>{
+      if(!startTime) return;
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+
+      if(timerMode === 'countdown' && countdownMax > 0){
+        const remaining = Math.max(0, countdownMax - elapsed);
+        const mm = Math.floor(remaining / 60);
+        const ss = remaining % 60;
+        dom.timeDisplay.innerText = String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
+        if(remaining <= 60) dom.timerBadge.classList.add('urgent');
+        if(remaining === 0){ clearInterval(timerInt); autoSubmitOnTimeout(); }
+      } else {
+        const mm = Math.floor(elapsed / 60);
+        const ss = elapsed % 60;
+        dom.timeDisplay.innerText = String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
+      }
+    }, 1000);
+  }
+
+  function autoSubmitOnTimeout(){
+    toast('⏰ Time is up! Auto-submitting…');
+    if(_proofMode && dom.proofTextarea?.value.trim()){
+      submitProof(true);
+    } else {
+      finishPuzzle(false);
+    }
+  }
+
+  // ═══ A10: PROOF HINT CASCADE ═══
+  let proofHintLevel = 0;
+  let proofMaxScore  = 7;
+  let proofSubmissionNumber = 1;
+  let _pendingHintLevel = null;
+
+  const HINT_CAP_MAP = { 1:7, 2:4, 3:3, 4:2 };
+  const HINT_MSG_MAP = {
+    1: 'A vague directional hint — no score penalty.',
+    2: 'A strategy hint that points you toward the key approach.',
+    3: 'A specific hint revealing an important step.',
+    4: '⚠️ This reveals the key insight. Only use if you are truly stuck.',
+  };
+
+  function updateProofHintUI(){
+    document.querySelectorAll('.hint-cascade-btn').forEach(btn=>{
+      const lvl = parseInt(btn.dataset.level);
+      btn.classList.toggle('used',  lvl < proofHintLevel);
+      btn.classList.toggle('active', lvl === proofHintLevel);
+      btn.disabled = lvl < proofHintLevel;
+    });
+    if(proofHintLevel > 0){
+      dom.hintLevelDisplay.textContent = `Level ${proofHintLevel}/4 used`;
+      dom.maxScoreBadge.style.display = '';
+      dom.maxScoreBadge.textContent   = `Max ${proofMaxScore}/7`;
+    } else {
+      dom.hintLevelDisplay.textContent = '';
+      dom.maxScoreBadge.style.display  = 'none';
+    }
+  }
+
+  function requestProofHintAtLevel(level){
+    const cap = HINT_CAP_MAP[level] || 7;
+    if(level > 1 && cap < proofMaxScore){
+      // Show cap warning modal
+      _pendingHintLevel = level;
+      dom.hintCapTitle.textContent = level === 4 ? 'Reveal key insight?' : 'Use this hint?';
+      dom.hintCapMsg.textContent   = HINT_MSG_MAP[level] || '';
+      dom.hintCapScore.textContent = `Max score after: ${cap}/7`;
+      dom.hintCapModal.classList.add('show');
+    } else {
+      fetchProofHint(level);
+    }
+  }
+
+  async function fetchProofHint(level){
+    proofHintLevel = level;
+    proofMaxScore  = HINT_CAP_MAP[level] || proofMaxScore;
+    updateProofHintUI();
+
+    addMessage('hint', '💡 Hint ' + level + '/4: fetching guidance…');
+
+    try{
+      if(!currentProblem?.id || !isValidUUID(currentProblem.id)){
+        addMessage('hint', '💡 Hint: Think carefully about what the problem is asking. What information do you have? What do you need to find?');
+        return;
+      }
+      const { data, error } = await sb.rpc('get_olympiad_proof_hint', {
+        p_problem_id: currentProblem.id,
+        p_hint_level: level,
+        p_child_id:   currentChildId || null,
+        p_session_id: sessionId || null,
+      });
+      if(error) throw error;
+      const hint_text = typeof data === 'string' ? data : data?.hint_text || data?.hint || JSON.stringify(data);
+      // Replace the placeholder message with the real hint
+      const hintEls = dom.chatContainer.querySelectorAll('.message.hint');
+      const lastHint = hintEls[hintEls.length - 1];
+      if(lastHint) lastHint.textContent = '💡 Level ' + level + ' hint: ' + hint_text;
+    }catch(e){
+      console.warn('[Proof hint] RPC failed:', e?.message);
+      const hintEls = dom.chatContainer.querySelectorAll('.message.hint');
+      const lastHint = hintEls[hintEls.length - 1];
+      if(lastHint) lastHint.textContent = '💡 Hint: Consider the structure of the problem carefully. What mathematical property or theorem might be relevant?';
+    }
+  }
+
+  // ═══ HINT (regular track, unchanged logic) ═══
+  function useHint(){
+    // Proof mode uses cascade instead
+    if(_proofMode){ requestProofHintAtLevel(proofHintLevel + 1); return; }
+    if(!HINTS_ENABLED){ toast('Hints are temporarily disabled.'); return; }
+    if(hintsUsed>=3)return;
+    let hints=currentProblem?.hints;
+    if(!hints||!Array.isArray(hints)||!hints.length) hints=['Think carefully about the wording!','Read the problem one more time.','The answer might be simpler than you think.'];
+    addMessage('hint','\uD83D\uDCA1 HINT: '+hints[Math.min(hintsUsed,hints.length-1)]);
+    hintsUsed++;updateStats();saveState();
   }
   function showSubscriptionBanner(type,days){
     if(!dom.subscriptionBanner)return;
@@ -573,7 +1238,7 @@
     }catch(_){}
   }
 // ═══ FINISH PUZZLE ═══
-  function finishPuzzle(correct){
+  async function finishPuzzle(correct){
     localStorage.removeItem('lp_state');
     sessionCorrect++;sessionTotal++;
     addMessage('ai','Correct! \uD83C\uDF89 Amazing job!');
@@ -590,17 +1255,408 @@
     const avgT=sessionTimes.length>0?Math.round(sessionTimes.reduce((a,b)=>a+b,0)/sessionTimes.length):null;
     dom.sessionSpeed.innerText=avgT?avgT+'s':'\u2014';
 
+    // A17: Mastery feedback (non-blocking)
+    fetchMasteryFeedback().catch(()=>{});
+
     setTimeout(()=>{dom.successModal.style.display='flex';},700);
   }
 
-  // ═══ HINT ═══
-  function useHint(){
-    if(!HINTS_ENABLED){ toast('Hints are temporarily disabled.'); return; }
-    if(hintsUsed>=3)return;
-    let hints=currentProblem?.hints;
-    if(!hints||!Array.isArray(hints)||!hints.length) hints=['Think carefully about the wording!','Read the problem one more time.','The answer might be simpler than you think.'];
-    addMessage('hint','\uD83D\uDCA1 HINT: '+hints[Math.min(hintsUsed,hints.length-1)]);
-    hintsUsed++;updateStats();saveState();
+  // ═══ A6/A8/A9: PROOF SUBMISSION + IMO SCORE DISPLAY ═══
+  async function submitProof(autoSubmit=false){
+    const proofText = dom.proofTextarea?.value.trim() || '';
+    if(!proofText && !autoSubmit){
+      toast('Write your proof before submitting.'); return;
+    }
+    if(!sb){ toast('Not connected — cannot submit proof.'); return; }
+
+    dom.proofSubmitBtn.classList.add('loading');
+    dom.proofSubmitBtn.disabled = true;
+
+    const proofFormat = document.querySelector('.fmt-tab.active')?.dataset?.fmt || 'plain';
+
+    addMessage('ai', '🔍 Analyzing your proof structure… (Brain A)');
+    setTimeout(()=>addMessage('ai','🧠 Checking completeness and rigor…'),1400);
+    setTimeout(()=>addMessage('ai','✍️ Preparing Socratic feedback…'),2800);
+
+    try{
+      // Insert into proof_submissions
+      const { data: sub, error: subErr } = await sb.from('proof_submissions').insert({
+        problem_id:         currentProblem?.id || null,
+        session_id:         sessionId || null,
+        child_id:           currentChildId || null,
+        user_id:            currentUserId || null,
+        proof_text:         proofText,
+        proof_format:       proofFormat,
+        hint_level_used:    proofHintLevel,
+        submission_number:  proofSubmissionNumber,
+        status:             'pending',
+      }).select('id').single();
+
+      if(subErr){ console.warn('[Proof] submission insert failed:', subErr.message); }
+
+      const submissionId = sub?.id || null;
+
+      // Poll for evaluation (up to 45 seconds)
+      if(submissionId){
+        const eval_ = await pollProofEvaluation(submissionId, 0);
+        if(eval_) renderIMOScore(eval_); else fallbackProofResponse(proofText);
+      } else {
+        // Edge Function direct call (fallback when DB insert unavailable)
+        fallbackProofResponse(proofText);
+      }
+
+      proofSubmissionNumber++;
+      if(dom.proofTextarea) dom.proofTextarea.value = '';
+
+    }catch(e){
+      console.error('[Proof] submit error:', e);
+      fallbackProofResponse(proofText);
+    } finally {
+      dom.proofSubmitBtn.classList.remove('loading');
+      dom.proofSubmitBtn.disabled = false;
+    }
+  }
+
+  async function pollProofEvaluation(submissionId, attempt){
+    const MAX = 15; const DELAY = 3000;
+    if(attempt >= MAX) return null;
+    await new Promise(r=>setTimeout(r, attempt===0 ? 1500 : DELAY));
+    try{
+      const { data, error } = await sb
+        .from('proof_evaluations')
+        .select('*')
+        .eq('submission_id', submissionId)
+        .limit(1)
+        .single();
+      if(error || !data) return pollProofEvaluation(submissionId, attempt+1);
+      return data;
+    }catch(_){ return pollProofEvaluation(submissionId, attempt+1); }
+  }
+
+  // A8/A9: Render IMO score + breakdown
+  function renderIMOScore(ev){
+    const score    = ev.imo_score ?? ev.score ?? 0;
+    const feedback = ev.feedback_text || ev.brain_b_response || '🧠 Good effort! Here is some Socratic guidance on improving your proof.';
+    const sim      = ev.similarity_score || 0;
+
+    if(sim > 0.70){ dom.plagiarismBanner.classList.add('show'); }
+
+    const barClass = score <= 1 ? 's01' : score <= 3 ? 's23' : score <= 5 ? 's45' : 's67';
+    const pct      = Math.round((score / 7) * 100);
+
+    const scoreMsg = score <= 1 ? 'Keep working — a solid attempt!'
+                   : score <= 3 ? 'Good start — refine the structure!'
+                   : score <= 5 ? 'Solid proof — tighten the rigor!'
+                   : '🎉 Excellent — near-complete proof!';
+
+    // Build structure breakdown rows
+    const struct_sc  = ev.structure_score    ? (ev.structure_score * 7).toFixed(1)    : '—';
+    const comp_sc    = ev.completeness_score ? (ev.completeness_score * 7).toFixed(1) : '—';
+    const rigor_sc   = ev.rigor_score        ? (ev.rigor_score * 7).toFixed(1)        : '—';
+    const gaps       = ev.gap_penalties ? (typeof ev.gap_penalties === 'object'
+      ? Object.entries(ev.gap_penalties).map(([k,v])=>`${k}: -${v}`).join(', ')
+      : String(ev.gap_penalties)) : 'None';
+
+    const prevNote   = proofSubmissionNumber > 2
+      ? `<div class="prev-score-note">⬆ Previous submission: ${score - (ev.prev_score||0) >= 0 ? '+' : ''}${score - (ev.prev_score||0)} points</div>`
+      : '';
+
+    const div = document.createElement('div');
+    div.className = 'message imo-score';
+    div.innerHTML = `
+      <div class="imo-score-header">
+        <div class="imo-score-badge score-${score}">${score}</div>
+        <div class="imo-score-label">
+          <div class="imo-score-title">IMO Score: ${score}/7</div>
+          <div class="imo-score-subtitle">${scoreMsg}</div>
+        </div>
+      </div>
+      <div class="imo-bar-wrap"><div class="imo-bar-fill ${barClass}" style="width:${pct}%"></div></div>
+      <div class="imo-feedback-text">${escHtml(feedback)}</div>
+      ${prevNote}
+      <button class="imo-breakdown-toggle" type="button">▶ Show score breakdown</button>
+      <div class="imo-breakdown">
+        <div class="breakdown-row"><span class="breakdown-key">Structure</span><span class="breakdown-val">${struct_sc}</span></div>
+        <div class="breakdown-row"><span class="breakdown-key">Completeness</span><span class="breakdown-val">${comp_sc}</span></div>
+        <div class="breakdown-row"><span class="breakdown-key">Rigor</span><span class="breakdown-val">${rigor_sc}</span></div>
+        <div class="breakdown-row"><span class="breakdown-key">Gap penalties</span><span class="breakdown-val" style="color:var(--bad)">${escHtml(gaps)}</span></div>
+      </div>
+      <button class="revise-btn" type="button">✏️ Revise &amp; Resubmit</button>
+    `;
+
+    // Wire breakdown toggle
+    div.querySelector('.imo-breakdown-toggle').addEventListener('click', function(){
+      const bd = div.querySelector('.imo-breakdown');
+      const open = bd.classList.toggle('show');
+      this.textContent = (open ? '▼' : '▶') + ' Show score breakdown';
+    });
+
+    // Wire revise button
+    div.querySelector('.revise-btn').addEventListener('click', ()=>{
+      if(dom.proofTextarea) dom.proofTextarea.focus();
+      toast('Revise your proof below and resubmit.');
+    });
+
+    dom.chatContainer.appendChild(div);
+    dom.chatContainer.scrollTop = dom.chatContainer.scrollHeight;
+
+    // If score 7, celebrate
+    if(score === 7){
+      try{confetti({particleCount:200,spread:80,origin:{y:0.5}});}catch(_){}
+      setTimeout(()=>finishPuzzle(true), 1500);
+    }
+  }
+
+  function fallbackProofResponse(proofText){
+    addMessage('ai', '🧠 Thank you for your proof. Let me give you some Socratic guidance: What was your key insight? Could you explain how each step follows from the previous one? Consider whether your argument handles all cases.');
+  }
+
+  function escHtml(s){
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ═══ A16: SESSION EXPLANATION ═══
+  async function fetchAndShowSessionExplanation(){
+    if(!sb || !sessionId || !isValidUUID(sessionId)) return;
+    try{
+      const { data, error } = await sb.rpc('get_session_explanation', { p_session_id: sessionId });
+      if(error || !data) return;
+      const text = typeof data === 'string' ? data : data?.explanation || data?.reason || JSON.stringify(data);
+      if(!text) return;
+      const div = document.createElement('div');
+      div.className = 'message session-plan';
+      div.innerHTML = `<div class="session-plan-title">📋 Today's Focus</div>${escHtml(text)}`;
+      dom.chatContainer.insertBefore(div, dom.chatContainer.firstChild);
+    }catch(e){ console.warn('[Session explanation]', e?.message); }
+  }
+
+  // ═══ A17: MASTERY FEEDBACK ═══
+  async function fetchMasteryFeedback(){
+    if(!sb || !sessionId || TRACK !== 'olympiad') return;
+    try{
+      // Read latest mastery_history for this session's skill
+      const skill = currentProblem?.skill_track;
+      if(!skill) return;
+      const { data } = await sb
+        .from('mastery_history')
+        .select('skill_key, mastery_level, mastery_state, created_at')
+        .eq('child_id', currentChildId || currentUserId)
+        .eq('skill_key', skill)
+        .order('created_at', { ascending: false })
+        .limit(2);
+
+      if(!data || data.length < 1) return;
+
+      const curr = data[0];
+      const prev = data[1];
+      const delta = prev ? (curr.mastery_level - prev.mastery_level) : 0;
+      const dir   = delta > 0.01 ? 'up' : delta < -0.01 ? 'down' : 'flat';
+      const sign  = delta >= 0 ? '+' : '';
+
+      dom.masteryFeedbackBox.classList.add('show');
+      dom.masteryFeedbackRows.innerHTML = `
+        <div class="mastery-row">
+          <span class="mastery-skill-name">${curr.skill_key.replace(/_/g,' ')}</span>
+          <span>
+            <span class="mastery-delta ${dir}">${sign}${(delta*100).toFixed(1)}%</span>
+            <span class="mastery-state-badge">${curr.mastery_state}</span>
+          </span>
+        </div>
+      `;
+    }catch(e){ console.warn('[Mastery]', e?.message); }
+  }
+
+  // ═══ A15: KaTeX loader ═══
+  let katexLoaded = false;
+  async function loadKaTeX(){
+    if(katexLoaded || window.renderMathInElement) { katexLoaded=true; return; }
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css';
+    document.head.appendChild(link);
+
+    await new Promise((ok,no)=>{
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js';
+      s.onload=()=>{
+        const s2=document.createElement('script');
+        s2.src='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js';
+        s2.onload=()=>{katexLoaded=true;ok();};
+        s2.onerror=no;
+        document.head.appendChild(s2);
+      };
+      s.onerror=no;
+      document.head.appendChild(s);
+    });
+  }
+
+  // A15: LaTeX preview for proof textarea
+  let _latexPreviewTimer = null;
+  function setupLatexPreview(){
+    if(!dom.proofTextarea) return;
+    dom.proofTextarea.addEventListener('input', ()=>{
+      const chars = dom.proofTextarea.value.length;
+      if(dom.proofCharCount) dom.proofCharCount.textContent = chars + ' chars';
+
+      clearTimeout(_latexPreviewTimer);
+      const fmt = document.querySelector('.fmt-tab.active')?.dataset?.fmt || 'plain';
+      if(fmt === 'latex' || fmt === 'mixed'){
+        _latexPreviewTimer = setTimeout(()=>{
+          const text = dom.proofTextarea.value;
+          if(dom.latexPreviewContent) dom.latexPreviewContent.textContent = text;
+          dom.latexPreview.classList.toggle('show', !!text);
+          if(window.renderMathInElement && dom.latexPreviewContent){
+            try{ renderMathInElement(dom.latexPreviewContent,{
+              delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],
+              throwOnError:false
+            }); }catch(_){}
+          }
+        }, 500);
+      } else {
+        dom.latexPreview.classList.remove('show');
+      }
+    });
+  }
+
+  // ═══ A11/A12: VISION GUIDANCE ═══
+  let _visionPhotoFile = null;
+
+  function initVisionPanel(){
+    if(!dom.visionFab) return;
+    if(TRACK === 'olympiad') dom.visionFab.classList.add('show');
+
+    dom.visionFab.addEventListener('click', ()=>{
+      dom.visionPanel.classList.toggle('show');
+    });
+    dom.visionCloseBtn?.addEventListener('click', ()=>{
+      dom.visionPanel.classList.remove('show');
+    });
+
+    dom.visionFileInput?.addEventListener('change', e=>{
+      const file = e.target.files?.[0];
+      if(!file) return;
+      _visionPhotoFile = file;
+      const url = URL.createObjectURL(file);
+      dom.visionPreviewImg.src = url;
+      dom.visionPreview.classList.add('show');
+    });
+
+    dom.visionSendBtn?.addEventListener('click', async ()=>{
+      dom.visionSendBtn.disabled = true;
+      dom.visionProcessing.classList.add('show');
+      try{
+        if(_visionPhotoFile){
+          await submitVisionPhoto(_visionPhotoFile);
+        } else {
+          const text = dom.visionTypedArea?.value.trim();
+          if(!text){ toast('Upload a photo or type your solution steps.'); return; }
+          await submitVisionTyped(text);
+        }
+        dom.visionPanel.classList.remove('show');
+      }finally{
+        dom.visionSendBtn.disabled = false;
+        dom.visionProcessing.classList.remove('show');
+      }
+    });
+  }
+
+  async function submitVisionPhoto(file){
+    // Compress to ≤1024px longest edge, JPEG 85%
+    const bmp = await createImageBitmap(file);
+    const MAX = 1024;
+    const scale = Math.min(1, MAX / Math.max(bmp.width, bmp.height));
+    const canvas = document.createElement('canvas');
+    canvas.width  = Math.round(bmp.width  * scale);
+    canvas.height = Math.round(bmp.height * scale);
+    canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise(r=>canvas.toBlob(r,'image/jpeg',0.85));
+    const b64  = await blobToBase64(blob);
+
+    dom.visionPanel.classList.remove('show');
+    addMessage('user','📸 [Sent handwritten work]');
+    addMessage('ai','🔍 Analyzing your work… (Vision AI)');
+
+    const payload = {
+      image_base64:  b64,
+      problem_text:  currentProblem?.problem_text || '',
+      track:         TRACK,
+      child_id:      currentChildId || null,
+      session_id:    sessionId || null,
+    };
+    await callVisionTutor(payload);
+  }
+
+  async function submitVisionTyped(text){
+    addMessage('user', '📝 [Solution steps]\n' + text);
+    addMessage('ai','🧠 Thinking about your approach…');
+    chatLog.push({role:'user', content:'[Solution steps] ' + text});
+    // Typed fallback uses the regular tutor endpoint with extra context
+    try{
+      const res = await fetch('/api/tutor',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          problem_text:          currentProblem?.problem_text,
+          solution_explanation:  currentProblem?.solution_explanation,
+          chatLog,
+          track:                 TRACK,
+          typed_solution_steps:  text,
+          mode:                  'vision_typed_fallback',
+        })
+      });
+      const data = await res.json().catch(()=>({}));
+      const reply = data?.reply || '🧠 Good thinking! Let me ask: which step are you least confident about?';
+      addMessage('ai', reply);
+      chatLog.push({role:'assistant', content:reply});
+      saveState();
+    }catch(e){
+      addMessage('ai','🧠 Interesting approach! Can you explain step 2 in more detail?');
+    }
+    dom.visionTypedArea.value = '';
+  }
+
+  async function callVisionTutor(payload){
+    try{
+      const env = await LP_getEnv();
+      const { data:{ session } } = await sb.auth.getSession();
+      const jwt = session?.access_token;
+      if(!jwt){ addMessage('ai','Sign-in required for vision analysis.'); return; }
+
+      const res = await fetch(`${env.SUPABASE_URL}/functions/v1/vision-tutor`,{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+jwt,'Content-Type':'application/json'},
+        body: JSON.stringify({...payload, problem_id: currentProblem?.id || null})
+      });
+      const data = await res.json().catch(()=>({}));
+      const reply = data?.brain_b_reply || data?.reply || '📸 I can see your work! Let me guide you through the next step.';
+      // Remove "Analyzing" placeholder
+      const aiMsgs = dom.chatContainer.querySelectorAll('.message.ai');
+      const last = aiMsgs[aiMsgs.length-1];
+      if(last && last.textContent.includes('Analyzing')) last.textContent = reply;
+      else addMessage('ai', reply);
+      chatLog.push({role:'assistant', content:reply});
+      saveState();
+    }catch(e){
+      console.warn('[Vision]', e?.message);
+      addMessage('ai','🔍 I can see your work! Try verifying your step 2 — does it follow directly from step 1?');
+    }
+  }
+
+  function blobToBase64(blob){
+    return new Promise((ok,no)=>{
+      const r=new FileReader();
+      r.onload=()=>ok(r.result.replace(/^data:[^;]+;base64,/,''));
+      r.onerror=no;
+      r.readAsDataURL(blob);
+    });
+  }
+
+  // ═══ A18: OLYMPIAD INIT ═══
+  async function initOlympiadMode(){
+    if(TRACK !== 'olympiad') return;
+    document.body.classList.add('olympiad-mode');
+    document.querySelector('.logo').textContent = '🏆 LogicPals Olympiad';
+    dom.olyHeaderStrip.classList.add('show');
+    await loadKaTeX();
   }
 
   // ═══ VOICE ═══
@@ -624,8 +1680,13 @@
   window.addEventListener('load',async()=>{
     cacheDom();
     // P1.6: sessionId will be replaced with the DB-assigned UUID after auth.
-    // Set a local fallback first so nothing is null during boot.
     sessionId=uuid();
+
+    // ── A18: Olympiad init (theme + KaTeX) ────────────────
+    await initOlympiadMode();
+
+    // ── A13: Timer mode detection ──────────────────────────
+    detectTimerMode();
 
     dom.exitBtn.addEventListener('click',clearStateAndExit);
     dom.toggleBtn.addEventListener('click',toggleProblem);
@@ -635,6 +1696,52 @@
     dom.nextBtn.addEventListener('click',()=>loadNextPuzzle(true));
     dom.textInput.addEventListener('keypress',e=>{if(e.key==='Enter')sendText();});
     dom.authLoginBtn.addEventListener('click',()=>location.assign(LOGIN_URL));
+
+    // ── A6: Proof submit button ────────────────────────────
+    dom.proofSubmitBtn?.addEventListener('click', ()=>submitProof());
+
+    // ── A15: LaTeX preview ────────────────────────────────
+    setupLatexPreview();
+
+    // ── A7: Format tab switching ───────────────────────────
+    document.querySelectorAll('.fmt-tab').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.fmt-tab').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        // Toggle LaTeX preview visibility
+        const fmt = btn.dataset.fmt;
+        const hasText = dom.proofTextarea?.value?.trim();
+        if(hasText && (fmt==='latex'||fmt==='mixed')){
+          dom.latexPreview.classList.add('show');
+        } else {
+          dom.latexPreview.classList.remove('show');
+        }
+      });
+    });
+
+    // ── A10: Hint cascade buttons ──────────────────────────
+    document.querySelectorAll('.hint-cascade-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const lvl = parseInt(btn.dataset.level);
+        if(btn.classList.contains('used')) return;
+        if(lvl <= proofHintLevel) return; // already used lower level
+        requestProofHintAtLevel(lvl);
+      });
+    });
+
+    // ── A10: Hint cap modal ────────────────────────────────
+    dom.hintCapYes?.addEventListener('click', ()=>{
+      dom.hintCapModal.classList.remove('show');
+      if(_pendingHintLevel) fetchProofHint(_pendingHintLevel);
+      _pendingHintLevel = null;
+    });
+    dom.hintCapNo?.addEventListener('click', ()=>{
+      dom.hintCapModal.classList.remove('show');
+      _pendingHintLevel = null;
+    });
+
+    // ── A11/A12: Vision panel ──────────────────────────────
+    initVisionPanel();
 
     try{
       const env=await LP_getEnv();
@@ -683,9 +1790,7 @@
         }
       }catch(_){}
 
-      // FIX 5: Show Olympiad header button only for eligible tiers.
-      // Uses lpCheckOlympiadTier() which is defined above loadNextPuzzle().
-      // Non-Olympiad subscribers never see the button — prevents confusion.
+      // Show Olympiad header button for eligible tiers
       try {
         const olympiadEligible = await lpCheckOlympiadTier();
         const olympiadBtn = document.getElementById('olympiadHeaderBtn');
@@ -700,11 +1805,24 @@
       }catch(_){}
       if(!currentChildId) console.warn('[Learn] No child_id — will use user_id for attempts');
 
-      // P1.6: Create DB session row — fires trg_extract_session_fingerprint
-      // which populates session_fingerprints and then trg_detect_session_sharing.
-      // createDbSession() is graceful: falls back to local UUID on any error.
+      // P1.6: Create DB session row
       sessionId=await createDbSession(currentUserId, currentChildId);
       console.log('[Learn] Session ID:',sessionId);
+
+      // A18: Mastery chip (fetch from DB for Olympiad)
+      if(TRACK === 'olympiad' && sb && currentChildId){
+        try{
+          const { data:ms } = await sb
+            .from('v_current_mastery')
+            .select('skill_key, mastery_level, mastery_state')
+            .eq('child_id', currentChildId)
+            .limit(1);
+          if(ms?.length){
+            dom.olyMasteryChip.textContent = `📊 ${ms[0].mastery_state} (${(ms[0].mastery_level*100).toFixed(0)}%)`;
+            dom.olyMasteryChip.style.display='';
+          }
+        }catch(_){}
+      }
 
       // Responsive
       if(window.innerWidth>600)dom.toggleBtn.style.display='none';
@@ -719,6 +1837,9 @@
           else restoreState(p);
         }else await loadNextPuzzle(false);
       }catch(_){await loadNextPuzzle(false);}
+
+      // A16: Session explanation (non-blocking, after first problem loads)
+      setTimeout(()=>fetchAndShowSessionExplanation().catch(()=>{}), 800);
 
       dom.textInput.focus();
     }catch(e){console.error(e);LP_showFatal('Start failed: '+(e?.message||e));}
