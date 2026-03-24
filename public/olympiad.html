@@ -1437,7 +1437,7 @@
     }
 
     async function fetchChildrenList() {
-      const { data, error } = await sb.from("children").select("id, display_name, name").order("created_at", { ascending: true });
+      const { data, error } = await sb.from("children").select("id, name").order("created_at", { ascending: true });
       if (error) throw new Error(error.message);
       return data || [];
     }
@@ -1463,13 +1463,13 @@
 
       if (!matched && children.length === 1) {
         const c = children[0];
-        saveChild(c.id, c.display_name || c.name || "Child");
+        saveChild(c.id, c.name || "Child");
         hideError();
         return true;
       }
 
       children.forEach(c => {
-        const nm = c.display_name || c.name || c.id.slice(0, 8);
+        const nm = c.name || c.id.slice(0, 8);
         const opt = document.createElement("option");
         opt.value = c.id;
         opt.textContent = nm;
@@ -1478,7 +1478,7 @@
       });
 
       if (matched) {
-        saveChild(matched.id, matched.display_name || matched.name || "Child");
+        saveChild(matched.id, matched.name || "Child");
         hideError();
         return true;
       }
