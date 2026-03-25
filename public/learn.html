@@ -989,7 +989,10 @@
     chatLog.forEach(m=>{if(m.role!=='system')addMessage(m.role==='assistant'?'ai':'user',m.content,false);});
     startTimer();
   }
-  function clearStateAndExit(){localStorage.removeItem('lp_state');location.href='dashboard.html';}
+  function clearStateAndExit(){
+    localStorage.removeItem('lp_state');
+    location.href = TRACK === 'olympiad' ? '/olympiad.html' : '/dashboard.html';
+  }
 
   // ═══ CORE: Load puzzle ═══
   // ═══════════════════════════════════════════════════════════════
