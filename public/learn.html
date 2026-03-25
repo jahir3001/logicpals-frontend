@@ -1493,14 +1493,26 @@
     if(!sb || !sessionId || !isValidUUID(sessionId)) return;
     try{
       const { data, error } = await sb.rpc('get_session_explanation', { p_session_id: sessionId });
-      if(error || !data) return;
+      // 404 = RPC not deployed yet — silent no-op, not an error
+      if(error){
+        if(error.code === 'PGRST202' || error.message?.includes('404') || error.message?.includes('not found')){
+          console.info('[Session explanation] RPC not deployed yet — skipping');
+        } else {
+          console.warn('[Session explanation] error:', error.message);
+        }
+        return;
+      }
+      if(!data) return;
       const text = typeof data === 'string' ? data : data?.explanation || data?.reason || JSON.stringify(data);
       if(!text) return;
       const div = document.createElement('div');
       div.className = 'message session-plan';
       div.innerHTML = `<div class="session-plan-title">📋 Today's Focus</div>${escHtml(text)}`;
       dom.chatContainer.insertBefore(div, dom.chatContainer.firstChild);
-    }catch(e){ console.warn('[Session explanation]', e?.message); }
+    }catch(e){
+      // Network errors or RPC not found — always silent
+      console.info('[Session explanation] skipped:', e?.message);
+    }
   }
 
   // ═══ A17: MASTERY FEEDBACK ═══
@@ -1882,14 +1894,19 @@
       sessionId=await createDbSession(currentUserId, currentChildId);
       console.log('[Learn] Session ID:',sessionId);
 
-      // A18: Mastery chip (fetch from DB for Olympiad)
+      // A18: Mastery chip (fetch latest mastery from mastery_history for Olympiad)
       if(TRACK === 'olympiad' && sb && currentChildId){
         try{
-          const { data:ms } = await sb
-            .from('v_current_mastery')
+          const urlP2 = new URLSearchParams(location.search);
+          const qSkill2 = urlP2.get('skill');
+          let mq = sb
+            .from('mastery_history')
             .select('skill_key,mastery_level,mastery_state')
             .eq('child_id', currentChildId)
+            .order('created_at',{ascending:false})
             .limit(1);
+          if(qSkill2) mq = mq.eq('skill_key', qSkill2);
+          const { data:ms } = await mq;
           if(ms?.length){
             dom.olyMasteryChip.textContent = `📊 ${ms[0].mastery_state} (${(ms[0].mastery_level*100).toFixed(0)}%)`;
             dom.olyMasteryChip.style.display='';

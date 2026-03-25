@@ -9,7 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 
   <!-- Keep your guard -->
-  <script src="/app/guards/subscription-guard.js" defer></script>
+  <script src="/assets/js/subscription-guard.js" defer></script>
   <!-- Env loader (should set window.__LP_ENV). Falls back to /api/env if not present -->
   <script src="/assets/js/env-loader.js" defer></script>
 
@@ -77,7 +77,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
+      flex-wrap: nowrap;
     }
 
     .logo {
@@ -159,33 +160,41 @@
     }
 
     @media (max-width: 768px) {
+      .header-content { padding: 0 12px; gap: 8px; }
       .header-user-email { display: none; }
-      .btn-dashboard span { display: none; }
+      .btn-dashboard span:last-child { display: none; }
+      .logo-text { font-size: 18px; }
     }
 
     /* Navigation */
     .nav-tabs {
       display: flex;
-      gap: 8px;
+      gap: 4px;
       background: white;
-      padding: 8px;
+      padding: 6px;
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      flex-wrap: wrap;
-      justify-content: center;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex-shrink: 1;
+      min-width: 0;
     }
+    .nav-tabs::-webkit-scrollbar { display: none; }
 
     .nav-tab {
-      padding: 10px 20px;
+      padding: 8px 14px;
       border: none;
       background: transparent;
       color: var(--gray-700);
       font-weight: 600;
-      font-size: 14px;
+      font-size: 13px;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.3s ease;
       font-family: var(--font-body);
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .nav-tab:hover {
