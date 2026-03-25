@@ -1076,42 +1076,79 @@
     problemCount++;
     updateStats();
 
-    let puzzle=localPuzzles[Math.floor(Math.random()*localPuzzles.length)];
+    let puzzle = null;  // null = no problem found yet
+    let noOlympiadContent = false;
     try{
       if(sb){
         const urlP  = new URLSearchParams(location.search);
-        const qLevel = urlP.get('level');   // primary/junior/secondary/higher_secondary/advanced
-        const qSkill = urlP.get('skill');   // divisibility_digit_logic etc.
+        const qLevel = urlP.get('level');
+        const qSkill = urlP.get('skill');
 
         let query = sb.from('problems').select('*').eq('is_active', true);
 
         if(TRACK === 'olympiad'){
-          // Olympiad problems have skill_track set (not null)
-          // Don't filter by olympiad_level='olympiad' — that matches nothing.
-          // Instead filter by the level from URL if provided, or fall back to any olympiad problem.
-          if(qLevel){
-            query = query.eq('olympiad_level', qLevel);
-          } else {
-            query = query.not('skill_track', 'is', null);
+          // Try 3 progressively broader queries so we always find something if it exists
+          // Query 1: exact level + skill
+          if(qLevel && qSkill){
+            const r = await sb.from('problems').select('*').eq('is_active',true).eq('olympiad_level',qLevel).eq('skill_track',qSkill);
+            if(!r.error && r.data?.length > 0){ puzzle = r.data[Math.floor(Math.random()*r.data.length)]; }
           }
-          // Further narrow by skill track if specified
-          if(qSkill){
-            query = query.eq('skill_track', qSkill);
+          // Query 2: level only (any skill)
+          if(!puzzle && qLevel){
+            const r = await sb.from('problems').select('*').eq('is_active',true).eq('olympiad_level',qLevel);
+            if(!r.error && r.data?.length > 0){ puzzle = r.data[Math.floor(Math.random()*r.data.length)]; }
+          }
+          // Query 3: any olympiad problem (skill_track IS NOT NULL)
+          if(!puzzle){
+            const r = await sb.from('problems').select('*').eq('is_active',true).not('skill_track','is',null);
+            if(!r.error && r.data?.length > 0){ puzzle = r.data[Math.floor(Math.random()*r.data.length)]; }
+          }
+          // Query 4: track column = 'olympiad' (alternative schema)
+          if(!puzzle){
+            const r = await sb.from('problems').select('*').eq('is_active',true).eq('track','olympiad');
+            if(!r.error && r.data?.length > 0){ puzzle = r.data[Math.floor(Math.random()*r.data.length)]; }
+          }
+          if(!puzzle){
+            noOlympiadContent = true;
+            console.warn('[Learn] No Olympiad problems in DB for level='+qLevel+'. Seed content first.');
           }
         } else {
-          // Regular track: problems without skill_track (or olympiad_level = 'regular')
-          query = query.or('skill_track.is.null,olympiad_level.eq.regular');
-        }
-
-        const{data,error} = await query;
-        if(!error && data?.length > 0){
-          puzzle = data[Math.floor(Math.random() * data.length)];
-        } else {
-          console.warn('[Learn] Problem fetch returned 0 rows. level='+qLevel+' skill='+qSkill+' error='+error?.message);
+          // Regular track
+          const r = await sb.from('problems').select('*').eq('is_active',true).or('skill_track.is.null,olympiad_level.eq.regular');
+          if(!r.error && r.data?.length > 0) puzzle = r.data[Math.floor(Math.random()*r.data.length)];
         }
       }
     }catch(e){console.warn('[Learn] Problem fetch failed:',e);}
 
+    // Regular track only: use local fallback if no DB problems
+    if(!puzzle && TRACK !== 'olympiad'){
+      puzzle = localPuzzles[Math.floor(Math.random()*localPuzzles.length)];
+    }
+
+    // Olympiad with no content: show proper empty state, never show sheep
+    if(!puzzle && TRACK === 'olympiad'){
+      dom.chatContainer.innerHTML = `
+        <div class="message ai" style="align-self:stretch;width:95%;border-radius:16px;text-align:center;padding:24px 20px;">
+          <div style="font-size:32px;margin-bottom:12px;">🏗️</div>
+          <div style="font-family:var(--font-d);font-size:16px;font-weight:800;color:var(--text);margin-bottom:8px;">
+            Olympiad Content Coming Soon
+          </div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px;">
+            The problem-solving engine is ready and working — but Olympiad problems haven't been seeded into the database yet.
+            <br><br>
+            Once problems are seeded for the <strong style="color:#82b1ff">${new URLSearchParams(location.search).get('level') || 'olympiad'}</strong> level, they'll appear here automatically.
+          </div>
+          <a href="/olympiad.html" style="display:inline-block;background:rgba(61,90,254,.18);color:#82b1ff;border:1px solid rgba(61,90,254,.3);padding:10px 20px;border-radius:12px;font-weight:700;font-size:13px;text-decoration:none;">
+            ← Back to Olympiad Hub
+          </a>
+        </div>
+      `;
+      dom.problemText.innerText = '🏗️ Olympiad content being prepared…';
+      dom.diffBadge.innerText   = 'SOON';
+      dom.catBadge.innerText    = 'OLYMPIAD';
+      if(dom.regularInputArea) dom.regularInputArea.style.display = 'none';
+      return; // Don't start timer, don't save state
+    }
     currentProblem=puzzle;
     startTime=Date.now();
     saveState();renderProblem();startTimer();
@@ -1472,7 +1509,7 @@
       if(!skill) return;
       const { data } = await sb
         .from('mastery_history')
-        .select('skill_key, mastery_level, mastery_state, created_at')
+        .select('skill_key,mastery_level,mastery_state,created_at')
         .eq('child_id', currentChildId || currentUserId)
         .eq('skill_key', skill)
         .order('created_at', { ascending: false })
@@ -1847,7 +1884,7 @@
         try{
           const { data:ms } = await sb
             .from('v_current_mastery')
-            .select('skill_key, mastery_level, mastery_state')
+            .select('skill_key,mastery_level,mastery_state')
             .eq('child_id', currentChildId)
             .limit(1);
           if(ms?.length){
