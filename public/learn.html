@@ -409,10 +409,11 @@
   </div>
   <div class="subscription-banner" id="subscriptionBanner"><span id="bannerText"></span><span class="banner-link" id="bannerLink">Take Action &#8594;</span></div>
 
-  <!-- A18: Olympiad track header strip -->
+  <!-- A18: Olympiad track header strip — breadcrumb style, chips are links -->
   <div class="oly-header-strip" id="olyHeaderStrip">
-    <span style="font-size:12px;color:var(--muted);font-weight:600;">&#127942; Olympiad</span>
-    <span class="oly-chip skill" id="olySkillChip">Loading track…</span>
+    <a href="/olympiad.html" style="font-size:12px;color:var(--muted);font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px;" title="Back to Olympiad hub">&#127942; Olympiad</a>
+    <span style="font-size:11px;color:var(--muted);opacity:.5">›</span>
+    <a href="/olympiad.html" class="oly-chip skill" id="olySkillChip" style="text-decoration:none;cursor:pointer;" title="Back to Olympiad hub">Loading track…</a>
     <span class="oly-chip mastery" id="olyMasteryChip" style="display:none"></span>
     <span class="oly-chip tier-standard" id="olyTierChip" style="display:none"></span>
     <span class="oly-chip proof-on" id="olyProofChip" style="display:none">&#128196; Proof required</span>
@@ -745,8 +746,13 @@
     // A18: Olympiad header strip
     if(TRACK === 'olympiad'){
       dom.olyHeaderStrip.classList.add('show');
-      const sk = currentProblem.skill_track || 'Olympiad Track';
-      dom.olySkillChip.textContent = '🎯 ' + sk.replace(/_/g,' ');
+      const urlP   = new URLSearchParams(location.search);
+      const qLevel = urlP.get('level');
+      const qSkill = urlP.get('skill');
+      // Prefer URL params over problem fields for the breadcrumb
+      const levelLabel = qLevel ? qLevel.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) : null;
+      const skillLabel = (qSkill || currentProblem.skill_track || '').replace(/_/g,' ');
+      dom.olySkillChip.textContent = '🎯 ' + (levelLabel || skillLabel || 'Olympiad Track');
 
       // Difficulty tier chip
       const tier = (currentProblem.difficulty_tier || 'standard').toLowerCase();
@@ -1073,9 +1079,36 @@
     let puzzle=localPuzzles[Math.floor(Math.random()*localPuzzles.length)];
     try{
       if(sb){
-        const level=TRACK==='olympiad'?'olympiad':'regular';
-        const{data,error}=await sb.from('problems').select('*').eq('is_active',true).eq('olympiad_level',level);
-        if(!error&&data?.length>0) puzzle=data[Math.floor(Math.random()*data.length)];
+        const urlP  = new URLSearchParams(location.search);
+        const qLevel = urlP.get('level');   // primary/junior/secondary/higher_secondary/advanced
+        const qSkill = urlP.get('skill');   // divisibility_digit_logic etc.
+
+        let query = sb.from('problems').select('*').eq('is_active', true);
+
+        if(TRACK === 'olympiad'){
+          // Olympiad problems have skill_track set (not null)
+          // Don't filter by olympiad_level='olympiad' — that matches nothing.
+          // Instead filter by the level from URL if provided, or fall back to any olympiad problem.
+          if(qLevel){
+            query = query.eq('olympiad_level', qLevel);
+          } else {
+            query = query.not('skill_track', 'is', null);
+          }
+          // Further narrow by skill track if specified
+          if(qSkill){
+            query = query.eq('skill_track', qSkill);
+          }
+        } else {
+          // Regular track: problems without skill_track (or olympiad_level = 'regular')
+          query = query.or('skill_track.is.null,olympiad_level.eq.regular');
+        }
+
+        const{data,error} = await query;
+        if(!error && data?.length > 0){
+          puzzle = data[Math.floor(Math.random() * data.length)];
+        } else {
+          console.warn('[Learn] Problem fetch returned 0 rows. level='+qLevel+' skill='+qSkill+' error='+error?.message);
+        }
       }
     }catch(e){console.warn('[Learn] Problem fetch failed:',e);}
 
@@ -1829,13 +1862,34 @@
       else dom.problemCard.classList.add('minimized');
 
       // Restore or fresh
+      // IMPORTANT: if URL has session_id= param, it came from olympiad.html —
+      // always load fresh (never restore localStorage which may have an old sheep problem)
+      const urlParams   = new URLSearchParams(location.search);
+      const urlSessionId = urlParams.get('session_id');
+      const urlChildId   = urlParams.get('child_id');
+      const urlLevel     = urlParams.get('level');   // primary/junior/secondary/higher_secondary/advanced
+      const urlSkill     = urlParams.get('skill');   // divisibility_digit_logic etc.
+
+      // Use child_id from URL if provided by olympiad.html
+      if(urlChildId && !currentChildId) currentChildId = urlChildId;
+      // Use session_id from URL if provided
+      if(urlSessionId) sessionId = urlSessionId;
+
+      const fromOlympiadHub = !!(urlSessionId || urlLevel || urlSkill);
+
       try{
-        const raw=localStorage.getItem('lp_state');
-        if(raw){
-          const p=JSON.parse(raw);
-          if(p?.track&&p.track!==TRACK){localStorage.removeItem('lp_state');await loadNextPuzzle(false);}
-          else restoreState(p);
-        }else await loadNextPuzzle(false);
+        if(fromOlympiadHub){
+          // Always fresh — olympiad.html gave us a new session
+          localStorage.removeItem('lp_state');
+          await loadNextPuzzle(false);
+        } else {
+          const raw=localStorage.getItem('lp_state');
+          if(raw){
+            const p=JSON.parse(raw);
+            if(p?.track&&p.track!==TRACK){localStorage.removeItem('lp_state');await loadNextPuzzle(false);}
+            else restoreState(p);
+          }else await loadNextPuzzle(false);
+        }
       }catch(_){await loadNextPuzzle(false);}
 
       // A16: Session explanation (non-blocking, after first problem loads)
