@@ -95,6 +95,74 @@
       font-weight: 900;
     }
 
+    /* Header right: user + sign out */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .header-user-email {
+      font-size: 13px;
+      color: var(--gray-700);
+      font-weight: 600;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .btn-signout {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border: 1.5px solid var(--gold-400);
+      background: white;
+      color: var(--gold-700);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn-signout:hover {
+      background: var(--gold-50);
+      border-color: var(--gold-600);
+    }
+
+    .btn-dashboard {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border: 1.5px solid var(--gray-200);
+      background: white;
+      color: var(--gray-700);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn-dashboard:hover {
+      background: var(--gray-100);
+      border-color: var(--gray-300);
+    }
+
+    @media (max-width: 768px) {
+      .header-user-email { display: none; }
+      .btn-dashboard span { display: none; }
+    }
+
     /* Navigation */
     .nav-tabs {
       display: flex;
@@ -785,7 +853,7 @@
 <body>
   <div class="header">
     <div class="header-content">
-      <a href="#" class="logo" onclick="return false;">
+      <a href="/dashboard.html" class="logo">
         <span class="logo-icon">🧠</span>
         <span class="logo-text">LogicPals Olympiad</span>
       </a>
@@ -797,6 +865,16 @@
         <button class="nav-tab" data-tab="mocks" onclick="switchSection('mocks', loadMockSection)">Mock Olympiads</button>
         <button class="nav-tab" data-tab="progress" onclick="switchSection('progress', loadProgressSection)">Progress</button>
         <button class="nav-tab" data-tab="leaderboard" onclick="switchSection('leaderboard', loadLeaderboardSection)">Leaderboard</button>
+      </div>
+
+      <div class="header-actions">
+        <a href="/dashboard.html" class="btn-dashboard" title="Go to Student Dashboard">
+          <span>📊</span><span> Dashboard</span>
+        </a>
+        <span class="header-user-email" id="headerUserEmail"></span>
+        <button class="btn-signout" id="btnSignOut" onclick="handleSignOut()" title="Sign out">
+          Sign out
+        </button>
       </div>
     </div>
   </div>
@@ -1409,12 +1487,26 @@
       window.location.href = `/login.html?next=${next}`;
     }
 
+    async function handleSignOut() {
+      const btn = document.getElementById('btnSignOut');
+      if (btn) { btn.disabled = true; btn.textContent = 'Signing out…'; }
+      try {
+        if (sb) await sb.auth.signOut({ scope: 'local' });
+      } catch (_) {}
+      window.location.href = '/login.html?logged_out=1';
+    }
+
     async function requireSession() {
       const { data, error } = await sb.auth.getSession();
       if (error) throw new Error(error.message);
       session = data?.session || null;
       user = session?.user || null;
       if (!user) { redirectToLogin(); return false; }
+
+      // Populate header email
+      const emailEl = document.getElementById('headerUserEmail');
+      if (emailEl && user.email) emailEl.textContent = user.email;
+
       return true;
     }
 
