@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="/assets/js/geometry-renderer.js"></script>
   <style>
     /* ─── Base variables (Regular track) ─────────────────── */
     :root{
@@ -60,6 +61,21 @@
     .oly-chip.tier-challenge{background:rgba(251,146,60,.12);color:#fb8c00;border:1px solid rgba(251,146,60,.25);}
     .oly-chip.tier-contest{background:rgba(220,38,38,.1);color:#ef9a9a;border:1px solid rgba(220,38,38,.2);}
     .oly-chip.proof-on{background:rgba(156,39,176,.12);color:#ce93d8;border:1px solid rgba(156,39,176,.25);}
+
+    /* ─── Geometry renderer container ────────────────────── */
+    .geometry-container{
+      display:none;
+      margin-bottom:12px;
+      border-radius:12px;
+      overflow:hidden;
+      border:1px solid var(--border);
+      background:#fffbeb;  /* matches SVG background colour */
+      line-height:0;       /* prevents extra space below inline SVG */
+    }
+    .geometry-container.show{display:block;}
+    .geometry-container svg{display:block;width:100%;height:auto;}
+    /* fallback image / description inside renderer */
+    .geometry-container img{max-width:100%;height:auto;display:block;}
 
     /* ─── Diagram box ─────────────────────────────────────── */
     .diagram-box{
@@ -443,9 +459,12 @@
           </div>
           <div style="font-size:12px;font-weight:700;color:var(--muted)">Problem <span id="probNum">1</span>/10</div>
         </div>
+        <!-- Geometry/diagram container — ABOVE problem text per spec.
+             geometry-renderer.js handles 3-tier: geometry_data → diagram_url → diagram_description -->
+        <div class="geometry-container" id="geometryContainer"></div>
         <div class="problem-text" id="problemText">Loading mystery...</div>
-        <!-- A14: Diagram box -->
-        <div class="diagram-box" id="diagramBox">
+        <!-- Legacy diagram box — kept for backward compat, hidden when renderer is active -->
+        <div class="diagram-box" id="diagramBox" style="display:none">
           <div class="diagram-label">&#128444; Diagram</div>
           <img class="diagram-img" id="diagramImg" src="" alt="Problem diagram" style="display:none" />
           <div class="diagram-desc" id="diagramDesc"></div>
@@ -681,7 +700,7 @@
      'authGate','authLoginBtn','exitBtn',
      // New elements
      'olyHeaderStrip','olySkillChip','olyMasteryChip','olyTierChip','olyProofChip',
-     'diagramBox','diagramImg','diagramDesc',
+     'diagramBox','diagramImg','diagramDesc','geometryContainer',
      'regularInputArea','proofArea','proofTextarea','latexPreview','latexPreviewContent',
      'plagiarismBanner','hintLevelDisplay','maxScoreBadge','proofSubmitBtn','proofCharCount',
      'visionFab','visionPanel','visionCloseBtn','visionFileInput','visionPreview','visionPreviewImg',
@@ -722,16 +741,30 @@
     dom.catBadge.innerText = catLabel;
     dom.probNum.innerText  = String(problemCount || 1);
 
-    // A14: Diagram rendering
-    const dUrl  = currentProblem.diagram_url;
-    const dDesc = currentProblem.diagram_description;
-    if(dUrl || dDesc){
-      dom.diagramBox.classList.add('show');
-      if(dUrl){ dom.diagramImg.src=dUrl; dom.diagramImg.style.display='block'; }
-      else { dom.diagramImg.style.display='none'; }
-      dom.diagramDesc.textContent = dDesc || '';
-    } else {
-      dom.diagramBox.classList.remove('show');
+    // Geometry rendering — 3-tier fallback via geometry-renderer.js
+    // Works for BOTH tracks: ?track=regular and ?track=olympiad
+    // Tier 1: geometry_data (jsonb)  → dynamic SVG
+    // Tier 2: diagram_url (text)     → static image
+    // Tier 3: diagram_description    → styled text box
+    const hasGeometry = !!(
+      currentProblem.geometry_data ||
+      currentProblem.diagram_url   ||
+      currentProblem.diagram_description
+    );
+    if(dom.geometryContainer){
+      if(hasGeometry && window.GeometryRenderer){
+        dom.geometryContainer.classList.add('show');
+        dom.geometryContainer.innerHTML = ''; // clear previous
+        try{
+          window.GeometryRenderer.renderGeometry(currentProblem, 'geometryContainer');
+        }catch(e){
+          console.warn('[Geometry] render failed:', e?.message);
+          dom.geometryContainer.classList.remove('show');
+        }
+      } else {
+        dom.geometryContainer.classList.remove('show');
+        dom.geometryContainer.innerHTML = '';
+      }
     }
 
     // A15: LaTeX rendering (KaTeX auto-render)
