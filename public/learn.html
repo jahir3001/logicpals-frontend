@@ -1,9 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;
+  f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-PSTQB75G');</script>
+  <!-- End Google Tag Manager -->
   <meta charset="UTF-8" />
+  <!-- SEO — title set dynamically by JS based on track -->
+  <title>LogicPals — Practice</title>
+  <meta name="description" content="Adaptive problem solving with AI Socratic tutoring. Build critical thinking and Olympiad skills.">
+  <meta name="robots" content="noindex, nofollow">
+  <script>
+    // Set title immediately based on track param — before any render
+    (function(){
+      const t = new URLSearchParams(location.search).get('track');
+      document.title = t === 'olympiad'
+        ? 'BdMO Olympiad Practice | LogicPals'
+        : 'Practice Critical Thinking | LogicPals';
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>LogicPals Tutor</title>
+  
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -412,12 +433,18 @@
       .status-bar{padding:5px;gap:10px;}.chat-container{padding:10px;}
       .input-area{padding:8px 12px;}
       .proof-textarea{min-height:70px;}
-      .vision-fab{bottom:70px;}
+      /* Push FAB above the 64px input bar + safe area — no overlap with mic/send */
+      .vision-fab{bottom:calc(68px + env(safe-area-inset-bottom, 0px));}
     }
     @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
   </style>
+  <script src="/assets/js/lp-tracking.js"></script>
 </head>
 <body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSTQB75G"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
   <div class="auth-gate" id="authGate">
     <h2>&#128274; Sign in required</h2>
     <p>You need to be signed in to practice. Please log in to continue.</p>
@@ -655,6 +682,8 @@
       }).select('id').single();
       if(error){console.warn('[Learn] sessions INSERT failed:',error.message);return uuid();}
       console.log('[Learn] DB session created:',data.id);
+      // GA4: session_started
+      window.LP_track('session_started',{track:TRACK,session_type:TRACK==='olympiad'?'olympiad_practice':'regular_practice'});
       return data.id;
     }catch(e){console.warn('[Learn] sessions INSERT exception:',e);return uuid();}
   }
@@ -1087,6 +1116,7 @@
 
   async function loadNextPuzzle(clearMemory){
     if(userSubscription?.expired && window.SubscriptionGuard?.showUpgradeModal){
+      window.LP_track('upgrade_modal_shown',{trigger_source:'learn_expired',track:TRACK});
       SubscriptionGuard.showUpgradeModal('Your free trial has ended! Upgrade to continue.','champion');return;
     }
 
@@ -1204,6 +1234,13 @@
     addMessage('user',text);dom.textInput.value='';
     chatLog.push({role:'user',content:text});saveState();
 
+    // GA4: problem_attempted
+    window.LP_track('problem_attempted',{
+      track:TRACK,
+      skill_track:currentProblem?.skill_track||null,
+      difficulty_tier:currentProblem?.difficulty_tier||null,
+    });
+
     // Local answer check
     const cleanInput=text.toLowerCase().replace(/[^a-z0-9]/g,'');
     const sources=[currentProblem?.answer_key,currentProblem?.solution_explanation].filter(Boolean);
@@ -1250,9 +1287,7 @@
   // ═══ LOG ATTEMPT — ONE record per problem ═══
   async function logAttempt(solvedCorrectly,submittedAnswer){
     if(!sb)return;
-    // Must have at least one identity
     if(!currentChildId&&!currentUserId){console.warn('[Learn] No identity to log attempt');return;}
-    // Only save DB problems (valid UUIDs), skip local fallback puzzles
     const pid=currentProblem?.id;
     if(!isValidUUID(pid)){console.log('[Learn] Local puzzle, skipping DB save. id=',pid);return;}
 
@@ -1276,60 +1311,52 @@
       completed_at: now,
       session_id: sessionId||null,
       mode: TRACK,
-      difficulty_tier: currentProblem?.difficulty||null,
+      track: TRACK,
+      difficulty_tier: currentProblem?.difficulty_tier||currentProblem?.difficulty||null,
       attempt_state: solvedCorrectly?'completed':'skipped'
     };
     if(currentChildId) row.child_id=currentChildId;
-    if(currentUserId) row.user_id=currentUserId;
+    if(currentUserId)  row.user_id=currentUserId;
 
-    
-    // Add track for server-side verification (regular|olympiad)
-    row.track = TRACK;
+    // Get JWT for server endpoint
+    let jwt=null;
+    try{const s=await sb.auth.getSession();jwt=s?.data?.session?.access_token||null;}catch(_){}
 
-    // Enterprise path: server-side attempt logging
-    const ALLOW_CLIENT_FALLBACK = false; // keep FALSE in production
-
-    // Get JWT
-    let jwt = null;
-    try{
-      const s = await sb.auth.getSession();
-      jwt = s?.data?.session?.access_token || null;
-    }catch(e){ jwt = null; }
-
-    if(!jwt){
-      console.warn('[attempt] No JWT/session. Attempt not logged.');
-      if(!ALLOW_CLIENT_FALLBACK) return;
-    }
-
-    // 1) Server endpoint
-    try{
-      const r = await fetch('/api/attempt/log', {
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          ...(jwt ? {'Authorization': 'Bearer ' + jwt} : {})
-        },
-        body: JSON.stringify({ data: row })
-      });
-
-      if(r.ok){
-        const out = await r.json();
-        if(DEBUG) console.log('[attempt] server logged', out);
-        return;
+    // Path 1: server endpoint (enterprise)
+    if(jwt){
+      try{
+        const r=await fetch('/api/attempt/log',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwt},
+          body:JSON.stringify({data:row})
+        });
+        if(r.ok){
+          if(DEBUG) console.log('[attempt] server logged');
+          return; // ✅ done
+        }
+        // Server returned error — fall through to client path
+        let body=null;try{body=await r.json();}catch(_){}
+        console.warn('[attempt] server refused',r.status,body?.error||'— falling back to client write');
+      }catch(e){
+        console.warn('[attempt] server unreachable — falling back to client write');
       }
-
-      let body=null;
-      try{ body = await r.json(); }catch(_){}
-      if(DEBUG) console.warn('[attempt] server refused', r.status, body?.error || '');
-      toast('Could not save progress (server refused). Please refresh and try again.');
-      if(!ALLOW_CLIENT_FALLBACK) return;
-    }catch(e){
-      if(DEBUG) console.warn('[attempt] server network error');
-      toast('Could not reach server to save progress. Check internet and retry.');
-      if(!ALLOW_CLIENT_FALLBACK) return;
+    } else {
+      console.warn('[attempt] No JWT — skipping server, writing directly to Supabase');
     }
 
-    // Enterprise: no client-side attempt writes.
+    // Path 2: direct Supabase INSERT (fallback — keeps dashboard data live)
+    // This fires when /api/attempt/log is not deployed or returns an error.
+    try{
+      const{error}=await sb.from('attempts').insert(row);
+      if(error){
+        console.warn('[attempt] direct insert failed:',error.message);
+        toast('Progress could not be saved. Check your connection.');
+      } else {
+        console.log('[attempt] saved via direct client insert ✓');
+      }
+    }catch(e){
+      console.warn('[attempt] direct insert exception:',e?.message);
+    }
   }
 
   
@@ -1364,6 +1391,16 @@
     // A17: Mastery feedback (non-blocking)
     fetchMasteryFeedback().catch(()=>{});
 
+    // GA4: problem_completed
+    const elapsed=startTime?Math.round((Date.now()-startTime)/1000):null;
+    window.LP_track('problem_completed',{
+      track:TRACK,
+      skill_track:currentProblem?.skill_track||null,
+      difficulty_tier:currentProblem?.difficulty_tier||null,
+      time_spent_seconds:elapsed,
+      hints_used:hintsUsed,
+    });
+
     setTimeout(()=>{dom.successModal.style.display='flex';},700);
   }
 
@@ -1379,6 +1416,15 @@
     dom.proofSubmitBtn.disabled = true;
 
     const proofFormat = document.querySelector('.fmt-tab.active')?.dataset?.fmt || 'plain';
+
+    // GA4: proof_submitted
+    window.LP_track('proof_submitted',{
+      track: TRACK,
+      submission_number: proofSubmissionNumber,
+      hint_level: proofHintLevel,
+      proof_format: proofFormat,
+      skill_track: currentProblem?.skill_track||null,
+    });
 
     addMessage('ai', '🔍 Analyzing your proof structure… (Brain A)');
     setTimeout(()=>addMessage('ai','🧠 Checking completeness and rigor…'),1400);
@@ -1694,6 +1740,9 @@
     addMessage('user','📸 [Sent handwritten work]');
     addMessage('ai','🔍 Analyzing your work… (Vision AI)');
 
+    // GA4: vision_upload
+    window.LP_track('vision_upload',{track:TRACK,tier:userSubscription?.tier||null});
+
     const payload = {
       image_base64:  b64,
       problem_text:  currentProblem?.problem_text || '',
@@ -1708,6 +1757,8 @@
     addMessage('user', '📝 [Solution steps]\n' + text);
     addMessage('ai','🧠 Thinking about your approach…');
     chatLog.push({role:'user', content:'[Solution steps] ' + text});
+    // GA4: vision_typed_fallback
+    window.LP_track('vision_typed_fallback',{track:TRACK,tier:userSubscription?.tier||null});
     // Typed fallback uses the regular tutor endpoint with extra context
     try{
       const res = await fetch('/api/tutor',{

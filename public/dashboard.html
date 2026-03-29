@@ -1,9 +1,22 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;
+  f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-PSTQB75G');</script>
+  <!-- End Google Tag Manager -->
   <meta charset="utf-8"/>
+
+  <!-- SEO -->
+  <title>Dashboard | LogicPals</title>
+  <meta name="description" content="Your personalized learning dashboard. Track progress, start practice sessions, enter arena competitions.">
+  <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>LogicPals — Regular Dashboard</title>
+  
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
@@ -17,6 +30,21 @@
     .wrap{max-width:var(--max);margin:0 auto;padding:88px 16px 40px;position:relative;z-index:1;}
     .topbar{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(12,14,26,.75);backdrop-filter:blur(24px) saturate(1.6);border-bottom:1px solid var(--border);}
     .topbar-inner{max-width:var(--max);margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px;}
+    @media(max-width:400px){
+      .track-label{display:none;}
+      .signout-label{display:none;}
+      #btnSignOut::before{content:'✕';}
+      #btnOlympiad span:first-child{font-size:0;}
+      #btnOlympiad::before{content:'🏆';}
+    }
+    @media(max-width:600px){
+      .topbar-inner{gap:8px;padding:10px 12px;}
+      .brand-title span{display:none;}
+      .center-pill{flex:1;min-width:0;}
+      .center-pill .track-pill{font-size:11px;padding:5px 10px;}
+      .actions{gap:6px;}
+      .actions .btn{padding:0 10px;font-size:12px;height:36px;}
+    }
     .brand{display:flex;align-items:center;gap:10px;min-width:120px;}
     .logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#a29bfe);box-shadow:0 4px 20px var(--glow);display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;}
     .brand-title{line-height:1.1;}.brand-title b{display:block;font-size:15px;font-weight:800;}.brand-title span{display:block;font-size:11px;color:var(--muted);font-weight:500;margin-top:1px;}
@@ -139,15 +167,20 @@
     .modal-actions{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;}
     @media(max-width:600px){.hero-head{font-size:20px;}.tile .v{font-size:20px;}.chart-area{height:120px;}.insight-val{font-size:18px;}}
   </style>
+  <script src="/assets/js/lp-tracking.js"></script>
 </head>
 <body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSTQB75G"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
   <div class="topbar">
     <div class="topbar-inner">
       <div class="brand"><div class="logo">LP</div><div class="brand-title"><b>LogicPals</b><span>Student Dashboard</span></div></div>
-      <div class="center-pill"><div class="track-pill"><span class="track-dot"></span>Regular Practice</div></div>
+      <div class="center-pill"><div class="track-pill"><span class="track-dot"></span><span class="track-label">Regular Practice</span></div></div>
       <div class="actions">
         <button id="btnOlympiad" class="btn btn-accent" type="button"><span>Olympiad</span><span id="olympiadLockIcon">&#128274;</span></button>
-        <button id="btnSignOut" class="btn btn-ghost" type="button" disabled>Sign out</button>
+        <button id="btnSignOut" class="btn btn-ghost" type="button" disabled><span class="signout-label">Sign out</span></button>
       </div>
     </div>
     <div class="status-strip">

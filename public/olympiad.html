@@ -1,9 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;
+  f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-PSTQB75G');</script>
+  <!-- End Google Tag Manager -->
   <meta charset="UTF-8" />
+
+  <!-- SEO -->
+  <title>Olympiad Hub — BdMO &amp; IMO Training | LogicPals</title>
+  <meta name="description" content="Premium Olympiad preparation: skill graph, arena duels, mock exams, proof mentor. Scholar &amp; Champion tier.">
+  <meta name="robots" content="noindex, nofollow">
+  <meta property="og:title" content="LogicPals Olympiad Hub">
+  <meta property="og:description" content="BdMO and IMO preparation with AI guidance, arena competition and mock Olympiads.">
+  <meta property="og:image" content="https://logicpals.com/og-image.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Olympiad Training - LogicPals</title>
+  
 
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Literata:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
@@ -857,9 +873,14 @@
       .lb-my-rank-banner { grid-template-columns: 1fr 1fr; }
     }
   </style>
+  <script src="/assets/js/lp-tracking.js"></script>
 </head>
 
 <body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSTQB75G"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
   <div class="header">
     <div class="header-content">
       <a href="/dashboard.html" class="logo">
@@ -1901,6 +1922,9 @@
       if (!selectedChildId) { showError("Select a child first."); return openChildModal(); }
       if (!currentLevel) { showError("Select your level first."); return; }
 
+      // GA4: mock_olympiad_joined (practice mock)
+      window.LP_track('mock_olympiad_joined', { event_type: type, mode: 'practice' });
+
       // P1.6: Create DB session for mock exam — same fingerprint pipeline
       const sessionId = await createDbSession(user.id, selectedChildId, currentLevel, 'exam');
 
@@ -2144,6 +2168,8 @@
 
     async function enterArena() {
       if (!selectedChildId && !user) { showError('Select a child first.'); return openChildModal(); }
+      // GA4: arena_match_started
+      window.LP_track('arena_match_started', { track: 'olympiad', match_type: 'live' });
       const params = new URLSearchParams({
         track: 'olympiad', mode: 'arena',
         child_id: selectedChildId || user.id,
@@ -2203,6 +2229,8 @@
 
     async function enterScheduledMock(eventId) {
       if (!selectedChildId && !user) { showError('Select a child first.'); return openChildModal(); }
+      // GA4: mock_olympiad_joined
+      window.LP_track('mock_olympiad_joined', { event_type: 'scheduled', event_id: eventId });
       const params = new URLSearchParams({
         track: 'olympiad', mode: 'scheduled_mock',
         event_id: eventId,

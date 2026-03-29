@@ -1,8 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;
+  f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-PSTQB75G');</script>
+  <!-- End Google Tag Manager -->
     <meta charset="UTF-8">
-    <title>Upgrade to Premium - LogicPals</title>
+
+  <!-- SEO -->
+  <title>Pricing — LogicPals Math Olympiad Plans</title>
+  <meta name="description" content="Free trial available. Thinker ৳399, Scholar ৳999, Champion ৳1,799/month. Compare LogicPals plans and features.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://logicpals.com/pricing.html">
+  <meta property="og:title" content="LogicPals Pricing — Math Olympiad Plans">
+  <meta property="og:description" content="Free trial available. Plans from ৳399/month for BdMO preparation.">
+  <meta property="og:image" content="https://logicpals.com/og-image.png">
+  <meta property="og:url" content="https://logicpals.com/pricing.html">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
@@ -41,8 +59,13 @@
         .footer-link { margin-top: 25px; color: #9CA3AF; font-size: 14px; text-decoration: none; }
     </style>
   <script src="/assets/js/env-loader.js"></script>
+  <script src="/assets/js/lp-tracking.js"></script>
 </head>
 <body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSTQB75G"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
 
     <div class="card">
         <h1>Unlock Your Child's Genius 🧠</h1>
@@ -72,12 +95,38 @@
             <p style="margin: 5px 0; font-size: 14px;">2. Click below to activate via WhatsApp:</p>
         </div>
 
-        <a href="https://wa.me/88017XXXXXXXX?text=Hi%20LogicPals,%20I%20have%20sent%20payment%20via%20Bkash%20for%20my%20child." target="_blank" class="btn-whatsapp">
+        <a href="https://wa.me/88017XXXXXXXX?text=Hi%20LogicPals,%20I%20have%20sent%20payment%20via%20Bkash%20for%20my%20child." target="_blank" class="btn-whatsapp" id="pricingCtaBtn">
             📲 Send Screenshot to Activate
         </a>
     </div>
 
     <a href="dashboard.html" class="footer-link">Back to Dashboard (Restricted)</a>
+
+    <script>
+        // GA4: pricing_page_viewed
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+            event: 'pricing_page_viewed',
+            referrer_source: document.referrer || 'direct',
+        });
+        // Facebook: ViewContent
+        if (typeof fbq === 'function') {
+            fbq('track', 'ViewContent', {
+                content_name: 'Pricing Page',
+                content_category: 'Subscription',
+                currency: 'BDT',
+                value: 2499,
+            });
+        }
+        // Track CTA click = plan_selected
+        document.getElementById('pricingCtaBtn')?.addEventListener('click', function() {
+            window.dataLayer.push({
+                event: 'plan_selected',
+                tier: 'annual',
+                price_bdt: 2499,
+            });
+        });
+    </script>
 
 </body>
 </html>

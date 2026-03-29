@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Landing page — highest priority -->
+  <url>
+    <loc>https://logicpals.com/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Pricing page — indexed for commercial search terms -->
+  <url>
+    <loc>https://logicpals.com/pricing.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Login / Signup — light indexing for branded searches -->
+  <url>
+    <loc>https://logicpals.com/login.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <url>
+    <loc>https://logicpals.com/signup.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Auth-required pages intentionally EXCLUDED:
+       dashboard.html, learn.html, olympiad.html,
+       upgrade.html, admin pages, /api/ routes -->
+
+</urlset>

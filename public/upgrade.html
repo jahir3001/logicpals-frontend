@@ -1,8 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;
+  f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-PSTQB75G');</script>
+  <!-- End Google Tag Manager -->
     <meta charset="UTF-8">
-    <title>Upgrade to Premium - LogicPals</title>
+
+  <!-- SEO -->
+  <title>Upgrade Your Plan | LogicPals</title>
+  <meta name="description" content="Unlock Olympiad track, vision guidance and arena. Plans from ৳399/month.">
+  <meta name="robots" content="noindex, nofollow">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
@@ -172,8 +185,13 @@
         }
     </style>
   <script src="/assets/js/env-loader.js"></script>
+  <script src="/assets/js/lp-tracking.js"></script>
 </head>
 <body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSTQB75G"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
 
     <div class="card">
         <div class="banner">🏆 UPGRADE TO OLYMPIAD</div>
@@ -206,7 +224,7 @@
             <p style="margin: 5px 0; font-size: 14px; text-align: center;">2. Click below to send screenshot:</p>
         </div>
 
-        <a href="https://wa.me/8801617000378?text=Hi%20LogicPals,%20I%20have%20sent%20payment%20via%20bKash%20for%20my%20child." target="_blank" class="btn-whatsapp">
+        <a href="https://wa.me/8801617000378?text=Hi%20LogicPals,%20I%20have%20sent%20payment%20via%20bKash%20for%20my%20child." target="_blank" class="btn-whatsapp" id="upgradeCtaBtn">
             📲 Send Payment Screenshot
         </a>
 
@@ -219,7 +237,21 @@
         // Get reason from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const reason = urlParams.get('reason');
-        const tier = urlParams.get('tier');
+        const tier   = urlParams.get('tier') || 'champion';
+        const currentTier = urlParams.get('current_tier') || 'free_trial';
+
+        // GA4: upgrade_initiated (page load = user saw upgrade page)
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+            event: 'upgrade_initiated',
+            current_tier: currentTier,
+            target_tier: tier,
+            trigger_reason: reason || 'direct',
+        });
+        // Facebook: InitiateCheckout
+        if (typeof fbq === 'function') {
+            fbq('track', 'InitiateCheckout', { content_name: tier + ' Plan', currency: 'BDT' });
+        }
 
         // Customize message based on reason
         const messageEl = document.getElementById('message');
@@ -254,6 +286,27 @@
                 <div class="feature-item"><span class="check">✓</span> Private Discord/Telegram Community</div>
             `;
         }
+
+        // Track WhatsApp CTA click = upgrade_modal_clicked
+        document.getElementById('upgradeCtaBtn')?.addEventListener('click', function() {
+            const priceEl = document.querySelector('.price');
+            const priceBDT = parseInt((priceEl?.textContent || '0').replace(/[^0-9]/g,'')) || 0;
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({
+                event: 'upgrade_modal_clicked',
+                target_tier: tier,
+                price_bdt: priceBDT,
+                payment_method: 'bkash_whatsapp',
+            });
+            // Facebook: ViewContent → treated as click-to-purchase signal
+            if (typeof fbq === 'function') {
+                fbq('track', 'Purchase', {
+                    content_name: tier + ' Plan',
+                    currency: 'BDT',
+                    value: priceBDT,
+                });
+            }
+        });
     </script>
 
 </body>

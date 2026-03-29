@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;
+  f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-PSTQB75G');</script>
+  <!-- End Google Tag Manager -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Log In — LogicPals</title>
@@ -283,8 +291,13 @@
 
     .trust-item svg { color: var(--success); flex-shrink: 0; }
   </style>
+  <script src="/assets/js/lp-tracking.js"></script>
 </head>
 <body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSTQB75G"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
   <div class="wrap">
 
     <!-- Brand -->
@@ -445,6 +458,9 @@
         try {
           const { error } = await sb.auth.signInWithPassword({ email, password });
           if (error) throw error;
+
+          // GA4: login event
+          window.LP_track('login', { method: 'email' });
 
           getOrCreateDeviceId(); // re-seed on login
           showMsg('ok', 'Signed in! Redirecting…');

@@ -1,0 +1,118 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <!-- Deep indigo background gradient -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#080b18"/>
+      <stop offset="60%" style="stop-color:#0d1230"/>
+      <stop offset="100%" style="stop-color:#0a1628"/>
+    </linearGradient>
+    <!-- Teal accent glow -->
+    <radialGradient id="glow1" cx="80%" cy="20%" r="50%">
+      <stop offset="0%" style="stop-color:#26c6da;stop-opacity:0.18"/>
+      <stop offset="100%" style="stop-color:#26c6da;stop-opacity:0"/>
+    </radialGradient>
+    <!-- Indigo glow -->
+    <radialGradient id="glow2" cx="15%" cy="80%" r="45%">
+      <stop offset="0%" style="stop-color:#3d5afe;stop-opacity:0.22"/>
+      <stop offset="100%" style="stop-color:#3d5afe;stop-opacity:0"/>
+    </radialGradient>
+    <!-- Logo gradient -->
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3d5afe"/>
+      <stop offset="100%" style="stop-color:#7c4dff"/>
+    </linearGradient>
+    <!-- Gold gradient for BdMO badge -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f9a825"/>
+      <stop offset="100%" style="stop-color:#f57f17"/>
+    </linearGradient>
+    <!-- Title gradient -->
+    <linearGradient id="titleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="60%" style="stop-color:#e8eaf6"/>
+      <stop offset="100%" style="stop-color:#80deea"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow1)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+
+  <!-- Subtle grid lines -->
+  <g opacity="0.04" stroke="#ffffff" stroke-width="1">
+    <line x1="0" y1="105" x2="1200" y2="105"/>
+    <line x1="0" y1="210" x2="1200" y2="210"/>
+    <line x1="0" y1="315" x2="1200" y2="315"/>
+    <line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="525" x2="1200" y2="525"/>
+    <line x1="200" y1="0" x2="200" y2="630"/>
+    <line x1="400" y1="0" x2="400" y2="630"/>
+    <line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="800" y1="0" x2="800" y2="630"/>
+    <line x1="1000" y1="0" x2="1000" y2="630"/>
+  </g>
+
+  <!-- Decorative math symbols (background) -->
+  <text x="880" y="180" font-family="serif" font-size="120" fill="#3d5afe" opacity="0.07" transform="rotate(-15,880,180)">∑</text>
+  <text x="1020" y="420" font-family="serif" font-size="90" fill="#26c6da" opacity="0.07" transform="rotate(10,1020,420)">∫</text>
+  <text x="920" y="520" font-family="serif" font-size="80" fill="#7c4dff" opacity="0.06" transform="rotate(-8,920,520)">π</text>
+  <text x="60" y="120" font-family="serif" font-size="70" fill="#3d5afe" opacity="0.06" transform="rotate(12,60,120)">√</text>
+  <text x="100" y="540" font-family="serif" font-size="60" fill="#26c6da" opacity="0.06">∞</text>
+
+  <!-- Left accent bar -->
+  <rect x="72" y="80" width="6" height="470" rx="3" fill="url(#logoGrad)" opacity="0.8"/>
+
+  <!-- Logo mark (brain icon placeholder) -->
+  <rect x="102" y="88" width="80" height="80" rx="20" fill="url(#logoGrad)"/>
+  <text x="142" y="144" font-family="serif" font-size="44" fill="white" text-anchor="middle">🧠</text>
+
+  <!-- LogicPals wordmark -->
+  <text x="202" y="145" font-family="'Arial Black', Arial, sans-serif" font-size="56" font-weight="900" fill="url(#titleGrad)" letter-spacing="-1">LogicPals</text>
+
+  <!-- Tagline (English) -->
+  <text x="102" y="214" font-family="Arial, sans-serif" font-size="24" font-weight="500" fill="#80deea" opacity="0.9" letter-spacing="0.5">AI-Powered Math Olympiad Preparation · Bangladesh</text>
+
+  <!-- Divider -->
+  <line x1="102" y1="242" x2="820" y2="242" stroke="#3d5afe" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- Main headline -->
+  <text x="102" y="310" font-family="'Arial Black', Arial, sans-serif" font-size="52" font-weight="900" fill="url(#titleGrad)">Practice Thinking.</text>
+  <text x="102" y="375" font-family="'Arial Black', Arial, sans-serif" font-size="52" font-weight="900" fill="url(#titleGrad)">Practice Olympiad.</text>
+
+  <!-- Bengali text -->
+  <text x="102" y="432" font-family="Arial, sans-serif" font-size="28" font-weight="600" fill="#f9a825" opacity="0.85">লজিকপ্যালস — বাংলাদেশের সেরা গণিত অলিম্পিয়াড প্রস্তুতি</text>
+
+  <!-- Feature chips row -->
+  <!-- Chip 1 -->
+  <rect x="102" y="460" width="170" height="40" rx="20" fill="rgba(61,90,254,0.25)" stroke="#3d5afe" stroke-width="1.5"/>
+  <text x="187" y="485" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#82b1ff" text-anchor="middle">🎯 7 Skill Tracks</text>
+  <!-- Chip 2 -->
+  <rect x="286" y="460" width="170" height="40" rx="20" fill="rgba(38,198,218,0.2)" stroke="#26c6da" stroke-width="1.5"/>
+  <text x="371" y="485" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#80deea" text-anchor="middle">⚔️ Arena Duels</text>
+  <!-- Chip 3 -->
+  <rect x="470" y="460" width="170" height="40" rx="20" fill="rgba(124,77,255,0.2)" stroke="#7c4dff" stroke-width="1.5"/>
+  <text x="555" y="485" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#ce93d8" text-anchor="middle">📝 Mock Exams</text>
+  <!-- Chip 4 -->
+  <rect x="654" y="460" width="170" height="40" rx="20" fill="rgba(249,168,37,0.15)" stroke="#f9a825" stroke-width="1.5"/>
+  <text x="739" y="485" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#f9a825" text-anchor="middle">🆓 Free Trial</text>
+
+  <!-- CTA pill -->
+  <rect x="102" y="526" width="280" height="52" rx="26" fill="url(#goldGrad)"/>
+  <text x="242" y="558" font-family="'Arial Black', Arial, sans-serif" font-size="20" font-weight="900" fill="white" text-anchor="middle">Start Free · From ৳399/mo</text>
+
+  <!-- BdMO badge (right side) -->
+  <rect x="880" y="170" width="240" height="290" rx="24" fill="rgba(249,168,37,0.08)" stroke="url(#goldGrad)" stroke-width="2"/>
+  <text x="1000" y="240" font-family="serif" font-size="72" text-anchor="middle">🏆</text>
+  <text x="1000" y="285" font-family="'Arial Black', Arial, sans-serif" font-size="22" font-weight="900" fill="#f9a825" text-anchor="middle">BdMO &amp; IMO</text>
+  <text x="1000" y="315" font-family="Arial, sans-serif" font-size="16" fill="#ffd54f" text-anchor="middle">Ages 8–16</text>
+  <line x1="920" y1="335" x2="1080" y2="335" stroke="#f9a825" stroke-width="1" opacity="0.4"/>
+  <text x="1000" y="365" font-family="Arial, sans-serif" font-size="14" fill="#fff9c4" text-anchor="middle">Primary → Advanced</text>
+  <text x="1000" y="388" font-family="Arial, sans-serif" font-size="14" fill="#fff9c4" text-anchor="middle">Regional → IMO Prep</text>
+  <text x="1000" y="420" font-family="Arial, sans-serif" font-size="13" fill="#ffd54f" text-anchor="middle">Vision AI · Proof Mentor</text>
+  <text x="1000" y="444" font-family="Arial, sans-serif" font-size="13" fill="#ffd54f" text-anchor="middle">Skill Graph · Leaderboards</text>
+
+  <!-- URL bar -->
+  <rect x="72" y="575" width="1056" height="38" rx="8" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <text x="102" y="599" font-family="'Courier New', monospace" font-size="16" fill="#80deea" opacity="0.7">logicpals.com</text>
+</svg>

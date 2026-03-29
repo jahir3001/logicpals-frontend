@@ -1,9 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;
+  f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-PSTQB75G');</script>
+  <!-- End Google Tag Manager -->
     <meta charset="UTF-8">
+
+  <!-- Primary SEO -->
+  <title>LogicPals — AI Math Olympiad Prep for Bangladeshi Students</title>
+  <meta name="description" content="AI-powered BdMO and IMO preparation for ages 8-16. Socratic tutoring, vision guidance, arena competition, mock Olympiads. Start free. From ৳399/month.">
+  <meta name="keywords" content="BdMO, math olympiad, Bangladesh, AI tutor, critical thinking, IMO preparation, গণিত অলিম্পিয়াড, LogicPals">
+  <meta name="author" content="LogicPals">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://logicpals.com/">
+  <!-- Open Graph -->
+  <meta property="og:title" content="LogicPals — AI Math Olympiad Preparation">
+  <meta property="og:description" content="Practice thinking. Practice Olympiad. AI-powered BdMO prep for Bangladeshi students ages 8-16. Start free.">
+  <meta property="og:image" content="https://logicpals.com/og-image.png">
+  <meta property="og:url" content="https://logicpals.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="bn_BD">
+  <meta property="og:site_name" content="LogicPals">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="LogicPals — AI Math Olympiad Prep">
+  <meta name="twitter:description" content="AI-powered BdMO and IMO preparation. Start free.">
+  <meta name="twitter:image" content="https://logicpals.com/og-image.png">
+  <!-- Schema.org JSON-LD -->
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"EducationalOrganization","name":"LogicPals","url":"https://logicpals.com","logo":"https://logicpals.com/logo.png","description":"AI-powered critical thinking and Olympiad preparation platform for Bangladeshi students ages 8-16","sameAs":["https://facebook.com/logicpals","https://youtube.com/@logicpals"],"address":{"@type":"PostalAddress","addressCountry":"BD"},"areaServed":{"@type":"Country","name":"Bangladesh"}}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Course","name":"BdMO Olympiad Preparation","description":"AI-guided preparation for Bangladesh Mathematical Olympiad. 7 skill tracks, adaptive difficulty, mock exams.","provider":{"@type":"Organization","name":"LogicPals"},"educationalLevel":"Primary to Advanced","inLanguage":["en","bn"],"offers":{"@type":"Offer","price":"399","priceCurrency":"BDT","availability":"https://schema.org/InStock","url":"https://logicpals.com/#pricing"}}
+  </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogicPals - AI Critical Thinking for Kids 8-12</title>
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563EB">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -23,6 +59,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
+    <script src="/assets/js/lp-tracking.js"></script>
     <style>
         /* --- VARIABLES & RESET --- */
         :root {
@@ -173,9 +210,17 @@
         .nav-buttons a {
             color: var(--text-dark);
             font-weight: 600;
+            white-space: nowrap;
         }
         .nav-buttons a:hover {
             color: var(--primary-blue);
+        }
+        /* Mobile: hide Login link, keep only CTA button */
+        @media(max-width:480px){
+            .nav-login-link { display: none; }
+            .nav-buttons { gap: 8px; }
+            .btn.btn-primary { padding: 10px 14px; font-size: 14px; }
+            .logo { font-size: 20px; }
         }
         /* HERO UPDATES */
         .hero {
@@ -659,6 +704,10 @@
 	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
 <body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSTQB75G"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
     <header>
         <div class="container nav-container">
             <div class="logo">
@@ -684,7 +733,7 @@
                 >
                   ⚙ Admin
                 </a>
-                <a href="login.html">Login</a>
+                <a href="login.html" class="nav-login-link">Login</a>
                 <a href="signup.html" class="btn btn-primary">Try Free for 7 Days</a>
             </div>
         </div>
@@ -1301,3 +1350,28 @@
 
 })();
 </script>
+
+<!-- ── Floating WhatsApp Button ──────────────────────────────── -->
+<a href="https://wa.me/8801617000378?text=Hi%2C%20I%20am%20interested%20in%20LogicPals%20for%20my%20child"
+   target="_blank"
+   rel="noopener noreferrer"
+   id="waFloatBtn"
+   aria-label="Chat on WhatsApp"
+   style="
+     position:fixed;bottom:24px;right:24px;
+     width:60px;height:60px;
+     background:#25D366;border-radius:50%;
+     display:flex;align-items:center;justify-content:center;
+     box-shadow:0 4px 16px rgba(37,211,102,.45);
+     z-index:9999;transition:transform .2s,box-shadow .2s;
+     text-decoration:none;
+   "
+   onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 6px 24px rgba(37,211,102,.6)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 16px rgba(37,211,102,.45)'"
+   onclick="window.dataLayer=window.dataLayer||[];window.dataLayer.push({event:'whatsapp_float_clicked'});"
+>
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.149-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.082 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+</a>
+<!-- ── End WhatsApp Button ──────────────────────────────────── -->

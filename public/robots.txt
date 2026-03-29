@@ -1,0 +1,25 @@
+User-agent: *
+Allow: /
+Allow: /pricing.html
+Allow: /login.html
+Allow: /signup.html
+Allow: /og-image.png
+Allow: /logo.png
+
+# Block auth-required pages
+Disallow: /dashboard.html
+Disallow: /learn.html
+Disallow: /olympiad.html
+Disallow: /upgrade.html
+Disallow: /admin.html
+Disallow: /admin-login.html
+Disallow: /admin-payments.html
+Disallow: /admin-subscriptions.html
+Disallow: /admin-roles.html
+Disallow: /ab-dashboard.html
+
+# Block API and internal routes
+Disallow: /api/
+Disallow: /assets/js/env-loader.js
+
+Sitemap: https://logicpals.com/sitemap.xml
