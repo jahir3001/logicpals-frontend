@@ -463,7 +463,7 @@
   </div>
 
   <header>
-    <div class="logo"><img src="/assets/img/logo.svg" alt="LogicPals" style="width:26px;height:26px;border-radius:7px;vertical-align:middle;margin-right:6px;" />LogicPals</div>
+    <div class="logo"><img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MDAgNDEwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPiA8Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjIwMCIgZmlsbD0iIzEzMjI0MCIvPiA8cmVjdCB4PSIxMDgiIHk9IjEyMCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjEwMCIgcng9IjQiIGZpbGw9IiMyRThCQzAiLz4gPHJlY3QgeD0iMTA4IiB5PSIxOTgiIHdpZHRoPSI2MiIgaGVpZ2h0PSIyMiIgcng9IjQiIGZpbGw9IiMyRThCQzAiLz4gPHJlY3QgeD0iMjE0IiB5PSIxMjAiIHdpZHRoPSIyMiIgaGVpZ2h0PSIxMDAiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjIxNCIgeT0iMTIwIiB3aWR0aD0iNjIiIGhlaWdodD0iMjIiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjI1NCIgeT0iMTIwIiB3aWR0aD0iMjIiIGhlaWdodD0iNTgiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjIxNCIgeT0iMTU2IiB3aWR0aD0iNjIiIGhlaWdodD0iMjIiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDwvc3ZnPg==" alt="LogicPals" style="width:26px;height:26px;border-radius:7px;vertical-align:middle;margin-right:6px;" />LogicPals</div>
     <div class="header-right">
       <a href="olympiad.html" class="olympiad-btn" id="olympiadHeaderBtn" style="display:none;">&#127942; Olympiad</a>
       <!-- A13: timer-badge now click-to-toggle and mode-aware -->
@@ -1311,74 +1311,67 @@
     const ttfi=firstInputTime&&startTime?Math.round((firstInputTime-startTime)/1000):null;
     if(solvedCorrectly&&elapsed) sessionTimes.push(elapsed);
 
-    const row={
-      problem_id: pid,
-      solved_correctly: solvedCorrectly,
-      is_correct: solvedCorrectly,
-      hints_used: hintsUsed,
-      questions_asked: questionsAsked,
-      attempt_number: problemCount,
-      submitted_answer: submittedAnswer||null,
-      ai_conversation: chatLog.length>0?chatLog:null,
+    // ── MINIMAL ROW — only columns confirmed in the attempts schema ──────
+    // Extra columns like 'track', 'mode', 'attempt_state', 'difficulty_tier'
+    // may not exist and cause a 400/PGRST error that silently drops the row.
+    const minRow={
+      problem_id:         pid,
+      solved_correctly:   solvedCorrectly,
+      is_correct:         solvedCorrectly,
+      hints_used:         hintsUsed,
+      questions_asked:    questionsAsked,
+      attempt_number:     problemCount,
+      submitted_answer:   submittedAnswer||null,
+      ai_conversation:    chatLog.length>0?chatLog:null,
       time_spent_seconds: elapsed,
-      time_to_first_input_seconds: ttfi,
-      started_at: startTime?new Date(startTime).toISOString():null,
-      completed_at: now,
-      session_id: sessionId||null,
-      mode: TRACK,
-      track: TRACK,
-      difficulty_tier: currentProblem?.difficulty_tier||currentProblem?.difficulty||null,
-      attempt_state: solvedCorrectly?'completed':'skipped'
+      started_at:         startTime?new Date(startTime).toISOString():null,
+      completed_at:       now,
+      session_id:         sessionId||null,
     };
-    if(currentChildId) row.child_id=currentChildId;
-    if(currentUserId)  row.user_id=currentUserId;
+    if(currentChildId) minRow.child_id=currentChildId;
+    if(currentUserId)  minRow.user_id=currentUserId;
+
+    // Full row for server endpoint (it handles column validation server-side)
+    const fullRow={...minRow, mode:TRACK, track:TRACK,
+      difficulty_tier:currentProblem?.difficulty_tier||currentProblem?.difficulty||null,
+      attempt_state:solvedCorrectly?'completed':'skipped',
+      time_to_first_input_seconds:ttfi};
 
     // Get JWT for server endpoint
     let jwt=null;
     try{const s=await sb.auth.getSession();jwt=s?.data?.session?.access_token||null;}catch(_){}
 
-    // Path 1: server endpoint (enterprise)
+    // Path 1: server endpoint (enterprise) — sends full row
     if(jwt){
       try{
         const r=await fetch('/api/attempt/log',{
           method:'POST',
           headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwt},
-          body:JSON.stringify({data:row})
+          body:JSON.stringify({data:fullRow})
         });
-        if(r.ok){
-          if(DEBUG) console.log('[attempt] server logged');
-          return; // ✅ done
-        }
-        // Server returned error — fall through to client path
+        if(r.ok){console.log('[attempt] server logged ✓');return;}
         let body=null;try{body=await r.json();}catch(_){}
-        console.warn('[attempt] server refused',r.status,body?.error||'— falling back to client write');
+        console.warn('[attempt] server refused',r.status,body?.error||'— using client fallback');
       }catch(e){
-        console.warn('[attempt] server unreachable — falling back to client write');
+        console.warn('[attempt] server unreachable — using client fallback');
       }
     } else {
-      console.warn('[attempt] No JWT — skipping server, writing directly to Supabase');
+      console.warn('[attempt] No JWT — writing directly to Supabase');
     }
 
-    // Path 2: direct Supabase INSERT (fallback — keeps dashboard data live)
-    // Fires when /api/attempt/log is not deployed or returns an error.
+    // Path 2: direct Supabase INSERT — MINIMAL row only (avoids unknown column errors)
     try{
-      // Build a clean row — remove null child_id if not set (avoids RLS issues)
-      const insertRow = {...row};
-      if(!insertRow.child_id) delete insertRow.child_id;
-      if(!insertRow.user_id)  delete insertRow.user_id;
-
-      const{error}=await sb.from('attempts').insert(insertRow);
+      const{error}=await sb.from('attempts').insert(minRow);
       if(error){
-        console.warn('[attempt] direct insert failed:',error.message,'code:',error.code);
-        // RLS block (code 42501) — means policy prevents write
-        if(error.code==='42501'){
-          console.warn('[attempt] RLS blocked insert — check attempts table policies allow authenticated users');
-        }
+        console.error('[attempt] direct insert FAILED:',error.message,'code:',error.code);
+        console.error('[attempt] row sent:',JSON.stringify(minRow));
+        if(error.code==='42501') console.error('[attempt] RLS is blocking the insert');
+        if(error.code==='PGRST204'||error.code==='42703') console.error('[attempt] Unknown column in row');
       } else {
         console.log('[attempt] saved via direct client insert ✓');
       }
     }catch(e){
-      console.warn('[attempt] direct insert exception:',e?.message);
+      console.error('[attempt] direct insert exception:',e?.message);
     }
   }
 
