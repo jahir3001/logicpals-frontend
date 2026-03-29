@@ -34,8 +34,9 @@
       .track-label{display:none;}
       .signout-label{display:none;}
       #btnSignOut::before{content:'✕';}
-      #btnOlympiad span:first-child{font-size:0;}
-      #btnOlympiad::before{content:'🏆';}
+      /* Olympiad button: shrink text but keep the JS-set icon span visible */
+      #btnOlympiad span:first-child{display:none;}
+      /* Do NOT add ::before content — JS sets olympiadLockIcon span */
     }
     @media(max-width:600px){
       .topbar-inner{gap:8px;padding:10px 12px;}
@@ -46,7 +47,8 @@
       .actions .btn{padding:0 10px;font-size:12px;height:36px;}
     }
     .brand{display:flex;align-items:center;gap:10px;min-width:120px;}
-    .logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#a29bfe);box-shadow:0 4px 20px var(--glow);display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;}
+    .logo{width:36px;height:36px;border-radius:10px;overflow:hidden;display:grid;place-items:center;}
+    .logo img{width:36px;height:36px;border-radius:10px;display:block;}
     .brand-title{line-height:1.1;}.brand-title b{display:block;font-size:15px;font-weight:800;}.brand-title span{display:block;font-size:11px;color:var(--muted);font-weight:500;margin-top:1px;}
     .center-pill{flex:1;display:flex;justify-content:center;}
     .track-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:100px;background:var(--as);border:1px solid rgba(108,92,231,.2);color:#b8b0f0;font-weight:700;font-size:12px;}
@@ -176,7 +178,7 @@
   <!-- End Google Tag Manager (noscript) -->
   <div class="topbar">
     <div class="topbar-inner">
-      <div class="brand"><div class="logo">LP</div><div class="brand-title"><b>LogicPals</b><span>Student Dashboard</span></div></div>
+      <div class="brand"><div class="logo"><img src="/assets/img/logo.svg" alt="LogicPals" /></div><div class="brand-title"><b>LogicPals</b><span class="brand-title-sub">Student Dashboard</span></div></div>
       <div class="center-pill"><div class="track-pill"><span class="track-dot"></span><span class="track-label">Regular Practice</span></div></div>
       <div class="actions">
         <button id="btnOlympiad" class="btn btn-accent" type="button"><span>Olympiad</span><span id="olympiadLockIcon">&#128274;</span></button>

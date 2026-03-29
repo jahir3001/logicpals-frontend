@@ -215,12 +215,20 @@
         .nav-buttons a:hover {
             color: var(--primary-blue);
         }
-        /* Mobile: hide Login link, keep only CTA button */
+        /* Mobile nav: Login moves below CTA, both fit cleanly */
         @media(max-width:480px){
-            .nav-login-link { display: none; }
-            .nav-buttons { gap: 8px; }
-            .btn.btn-primary { padding: 10px 14px; font-size: 14px; }
-            .logo { font-size: 20px; }
+            .nav-buttons { gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+            .nav-login-link {
+                order: 2;
+                width: 100%;
+                text-align: center;
+                font-size: 13px;
+                padding: 4px 0;
+                color: var(--primary-blue);
+            }
+            .btn.btn-primary { padding: 10px 14px; font-size: 14px; order: 1; }
+            .logo { font-size: 18px; }
+            .logo img { width: 28px; height: 28px; }
         }
         /* HERO UPDATES */
         .hero {
@@ -711,10 +719,7 @@
     <header>
         <div class="container nav-container">
             <div class="logo">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="32" height="32" rx="8" fill="#2563EB"/>
-                    <path d="M10 10H14V22H22V10H26" stroke="white" stroke-width="3" stroke-linecap="round"/>
-                </svg>
+                <img src="/assets/img/logo.svg" alt="LogicPals logo" style="width:36px;height:36px;border-radius:8px;display:block;" />
                 LogicPals
             </div>
             <nav class="nav-links">
@@ -762,7 +767,30 @@
                 </div>
             </div>
             <div class="hero-illustration">
-                <img src="https://placehold.co/500x500/EFF6FF/2563EB?text=Child+Learning+Happily" alt="Child learning critical thinking with LogicPals">
+                <!-- Replace placeholder with branded visual -->
+                <div style="background:linear-gradient(135deg,#1e3a8a 0%,#1e40af 50%,#1d4ed8 100%);border-radius:24px;padding:32px;box-shadow:0 20px 60px rgba(37,99,235,.25);text-align:center;">
+                  <img src="/assets/img/logo.svg" alt="LogicPals" style="width:120px;height:120px;margin:0 auto 20px;display:block;filter:brightness(1.1);" />
+                  <div style="color:white;font-size:22px;font-weight:800;margin-bottom:8px;">LogicPals</div>
+                  <div style="color:rgba(255,255,255,.75);font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:28px;">THINK. DON'T MEMORIZE.</div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div style="background:rgba(255,255,255,.12);border-radius:12px;padding:16px;">
+                      <div style="color:white;font-size:28px;font-weight:800;">567+</div>
+                      <div style="color:rgba(255,255,255,.7);font-size:12px;">Problems</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,.12);border-radius:12px;padding:16px;">
+                      <div style="color:white;font-size:28px;font-weight:800;">500+</div>
+                      <div style="color:rgba(255,255,255,.7);font-size:12px;">Families</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,.12);border-radius:12px;padding:16px;">
+                      <div style="color:white;font-size:28px;font-weight:800;">7</div>
+                      <div style="color:rgba(255,255,255,.7);font-size:12px;">Skill Tracks</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,.12);border-radius:12px;padding:16px;">
+                      <div style="color:#4ade80;font-size:28px;font-weight:800;">Free</div>
+                      <div style="color:rgba(255,255,255,.7);font-size:12px;">Trial</div>
+                    </div>
+                  </div>
+                </div>
             </div>
         </div>
     </section>
@@ -1127,7 +1155,7 @@
             <div class="footer-grid">
                 <div class="footer-col">
                     <div class="logo" style="color: white; margin-bottom: 16px;">
-                        🧠 LogicPals
+                        <img src="/assets/img/logo.svg" alt="LogicPals" style="width:32px;height:32px;border-radius:8px;vertical-align:middle;margin-right:8px;" />LogicPals
                     </div>
                     <p style="font-size: 14px;">Building critical thinkers, one problem at a time. Empowering children in Bangladesh to solve the unsolvable.</p>
                 </div>
