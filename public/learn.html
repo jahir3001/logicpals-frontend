@@ -1256,17 +1256,38 @@
       difficulty_tier:currentProblem?.difficulty_tier||null,
     });
 
-    // Local answer check
-    const cleanInput=text.toLowerCase().replace(/[^a-z0-9]/g,'');
-    const sources=[currentProblem?.answer_key,currentProblem?.solution_explanation].filter(Boolean);
-    let isCorrect=false;
-    for(const src of sources){
-      for(const a of src.toLowerCase().split('|')){
-        const ca=a.replace(/[^a-z0-9]/g,'');
-        if(ca.length>0&&cleanInput.includes(ca)){isCorrect=true;break;}
+    // ── LOCAL ANSWER CHECK ─────────────────────────────────────────────────
+    // Rules (prevent false positives):
+    // 1. Only check against answer_key — NOT solution_explanation (which is a
+    //    full sentence and will substring-match almost anything).
+    // 2. Use EXACT WHOLE-TOKEN match, not substring. "9" must not match "19"
+    //    or "90". Split user input into tokens and check each token.
+    // 3. answer_key supports pipe-separated alternatives: "8|eight"
+    // 4. answer_key must be at least 2 chars to avoid single-letter accidents.
+    const cleanInput=text.trim().toLowerCase();
+    // Tokenise: split on whitespace + common separators, strip punctuation
+    const inputTokens = cleanInput.split(/[\s,.\-\/=:;!?()]+/).map(t=>t.replace(/[^a-z0-9]/g,'')).filter(t=>t.length>0);
+
+    let isCorrect = false;
+    const answerKey = currentProblem?.answer_key;
+    if(answerKey && answerKey.trim().length >= 1){
+      const acceptedAnswers = answerKey.toLowerCase().split('|').map(a=>a.trim().replace(/[^a-z0-9]/g,''));
+      for(const accepted of acceptedAnswers){
+        if(accepted.length === 0) continue;
+        // For numeric/short answers (≤ 6 chars): require exact token match
+        // For longer phrase answers (> 6 chars): allow contained-phrase match
+        if(accepted.length <= 6){
+          // Exact token match — "9" must not match inside "19" or "90"
+          if(inputTokens.includes(accepted)){isCorrect=true;break;}
+        } else {
+          // Phrase match — strip spaces and check containment
+          const flatInput = inputTokens.join('');
+          if(flatInput.includes(accepted.replace(/\s/g,''))){isCorrect=true;break;}
+        }
       }
-      if(isCorrect)break;
     }
+    // Note: we deliberately do NOT check solution_explanation — it's a full
+    // explanation sentence that would produce constant false positives.
 
     if(isCorrect){
       await logAttempt(true,text);
@@ -1285,8 +1306,15 @@
       const reply=data?.reply||"Hmm, that's not quite right. Try a different angle!";
       addMessage('ai',reply);chatLog.push({role:'assistant',content:reply});saveState();
 
-      const rl=reply.toLowerCase();
-      if((rl.includes('correct')||rl.includes('\uD83C\uDF89'))&&cleanInput.length>1){
+      // ── AI REPLY SOLVED SIGNAL ─────────────────────────────────────────
+      // IMPORTANT: The AI says "correct" in many contexts — e.g. "That's not
+      // correct" or "Correct reasoning, but..." — never trigger win on the
+      // word alone. Only trust an explicit SOLVED marker from the API, OR a
+      // very unambiguous emoji-only celebration signal. The server should send
+      // { solved: true } in the JSON to signal a confirmed correct answer.
+      const isSolvedByServer = data?.solved === true;
+      const isCelebrationReply = rl.startsWith('🎉') || rl.startsWith('✅') || rl.startsWith('correct!') || rl.startsWith("that's correct");
+      if(isSolvedByServer || isCelebrationReply){
         await logAttempt(true,text);finishPuzzle(true);
       }
       // Don't log wrong attempt per message — only log once when problem is finished or skipped
