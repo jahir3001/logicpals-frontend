@@ -1329,7 +1329,7 @@
     const row={
       problem_id:                  pid,
       child_id:                    currentChildId,         // NOT NULL — required
-      user_id:                     currentUserId||currentChildId, // NOT NULL — fallback to child_id
+      user_id:                     currentChildId,          // CHECK CONSTRAINT: user_id = child_id (attempts_user_equals_child)
       attempt_number:              problemCount,           // NOT NULL — required
       solved_correctly:            solvedCorrectly,
       is_correct:                  solvedCorrectly,
@@ -1408,7 +1408,7 @@
     const testRow={
       problem_id:      testPid,
       child_id:        currentChildId,
-      user_id:         currentUserId,
+      user_id:         currentChildId,   // must equal child_id (CHECK constraint)
       attempt_number:  999,
       solved_correctly:true,
       is_correct:      true,
