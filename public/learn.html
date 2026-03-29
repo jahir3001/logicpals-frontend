@@ -1387,7 +1387,56 @@
   }
 
   
-  function toast(msg){
+  // ══ DEBUG: paste in console → window.testAttemptInsert() to test insert ══
+  window.testAttemptInsert = async function(){
+    console.log('=== ATTEMPT INSERT TEST ===');
+    console.log('sb:', !!sb);
+    console.log('currentChildId:', currentChildId);
+    console.log('currentUserId:', currentUserId);
+    console.log('currentProblem.id:', currentProblem?.id);
+
+    if(!sb){ console.error('FAIL: sb not set'); return; }
+    if(!currentChildId){ console.error('FAIL: currentChildId is null'); return; }
+    if(!currentUserId){ console.error('FAIL: currentUserId is null'); return; }
+
+    const{data:sess}=await sb.auth.getSession();
+    console.log('Session user:', sess?.session?.user?.id, sess?.session?.user?.email);
+    console.log('JWT present:', !!sess?.session?.access_token);
+
+    // Use a known real problem UUID from DB
+    const testPid = currentProblem?.id || '2aecdc6d-6790-4973-9575-369629ddae13';
+    const testRow={
+      problem_id:      testPid,
+      child_id:        currentChildId,
+      user_id:         currentUserId,
+      attempt_number:  999,
+      solved_correctly:true,
+      is_correct:      true,
+      hints_used:      0,
+      questions_asked: 0,
+      completed_at:    new Date().toISOString(),
+      mode:            'regular',
+      attempt_state:   'completed',
+    };
+    console.log('Inserting test row:', JSON.stringify(testRow));
+    const{data,error}=await sb.from('attempts').insert(testRow).select();
+    if(error){
+      console.error('INSERT FAILED:', error.message);
+      console.error('Error code:', error.code);
+      console.error('Error details:', error.details);
+      console.error('Error hint:', error.hint);
+    } else {
+      console.log('INSERT SUCCESS ✓ id:', data?.[0]?.id);
+      // Clean up test row
+      if(data?.[0]?.id){
+        await sb.from('attempts').delete().eq('id',data[0].id);
+        console.log('Test row deleted ✓');
+      }
+    }
+  };
+  // ══ END DEBUG ══
+
+
     try{
       const el=document.createElement('div');
       el.className='lp-toast';
