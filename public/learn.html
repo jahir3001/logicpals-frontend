@@ -1306,48 +1306,59 @@
     const pid=currentProblem?.id;
     if(!isValidUUID(pid)){console.log('[Learn] Local puzzle, skipping DB save. id=',pid);return;}
 
+    // child_id is NOT NULL in DB — must always be present
+    if(!currentChildId){
+      console.error('[attempt] child_id is null — cannot insert (child_id is NOT NULL in DB). Ensure child is fetched on boot.');
+      return;
+    }
+
     const now=new Date().toISOString();
     const elapsed=startTime?Math.round((Date.now()-startTime)/1000):null;
     const ttfi=firstInputTime&&startTime?Math.round((firstInputTime-startTime)/1000):null;
     if(solvedCorrectly&&elapsed) sessionTimes.push(elapsed);
 
-    // ── MINIMAL ROW — only columns confirmed in the attempts schema ──────
-    // Extra columns like 'track', 'mode', 'attempt_state', 'difficulty_tier'
-    // may not exist and cause a 400/PGRST error that silently drops the row.
-    const minRow={
-      problem_id:         pid,
-      solved_correctly:   solvedCorrectly,
-      is_correct:         solvedCorrectly,
-      hints_used:         hintsUsed,
-      questions_asked:    questionsAsked,
-      attempt_number:     problemCount,
-      submitted_answer:   submittedAnswer||null,
-      ai_conversation:    chatLog.length>0?chatLog:null,
-      time_spent_seconds: elapsed,
-      started_at:         startTime?new Date(startTime).toISOString():null,
-      completed_at:       now,
-      session_id:         sessionId||null,
+    // ── SCHEMA-VERIFIED ROW ──────────────────────────────────────────────
+    // Columns confirmed from information_schema.columns on 2026-03-29:
+    // id(auto), child_id(NOT NULL), problem_id(NOT NULL), user_id(NOT NULL),
+    // attempt_number(NOT NULL), solved_correctly, is_correct, hints_used,
+    // questions_asked, ai_conversation, completed_at, created_at(auto),
+    // attempt_state, difficulty_tier, mode, started_at, submitted_at,
+    // time_spent_seconds, time_to_first_input_seconds, submitted_answer,
+    // session_id, session_item_id, score_delta, active, review_started_at
+    // NOTE: 'track' is NOT a column — never include it
+    const row={
+      problem_id:                  pid,
+      child_id:                    currentChildId,         // NOT NULL — required
+      user_id:                     currentUserId||currentChildId, // NOT NULL — fallback to child_id
+      attempt_number:              problemCount,           // NOT NULL — required
+      solved_correctly:            solvedCorrectly,
+      is_correct:                  solvedCorrectly,
+      hints_used:                  hintsUsed,
+      questions_asked:             questionsAsked,
+      submitted_answer:            submittedAnswer||null,
+      ai_conversation:             chatLog.length>0?chatLog:null,
+      time_spent_seconds:          elapsed,
+      time_to_first_input_seconds: ttfi,
+      started_at:                  startTime?new Date(startTime).toISOString():null,
+      completed_at:                now,
+      session_id:                  sessionId||null,
+      attempt_state:               solvedCorrectly?'completed':'skipped',
+      difficulty_tier:             currentProblem?.difficulty_tier||currentProblem?.difficulty||null,
+      mode:                        TRACK,
+      // 'track' intentionally omitted — does NOT exist as a DB column
     };
-    if(currentChildId) minRow.child_id=currentChildId;
-    if(currentUserId)  minRow.user_id=currentUserId;
-
-    // Full row for server endpoint (it handles column validation server-side)
-    const fullRow={...minRow, mode:TRACK, track:TRACK,
-      difficulty_tier:currentProblem?.difficulty_tier||currentProblem?.difficulty||null,
-      attempt_state:solvedCorrectly?'completed':'skipped',
-      time_to_first_input_seconds:ttfi};
 
     // Get JWT for server endpoint
     let jwt=null;
     try{const s=await sb.auth.getSession();jwt=s?.data?.session?.access_token||null;}catch(_){}
 
-    // Path 1: server endpoint (enterprise) — sends full row
+    // Path 1: server endpoint (/api/attempt/log)
     if(jwt){
       try{
         const r=await fetch('/api/attempt/log',{
           method:'POST',
           headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwt},
-          body:JSON.stringify({data:fullRow})
+          body:JSON.stringify({data:row})
         });
         if(r.ok){console.log('[attempt] server logged ✓');return;}
         let body=null;try{body=await r.json();}catch(_){}
@@ -1359,16 +1370,16 @@
       console.warn('[attempt] No JWT — writing directly to Supabase');
     }
 
-    // Path 2: direct Supabase INSERT — MINIMAL row only (avoids unknown column errors)
+    // Path 2: direct Supabase INSERT
     try{
-      const{error}=await sb.from('attempts').insert(minRow);
+      const{error}=await sb.from('attempts').insert(row);
       if(error){
         console.error('[attempt] direct insert FAILED:',error.message,'code:',error.code);
-        console.error('[attempt] row sent:',JSON.stringify(minRow));
-        if(error.code==='42501') console.error('[attempt] RLS is blocking the insert');
-        if(error.code==='PGRST204'||error.code==='42703') console.error('[attempt] Unknown column in row');
+        if(error.code==='42501') console.error('[attempt] → RLS is blocking. Check INSERT policy.');
+        if(error.code==='42703'||error.code==='PGRST204') console.error('[attempt] → Unknown column sent. Schema mismatch.');
+        if(error.code==='23502') console.error('[attempt] → NOT NULL violation. Check child_id/user_id/attempt_number.');
       } else {
-        console.log('[attempt] saved via direct client insert ✓');
+        console.log('[attempt] saved via direct client insert ✓ child_id:',currentChildId);
       }
     }catch(e){
       console.error('[attempt] direct insert exception:',e?.message);
