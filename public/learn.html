@@ -463,7 +463,7 @@
   </div>
 
   <header>
-    <div class="logo">&#129504; LogicPals</div>
+    <div class="logo"><img src="/assets/img/logo.svg" alt="LogicPals" style="width:26px;height:26px;border-radius:7px;vertical-align:middle;margin-right:6px;" />LogicPals</div>
     <div class="header-right">
       <a href="olympiad.html" class="olympiad-btn" id="olympiadHeaderBtn" style="display:none;">&#127942; Olympiad</a>
       <!-- A13: timer-badge now click-to-toggle and mode-aware -->
@@ -1179,9 +1179,24 @@
             console.warn('[Learn] No Olympiad problems in DB for level='+qLevel+'. Seed content first.');
           }
         } else {
-          // Regular track
-          const r = await sb.from('problems').select('*').eq('is_active',true).or('skill_track.is.null,olympiad_level.eq.regular');
-          if(!r.error && r.data?.length > 0) puzzle = r.data[Math.floor(Math.random()*r.data.length)];
+          // Regular track — DB has olympiad_level='regular', skill_track=NULL for all 567 problems
+          // Use direct eq filter — avoids PostgREST .or() parsing issues with IS NULL
+          // Query A: olympiad_level = 'regular' (matches all 567 real problems)
+          const rA = await sb.from('problems').select('*').eq('is_active',true).eq('olympiad_level','regular');
+          if(!rA.error && rA.data?.length > 0){
+            puzzle = rA.data[Math.floor(Math.random()*rA.data.length)];
+            console.log('[Learn] Regular problems loaded from DB:',rA.data.length);
+          } else {
+            console.warn('[Learn] olympiad_level=regular query failed:',rA.error?.message,'rows:',rA.data?.length);
+            // Query B: skill_track IS NULL (schema fallback)
+            const rB = await sb.from('problems').select('*').eq('is_active',true).is('skill_track',null);
+            if(!rB.error && rB.data?.length > 0){
+              puzzle = rB.data[Math.floor(Math.random()*rB.data.length)];
+              console.log('[Learn] Regular problems loaded via skill_track IS NULL:',rB.data.length);
+            } else {
+              console.warn('[Learn] Both regular queries returned 0 rows. Falling to local puzzles.');
+            }
+          }
         }
       }
     }catch(e){console.warn('[Learn] Problem fetch failed:',e);}
@@ -1345,12 +1360,20 @@
     }
 
     // Path 2: direct Supabase INSERT (fallback — keeps dashboard data live)
-    // This fires when /api/attempt/log is not deployed or returns an error.
+    // Fires when /api/attempt/log is not deployed or returns an error.
     try{
-      const{error}=await sb.from('attempts').insert(row);
+      // Build a clean row — remove null child_id if not set (avoids RLS issues)
+      const insertRow = {...row};
+      if(!insertRow.child_id) delete insertRow.child_id;
+      if(!insertRow.user_id)  delete insertRow.user_id;
+
+      const{error}=await sb.from('attempts').insert(insertRow);
       if(error){
-        console.warn('[attempt] direct insert failed:',error.message);
-        toast('Progress could not be saved. Check your connection.');
+        console.warn('[attempt] direct insert failed:',error.message,'code:',error.code);
+        // RLS block (code 42501) — means policy prevents write
+        if(error.code==='42501'){
+          console.warn('[attempt] RLS blocked insert — check attempts table policies allow authenticated users');
+        }
       } else {
         console.log('[attempt] saved via direct client insert ✓');
       }
@@ -1966,12 +1989,12 @@
         if (olympiadEligible && olympiadBtn) olympiadBtn.style.display = 'inline-block';
       } catch(_) {}
 
-      // Child ID
+      // Child ID — use limit(1) not .single() to avoid throwing on 0 or multiple children
       try{
-        const{data,error}=await sb.from('children').select('id,name').eq('parent_id',user.id).single();
-        if(data?.id){currentChildId=data.id;console.log('[Learn] Child:',data.id,data.name);}
-        else console.warn('[Learn] No child profile:',error?.message);
-      }catch(_){}
+        const{data,error}=await sb.from('children').select('id,name').eq('parent_id',user.id).order('created_at',{ascending:true}).limit(1);
+        if(data?.length>0){currentChildId=data[0].id;console.log('[Learn] Child:',data[0].id,data[0].name);}
+        else console.warn('[Learn] No child profile found:',error?.message||'0 rows');
+      }catch(e){console.warn('[Learn] Child fetch error:',e?.message);}
       if(!currentChildId) console.warn('[Learn] No child_id — will use user_id for attempts');
 
       // P1.6: Create DB session row
