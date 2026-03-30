@@ -633,7 +633,7 @@
     }
 
     async function callMetricsSummary(jwt, experimentKey, track, days) {
-      const res = await fetch('/api/ab/metrics-summary', {
+      const res = await fetch('/api/ab/admin-ops?action=metrics-summary', {
         method: 'POST',
         headers: {
           'Content-Type':  'application/json',
@@ -734,7 +734,7 @@
           const m = await callMetricsSummary(jwt, experimentKey, track, days);
           setOutput(
             { admin_bundle_error: b.json, metrics_summary: m.json },
-            '/api/ab/metrics-summary (fallback)'
+            '/api/ab/admin-ops?action=metrics-summary (fallback)'
           );
 
           if (!m.ok) {
@@ -800,7 +800,7 @@
       }
 
       try {
-        const res  = await fetch('/api/ab/refresh-dashboards', {
+        const res  = await fetch('/api/ab/admin-ops?action=refresh-dashboards', {
           method: 'POST',
           headers: {
             'Content-Type':  'application/json',
@@ -809,7 +809,7 @@
           body: JSON.stringify({}),
         });
         const json = await res.json().catch(() => ({}));
-        setOutput(json, '/api/ab/refresh-dashboards');
+        setOutput(json, '/api/ab/admin-ops?action=refresh-dashboards');
 
         if (!res.ok) {
           LPAdmin.setStatus('err', 'Refresh failed');
