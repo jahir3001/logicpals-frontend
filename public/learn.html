@@ -1311,7 +1311,11 @@
       return;
     }
 
-    // Ask tutor API
+    // Ask tutor API — AI is a SOCRATIC GUIDE only, never the judge of correctness.
+    // The AI uses "Perfect!", "Excellent!", "Well done!" for INTERMEDIATE steps.
+    // These must NEVER trigger finishPuzzle. Only two things end a problem:
+    //   1. Local answer_key match (above) — primary path
+    //   2. data.solved === true from server — explicit server confirmation only
     try{
       const res=await fetch('/api/tutor',{
         method:'POST',headers:{'Content-Type':'application/json'},
@@ -1321,20 +1325,10 @@
       const reply=data?.reply||"Hmm, that's not quite right. Try a different angle!";
       addMessage('ai',reply);chatLog.push({role:'assistant',content:reply});saveState();
 
-      // ── SOLVED CHECK — isolated in its own try so errors here never show "Hmm" ──
-      try{
-        const rl = reply.toLowerCase();  // ← was missing, caused ReferenceError → catch → "Hmm" message
-        const isSolvedByServer  = data?.solved === true;
-        // Only fire on unambiguous celebration starts — never on mid-sentence "correct"
-        const isCelebrationReply = rl.startsWith('🎉') || rl.startsWith('✅')
-          || rl.startsWith('correct!') || rl.startsWith("that's correct!")
-          || rl.startsWith('well done!') || rl.startsWith('perfect!') || rl.startsWith('excellent!');
-        if(isSolvedByServer || isCelebrationReply){
-          await logAttempt(true,text);finishPuzzle(true);
-        }
-      }catch(solvedErr){
-        console.warn('[Learn] Solved-check error (non-fatal):',solvedErr);
-        // Do NOT addMessage here — the AI reply was already shown correctly above
+      // Only trust an EXPLICIT solved:true flag from the server API.
+      // NEVER check reply text — the AI celebrates intermediate steps too.
+      if(data?.solved === true){
+        await logAttempt(true,text);finishPuzzle(true);
       }
 
     }catch(e){
