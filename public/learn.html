@@ -396,8 +396,8 @@
     @keyframes popIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
     .input-area{background:rgba(12,14,26,.8);backdrop-filter:blur(16px);padding:10px 16px;border-top:1px solid var(--border);flex-shrink:0;width:100%;z-index:20;padding-bottom:env(safe-area-inset-bottom,10px);}
     .typing-indicator{font-size:12px;color:var(--muted);margin-bottom:5px;opacity:0;transition:.2s;height:15px;}
-    .input-wrapper{display:flex;gap:8px;align-items:center;max-width:800px;margin:0 auto;}
-    .round-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--border);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.12s;flex-shrink:0;background:var(--card);font-family:var(--font);}
+    .input-wrapper{display:flex;gap:8px;align-items:flex-end;max-width:800px;margin:0 auto;}
+    .round-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--border);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.12s;flex-shrink:0;background:var(--card);font-family:var(--font);align-self:flex-end;}
     .round-btn:active{transform:scale(.93);}
     .round-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
     .hint-btn{background:var(--ys);color:var(--warning);border-color:rgba(254,202,87,.2);}
@@ -405,9 +405,20 @@
     .mic-btn{background:rgba(255,255,255,.03);color:var(--text2);}
     .mic-btn.recording{background:rgba(255,107,107,.12);color:var(--bad);border-color:rgba(255,107,107,.2);animation:pulse 1.5s infinite;}
     .send-btn{background:linear-gradient(135deg,var(--primary),#8b7cf6);color:white;border:none;box-shadow:0 2px 12px var(--glow);}
-    input[type="text"]{flex:1;padding:0 20px;border:2px solid var(--border);border-radius:100px;font:500 15px var(--font);outline:none;height:44px;background:rgba(255,255,255,.04);color:var(--text);}
-    input[type="text"]::placeholder{color:var(--muted);}
-    input[type="text"]:focus{border-color:rgba(108,92,231,.3);background:rgba(255,255,255,.06);box-shadow:0 0 0 3px rgba(108,92,231,.08);}
+    /* Auto-growing textarea — replaces single-line text input */
+    #textInput{
+      flex:1;padding:10px 18px;
+      border:2px solid var(--border);border-radius:22px;
+      font:500 15px var(--font);outline:none;
+      background:rgba(255,255,255,.04);color:var(--text);
+      resize:none;overflow-y:hidden;
+      min-height:44px;max-height:180px;
+      line-height:1.5;
+      transition:border-color .15s,box-shadow .15s;
+      display:block;align-self:flex-end;
+    }
+    #textInput::placeholder{color:var(--muted);}
+    #textInput:focus{border-color:rgba(108,92,231,.3);background:rgba(255,255,255,.06);box-shadow:0 0 0 3px rgba(108,92,231,.08);}
     .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(8,10,22,.7);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:1000;}
     .modal-content{background:rgba(20,24,52,.85);backdrop-filter:blur(24px);border:1px solid var(--border);padding:32px 24px;border-radius:20px;width:90%;max-width:400px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.4);animation:popUp .4s;}
     @keyframes popUp{from{transform:scale(.85);opacity:0;}to{transform:scale(1);opacity:1;}}
@@ -508,7 +519,7 @@
     <div class="typing-indicator" id="typing">LogicPals is thinking...</div>
     <div class="input-wrapper">
       <button class="round-btn hint-btn" id="hintBtn" title="Hint">&#128161;</button>
-      <input type="text" id="textInput" placeholder="Type your answer..." autocomplete="off" />
+      <textarea id="textInput" placeholder="Type your answer..." autocomplete="off" rows="1"></textarea>
       <button class="round-btn mic-btn" id="micBtn" title="Voice">&#127908;</button>
       <button class="round-btn send-btn" id="sendBtn" title="Send">&#10148;</button>
     </div>
@@ -1246,7 +1257,7 @@
 
     isProcessing=true;questionsAsked++;updateStats();
     dom.sendBtn.disabled=true;dom.typing.style.opacity=1;
-    addMessage('user',text);dom.textInput.value='';
+    addMessage('user',text);dom.textInput.value='';dom.textInput.style.height='auto';
     chatLog.push({role:'user',content:text});saveState();
 
     // GA4: problem_attempted
@@ -1500,6 +1511,21 @@
     dom.sessionAcc.innerText=acc+'%';
     const avgT=sessionTimes.length>0?Math.round(sessionTimes.reduce((a,b)=>a+b,0)/sessionTimes.length):null;
     dom.sessionSpeed.innerText=avgT?avgT+'s':'\u2014';
+
+    // ── Update children table counters (non-blocking) ─────────────────────
+    // Increments total_problems_solved (leaderboard pts) and streak_days.
+    // Uses Postgres RPC to avoid race conditions (concurrent sessions).
+    if(sb && currentChildId){
+      try{
+        // Increment total_problems_solved — used for leaderboard score
+        await sb.rpc('increment_child_problems_solved', { p_child_id: currentChildId });
+      }catch(e){ console.warn('[Learn] increment_child_problems_solved failed:',e?.message); }
+
+      try{
+        // Update streak — set last_active_date; DB function handles streak logic
+        await sb.rpc('update_child_streak', { p_child_id: currentChildId });
+      }catch(e){ console.warn('[Learn] update_child_streak failed:',e?.message); }
+    }
 
     // A17: Mastery feedback (non-blocking)
     fetchMasteryFeedback().catch(()=>{});
@@ -1976,7 +2002,18 @@
     dom.sendBtn.addEventListener('click',sendText);
     dom.micBtn.addEventListener('click',toggleRecording);
     dom.nextBtn.addEventListener('click',()=>loadNextPuzzle(true));
-    dom.textInput.addEventListener('keypress',e=>{if(e.key==='Enter')sendText();});
+    dom.textInput.addEventListener('keydown',e=>{
+      if(e.key==='Enter' && !e.shiftKey){
+        e.preventDefault(); // prevent newline on plain Enter
+        sendText();
+      }
+      // Shift+Enter falls through — adds a newline (default textarea behaviour)
+    });
+    // Auto-grow textarea as user types
+    dom.textInput.addEventListener('input',()=>{
+      dom.textInput.style.height='auto';
+      dom.textInput.style.height=Math.min(dom.textInput.scrollHeight,180)+'px';
+    });
     dom.authLoginBtn.addEventListener('click',()=>location.assign(LOGIN_URL));
 
     // ── A6: Proof submit button ────────────────────────────
