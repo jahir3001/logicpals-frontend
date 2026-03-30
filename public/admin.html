@@ -1068,11 +1068,11 @@
 
     async function loadTelemetry() {
       const [summaryRes, alertsRes, costsRes, providersRes, boundaryRes] = await Promise.all([
-        fetchAdminJson('/api/admin/telemetry/summary'),
-        fetchAdminJson('/api/admin/telemetry/alerts'),
-        fetchAdminJson('/api/admin/telemetry/costs'),
-        fetchAdminJson('/api/admin/telemetry/providers'),
-        fetchAdminJson('/api/admin/telemetry/boundary'),
+        fetchAdminJson('/api/admin/telemetry?type=summary'),
+        fetchAdminJson('/api/admin/telemetry?type=alerts'),
+        fetchAdminJson('/api/admin/telemetry?type=boundary'),
+        fetchAdminJson('/api/admin/telemetry?type=costs'),
+        fetchAdminJson('/api/admin/telemetry?type=providers'),
       ]);
 
       const summary = summaryRes.result || summaryRes;
