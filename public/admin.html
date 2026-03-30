@@ -226,153 +226,202 @@
     @media (max-width: 1100px) {
       .lp-workspace-grid { grid-template-columns: 1fr; }
     }
-
-
-    /* ─── Telemetry dashboard ───────────────────────────────── */
-    .lp-telemetry-stack { display:flex; flex-direction:column; gap:18px; padding:22px; }
+  
+    /* ─── Telemetry dashboard ─────────────────────────────────── */
     .lp-telemetry-grid {
-      display:grid;
-      grid-template-columns: repeat(6, minmax(0,1fr));
-      gap:12px;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
     }
-    @media (max-width: 1400px) { .lp-telemetry-grid { grid-template-columns: repeat(3, minmax(0,1fr)); } }
-    @media (max-width: 760px)  { .lp-telemetry-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
-    @media (max-width: 520px)  { .lp-telemetry-grid { grid-template-columns: 1fr; } }
 
     .lp-telemetry-card {
       background: var(--lp-card);
       border: 1px solid var(--lp-border);
       border-radius: var(--lp-r-lg);
-      padding: 16px 18px;
+      padding: 14px 16px;
       box-shadow: var(--lp-shadow-sm);
     }
+
     .lp-telemetry-card-label {
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
-      color: var(--lp-muted);
+      letter-spacing: .03em;
       text-transform: uppercase;
-      letter-spacing: .04em;
+      color: var(--lp-muted);
       margin-bottom: 8px;
     }
+
     .lp-telemetry-card-value {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 800;
       color: var(--lp-text);
       letter-spacing: -0.02em;
-    }
-    .lp-telemetry-card-sub {
-      margin-top: 6px;
-      font-size: 12px;
-      color: var(--lp-subtle);
-      min-height: 18px;
+      line-height: 1.1;
     }
 
-    .lp-telemetry-toolbar {
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:12px;
-      flex-wrap:wrap;
+    .lp-telemetry-card-sub {
+      margin-top: 5px;
+      font-size: 11.5px;
+      color: var(--lp-subtle);
     }
-    .lp-telemetry-toolbar-left,
-    .lp-telemetry-toolbar-right {
-      display:flex;
-      align-items:flex-end;
-      gap:12px;
-      flex-wrap:wrap;
+
+    .lp-telemetry-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
     }
-    .lp-telemetry-toolbar .admin-field { min-width: 160px; }
-    .lp-telemetry-inline-meta {
-      display:flex;
-      gap:12px;
-      align-items:center;
-      flex-wrap:wrap;
-      font-size:12px;
+
+    .lp-telemetry-filters {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .lp-telemetry-meta {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 12px;
       color: var(--lp-muted);
     }
-    .lp-telemetry-kv { font-family: var(--lp-font-mono); color: var(--lp-text-2); }
 
-    .lp-telemetry-section {
+    .lp-telemetry-table-card {
       background: var(--lp-card);
       border: 1px solid var(--lp-border);
-      border-radius: var(--lp-r-xl);
+      border-radius: var(--lp-r-lg);
       overflow: hidden;
       box-shadow: var(--lp-shadow-sm);
     }
-    .lp-telemetry-section-head {
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding: 14px 18px;
+
+    .lp-telemetry-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
       border-bottom: 1px solid var(--lp-border);
       background: var(--lp-surface);
     }
-    .lp-telemetry-section-title {
-      font-size: 14px;
-      font-weight: 800;
-      color: var(--lp-text);
-    }
-    .lp-telemetry-section-sub {
-      font-size: 12px;
-      color: var(--lp-muted);
-      margin-top: 2px;
+
+    .lp-telemetry-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--lp-text-2);
     }
 
-    .lp-telemetry-table-wrap { overflow:auto; }
+    .lp-telemetry-table-wrap {
+      overflow: auto;
+    }
+
     .lp-telemetry-table {
-      width:100%;
+      width: 100%;
       border-collapse: collapse;
       font-size: 12.5px;
     }
+
     .lp-telemetry-table th,
     .lp-telemetry-table td {
-      padding: 11px 14px;
+      padding: 10px 12px;
       border-bottom: 1px solid var(--lp-border);
-      text-align:left;
+      text-align: left;
       vertical-align: top;
     }
+
     .lp-telemetry-table th {
       font-size: 11.5px;
       text-transform: uppercase;
-      letter-spacing: .04em;
+      letter-spacing: .03em;
       color: var(--lp-muted);
-      background: rgba(247,248,252,.45);
+      background: var(--lp-surface);
       position: sticky;
       top: 0;
       z-index: 1;
     }
-    .lp-telemetry-table tbody tr:hover { background: rgba(79,70,229,.03); }
+
     .lp-telemetry-empty {
-      padding: 20px 18px;
-      color: var(--lp-muted);
+      padding: 20px 16px;
       font-size: 12.5px;
+      color: var(--lp-muted);
     }
-    .lp-severity-pill,
-    .lp-health-pill,
-    .lp-breaker-pill {
-      display:inline-flex;
-      align-items:center;
-      gap:5px;
-      padding: 4px 9px;
+
+    .lp-severity-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
       border-radius: 999px;
       font-size: 11px;
-      font-weight: 800;
-      line-height: 1;
-      border: 1px solid var(--lp-border);
-      white-space: nowrap;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .03em;
     }
-    .lp-severity-critical { background: var(--lp-danger-bg); color: var(--lp-danger-text); border-color: var(--lp-danger-border); }
-    .lp-severity-warning  { background: var(--lp-warning-bg); color: var(--lp-warning-text); border-color: var(--lp-warning-border); }
-    .lp-severity-info     { background: rgba(79,70,229,.08); color: var(--lp-indigo-dark); border-color: rgba(79,70,229,.18); }
-    .lp-health-ok         { background: var(--lp-success-bg); color: var(--lp-success-text); border-color: var(--lp-success-border); }
-    .lp-health-warn       { background: var(--lp-warning-bg); color: var(--lp-warning-text); border-color: var(--lp-warning-border); }
-    .lp-health-bad        { background: var(--lp-danger-bg); color: var(--lp-danger-text); border-color: var(--lp-danger-border); }
-    .lp-breaker-open      { background: var(--lp-danger-bg); color: var(--lp-danger-text); border-color: var(--lp-danger-border); }
-    .lp-breaker-half_open { background: var(--lp-warning-bg); color: var(--lp-warning-text); border-color: var(--lp-warning-border); }
-    .lp-breaker-closed    { background: var(--lp-success-bg); color: var(--lp-success-text); border-color: var(--lp-success-border); }
-    .lp-code-lite { font-family: var(--lp-font-mono); font-size: 11.5px; color: var(--lp-text-2); }
-    .lp-mono-tiny { font-family: var(--lp-font-mono); font-size: 11px; color: var(--lp-subtle); }
+
+    .lp-severity-pill.critical {
+      background: var(--lp-danger-bg);
+      color: var(--lp-danger-text);
+      border: 1px solid var(--lp-danger-border);
+    }
+
+    .lp-severity-pill.warning {
+      background: var(--lp-warning-bg);
+      color: var(--lp-warning-text);
+      border: 1px solid var(--lp-warning-border);
+    }
+
+    .lp-severity-pill.info {
+      background: rgba(79,70,229,.08);
+      color: var(--lp-indigo-dark);
+      border: 1px solid rgba(79,70,229,.18);
+    }
+
+    .lp-track-chip {
+      display: inline-flex;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--lp-font-mono);
+      background: var(--lp-surface-2);
+      color: var(--lp-text-2);
+      border: 1px solid var(--lp-border);
+    }
+
+    .lp-track-chip.regular {
+      background: rgba(79,70,229,.08);
+      color: var(--lp-indigo-dark);
+      border-color: rgba(79,70,229,.18);
+    }
+
+    .lp-track-chip.olympiad {
+      background: rgba(8,145,178,.08);
+      color: #0e7490;
+      border-color: rgba(8,145,178,.18);
+    }
+
+    .lp-mono {
+      font-family: var(--lp-font-mono);
+      font-size: 12px;
+      color: var(--lp-text-2);
+      word-break: break-word;
+    }
+
+    @media (max-width: 1200px) {
+      .lp-telemetry-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .lp-telemetry-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 520px) {
+      .lp-telemetry-grid { grid-template-columns: 1fr; }
+    }
 
   </style>
 </head>
@@ -481,7 +530,7 @@
               Access
             </button>
             <button class="lp-tab" data-tab="telemetry" role="tab" aria-selected="false" type="button">
-              <svg class="lp-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 4-6"/></svg>
+              <svg class="lp-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l3-3 3 2 4-6"/></svg>
               Telemetry
             </button>
           </div>
@@ -716,123 +765,120 @@
 
           <!-- ── Panel: Telemetry ── -->
           <div class="lp-panel" id="tab-telemetry" role="tabpanel">
-            <div class="lp-telemetry-stack">
-              <div class="admin-banner admin-banner-info">
-                <svg class="admin-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 4-6"/></svg>
+            <div style="padding:22px">
+              <div class="admin-banner admin-banner-info" style="margin-bottom:18px">
+                <svg class="admin-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
                 <div class="admin-banner-body">
-                  <div class="admin-banner-title">Operational telemetry</div>
-                  Enterprise monitoring view fed by platform health, alert log, AI cost ledger, provider failover events and boundary incidents. Admin only.
+                  <div class="admin-banner-title">Enterprise Telemetry Console</div>
+                  Real-time operational visibility for AI health, alerts, costs, provider failover, and boundary incidents.
                 </div>
               </div>
 
-              <div class="lp-telemetry-toolbar">
-                <div class="lp-telemetry-toolbar-left">
-                  <div class="admin-field">
+              <div class="lp-telemetry-controls">
+                <div class="lp-telemetry-filters">
+                  <div class="admin-field" style="min-width:140px">
                     <label class="admin-label" for="telemetryWindow">Window</label>
-                    <select class="admin-input" id="telemetryWindow">
-                      <option value="15m">Last 15 minutes</option>
-                      <option value="1h">Last 1 hour</option>
-                      <option value="24h">Last 24 hours</option>
+                    <select class="admin-select" id="telemetryWindow">
+                      <option value="15m">15 minutes</option>
+                      <option value="1h">1 hour</option>
+                      <option value="24h">24 hours</option>
                     </select>
                   </div>
-                  <div class="admin-field">
+                  <div class="admin-field" style="min-width:140px">
                     <label class="admin-label" for="telemetrySeverity">Severity</label>
-                    <select class="admin-input" id="telemetrySeverity">
+                    <select class="admin-select" id="telemetrySeverity">
                       <option value="all">All severities</option>
                       <option value="critical">Critical</option>
                       <option value="warning">Warning</option>
                       <option value="info">Info</option>
                     </select>
                   </div>
-                  <label class="admin-label" style="display:flex;align-items:center;gap:8px;padding-bottom:10px;cursor:pointer;">
-                    <input id="telemetryAutoRefresh" type="checkbox" checked />
+                  <label class="admin-label" style="display:flex;align-items:center;gap:8px;margin:24px 0 0 0;">
+                    <input type="checkbox" id="telemetryAutoRefresh" checked />
                     Auto refresh
                   </label>
+                  <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" id="btnTelemetryRefresh" style="margin-top:23px">Refresh</button>
                 </div>
-                <div class="lp-telemetry-toolbar-right">
-                  <div class="lp-telemetry-inline-meta">
-                    <span>API <span class="lp-telemetry-kv" id="telemetryApiBadge">idle</span></span>
-                    <span>Updated <span class="lp-telemetry-kv" id="telemetryLastUpdated">never</span></span>
-                  </div>
-                  <button class="admin-btn admin-btn-secondary admin-btn-sm gated" id="btnTelemetryRefresh" type="button">Refresh</button>
+                <div class="lp-telemetry-meta">
+                  <span class="admin-badge admin-badge-teal">Admin only</span>
+                  <span id="telemetryLastUpdated">Last updated: —</span>
                 </div>
               </div>
 
               <div class="lp-telemetry-grid">
-                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">AI Calls (15m)</div><div class="lp-telemetry-card-value" id="tmAiCalls">—</div><div class="lp-telemetry-card-sub" id="tmAiCallsSub">rolling health window</div></div>
-                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">Error Rate</div><div class="lp-telemetry-card-value" id="tmErrorRate">—</div><div class="lp-telemetry-card-sub" id="tmErrorRateSub">last 15 minutes</div></div>
-                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">p95 Latency</div><div class="lp-telemetry-card-value" id="tmP95">—</div><div class="lp-telemetry-card-sub" id="tmP95Sub">AI response latency</div></div>
-                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">Cost Today</div><div class="lp-telemetry-card-value" id="tmCostToday">—</div><div class="lp-telemetry-card-sub" id="tmCostTodaySub">USD across providers</div></div>
-                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">Active Sessions</div><div class="lp-telemetry-card-value" id="tmActiveSessions">—</div><div class="lp-telemetry-card-sub" id="tmActiveSessionsSub">current platform load</div></div>
-                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">Boundary Violations</div><div class="lp-telemetry-card-value" id="tmBoundary">—</div><div class="lp-telemetry-card-sub" id="tmBoundarySub">security watch</div></div>
+                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">AI Calls (15m)</div><div class="lp-telemetry-card-value" id="metricAiCalls">—</div><div class="lp-telemetry-card-sub">Recent orchestration traffic</div></div>
+                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">Error Rate</div><div class="lp-telemetry-card-value" id="metricErrorRate">—</div><div class="lp-telemetry-card-sub">Failures / total requests</div></div>
+                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">p95 Latency</div><div class="lp-telemetry-card-value" id="metricP95">—</div><div class="lp-telemetry-card-sub">Milliseconds</div></div>
+                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">Cost Today</div><div class="lp-telemetry-card-value" id="metricCostToday">—</div><div class="lp-telemetry-card-sub">USD across all AI calls</div></div>
+                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">Active Sessions</div><div class="lp-telemetry-card-value" id="metricActiveSessions">—</div><div class="lp-telemetry-card-sub">Platform health view</div></div>
+                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">Boundary Violations</div><div class="lp-telemetry-card-value" id="metricBoundary">—</div><div class="lp-telemetry-card-sub">Last 15m incidents</div></div>
               </div>
 
-              <section class="lp-telemetry-section">
-                <div class="lp-telemetry-section-head">
-                  <div>
-                    <div class="lp-telemetry-section-title">Recent alerts</div>
-                    <div class="lp-telemetry-section-sub">Latest alert log and incident events across Slack + audit flow.</div>
+              <div class="admin-grid admin-grid-2" style="gap:12px">
+                <div class="lp-telemetry-table-card">
+                  <div class="lp-telemetry-card-head">
+                    <div class="lp-telemetry-card-title">Recent Alerts</div>
+                    <span class="admin-badge admin-badge-indigo" id="alertsCountBadge">0 rows</span>
+                  </div>
+                  <div class="lp-telemetry-table-wrap">
+                    <table class="lp-telemetry-table">
+                      <thead>
+                        <tr><th>Time</th><th>Type</th><th>Severity</th><th>Message</th></tr>
+                      </thead>
+                      <tbody id="telemetryAlertsBody"><tr><td colspan="4" class="lp-telemetry-empty">Loading…</td></tr></tbody>
+                    </table>
                   </div>
                 </div>
-                <div class="lp-telemetry-table-wrap">
-                  <table class="lp-telemetry-table" id="telemetryAlertsTable">
-                    <thead><tr><th>Time</th><th>Severity</th><th>Type</th><th>Source</th><th>Summary</th></tr></thead>
-                    <tbody></tbody>
-                  </table>
-                </div>
-                <div class="lp-telemetry-empty" id="telemetryAlertsEmpty">Waiting for telemetry data…</div>
-              </section>
 
-              <section class="lp-telemetry-section">
-                <div class="lp-telemetry-section-head">
-                  <div>
-                    <div class="lp-telemetry-section-title">Cost intelligence</div>
-                    <div class="lp-telemetry-section-sub">Model, route, track and request-type cost view from the AI cost ledger.</div>
+                <div class="lp-telemetry-table-card">
+                  <div class="lp-telemetry-card-head">
+                    <div class="lp-telemetry-card-title">Boundary Watch</div>
+                    <span class="admin-badge admin-badge-amber" id="boundaryCountBadge">0 rows</span>
+                  </div>
+                  <div class="lp-telemetry-table-wrap">
+                    <table class="lp-telemetry-table">
+                      <thead>
+                        <tr><th>Time</th><th>Type</th><th>Severity</th><th>Metadata</th></tr>
+                      </thead>
+                      <tbody id="telemetryBoundaryBody"><tr><td colspan="4" class="lp-telemetry-empty">Loading…</td></tr></tbody>
+                    </table>
                   </div>
                 </div>
-                <div class="lp-telemetry-table-wrap">
-                  <table class="lp-telemetry-table" id="telemetryCostsTable">
-                    <thead><tr><th>Model</th><th>Request</th><th>Track</th><th>Tier</th><th>Calls</th><th>Total Cost</th><th>Avg Latency</th></tr></thead>
-                    <tbody></tbody>
-                  </table>
-                </div>
-                <div class="lp-telemetry-empty" id="telemetryCostsEmpty">Waiting for telemetry data…</div>
-              </section>
 
-              <section class="lp-telemetry-section">
-                <div class="lp-telemetry-section-head">
-                  <div>
-                    <div class="lp-telemetry-section-title">AI provider health</div>
-                    <div class="lp-telemetry-section-sub">Circuit breaker state, fallback events and provider health summary.</div>
+                <div class="lp-telemetry-table-card">
+                  <div class="lp-telemetry-card-head">
+                    <div class="lp-telemetry-card-title">Cost Intelligence</div>
+                    <span class="admin-badge admin-badge-teal" id="costCountBadge">0 rows</span>
+                  </div>
+                  <div class="lp-telemetry-table-wrap">
+                    <table class="lp-telemetry-table">
+                      <thead>
+                        <tr><th>Scope</th><th>Metric</th><th>Value</th><th>Notes</th></tr>
+                      </thead>
+                      <tbody id="telemetryCostsBody"><tr><td colspan="4" class="lp-telemetry-empty">Loading…</td></tr></tbody>
+                    </table>
                   </div>
                 </div>
-                <div class="lp-telemetry-table-wrap">
-                  <table class="lp-telemetry-table" id="telemetryProvidersTable">
-                    <thead><tr><th>Provider</th><th>Breaker</th><th>Fallback</th><th>p95</th><th>Error Rate</th><th>Last Event</th></tr></thead>
-                    <tbody></tbody>
-                  </table>
-                </div>
-                <div class="lp-telemetry-empty" id="telemetryProvidersEmpty">Waiting for telemetry data…</div>
-              </section>
 
-              <section class="lp-telemetry-section">
-                <div class="lp-telemetry-section-head">
-                  <div>
-                    <div class="lp-telemetry-section-title">Boundary watch</div>
-                    <div class="lp-telemetry-section-sub">Cross-track and protected endpoint access violations.</div>
+                <div class="lp-telemetry-table-card">
+                  <div class="lp-telemetry-card-head">
+                    <div class="lp-telemetry-card-title">AI Provider Health</div>
+                    <span class="admin-badge admin-badge-green" id="providersCountBadge">0 rows</span>
+                  </div>
+                  <div class="lp-telemetry-table-wrap">
+                    <table class="lp-telemetry-table">
+                      <thead>
+                        <tr><th>Provider</th><th>Status</th><th>Metric</th><th>Details</th></tr>
+                      </thead>
+                      <tbody id="telemetryProvidersBody"><tr><td colspan="4" class="lp-telemetry-empty">Loading…</td></tr></tbody>
+                    </table>
                   </div>
                 </div>
-                <div class="lp-telemetry-table-wrap">
-                  <table class="lp-telemetry-table" id="telemetryBoundaryTable">
-                    <thead><tr><th>Time</th><th>User</th><th>Track</th><th>Attempted</th><th>Endpoint</th><th>Request</th></tr></thead>
-                    <tbody></tbody>
-                  </table>
-                </div>
-                <div class="lp-telemetry-empty" id="telemetryBoundaryEmpty">Waiting for telemetry data…</div>
-              </section>
+              </div>
             </div>
           </div>
           <!-- /tab-telemetry -->
+
 
           <!-- ── Gate overlay (locked when signed out) ── -->
           <div class="lp-gate" id="gateOverlay" aria-live="polite" aria-label="Workspace locked">
@@ -899,6 +945,8 @@
           Object.values(panels).forEach(p => p?.classList.remove('active'));
           const key = tab.getAttribute('data-tab');
           panels[key]?.classList.add('active');
+          if (key === 'telemetry') loadTelemetry().catch(() => {});
+
         });
       });
     }
@@ -942,6 +990,180 @@
         if (dt) dt.textContent = 'Schema table unavailable';
       }
     }
+
+
+    /* ── Telemetry helpers ───────────────────────────────────── */
+    function formatNum(v, digits = 0) {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return '—';
+      return n.toLocaleString(undefined, { maximumFractionDigits: digits, minimumFractionDigits: digits });
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function severityPill(sev) {
+      const s = String(sev || 'info').toLowerCase();
+      return `<span class="lp-severity-pill ${s}">${escapeHtml(s)}</span>`;
+    }
+
+    function truncateJson(obj, max = 180) {
+      let text = '';
+      try { text = JSON.stringify(obj ?? {}); } catch { text = String(obj ?? ''); }
+      return text.length > max ? `${text.slice(0, max)}…` : text;
+    }
+
+    async function getAdminToken() {
+      if (!window.LPAdmin || !LPAdmin.getClient) throw new Error('LPAdmin client unavailable');
+      const sb = await LPAdmin.getClient();
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session?.access_token) throw new Error('No admin session');
+      return session.access_token;
+    }
+
+    async function fetchAdminJson(path) {
+      const token = await getAdminToken();
+      const res = await fetch(path, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-store',
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.details || json?.error || `Request failed: ${res.status}`);
+      return json;
+    }
+
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+
+    function renderRows(tbodyId, rows, mapper, colspan = 4) {
+      const body = document.getElementById(tbodyId);
+      if (!body) return;
+      if (!Array.isArray(rows) || rows.length === 0) {
+        body.innerHTML = `<tr><td colspan="${colspan}" class="lp-telemetry-empty">No data available.</td></tr>`;
+        return;
+      }
+      body.innerHTML = rows.map(mapper).join('');
+    }
+
+    function normalizeRows(result) {
+      if (!result) return [];
+      if (Array.isArray(result)) return result;
+      if (Array.isArray(result.rows)) return result.rows;
+      if (Array.isArray(result.result)) return result.result;
+      if (result.data && Array.isArray(result.data)) return result.data;
+      return [];
+    }
+
+    async function loadTelemetry() {
+      const [summaryRes, alertsRes, costsRes, providersRes, boundaryRes] = await Promise.all([
+        fetchAdminJson('/api/admin/telemetry/summary'),
+        fetchAdminJson('/api/admin/telemetry/alerts'),
+        fetchAdminJson('/api/admin/telemetry/costs'),
+        fetchAdminJson('/api/admin/telemetry/providers'),
+        fetchAdminJson('/api/admin/telemetry/boundary'),
+      ]);
+
+      const summary = summaryRes.result || summaryRes;
+      const alerts = normalizeRows(alertsRes.result || alertsRes);
+      const costs = normalizeRows(costsRes.result || costsRes);
+      const providers = normalizeRows(providersRes.result || providersRes);
+      const boundary = normalizeRows(boundaryRes.result || boundaryRes);
+
+      setText('metricAiCalls', formatNum(summary.ai_calls_15m ?? summary.ai_calls ?? 0));
+      setText('metricErrorRate', Number.isFinite(Number(summary.ai_error_rate_15m ?? summary.error_rate))
+        ? `${formatNum((summary.ai_error_rate_15m ?? summary.error_rate) * 100, 1)}%`
+        : '—');
+      setText('metricP95', Number.isFinite(Number(summary.ai_latency_p95 ?? summary.p95_latency_ms))
+        ? `${formatNum(summary.ai_latency_p95 ?? summary.p95_latency_ms, 0)} ms`
+        : '—');
+      setText('metricCostToday', Number.isFinite(Number(summary.cost_today_usd))
+        ? `$${formatNum(summary.cost_today_usd, 2)}`
+        : '—');
+      setText('metricActiveSessions', formatNum(summary.active_sessions ?? 0));
+      setText('metricBoundary', formatNum(summary.boundary_violations_15m ?? summary.boundary_15m ?? 0));
+
+      setText('alertsCountBadge', `${alerts.length} rows`);
+      setText('costCountBadge', `${costs.length} rows`);
+      setText('providersCountBadge', `${providers.length} rows`);
+      setText('boundaryCountBadge', `${boundary.length} rows`);
+      setText('telemetryLastUpdated', `Last updated: ${new Date().toLocaleTimeString()}`);
+
+      const severityFilter = (document.getElementById('telemetrySeverity')?.value || 'all').toLowerCase();
+      const filterSeverity = rows => severityFilter === 'all' ? rows : rows.filter(r => String(r.severity || '').toLowerCase() === severityFilter);
+
+      const visibleAlerts = filterSeverity(alerts);
+      const visibleBoundary = filterSeverity(boundary);
+
+      renderRows('telemetryAlertsBody', visibleAlerts, row => `
+        <tr>
+          <td>${escapeHtml(row.created_at ? new Date(row.created_at).toLocaleString() : '—')}</td>
+          <td class="lp-mono">${escapeHtml(row.alert_type || '—')}</td>
+          <td>${severityPill(row.severity)}</td>
+          <td>${escapeHtml(row.message || '')}</td>
+        </tr>
+      `);
+
+      renderRows('telemetryBoundaryBody', visibleBoundary, row => `
+        <tr>
+          <td>${escapeHtml(row.created_at ? new Date(row.created_at).toLocaleString() : '—')}</td>
+          <td class="lp-mono">${escapeHtml(row.alert_type || '—')}</td>
+          <td>${severityPill(row.severity)}</td>
+          <td class="lp-mono">${escapeHtml(truncateJson(row.metadata || row.metadata_json || {}))}</td>
+        </tr>
+      `);
+
+      renderRows('telemetryCostsBody', costs, row => `
+        <tr>
+          <td>${escapeHtml(row.scope || row.track || row.tier || row.model_name || '—')}</td>
+          <td>${escapeHtml(row.metric || row.request_type || 'cost')}</td>
+          <td class="lp-mono">${escapeHtml(row.value ?? row.total_cost_usd ?? row.cost_usd ?? '—')}</td>
+          <td>${escapeHtml(row.notes || row.provider || '')}</td>
+        </tr>
+      `);
+
+      renderRows('telemetryProvidersBody', providers, row => `
+        <tr>
+          <td class="lp-mono">${escapeHtml(row.provider || row.model || '—')}</td>
+          <td>${severityPill(row.status || row.severity || 'info')}</td>
+          <td>${escapeHtml(row.metric || row.breaker_state || '—')}</td>
+          <td>${escapeHtml(row.details || row.message || '')}</td>
+        </tr>
+      `);
+    }
+
+    function wireTelemetry() {
+      document.getElementById('btnTelemetryRefresh')?.addEventListener('click', () => {
+        loadTelemetry().catch(err => {
+          if (window.LPAdmin) LPAdmin.toast(`Telemetry refresh failed: ${err.message}`, 'error', 4000);
+        });
+      });
+
+      let timer = null;
+      const start = () => {
+        if (timer) clearInterval(timer);
+        timer = setInterval(() => {
+          const active = document.getElementById('tab-telemetry')?.classList.contains('active');
+          const autoOn = !!document.getElementById('telemetryAutoRefresh')?.checked;
+          if (active && autoOn) loadTelemetry().catch(() => {});
+        }, 15000);
+      };
+      start();
+
+      document.getElementById('telemetrySeverity')?.addEventListener('change', () => loadTelemetry().catch(() => {}));
+      document.getElementById('telemetryWindow')?.addEventListener('change', () => loadTelemetry().catch(() => {}));
+    }
+
 
     /* ── Role-aware UI adjustments ────────────────────────────── */
     function applyRoleUX(role) {
@@ -1011,198 +1233,6 @@
       });
     }
 
-
-
-    /* ── Telemetry Dashboard v1 ─────────────────────────────── */
-    const TELEMETRY_STATE = {
-      sb: null,
-      timer: null,
-      window: '15m',
-      severity: 'all',
-      lastSummary: null,
-    };
-
-    function telemetryApiBadge(ok, label) {
-      const el = document.getElementById('telemetryApiBadge');
-      if (!el) return;
-      el.textContent = label || (ok ? 'ok' : 'error');
-      el.style.color = ok ? 'var(--lp-success)' : 'var(--lp-danger)';
-    }
-
-    function telemetryTimestamp() {
-      const el = document.getElementById('telemetryLastUpdated');
-      if (el) el.textContent = new Date().toLocaleTimeString();
-    }
-
-    function fmtMoney(v) {
-      const n = Number(v ?? 0);
-      return isFinite(n) ? `$${n.toFixed(2)}` : '—';
-    }
-    function fmtPct(v) {
-      const n = Number(v ?? 0);
-      return isFinite(n) ? `${(n * 100).toFixed(1)}%` : '—';
-    }
-    function fmtMs(v) {
-      const n = Number(v ?? 0);
-      return isFinite(n) ? `${Math.round(n)} ms` : '—';
-    }
-    function fmtInt(v) {
-      const n = Number(v ?? 0);
-      return isFinite(n) ? String(Math.round(n)) : '—';
-    }
-    function severityPill(sev) {
-      const s = String(sev || 'info').toLowerCase();
-      return `<span class="lp-severity-pill lp-severity-${s}">${s.toUpperCase()}</span>`;
-    }
-    function breakerPill(state) {
-      const s = String(state || 'unknown').toLowerCase();
-      const cls = s === 'open' ? 'lp-breaker-open' : s === 'half_open' ? 'lp-breaker-half_open' : 'lp-breaker-closed';
-      return `<span class="lp-breaker-pill ${cls}">${s}</span>`;
-    }
-    function healthPill(v) {
-      const n = Number(v ?? 0);
-      if (!isFinite(n)) return '<span class="lp-health-pill lp-health-warn">unknown</span>';
-      if (n <= 0.02) return '<span class="lp-health-pill lp-health-ok">healthy</span>';
-      if (n <= 0.05) return '<span class="lp-health-pill lp-health-warn">watch</span>';
-      return '<span class="lp-health-pill lp-health-bad">degraded</span>';
-    }
-    function shortJson(obj) {
-      try {
-        const s = JSON.stringify(obj || {});
-        return s.length > 120 ? `${s.slice(0, 120)}…` : s;
-      } catch {
-        return '—';
-      }
-    }
-
-    async function telemetryAuthFetch(path) {
-      if (!TELEMETRY_STATE.sb) throw new Error('Supabase client unavailable');
-      const { data: { session } } = await TELEMETRY_STATE.sb.auth.getSession();
-      if (!session?.access_token) throw new Error('Missing admin session');
-      const res = await fetch(path, {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      const text = await res.text();
-      let json = {};
-      try { json = text ? JSON.parse(text) : {}; } catch { json = { ok:false, error:'invalid_json', raw:text }; }
-      if (!res.ok) throw new Error(json?.details || json?.error || `Request failed (${res.status})`);
-      return json;
-    }
-
-    function setTelemetrySummary(summary = {}) {
-      document.getElementById('tmAiCalls').textContent = fmtInt(summary.ai_calls_15m);
-      document.getElementById('tmErrorRate').textContent = fmtPct(summary.ai_error_rate_15m);
-      document.getElementById('tmP95').textContent = fmtMs(summary.ai_latency_p95);
-      document.getElementById('tmCostToday').textContent = fmtMoney(summary.cost_today_usd);
-      document.getElementById('tmActiveSessions').textContent = fmtInt(summary.active_sessions);
-      document.getElementById('tmBoundary').textContent = fmtInt(summary.boundary_violations_15m);
-      document.getElementById('tmErrorRateSub').innerHTML = `${healthPill(summary.ai_error_rate_15m)} <span style="margin-left:6px">15m</span>`;
-      document.getElementById('tmP95Sub').textContent = `p50 ${fmtMs(summary.ai_latency_p50)} · p99 ${fmtMs(summary.ai_latency_p99)}`;
-      document.getElementById('tmCostTodaySub').textContent = `window ${TELEMETRY_STATE.window} · refreshed live`;
-      document.getElementById('tmBoundarySub').textContent = `15m incidents · alert + audit`; 
-    }
-
-    function fillTable(tableId, emptyId, rows, renderRow) {
-      const tbody = document.querySelector(`#${tableId} tbody`);
-      const empty = document.getElementById(emptyId);
-      if (!tbody || !empty) return;
-      tbody.innerHTML = '';
-      if (!rows || !rows.length) {
-        empty.style.display = 'block';
-        return;
-      }
-      empty.style.display = 'none';
-      rows.forEach(r => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = renderRow(r);
-        tbody.appendChild(tr);
-      });
-    }
-
-    async function loadTelemetry() {
-      try {
-        const params = new URLSearchParams({
-          window: TELEMETRY_STATE.window,
-          severity: TELEMETRY_STATE.severity,
-        });
-        const [summary, alerts, costs, providers, boundary] = await Promise.all([
-          telemetryAuthFetch(`/api/admin/telemetry/summary.js?${params.toString()}`),
-          telemetryAuthFetch(`/api/admin/telemetry/alerts.js?${params.toString()}`),
-          telemetryAuthFetch(`/api/admin/telemetry/costs.js?${params.toString()}`),
-          telemetryAuthFetch(`/api/admin/telemetry/providers.js?${params.toString()}`),
-          telemetryAuthFetch(`/api/admin/telemetry/boundary.js?${params.toString()}`),
-        ]);
-
-        setTelemetrySummary(summary.result || summary.data || summary);
-
-        fillTable('telemetryAlertsTable', 'telemetryAlertsEmpty', alerts.rows || alerts.result || [], r => `
-          <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '—'}</td>
-          <td>${severityPill(r.severity)}</td>
-          <td><span class="lp-code-lite">${r.alert_type || r.type || '—'}</span></td>
-          <td>${r.source || r.channel || '—'}</td>
-          <td title="${String(r.summary || shortJson(r.payload || {})).replace(/"/g,'&quot;')}">${r.summary || shortJson(r.payload || {})}</td>
-        `);
-
-        fillTable('telemetryCostsTable', 'telemetryCostsEmpty', costs.rows || costs.result || [], r => `
-          <td>${r.model_id || r.model || '—'}</td>
-          <td>${r.request_type || '—'}</td>
-          <td>${r.track || '—'}</td>
-          <td>${r.tier || '—'}</td>
-          <td>${fmtInt(r.calls || r.call_count || 0)}</td>
-          <td>${fmtMoney(r.total_cost_usd || r.cost_usd || 0)}</td>
-          <td>${fmtMs(r.avg_latency_ms || r.latency_ms || 0)}</td>
-        `);
-
-        fillTable('telemetryProvidersTable', 'telemetryProvidersEmpty', providers.rows || providers.result || [], r => `
-          <td>${r.provider || r.model_id || '—'}</td>
-          <td>${breakerPill(r.breaker_state || r.state || 'closed')}</td>
-          <td>${r.fallback_active ? '<span class="lp-health-pill lp-health-warn">active</span>' : '<span class="lp-health-pill lp-health-ok">off</span>'}</td>
-          <td>${fmtMs(r.p95_latency_ms || r.ai_latency_p95 || 0)}</td>
-          <td>${fmtPct(r.error_rate || 0)}</td>
-          <td>${r.last_event_at ? new Date(r.last_event_at).toLocaleString() : '—'}</td>
-        `);
-
-        fillTable('telemetryBoundaryTable', 'telemetryBoundaryEmpty', boundary.rows || boundary.result || [], r => `
-          <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '—'}</td>
-          <td class="lp-code-lite">${r.user_id || '—'}</td>
-          <td>${r.track || '—'}</td>
-          <td>${r.attempted_track || r.reason || '—'}</td>
-          <td><span class="lp-code-lite">${r.endpoint || '—'}</span></td>
-          <td class="lp-mono-tiny">${r.request_id || '—'}</td>
-        `);
-
-        telemetryApiBadge(true, 'live');
-        telemetryTimestamp();
-      } catch (err) {
-        telemetryApiBadge(false, 'error');
-        if (window.LPAdmin) LPAdmin.toast(`Telemetry load failed: ${err?.message || err}`, 'error', 3800);
-      }
-    }
-
-    function wireTelemetry() {
-      document.getElementById('telemetryWindow')?.addEventListener('change', e => {
-        TELEMETRY_STATE.window = e.target.value;
-        loadTelemetry();
-      });
-      document.getElementById('telemetrySeverity')?.addEventListener('change', e => {
-        TELEMETRY_STATE.severity = e.target.value;
-        loadTelemetry();
-      });
-      document.getElementById('btnTelemetryRefresh')?.addEventListener('click', () => loadTelemetry());
-      document.getElementById('telemetryAutoRefresh')?.addEventListener('change', e => {
-        if (e.target.checked) {
-          TELEMETRY_STATE.timer = setInterval(loadTelemetry, 15000);
-        } else if (TELEMETRY_STATE.timer) {
-          clearInterval(TELEMETRY_STATE.timer);
-          TELEMETRY_STATE.timer = null;
-        }
-      });
-      if (!TELEMETRY_STATE.timer) TELEMETRY_STATE.timer = setInterval(loadTelemetry, 15000);
-    }
-
     /* ── Main bootstrap ───────────────────────────────────────── */
     wireTabs();
     wireNav();
@@ -1228,10 +1258,6 @@
 
         // Fetch schema version from DB
         fetchSchema(sb);
-
-        // Telemetry bootstrap
-        TELEMETRY_STATE.sb = sb;
-        loadTelemetry();
       },
     }).then(result => {
       if (!result.ok) {
