@@ -1270,42 +1270,31 @@
         const sb = createClient(supabaseUrl, supabaseAnonKey);
 
         async function fetchLiveRankings() {
-            const board = document.getElementById('publicLeaderboard');
-            try {
-                // Query children grouped by school — school_leaderboard view may not exist yet
-                const { data: kids, error } = await sb
-                    .from('children')
-                    .select('school_name, total_problems_solved')
-                    .not('school_name', 'is', null)
-                    .gt('total_problems_solved', 0);
+    const board = document.getElementById('publicLeaderboard');
+    try {
+        const { data: schools, error } = await sb
+            .from('public_school_leaderboard')
+            .select('school_name, regular_pts, olympiad_wins, total_pts, student_count')
+            .limit(3);
 
-                if (error || !kids || kids.length === 0) {
-                    board.innerHTML = '<span style="color:#64748B;">Be the first school on the board! <a href="signup.html" style="color:#2563eb;font-weight:600;">Join now →</a></span>';
-                    return;
-                }
-
-                // Aggregate by school
-                const schools = {};
-                kids.forEach(k => {
-                    const s = k.school_name.trim();
-                    schools[s] = (schools[s] || 0) + (k.total_problems_solved || 0);
-                });
-                const sorted = Object.entries(schools)
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, 3);
-
-                const medals = ['🥇', '🥈', '🥉'];
-                let html = '';
-                sorted.forEach(([name, pts], i) => {
-                    html += `<div class="school-pill">${medals[i]} ${name} <span class="school-points">(${pts} pts)</span></div>`;
-                });
-                board.innerHTML = html;
-
-            } catch (err) {
-                console.warn('Leaderboard fetch failed:', err?.message);
-                board.innerHTML = '<span style="color:#64748B;">Rankings update daily. <a href="signup.html" style="color:#2563eb;font-weight:600;">Join your school →</a></span>';
-            }
+        if (error || !schools || schools.length === 0) {
+            board.innerHTML = '<span style="color:#64748B;">Be the first school on the board! <a href="signup.html" style="color:#2563eb;font-weight:600;">Join now →</a></span>';
+            return;
         }
+
+        const medals = ['🥇', '🥈', '🥉'];
+        let html = '';
+        schools.forEach((row, i) => {
+            const trophy = row.olympiad_wins > 0 ? ` 🏆×${row.olympiad_wins}` : '';
+            html += `<div class="school-pill">${medals[i]} ${row.school_name}${trophy} <span class="school-points">(${row.total_pts} pts)</span></div>`;
+        });
+        board.innerHTML = html;
+
+    } catch (err) {
+        console.warn('Leaderboard fetch failed:', err?.message);
+        board.innerHTML = '<span style="color:#64748B;">Rankings update daily. <a href="signup.html" style="color:#2563eb;font-weight:600;">Join your school →</a></span>';
+    }
+}
 
         // Run on page load
         fetchLiveRankings();
