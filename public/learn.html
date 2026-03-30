@@ -1257,37 +1257,41 @@
     });
 
     // ── LOCAL ANSWER CHECK ─────────────────────────────────────────────────
-    // Rules (prevent false positives):
-    // 1. Only check against answer_key — NOT solution_explanation (which is a
-    //    full sentence and will substring-match almost anything).
-    // 2. Use EXACT WHOLE-TOKEN match, not substring. "9" must not match "19"
-    //    or "90". Split user input into tokens and check each token.
-    // 3. answer_key supports pipe-separated alternatives: "8|eight"
-    // 4. answer_key must be at least 2 chars to avoid single-letter accidents.
-    const cleanInput=text.trim().toLowerCase();
-    // Tokenise: split on whitespace + common separators, strip punctuation
-    const inputTokens = cleanInput.split(/[\s,.\-\/=:;!?()]+/).map(t=>t.replace(/[^a-z0-9]/g,'')).filter(t=>t.length>0);
+    // Rules:
+    // 1. Only check answer_key — NOT solution_explanation (full sentence = false positives)
+    // 2. Normalise decimals FIRST (keep "67.5" as "675" not split into "67"+"5")
+    // 3. Pipe-separated alternatives: "67.5|67 taka"
+    // 4. Exact token match for short answers, phrase match for long answers
+    const cleanInput = text.trim().toLowerCase();
+
+    // Normalise: collapse decimal numbers to digit string before splitting
+    // "67.5" → "675", "37.5 taka" → "375 taka"
+    // Then split only on whitespace and word-separating punctuation (NOT the decimal dot)
+    const normInput = cleanInput.replace(/(\d)\.(\d)/g, '$1$2'); // 67.5 → 675
+    const inputTokens = normInput.split(/[\s,\-\/=:;!?()]+/)
+                                 .map(t => t.replace(/[^a-z0-9]/g,''))
+                                 .filter(t => t.length > 0);
 
     let isCorrect = false;
     const answerKey = currentProblem?.answer_key;
     if(answerKey && answerKey.trim().length >= 1){
-      const acceptedAnswers = answerKey.toLowerCase().split('|').map(a=>a.trim().replace(/[^a-z0-9]/g,''));
+      // Normalise accepted answers the same way (remove dots between digits)
+      const acceptedAnswers = answerKey.toLowerCase().split('|')
+        .map(a => a.trim().replace(/(\d)\.(\d)/g,'$1$2').replace(/[^a-z0-9]/g,''))
+        .filter(a => a.length > 0);
+
       for(const accepted of acceptedAnswers){
-        if(accepted.length === 0) continue;
-        // For numeric/short answers (≤ 6 chars): require exact token match
-        // For longer phrase answers (> 6 chars): allow contained-phrase match
-        if(accepted.length <= 6){
-          // Exact token match — "9" must not match inside "19" or "90"
+        if(accepted.length <= 8){
+          // Short answer: exact token match — "9" must NOT match inside "90" or "19"
           if(inputTokens.includes(accepted)){isCorrect=true;break;}
         } else {
-          // Phrase match — strip spaces and check containment
+          // Long phrase: contained match (student may rephrase)
           const flatInput = inputTokens.join('');
           if(flatInput.includes(accepted.replace(/\s/g,''))){isCorrect=true;break;}
         }
       }
     }
-    // Note: we deliberately do NOT check solution_explanation — it's a full
-    // explanation sentence that would produce constant false positives.
+    // Never check solution_explanation — it's a full explanation, not just the answer.
 
     if(isCorrect){
       await logAttempt(true,text);
@@ -1306,21 +1310,26 @@
       const reply=data?.reply||"Hmm, that's not quite right. Try a different angle!";
       addMessage('ai',reply);chatLog.push({role:'assistant',content:reply});saveState();
 
-      // ── AI REPLY SOLVED SIGNAL ─────────────────────────────────────────
-      // IMPORTANT: The AI says "correct" in many contexts — e.g. "That's not
-      // correct" or "Correct reasoning, but..." — never trigger win on the
-      // word alone. Only trust an explicit SOLVED marker from the API, OR a
-      // very unambiguous emoji-only celebration signal. The server should send
-      // { solved: true } in the JSON to signal a confirmed correct answer.
-      const isSolvedByServer = data?.solved === true;
-      const isCelebrationReply = rl.startsWith('🎉') || rl.startsWith('✅') || rl.startsWith('correct!') || rl.startsWith("that's correct");
-      if(isSolvedByServer || isCelebrationReply){
-        await logAttempt(true,text);finishPuzzle(true);
+      // ── SOLVED CHECK — isolated in its own try so errors here never show "Hmm" ──
+      try{
+        const rl = reply.toLowerCase();  // ← was missing, caused ReferenceError → catch → "Hmm" message
+        const isSolvedByServer  = data?.solved === true;
+        // Only fire on unambiguous celebration starts — never on mid-sentence "correct"
+        const isCelebrationReply = rl.startsWith('🎉') || rl.startsWith('✅')
+          || rl.startsWith('correct!') || rl.startsWith("that's correct!")
+          || rl.startsWith('well done!') || rl.startsWith('perfect!') || rl.startsWith('excellent!');
+        if(isSolvedByServer || isCelebrationReply){
+          await logAttempt(true,text);finishPuzzle(true);
+        }
+      }catch(solvedErr){
+        console.warn('[Learn] Solved-check error (non-fatal):',solvedErr);
+        // Do NOT addMessage here — the AI reply was already shown correctly above
       }
-      // Don't log wrong attempt per message — only log once when problem is finished or skipped
+
     }catch(e){
-      console.error('[Learn] Tutor error:',e);
-      addMessage('ai',"Hmm, that doesn't seem right. Try again!");
+      // Only reaches here if the FETCH itself fails (network error, etc.)
+      console.error('[Learn] Tutor fetch error:',e);
+      addMessage('ai',"I couldn't connect to the tutor. Please check your internet and try again.");
     }
 
     isProcessing=false;dom.sendBtn.disabled=false;dom.typing.style.opacity=0;
