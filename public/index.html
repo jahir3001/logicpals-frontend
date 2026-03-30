@@ -59,6 +59,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
+    <script src="/assets/js/env-loader.js"></script>
     <script src="/assets/js/lp-tracking.js"></script>
     <style>
         /* --- VARIABLES & RESET --- */
@@ -1260,44 +1261,55 @@
             });
         });
 
-        // FIXED: Live Leaderboard
-        const { createClient } = supabase;
-        const { SUPABASE_URL: supabaseUrl, SUPABASE_ANON_KEY: supabaseAnonKey } = window.__LP_ENV || {};
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase config. Ensure /api/env is deployed and reachable.');
-    }
-        
-        const sb = createClient(supabaseUrl, supabaseAnonKey);
+        // Live School Leaderboard — async IIFE with env-loader polling (4s timeout)
+        (async () => {
+            const board = document.getElementById('publicLeaderboard');
 
-        async function fetchLiveRankings() {
-    const board = document.getElementById('publicLeaderboard');
-    try {
-        const { data: schools, error } = await sb
-            .from('public_school_leaderboard')
-            .select('school_name, regular_pts, olympiad_wins, total_pts, student_count')
-            .limit(3);
+            // Poll window.__LP_ENV until env-loader.js populates it (max 4s)
+            const env = await new Promise((resolve) => {
+                let attempts = 0;
+                const check = () => {
+                    const e = window.__LP_ENV;
+                    if (e && e.SUPABASE_URL && e.SUPABASE_ANON_KEY) return resolve(e);
+                    if (++attempts > 40) return resolve(null); // 40 × 100ms = 4s
+                    setTimeout(check, 100);
+                };
+                check();
+            });
 
-        if (error || !schools || schools.length === 0) {
-            board.innerHTML = '<span style="color:#64748B;">Be the first school on the board! <a href="signup.html" style="color:#2563eb;font-weight:600;">Join now →</a></span>';
-            return;
-        }
+            if (!env) {
+                console.warn('Leaderboard: env-loader timeout — __LP_ENV not available');
+                board.innerHTML = '<span style="color:#64748B;">Rankings update daily. <a href="signup.html" style="color:#2563eb;font-weight:600;">Join your school →</a></span>';
+                return;
+            }
 
-        const medals = ['🥇', '🥈', '🥉'];
-        let html = '';
-        schools.forEach((row, i) => {
-            const trophy = row.olympiad_wins > 0 ? ` 🏆×${row.olympiad_wins}` : '';
-            html += `<div class="school-pill">${medals[i]} ${row.school_name}${trophy} <span class="school-points">(${row.total_pts} pts)</span></div>`;
-        });
-        board.innerHTML = html;
+            try {
+                const { createClient } = supabase;
+                const sb = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
 
-    } catch (err) {
-        console.warn('Leaderboard fetch failed:', err?.message);
-        board.innerHTML = '<span style="color:#64748B;">Rankings update daily. <a href="signup.html" style="color:#2563eb;font-weight:600;">Join your school →</a></span>';
-    }
-}
+                const { data: schools, error } = await sb
+                    .from('public_school_leaderboard')
+                    .select('school_name, regular_pts, olympiad_wins, total_pts, student_count')
+                    .limit(3);
 
-        // Run on page load
-        fetchLiveRankings();
+                if (error || !schools || schools.length === 0) {
+                    board.innerHTML = '<span style="color:#64748B;">Be the first school on the board! <a href="signup.html" style="color:#2563eb;font-weight:600;">Join now →</a></span>';
+                    return;
+                }
+
+                const medals = ['🥇', '🥈', '🥉'];
+                let html = '';
+                schools.forEach((row, i) => {
+                    const trophy = row.olympiad_wins > 0 ? ` 🏆×${row.olympiad_wins}` : '';
+                    html += `<div class="school-pill">${medals[i]} ${row.school_name}${trophy} <span class="school-points">(${row.total_pts} pts)</span></div>`;
+                });
+                board.innerHTML = html;
+
+            } catch (err) {
+                console.warn('Leaderboard fetch failed:', err?.message);
+                board.innerHTML = '<span style="color:#64748B;">Rankings update daily. <a href="signup.html" style="color:#2563eb;font-weight:600;">Join your school →</a></span>';
+            }
+        })();
     </script>
 
 <script>
