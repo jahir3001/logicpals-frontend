@@ -799,6 +799,32 @@
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',runInit);else runInit();
 })();
+async function applyRegularTutorHintFlag() {
+  try {
+    const sessionId = localStorage.getItem('lp_flag_session') ||
+      ('sess_' + Math.random().toString(36).slice(2));
+    localStorage.setItem('lp_flag_session', sessionId);
+
+    const res = await fetch('/api/ab/admin-ops?action=flag_resolve_runtime', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        flag_key: 'home_tutor_hint',
+        track: 'regular',
+        session_id: sessionId
+      })
+    });
+
+    const data = await res.json();
+
+    if (data && data.enabled) {
+      const el = document.getElementById('homeTutorHintCard');
+      if (el) el.style.display = 'block';
+    }
+  } catch (e) {
+    console.log('Tutor hint flag failed (non-blocking)');
+  }
+}
 </script>
 </body>
 </html>
