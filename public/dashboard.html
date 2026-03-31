@@ -223,15 +223,10 @@
             <div class="ring" id="goalRing" style="--p:0%;"><div><span id="goalPct">0%</span></div></div>
           </div>
           <div class="hero-actions"><button id="btnStart" class="btn btn-primary btn-wide" type="button">Start now</button></div>
-          <div id="homeTutorHintCard"
-     		style="display:none;margin-top:12px;max-width:100%;line-height:1.4;padding:12px 14px;
-           	 border-radius:12px;background:rgba(255,255,255,.03);
-            	border:1px solid rgba(255,255,255,.08);font-size:13px;color:#b8c0ff;">
-  		<strong>AI Tutor Hint</strong><br>
- 		 <span id="homeTutorHintText">
-    		Get a small guided hint before you start todays practice.
-  		</span>
-		</div>
+          <div id="homeTutorHintCard" class="pill" style="display:none;margin-top:12px;max-width:100%;line-height:1.4;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);font-size:13px;color:#b8c0ff;">
+            <strong>AI Tutor Hint</strong><br>
+            <span id="homeTutorHintText">Get a small guided hint before you start todays practice.</span>
+          </div>
         </div></section>
         <section class="card">
           <div class="kpi-grid">
@@ -312,53 +307,6 @@
 
     window.__LP_ENV = env;
     return env;
-  }
-
-  function getRuntimeSessionId(){
-    try{
-      const k='lp_runtime_session_regular';
-      let v=localStorage.getItem(k);
-      if(!v){
-        v='regular_'+Math.random().toString(36).slice(2)+Date.now().toString(36);
-        localStorage.setItem(k,v);
-      }
-      return v;
-    }catch(_){
-      return 'regular_fallback_session';
-    }
-  }
-
-  async function applyRegularHintNonBlocking(sb,user){
-    const card=$('homeTutorHintCard');
-    const textEl=$('homeTutorHintText');
-    if(!card||!textEl) return;
-    try{
-      const { data: sessionData } = await sb.auth.getSession();
-      const token = sessionData?.session?.access_token || null;
-      const r = await fetch('/api/ab/admin-ops?action=flag_resolve_runtime',{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          ...(token?{'Authorization':'Bearer '+token}:{})
-        },
-        body:JSON.stringify({
-          flag_key:'home_tutor_hint',
-          track:'regular',
-          session_id:getRuntimeSessionId()
-        })
-      });
-      if(!r.ok) return;
-      const j = await r.json();
-      if(j && j.ok && j.enabled){
-        card.style.display='inline-flex';
-        textEl.textContent='Get a small guided hint before you start today's regular practice.';
-      }else{
-        card.style.display='none';
-      }
-    }catch(err){
-      console.warn('[Dashboard] home_tutor_hint resolve skipped:', err?.message || err);
-      card.style.display='none';
-    }
   }
 
   async function init(){
@@ -559,7 +507,7 @@
       $('chartInsight').textContent='Complete problems to see trends.';
       renderChart($('chartSvg'),[]);
       $('btnStart').addEventListener('click',()=>location.assign('/learn.html?track=regular'));
-      applyRegularHintNonBlocking(sb,user);
+      applyRegularTutorHintFlag();
       return;
     }
 
@@ -598,7 +546,21 @@
     renderLeaderboard(schoolPeers,childId,childData);
     setupChartTabs(attempts);
     $('btnStart').addEventListener('click',()=>location.assign('/learn.html?track=regular'));
-    applyRegularHintNonBlocking(sb,user);
+    applyRegularTutorHintFlag();
+  }
+
+  async function applyRegularTutorHintFlag(){
+    try{
+      const sessionId=localStorage.getItem('lp_flag_session')||('sess_'+Math.random().toString(36).slice(2));
+      localStorage.setItem('lp_flag_session',sessionId);
+      const res=await fetch('/api/ab/admin-ops?action=flag_resolve_runtime',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({flag_key:'home_tutor_hint',track:'regular',session_id:sessionId})
+      });
+      const data=await res.json().catch(()=>null);
+      if(data&&data.enabled){const el=$('homeTutorHintCard');if(el)el.style.display='block';}
+    }catch(_){console.log('[Dashboard] tutor hint flag unavailable (non-blocking)');}
   }
 
   // ═══ KPIs — count UNIQUE solved problems ═══
@@ -799,32 +761,6 @@
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',runInit);else runInit();
 })();
-async function applyRegularTutorHintFlag() {
-  try {
-    const sessionId = localStorage.getItem('lp_flag_session') ||
-      ('sess_' + Math.random().toString(36).slice(2));
-    localStorage.setItem('lp_flag_session', sessionId);
-
-    const res = await fetch('/api/ab/admin-ops?action=flag_resolve_runtime', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        flag_key: 'home_tutor_hint',
-        track: 'regular',
-        session_id: sessionId
-      })
-    });
-
-    const data = await res.json();
-
-    if (data && data.enabled) {
-      const el = document.getElementById('homeTutorHintCard');
-      if (el) el.style.display = 'block';
-    }
-  } catch (e) {
-    console.log('Tutor hint flag failed (non-blocking)');
-  }
-}
 </script>
 </body>
 </html>
