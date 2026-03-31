@@ -425,6 +425,29 @@
       .lp-telemetry-grid { grid-template-columns: 1fr; }
     }
 
+
+    /* ─── Feature flags admin ───────────────────────────────── */
+    .lp-flag-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+    .lp-flag-card {
+      background: var(--lp-card);
+      border: 1px solid var(--lp-border);
+      border-radius: var(--lp-r-lg);
+      padding: 16px;
+      box-shadow: var(--lp-shadow-sm);
+    }
+    .lp-flag-form { display:grid; gap:12px; }
+    .lp-flag-row { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    .lp-flag-stack { display:grid; gap:10px; }
+    .lp-flag-meta { font-size:12px; color: var(--lp-muted); }
+    .lp-flag-toggle { display:flex; align-items:center; gap:8px; font-size:12.5px; color: var(--lp-text-2); }
+    .lp-flag-note { font-size:12px; color: var(--lp-muted); line-height:1.5; }
+    @media (max-width: 980px) { .lp-flag-grid { grid-template-columns: 1fr; } }
+
   </style>
 </head>
 
@@ -530,6 +553,10 @@
             <button class="lp-tab" data-tab="access" role="tab" aria-selected="false" type="button">
               <svg class="lp-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
               Access
+            </button>
+            <button class="lp-tab" data-tab="flags" role="tab" aria-selected="false" type="button">
+              <svg class="lp-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5v14"/><path d="M5 5h8l1.5 3L21 8v8h-8l-1.5-3H5"/></svg>
+              Feature Flags
             </button>
             <button class="lp-tab" data-tab="telemetry" role="tab" aria-selected="false" type="button">
               <svg class="lp-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l3-3 3 2 4-6"/></svg>
@@ -765,6 +792,101 @@
           <!-- /tab-access -->
 
 
+          <!-- ── Panel: Feature Flags ── -->
+          <div class="lp-panel" id="tab-flags" role="tabpanel">
+            <div style="padding:22px">
+              <div class="admin-banner admin-banner-info" style="margin-bottom:18px">
+                <svg class="admin-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5v14"/><path d="M5 5h8l1.5 3L21 8v8h-8l-1.5-3H5"/></svg>
+                <div class="admin-banner-body">
+                  <div class="admin-banner-title">Feature Flag Control Plane</div>
+                  Track-separated operational controls for runtime rollout. Regular and Olympiad flags are edited independently and resolved through RPC only.
+                </div>
+              </div>
+
+              <div class="lp-flag-grid">
+                <div class="lp-flag-card">
+                  <div class="lp-flag-form">
+                    <div>
+                      <div class="lp-action-card-title" style="margin-bottom:4px">Flag Editor</div>
+                      <div class="lp-flag-note">Use this panel to update one feature flag for one track. Mutations go through merged admin gateway actions only.</div>
+                    </div>
+
+                    <div class="lp-flag-row">
+                      <div class="admin-field">
+                        <label class="admin-label" for="flagKey">Flag Key</label>
+                        <select class="admin-select" id="flagKey">
+                          <option value="home_tutor_hint">home_tutor_hint</option>
+                        </select>
+                      </div>
+                      <div class="admin-field">
+                        <label class="admin-label" for="flagTrack">Track</label>
+                        <select class="admin-select" id="flagTrack">
+                          <option value="regular">regular</option>
+                          <option value="olympiad">olympiad</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="admin-field">
+                      <label class="admin-label" for="flagDescription">Description</label>
+                      <input class="admin-input" id="flagDescription" type="text" placeholder="Flag description" />
+                    </div>
+
+                    <div class="lp-flag-row">
+                      <div class="admin-field">
+                        <label class="admin-label" for="flagRolloutType">Rollout Type</label>
+                        <select class="admin-select" id="flagRolloutType">
+                          <option value="off">off</option>
+                          <option value="all">all</option>
+                          <option value="percentage">percentage</option>
+                        </select>
+                      </div>
+                      <div class="admin-field">
+                        <label class="admin-label" for="flagRolloutPercentage">Rollout Percentage</label>
+                        <input class="admin-input" id="flagRolloutPercentage" type="number" min="0" max="100" step="1" value="100" />
+                      </div>
+                    </div>
+
+                    <div class="admin-field">
+                      <label class="admin-label" for="flagExperimentKey">Experiment Key</label>
+                      <input class="admin-input" id="flagExperimentKey" type="text" placeholder="Optional linked experiment key" />
+                    </div>
+
+                    <label class="lp-flag-toggle"><input type="checkbox" id="flagEnabled" /> Enabled</label>
+                    <label class="lp-flag-toggle"><input type="checkbox" id="flagKillswitched" /> Kill switch active</label>
+
+                    <div class="lp-action-card-btns">
+                      <button class="admin-btn admin-btn-primary admin-btn-sm" id="btnFlagRefresh" type="button">Load Flag</button>
+                      <button class="admin-btn admin-btn-secondary admin-btn-sm" id="btnFlagSave" type="button">Save Flag</button>
+                      <button class="admin-btn admin-btn-secondary admin-btn-sm" id="btnFlagEnableToggle" type="button">Toggle Enabled</button>
+                      <button class="admin-btn admin-btn-secondary admin-btn-sm" id="btnFlagKillToggle" type="button">Toggle Kill Switch</button>
+                    </div>
+
+                    <div class="lp-flag-meta" id="flagEditorMeta">No flag loaded yet.</div>
+                  </div>
+                </div>
+
+                <div class="lp-flag-card" style="padding:0;overflow:hidden">
+                  <div class="lp-telemetry-card-head">
+                    <div class="lp-telemetry-card-title">Feature Flags Inventory</div>
+                    <span class="admin-badge admin-badge-indigo" id="flagsCountBadge">0 rows</span>
+                  </div>
+                  <div class="lp-telemetry-table-wrap">
+                    <table class="lp-telemetry-table">
+                      <thead>
+                        <tr>
+                          <th>Flag</th><th>Track</th><th>Enabled</th><th>Rollout</th><th>Kill Switch</th><th>Experiment</th><th>Updated</th>
+                        </tr>
+                      </thead>
+                      <tbody id="featureFlagsBody"><tr><td colspan="7" class="lp-telemetry-empty">Loading…</td></tr></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /tab-flags -->
+
           <!-- ── Panel: Telemetry ── -->
           <div class="lp-panel" id="tab-telemetry" role="tabpanel">
             <div style="padding:22px">
@@ -932,6 +1054,7 @@
         content:      document.getElementById('tab-content'),
         monetization: document.getElementById('tab-monetization'),
         access:       document.getElementById('tab-access'),
+        flags:        document.getElementById('tab-flags'),
         telemetry:    document.getElementById('tab-telemetry'),
       };
 
@@ -948,6 +1071,7 @@
           const key = tab.getAttribute('data-tab');
           panels[key]?.classList.add('active');
           if (key === 'telemetry') loadTelemetry().catch(() => {});
+          if (key === 'flags') loadFeatureFlags().catch(() => {});
 
         });
       });
@@ -1041,6 +1165,23 @@
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json?.details || json?.error || `Request failed: ${res.status}`);
       return json;
+    }
+
+    async function postAdminAction(action, payload = {}) {
+      const token = await getAdminToken();
+      const res = await fetch(`/api/ab/admin-ops?action=${encodeURIComponent(action)}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        cache: 'no-store',
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.details || json?.error || `Request failed: ${res.status}`);
+      if (json && json.ok === false) throw new Error(json.error || 'Admin action failed');
+      return json?.result ?? json;
     }
 
     function setText(id, value) {
@@ -1166,6 +1307,134 @@
       document.getElementById('telemetryWindow')?.addEventListener('change', () => loadTelemetry().catch(() => {}));
     }
 
+    function setFlagEditorFromRow(row) {
+      if (!row) return;
+      const flagKeyEl = document.getElementById('flagKey');
+      const trackEl = document.getElementById('flagTrack');
+      const descEl = document.getElementById('flagDescription');
+      const rolloutTypeEl = document.getElementById('flagRolloutType');
+      const rolloutPctEl = document.getElementById('flagRolloutPercentage');
+      const experimentEl = document.getElementById('flagExperimentKey');
+      const enabledEl = document.getElementById('flagEnabled');
+      const killEl = document.getElementById('flagKillswitched');
+      const metaEl = document.getElementById('flagEditorMeta');
+      if (flagKeyEl) flagKeyEl.value = row.flag_key || 'home_tutor_hint';
+      if (trackEl) trackEl.value = row.track || 'regular';
+      if (descEl) descEl.value = row.description || '';
+      if (rolloutTypeEl) rolloutTypeEl.value = row.rollout_type || 'all';
+      if (rolloutPctEl) rolloutPctEl.value = Number.isFinite(Number(row.rollout_percentage)) ? row.rollout_percentage : 100;
+      if (experimentEl) experimentEl.value = row.experiment_key || '';
+      if (enabledEl) enabledEl.checked = !!row.enabled;
+      if (killEl) killEl.checked = !!row.is_killswitched;
+      if (metaEl) metaEl.textContent = `Loaded ${row.flag_key} / ${row.track} · updated ${row.updated_at ? new Date(row.updated_at).toLocaleString() : '—'}`;
+    }
+
+    function getFlagEditorPayload() {
+      return {
+        flag_key: document.getElementById('flagKey')?.value || 'home_tutor_hint',
+        track: document.getElementById('flagTrack')?.value || 'regular',
+        description: document.getElementById('flagDescription')?.value?.trim() || null,
+        enabled: !!document.getElementById('flagEnabled')?.checked,
+        rollout_type: document.getElementById('flagRolloutType')?.value || 'all',
+        rollout_percentage: Number(document.getElementById('flagRolloutPercentage')?.value || 100),
+        experiment_key: document.getElementById('flagExperimentKey')?.value?.trim() || null,
+        is_killswitched: !!document.getElementById('flagKillswitched')?.checked,
+        config: {},
+      };
+    }
+
+    async function loadFeatureFlags() {
+      const rows = await postAdminAction('feature_flags_list', {});
+      const body = document.getElementById('featureFlagsBody');
+      const badge = document.getElementById('flagsCountBadge');
+      const list = Array.isArray(rows) ? rows : [];
+      if (badge) badge.textContent = `${list.length} rows`;
+      if (!body) return;
+      if (!list.length) {
+        body.innerHTML = '<tr><td colspan="7" class="lp-telemetry-empty">No feature flags configured.</td></tr>';
+        return;
+      }
+      body.innerHTML = list.map(row => `
+        <tr data-flag-key="${escapeHtml(row.flag_key)}" data-track="${escapeHtml(row.track)}">
+          <td><button type="button" class="admin-btn admin-btn-ghost admin-btn-sm" data-flag-select="1" data-flag-key="${escapeHtml(row.flag_key)}" data-track="${escapeHtml(row.track)}">${escapeHtml(row.flag_key)}</button></td>
+          <td><span class="lp-track-chip ${escapeHtml(row.track)}">${escapeHtml(row.track)}</span></td>
+          <td>${row.enabled ? '<span class="admin-badge admin-badge-green">enabled</span>' : '<span class="admin-badge admin-badge-amber">disabled</span>'}</td>
+          <td class="lp-mono">${escapeHtml(row.rollout_type)} ${row.rollout_type === 'percentage' ? `(${escapeHtml(row.rollout_percentage)}%)` : ''}</td>
+          <td>${row.is_killswitched ? '<span class="admin-badge admin-badge-red">active</span>' : '<span class="admin-badge admin-badge-teal">off</span>'}</td>
+          <td class="lp-mono">${escapeHtml(row.experiment_key || '—')}</td>
+          <td>${escapeHtml(row.updated_at ? new Date(row.updated_at).toLocaleString() : '—')}</td>
+        </tr>
+      `).join('');
+
+      body.querySelectorAll('[data-flag-select]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const row = list.find(r => r.flag_key === btn.getAttribute('data-flag-key') && r.track === btn.getAttribute('data-track'));
+          setFlagEditorFromRow(row);
+        });
+      });
+
+      const current = getFlagEditorPayload();
+      const match = list.find(r => r.flag_key === current.flag_key && r.track === current.track) || list[0];
+      setFlagEditorFromRow(match);
+    }
+
+    function wireFeatureFlags() {
+      document.getElementById('btnFlagRefresh')?.addEventListener('click', () => {
+        loadFeatureFlags().then(() => window.LPAdmin?.toast('Feature flags refreshed', 'success', 2200)).catch(err => {
+          window.LPAdmin?.toast(`Feature flag refresh failed: ${err.message}`, 'error', 4000);
+        });
+      });
+
+      document.getElementById('btnFlagSave')?.addEventListener('click', async () => {
+        try {
+          const payload = getFlagEditorPayload();
+          const result = await postAdminAction('feature_flag_upsert', payload);
+          setFlagEditorFromRow(result);
+          await loadFeatureFlags();
+          window.LPAdmin?.toast(`Saved ${payload.flag_key} / ${payload.track}`, 'success', 2500);
+        } catch (err) {
+          window.LPAdmin?.toast(`Save failed: ${err.message}`, 'error', 4000);
+        }
+      });
+
+      document.getElementById('btnFlagEnableToggle')?.addEventListener('click', async () => {
+        try {
+          const payload = getFlagEditorPayload();
+          const nextEnabled = !payload.enabled;
+          const result = await postAdminAction('feature_flag_set_enabled', {
+            flag_key: payload.flag_key,
+            track: payload.track,
+            enabled: nextEnabled,
+          });
+          document.getElementById('flagEnabled').checked = !!result.enabled;
+          await loadFeatureFlags();
+          window.LPAdmin?.toast(`Enabled set to ${result.enabled ? 'true' : 'false'} for ${payload.flag_key} / ${payload.track}`, 'success', 2600);
+        } catch (err) {
+          window.LPAdmin?.toast(`Enable toggle failed: ${err.message}`, 'error', 4000);
+        }
+      });
+
+      document.getElementById('btnFlagKillToggle')?.addEventListener('click', async () => {
+        try {
+          const payload = getFlagEditorPayload();
+          const nextKill = !payload.is_killswitched;
+          const result = await postAdminAction('feature_flag_set_killswitch', {
+            flag_key: payload.flag_key,
+            track: payload.track,
+            is_killswitched: nextKill,
+          });
+          document.getElementById('flagKillswitched').checked = !!result.is_killswitched;
+          await loadFeatureFlags();
+          window.LPAdmin?.toast(`Kill switch set to ${result.is_killswitched ? 'true' : 'false'} for ${payload.flag_key} / ${payload.track}`, 'success', 2600);
+        } catch (err) {
+          window.LPAdmin?.toast(`Kill switch toggle failed: ${err.message}`, 'error', 4000);
+        }
+      });
+
+      document.getElementById('flagTrack')?.addEventListener('change', () => loadFeatureFlags().catch(() => {}));
+      document.getElementById('flagKey')?.addEventListener('change', () => loadFeatureFlags().catch(() => {}));
+    }
+
 
     /* ── Role-aware UI adjustments ────────────────────────────── */
     function applyRoleUX(role) {
@@ -1239,6 +1508,7 @@
     wireTabs();
     wireNav();
     wireTelemetry();
+    wireFeatureFlags();
 
     LPAdmin.init({
       page:         'overview',
@@ -1260,6 +1530,9 @@
 
         // Fetch schema version from DB
         fetchSchema(sb);
+
+        // Preload feature flags for admin control plane
+        loadFeatureFlags().catch(() => {});
       },
     }).then(result => {
       if (!result.ok) {
