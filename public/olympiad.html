@@ -966,6 +966,8 @@
         </div>
       </div>
 
+      <div id="olympiadTutorHintBox" style="display:none;max-width:700px;margin:0 auto 24px;padding:16px 18px;border:2px solid var(--gold-300);border-radius:14px;background:rgba(255,255,255,.88);box-shadow:0 8px 24px rgba(245,158,11,.12);"><div style="font-weight:800;color:var(--gold-800);margin-bottom:6px;">🧠 Olympiad Tutor Hint</div><div id="olympiadTutorHintText" style="font-size:14px;color:var(--gray-700);line-height:1.6;">A focused Olympiad hint will appear here when enabled.</div></div>
+
       <!-- Today's plan -->
       <div class="today-plan-container" id="todayPlanContainer">
         <div class="today-plan-card">
@@ -1494,6 +1496,68 @@
       window.__LP_ENV = j;
       if (!j?.SUPABASE_URL || !j?.SUPABASE_ANON_KEY) throw new Error("Invalid /api/env payload.");
       return j;
+    }
+
+
+    function getRuntimeSessionId(track) {
+      const key = 'lp_runtime_session_' + track;
+      try {
+        let id = localStorage.getItem(key);
+        if (!id) {
+          id = (window.crypto && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+          localStorage.setItem(key, id);
+        }
+        return id;
+      } catch (_) {
+        return 'sess_fallback_' + track;
+      }
+    }
+
+    async function resolveRuntimeFlag(flagKey, track) {
+      let accessToken = null;
+      try {
+        const { data } = await sb.auth.getSession();
+        accessToken = data?.session?.access_token || null;
+      } catch (_) {}
+
+      const r = await fetch('/api/ab/admin-ops?action=flag_resolve_runtime', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+        },
+        body: JSON.stringify({
+          action: 'flag_resolve_runtime',
+          flag_key: flagKey,
+          track,
+          session_id: getRuntimeSessionId(track)
+        })
+      });
+
+      const j = await r.json().catch(() => ({ ok: false, error: 'invalid_json' }));
+      if (!r.ok || j?.ok === false) throw new Error(j?.error || ('flag_resolve_failed:' + r.status));
+      return j;
+    }
+
+    async function renderOlympiadTutorHint() {
+      const box = document.getElementById('olympiadTutorHintBox');
+      const text = document.getElementById('olympiadTutorHintText');
+      if (!box || !text) return;
+      try {
+        const flag = await resolveRuntimeFlag('home_tutor_hint', 'olympiad');
+        if (!flag?.enabled) {
+          box.style.display = 'none';
+          return;
+        }
+        const lvl = currentLevel ? currentLevel.replace(/_/g, ' ') : 'your selected level';
+        text.textContent = `Choose your level, review today’s plan, and begin only after you name the first thinking pattern you expect to use. Olympiad progress is strongest when the first attempt is deliberate.`;
+        box.style.display = 'block';
+      } catch (e) {
+        console.warn('[Olympiad] home_tutor_hint resolve failed:', e?.message || e);
+        box.style.display = 'none';
+      }
     }
 
     async function initSupabase() {
@@ -2054,6 +2118,7 @@
         // ───────────────────────────────────────────────────────
 
         await ensureChildSelected();
+        await renderOlympiadTutorHint();
 
         // If there is already a saved level, do nothing; user chooses.
         resetCountdownUI();
