@@ -223,7 +223,10 @@
             <div class="ring" id="goalRing" style="--p:0%;"><div><span id="goalPct">0%</span></div></div>
           </div>
           <div class="hero-actions"><button id="btnStart" class="btn btn-primary btn-wide" type="button">Start now</button></div>
-          <div id="homeTutorHintBox" class="notice" style="display:none;margin-top:14px;padding:14px 16px;"><b>AI Tutor Hint</b><div id="homeTutorHintText">A small tutor hint will appear here when enabled.</div></div>
+          <div id="homeTutorHintCard" class="pill" style="display:none;margin-top:12px;max-width:100%;line-height:1.45;">
+            <strong>AI Tutor Hint</strong>
+            <span id="homeTutorHintText">Get a small guided hint before you start today's practice.</span>
+          </div>
         </div></section>
         <section class="card">
           <div class="kpi-grid">
@@ -306,55 +309,50 @@
     return env;
   }
 
-
-  function getRuntimeSessionId(track){
-    const key='lp_runtime_session_'+track;
+  function getRuntimeSessionId(){
     try{
-      let id=localStorage.getItem(key);
-      if(!id){
-        id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():'sess_'+Math.random().toString(36).slice(2)+Date.now().toString(36);
-        localStorage.setItem(key,id);
+      const k='lp_runtime_session_regular';
+      let v=localStorage.getItem(k);
+      if(!v){
+        v='regular_'+Math.random().toString(36).slice(2)+Date.now().toString(36);
+        localStorage.setItem(k,v);
       }
-      return id;
+      return v;
     }catch(_){
-      return 'sess_fallback_'+track;
+      return 'regular_fallback_session';
     }
   }
 
-  async function resolveRuntimeFlag(sb, flagKey, track){
-    let accessToken=null;
-    try{const { data } = await sb.auth.getSession(); accessToken=data?.session?.access_token||null;}catch(_){ }
-    const r = await fetch('/api/ab/admin-ops?action=flag_resolve_runtime', {
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        ...(accessToken?{Authorization:`Bearer ${accessToken}`}:{})
-      },
-      body: JSON.stringify({
-        action:'flag_resolve_runtime',
-        flag_key: flagKey,
-        track,
-        session_id: getRuntimeSessionId(track)
-      })
-    });
-    const j = await r.json().catch(()=>({ok:false,error:'invalid_json'}));
-    if(!r.ok || j?.ok===false) throw new Error(j?.error||('flag_resolve_failed:'+r.status));
-    return j;
-  }
-
-  async function refreshRegularHomeTutorHint(sb){
-    const box=$('homeTutorHintBox'), textEl=$('homeTutorHintText');
-    if(!box||!textEl) return;
+  async function applyRegularHintNonBlocking(sb,user){
+    const card=$('homeTutorHintCard');
+    const textEl=$('homeTutorHintText');
+    if(!card||!textEl) return;
     try{
-      const flag = await resolveRuntimeFlag(sb,'home_tutor_hint','regular');
-      if(!flag?.enabled){ box.style.display='none'; return; }
-      const focus = $('heroFocusLabel')?.textContent || 'today's focus';
-      const minutes = $('heroMinutes')?.textContent || '10';
-      textEl.textContent = `Start with a short ${minutes}-minute session. Focus first on ${focus.toLowerCase()}, and ask for a hint only after you try one clear idea yourself.`;
-      box.style.display='block';
+      const { data: sessionData } = await sb.auth.getSession();
+      const token = sessionData?.session?.access_token || null;
+      const r = await fetch('/api/ab/admin-ops?action=flag_resolve_runtime',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          ...(token?{'Authorization':'Bearer '+token}:{})
+        },
+        body:JSON.stringify({
+          flag_key:'home_tutor_hint',
+          track:'regular',
+          session_id:getRuntimeSessionId()
+        })
+      });
+      if(!r.ok) return;
+      const j = await r.json();
+      if(j && j.ok && j.enabled){
+        card.style.display='inline-flex';
+        textEl.textContent='Get a small guided hint before you start today's regular practice.';
+      }else{
+        card.style.display='none';
+      }
     }catch(err){
-      console.warn('[Dashboard] home_tutor_hint resolve failed:', err?.message||err);
-      box.style.display='none';
+      console.warn('[Dashboard] home_tutor_hint resolve skipped:', err?.message || err);
+      card.style.display='none';
     }
   }
 
@@ -556,7 +554,7 @@
       $('chartInsight').textContent='Complete problems to see trends.';
       renderChart($('chartSvg'),[]);
       $('btnStart').addEventListener('click',()=>location.assign('/learn.html?track=regular'));
-      await refreshRegularHomeTutorHint(sb);
+      applyRegularHintNonBlocking(sb,user);
       return;
     }
 
@@ -591,11 +589,11 @@
     renderChart($('chartSvg'),attempts,7);
     renderSkills(attempts);
     renderActivity(attempts);
-    await refreshRegularHomeTutorHint(sb);
     renderInsights(attempts);
     renderLeaderboard(schoolPeers,childId,childData);
     setupChartTabs(attempts);
     $('btnStart').addEventListener('click',()=>location.assign('/learn.html?track=regular'));
+    applyRegularHintNonBlocking(sb,user);
   }
 
   // ═══ KPIs — count UNIQUE solved problems ═══
