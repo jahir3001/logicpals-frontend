@@ -757,51 +757,70 @@
      PUBLIC API
   ══════════════════════════════════════════════════════════════ */
   window.LPAdmin = {
-    /** Bootstrap auth for a page. Call once on DOMContentLoaded. */
-    init,
+  /** Bootstrap auth for a page. Call once on DOMContentLoaded. */
+  init,
 
-    /** Get the shared SupabaseClient instance (null before init). */
-    getSupabase: () => _sb,
+  /** Get the shared SupabaseClient instance (null before init). */
+  getSupabase: () => _sb,
 
-    /** Get the current Supabase session object (null if not signed in). */
-    getSession: () => _session,
+  /** Backward/forward-compatible alias used by newer admin pages. */
+  getClient: async () => getSupabase(),
 
-    /** Get the resolved role string (null before init). */
-    getRole: () => _role,
+  /** Get the current Supabase session object (null if not signed in). */
+  getSession: () => _session,
 
-    /** Get the current JWT Bearer token (null if not signed in). */
-    getToken: () => _session?.access_token || null,
+  /** Get the resolved role string (null before init). */
+  getRole: () => _role,
 
-    /** Sign in with email + password. Returns {ok, role?, error?}. */
-    signIn,
+  /** Get the current JWT Bearer token (null if not signed in). */
+  getToken: () => _session?.access_token || null,
 
-    /** Sign out and redirect to loginUrl. */
-    signOut,
+  /**
+   * Full auth context helper for enterprise admin pages.
+   * Returns { sb, session, role, token }.
+   */
+  getAuthContext: async () => {
+    const sb = await getSupabase();
+    const { data: { session } } = await sb.auth.getSession();
+    const role = _role || (session ? await resolveRole(sb) : null);
+    return {
+      sb,
+      session,
+      role,
+      token: session?.access_token || null,
+    };
+  },
 
-    /**
-     * Gate-check the current session against allowed roles.
-     * Automatically opens login dialog if not authenticated.
-     * Returns {ok, sb, role, token} on success or {ok: false} on failure.
-     */
-    requireRole,
+  /** Sign in with email + password. Returns {ok, role?, error?}. */
+  signIn,
 
-    /** Show a toast notification. type: 'success'|'error'|'warning'|'info' */
-    toast,
+  /** Sign out and redirect to loginUrl. */
+  signOut,
 
-    /** Update the status pill. kind: 'ok'|'warn'|'err'|'idle' */
-    setStatus,
+  /**
+   * Gate-check the current session against allowed roles.
+   * Automatically opens login dialog if not authenticated.
+   * Returns {ok, sb, role, token} on success or {ok: false} on failure.
+   */
+  requireRole,
 
-    /** Write data to the page's output block (#out by default). */
-    setOutput,
+  /** Show a toast notification. type: 'success'|'error'|'warning'|'info' */
+  toast,
 
-    /** Open the login dialog. Optional deniedMessage shown as banner. */
-    openLogin,
+  /** Update the status pill. kind: 'ok'|'warn'|'err'|'idle' */
+  setStatus,
 
-    /** Close the login dialog. */
-    closeLogin,
+  /** Write data to the page's output block (#out by default). */
+  setOutput,
 
-    /** Re-render the sidebar (e.g. after role change). */
-    renderSidebar,
-  };
+  /** Open the login dialog. Optional deniedMessage shown as banner. */
+  openLogin,
+
+  /** Close the login dialog. */
+  closeLogin,
+
+  /** Re-render the sidebar (e.g. after role change). */
+  renderSidebar,
+};
 
 })();
