@@ -6,15 +6,26 @@ function getBearer(req) {
   return m ? m[1] : null;
 }
 
-function sbForJwt(jwt) {
+function getSupabaseEnv() {
   const SUPABASE_URL =
     process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const SUPABASE_ANON_KEY =
     process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     throw new Error("missing_supabase_env");
   }
+
+  return {
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    SUPABASE_SERVICE_ROLE_KEY,
+  };
+}
+
+function sbForJwt(jwt) {
+  const { SUPABASE_URL, SUPABASE_ANON_KEY } = getSupabaseEnv();
 
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     global: { headers: { Authorization: `Bearer ${jwt}` } },
@@ -28,7 +39,28 @@ async function requireAdmin(supabase) {
 }
 
 function getType(req) {
-  return String(req.query.type || "summary").trim().toLowerCase();
+  return String(req.query.type || req.body?.type || "summary")
+    .trim()
+    .toLowerCase();
+}
+
+function getAction(req) {
+  return String(req.query.action || req.body?.action || "")
+    .trim()
+    .toLowerCase();
+}
+
+function parseBody(req) {
+  if (!req.body) return {};
+  if (typeof req.body === "string") {
+    try {
+      return JSON.parse(req.body);
+    } catch (_) {
+      return {};
+    }
+  }
+  if (typeof req.body === "object") return req.body;
+  return {};
 }
 
 function jsonOk(res, payload) {
@@ -241,8 +273,51 @@ async function handleProviders(supabase) {
   return { rows: Array.from(state.values()) };
 }
 
+async function rpcOrThrow(supabase, fnName, params = {}) {
+  const { data, error } = await supabase.rpc(fnName, params);
+  if (error) throw error;
+  return data;
+}
+
+async function handleMonitoringAction(userSb, body, action) {
+  switch (action) {
+    case "monitoring_dashboard_bundle":
+      return { result: await rpcOrThrow(userSb, "admin_monitoring_dashboard_bundle") };
+
+    case "monitoring_evaluate_alerts":
+      return { result: await rpcOrThrow(userSb, "admin_monitoring_evaluate_alerts") };
+
+    case "monitoring_ack_alert": {
+      const alertId = String(body.alert_id || "").trim();
+      if (!alertId) {
+        throw new Error("missing_alert_id");
+      }
+      return {
+        result: await rpcOrThrow(userSb, "admin_monitoring_ack_alert", {
+          p_alert_id: alertId,
+        }),
+      };
+    }
+
+    case "monitoring_resolve_alert": {
+      const alertId = String(body.alert_id || "").trim();
+      if (!alertId) {
+        throw new Error("missing_alert_id");
+      }
+      return {
+        result: await rpcOrThrow(userSb, "admin_monitoring_resolve_alert", {
+          p_alert_id: alertId,
+        }),
+      };
+    }
+
+    default:
+      throw new Error(`unsupported_monitoring_action:${action || "unknown"}`);
+  }
+}
+
 module.exports = async (req, res) => {
-  if (req.method !== "GET") {
+  if (!["GET", "POST"].includes(req.method)) {
     return jsonErr(res, 405, "method_not_allowed", null);
   }
 
@@ -251,33 +326,60 @@ module.exports = async (req, res) => {
     return jsonErr(res, 401, "missing_bearer_token", null);
   }
 
+  const body = parseBody(req);
   const type = getType(req);
-  const severity = String(req.query.severity || "all").trim().toLowerCase();
+  const action = getAction(req);
+  const severity = String(req.query.severity || body.severity || "all")
+    .trim()
+    .toLowerCase();
 
   try {
-    const supabase = sbForJwt(jwt);
-    await requireAdmin(supabase);
+    const userSb = sbForJwt(jwt);
+    await requireAdmin(userSb);
+
+    if (req.method === "POST") {
+      const payload = await handleMonitoringAction(userSb, body, action);
+      return jsonOk(res, payload);
+    }
 
     switch (type) {
       case "summary":
-        return jsonOk(res, await handleSummary(supabase));
+        return jsonOk(res, await handleSummary(userSb));
 
       case "alerts":
-        return jsonOk(res, await handleAlerts(supabase, severity));
+        return jsonOk(res, await handleAlerts(userSb, severity));
 
       case "boundary":
-        return jsonOk(res, await handleBoundary(supabase));
+        return jsonOk(res, await handleBoundary(userSb));
 
       case "costs":
-        return jsonOk(res, await handleCosts(supabase));
+        return jsonOk(res, await handleCosts(userSb));
 
       case "providers":
-        return jsonOk(res, await handleProviders(supabase));
+        return jsonOk(res, await handleProviders(userSb));
+
+      case "monitoring":
+        return jsonOk(res, {
+          result: await rpcOrThrow(userSb, "admin_monitoring_dashboard_bundle"),
+        });
 
       default:
-        return jsonErr(res, 400, "invalid_telemetry_type", `Unsupported type: ${type}`);
+        return jsonErr(
+          res,
+          400,
+          "invalid_telemetry_type",
+          `Unsupported type: ${type}`
+        );
     }
   } catch (err) {
-    return jsonErr(res, 403, "telemetry_failed", err.message || String(err));
+    const message = err?.message || String(err);
+    const status =
+      message === "missing_bearer_token"
+        ? 401
+        : message === "admin_required" || /admin access required/i.test(message)
+          ? 403
+          : 400;
+
+    return jsonErr(res, status, "telemetry_failed", message);
   }
 };
