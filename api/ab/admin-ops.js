@@ -169,63 +169,63 @@ module.exports = async function handler(req, res) {
     ----------------------------------------------------- */
 
     if (action === "feature_flags_list") {
-      const { data, error } = await svc.rpc("admin_feature_flags_list");
-      if (error) return json(res, 500, { ok: false, error: error.message });
-      return json(res, 200, { ok: true, result: data });
-    }
+  	const { data, error } = await userSb.rpc("admin_feature_flags_list");
+  	if (error) return json(res, 500, { ok: false, error: error.message });
+ 	 return json(res, 200, { ok: true, result: data });
+	}
 
     if (action === "feature_flag_upsert") {
-      const { data, error } = await svc.rpc("admin_feature_flag_upsert", {
-        p_flag_key: body.flag_key,
-        p_track: body.track,
-        p_description: body.description,
-        p_enabled: body.enabled,
-        p_rollout_type: body.rollout_type,
-        p_rollout_percentage: body.rollout_percentage,
-        p_experiment_key: body.experiment_key,
-        p_is_killswitched: body.is_killswitched,
-        p_config: body.config || {}
-      });
+  	const { data, error } = await userSb.rpc("admin_feature_flag_upsert", {
+   	 p_flag_key: body.flag_key,
+    	p_track: body.track,
+   	 p_description: body.description,
+    	p_enabled: body.enabled,
+    	p_rollout_type: body.rollout_type,
+    	p_rollout_percentage: body.rollout_percentage,
+    	p_experiment_key: body.experiment_key,
+    	p_is_killswitched: body.is_killswitched,
+    	p_config: body.config || {}
+  	});
 
-      if (error) return json(res, 500, { ok: false, error: error.message });
-      return json(res, 200, { ok: true, result: data });
-    }
+  	if (error) return json(res, 500, { ok: false, error: error.message });
+ 	 return json(res, 200, { ok: true, result: data });
+	}
 
     if (action === "feature_flag_set_enabled") {
-      const { data, error } = await svc.rpc("admin_feature_flag_set_enabled", {
-        p_flag_key: body.flag_key,
-        p_track: body.track,
-        p_enabled: body.enabled
-      });
+  	const { data, error } = await userSb.rpc("admin_feature_flag_set_enabled", {
+   	 p_flag_key: body.flag_key,
+    	p_track: body.track,
+   	 p_enabled: body.enabled
+  	});
 
-      if (error) return json(res, 500, { ok: false, error: error.message });
-      return json(res, 200, { ok: true, result: data });
-    }
+  	if (error) return json(res, 500, { ok: false, error: error.message });
+  	return json(res, 200, { ok: true, result: data });
+	}
 
     if (action === "feature_flag_set_killswitch") {
-      const { data, error } = await svc.rpc("admin_feature_flag_set_killswitch", {
-        p_flag_key: body.flag_key,
-        p_track: body.track,
-        p_is_killswitched: body.is_killswitched
-      });
+  	const { data, error } = await userSb.rpc("admin_feature_flag_set_killswitch", {
+    	p_flag_key: body.flag_key,
+    	p_track: body.track,
+    	p_is_killswitched: body.is_killswitched
+  	});
 
-      if (error) return json(res, 500, { ok: false, error: error.message });
-      return json(res, 200, { ok: true, result: data });
-    }
+  	if (error) return json(res, 500, { ok: false, error: error.message });
+ 	 return json(res, 200, { ok: true, result: data });
+	}
 
     /* -----------------------------------------------------
        Experiment Dashboard Bundle
     ----------------------------------------------------- */
 
     if (action === "experiment_dashboard_bundle") {
-      const { data, error } = await svc.rpc("admin_experiment_dashboard_bundle", {
-        p_experiment_key: body.experiment_key,
-        p_track: body.track
-      });
+  	const { data, error } = await userSb.rpc("admin_experiment_dashboard_bundle", {
+    	p_experiment_key: body.experiment_key,
+    	p_track: body.track
+  	});
 
-      if (error) return json(res, 500, { ok: false, error: error.message });
-      return json(res, 200, { ok: true, result: data });
-    }
+  	if (error) return json(res, 500, { ok: false, error: error.message });
+ 	 return json(res, 200, { ok: true, result: data });
+	}
 
     return json(res, 400, { ok: false, error: "unknown_action" });
   } catch (err) {
