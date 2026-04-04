@@ -316,6 +316,59 @@ async function handleMonitoringAction(userSb, body, action) {
   }
 }
 
+async function handleSystemHealth(supabase) {
+  const { data, error } = await supabase
+    .from("v_platform_health_live")
+    .select("*")
+    .limit(1)
+    .single();
+
+  if (error) throw error;
+
+  const health = data || {};
+
+  const services = [
+    {
+      key: "attempt_api",
+      label: "Attempt API",
+      status: health.attempt_api_status || "unknown",
+      detail: health.attempt_api_detail || ""
+    },
+    {
+      key: "ai_provider",
+      label: "AI Provider",
+      status: health.ai_provider_status || "unknown",
+      detail: health.ai_provider_detail || ""
+    },
+    {
+      key: "supabase",
+      label: "Supabase",
+      status: health.supabase_status || "unknown",
+      detail: health.supabase_detail || ""
+    },
+    {
+      key: "worker",
+      label: "Worker",
+      status: health.worker_status || "unknown",
+      detail: health.worker_detail || ""
+    },
+    {
+      key: "cron",
+      label: "Cron",
+      status: health.cron_status || "unknown",
+      detail: health.cron_detail || ""
+    },
+    {
+      key: "experiments",
+      label: "Experiments",
+      status: health.experiment_status || "unknown",
+      detail: health.experiment_detail || ""
+    }
+  ];
+
+  return { services };
+}
+
 module.exports = async (req, res) => {
   if (!["GET", "POST"].includes(req.method)) {
     return jsonErr(res, 405, "method_not_allowed", null);
@@ -362,6 +415,8 @@ module.exports = async (req, res) => {
         return jsonOk(res, {
           result: await rpcOrThrow(userSb, "admin_monitoring_dashboard_bundle"),
         });
+      case "system_health":
+ 	 return jsonOk(res, await handleSystemHealth(userSb));
 
       default:
         return jsonErr(
