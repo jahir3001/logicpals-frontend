@@ -107,7 +107,7 @@ async function handleSummary(supabase) {
 
   if (error) throw error;
 
-  return { result: data || {} };
+  return data || {};
 }
 
 async function handleAlerts(supabase, severity) {
