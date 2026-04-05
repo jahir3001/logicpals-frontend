@@ -531,19 +531,19 @@ module.exports = async (req, res) => {
     await requireAdmin(userSb);
 
     if (req.method === "POST") {
-  if (
-    action === "incident_acknowledge" ||
-    action === "incident_resolve" ||
-    action === "incident_add_note" ||
-    action === "monitoring_sync_incidents"
-  ) {
-    const payload = await handleIncidentAction(userSb, body, action);
-    return jsonOk(res, payload);
-  }
+      if (
+        action === "incident_acknowledge" ||
+        action === "incident_resolve" ||
+        action === "incident_add_note" ||
+        action === "monitoring_sync_incidents"
+      ) {
+        const payload = await handleIncidentAction(userSb, body, action);
+        return jsonOk(res, payload);
+      }
 
-  const payload = await handleMonitoringAction(userSb, body, action);
-  return jsonOk(res, payload);
-}
+      const payload = await handleMonitoringAction(userSb, body, action);
+      return jsonOk(res, payload);
+    }
 
     switch (type) {
       case "summary":
@@ -565,18 +565,20 @@ module.exports = async (req, res) => {
         return jsonOk(res, {
           result: await rpcOrThrow(userSb, "admin_monitoring_dashboard_bundle"),
         });
+
       case "system_health":
- 	 return jsonOk(res, await handleSystemHealth(userSb));
+        return jsonOk(res, await handleSystemHealth(userSb));
+
       case "incidents":
-  	return jsonOk(
-    	res,
-   	 await handleIncidents(
-      		userSb,
-      		String(req.query.incident_status || body.incident_status || "open")
-        	.trim()
-        	.toLowerCase()
-   		 )
-  		);
+        return jsonOk(
+          res,
+          await handleIncidents(
+            userSb,
+            String(req.query.incident_status || body.incident_status || "open")
+              .trim()
+              .toLowerCase()
+          )
+        );
 
       default:
         return jsonErr(
@@ -587,26 +589,23 @@ module.exports = async (req, res) => {
         );
     }
   } catch (err) {
-  const message = err?.message || String(err);
+    const message = err?.message || String(err);
 
-  const status =
-    message === "missing_bearer_token"
-      ? 401
-      : message === "admin_required" || /admin access required/i.test(message)
-        ? 403
-        : [
-            "missing_incident_id",
-            "missing_note_message",
-            "note_message_too_long",
-            "missing_alert_id",
-          ].includes(message)
-          ? 400
-          : /not_found/i.test(message)
-            ? 404
-            : 400;
-
-  return jsonErr(res, status, "telemetry_failed", message);
-}
+    const status =
+      message === "missing_bearer_token"
+        ? 401
+        : message === "admin_required" || /admin access required/i.test(message)
+          ? 403
+          : [
+              "missing_incident_id",
+              "missing_note_message",
+              "note_message_too_long",
+              "missing_alert_id",
+            ].includes(message)
+            ? 400
+            : /not_found/i.test(message)
+              ? 404
+              : 500;
 
     return jsonErr(res, status, "telemetry_failed", message);
   }
