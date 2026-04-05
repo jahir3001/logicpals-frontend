@@ -124,15 +124,32 @@ async function handleAlerts(supabase, severity) {
   const { data, error } = await q;
   if (error) throw error;
 
-  const rows = (data || []).map((r) => ({
+  const rows = (data || []).map((r) => {
+  const metadata = r.metadata || {};
+  const acknowledgedAt =
+    metadata.acknowledged_at ||
+    metadata.ack_at ||
+    null;
+
+  const status = r.resolved_at
+    ? "resolved"
+    : acknowledgedAt
+      ? "acknowledged"
+      : "open";
+
+  return {
+    id: r.id || metadata.alert_id || null,
     created_at: r.created_at,
     alert_type: r.alert_type,
     severity: r.severity,
     message: r.message || "",
-    source: inferSource(r.metadata || {}),
-    metadata: r.metadata || {},
+    source: inferSource(metadata),
+    metadata,
+    acknowledged_at: acknowledgedAt,
     resolved_at: r.resolved_at || null,
-  }));
+    status,
+  };
+});
 
   return { rows };
 }

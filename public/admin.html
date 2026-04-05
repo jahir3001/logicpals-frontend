@@ -1082,12 +1082,12 @@
               </div>
 
               <div class="lp-telemetry-grid">
-                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">Active Alerts</div><div class="lp-telemetry-card-value" id="metricActiveAlerts">—</div><div class="lp-telemetry-card-sub">Open + acknowledged incidents</div></div>
-                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">Critical Alerts</div><div class="lp-telemetry-card-value" id="metricCriticalAlerts">—</div><div class="lp-telemetry-card-sub">Immediate attention required</div></div>
+                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">Open Alerts</div><div class="lp-telemetry-card-value" id="metricActiveAlerts">—</div><div class="lp-telemetry-card-sub">Currently unresolved incidents</div></div>
+                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">Critical Open Alerts</div><div class="lp-telemetry-card-value" id="metricCriticalAlerts">—</div><div class="lp-telemetry-card-sub">Unresolved critical incidents</div></div>
                 <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">Provider Error Rate</div><div class="lp-telemetry-card-value" id="metricProviderErrorRate">—</div><div class="lp-telemetry-card-sub">Recent AI failures</div></div>
                 <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">Avg Provider Latency</div><div class="lp-telemetry-card-value" id="metricAvgLatency">—</div><div class="lp-telemetry-card-sub">Milliseconds</div></div>
                 <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">7d Cost</div><div class="lp-telemetry-card-value" id="metricCost7d">—</div><div class="lp-telemetry-card-sub">Estimated AI usage</div></div>
-                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">Open Circuit Breakers</div><div class="lp-telemetry-card-value" id="metricCircuitBreakers">—</div><div class="lp-telemetry-card-sub">Operational containment</div></div>
+                <div class="lp-telemetry-card"><div class="lp-telemetry-card-label">Open Circuit Breakers</div><div class="lp-telemetry-card-value" id="metricCircuitBreakers">—</div><div class="lp-telemetry-card-sub">Current open breaker count</div></div>
               </div>
 
               <div class="lp-monitoring-layout">
@@ -1104,7 +1104,7 @@
                 <div class="admin-grid admin-grid-2" style="gap:12px">
                   <div class="lp-telemetry-table-card">
                     <div class="lp-telemetry-card-head">
-                      <div class="lp-telemetry-card-title">Active Alerts</div>
+                      <div class="lp-telemetry-card-title">Open Incidents</div>
                       <span class="admin-badge admin-badge-red" id="alertsCountBadge">0 rows</span>
                     </div>
                     <div class="lp-telemetry-table-wrap">
@@ -1134,7 +1134,7 @@
 
                   <div class="lp-telemetry-table-card">
                     <div class="lp-telemetry-card-head">
-                      <div class="lp-telemetry-card-title">Costs</div>
+                      <div class="lp-telemetry-card-title">Provider Usage</div>
                       <span class="admin-badge admin-badge-teal" id="costCountBadge">0 rows</span>
                     </div>
                     <div class="lp-telemetry-table-wrap">
@@ -1149,7 +1149,7 @@
 
                   <div class="lp-telemetry-table-card">
                     <div class="lp-telemetry-card-head">
-                      <div class="lp-telemetry-card-title">Providers</div>
+                      <div class="lp-telemetry-card-title">Provider Health</div>
                       <span class="admin-badge admin-badge-green" id="providersCountBadge">0 rows</span>
                     </div>
                     <div class="lp-telemetry-table-wrap">
@@ -1164,7 +1164,7 @@
 
                   <div class="lp-telemetry-table-card">
                     <div class="lp-telemetry-card-head">
-                      <div class="lp-telemetry-card-title">Boundary Watch</div>
+                      <div class="lp-telemetry-card-title">Guardrail Events</div>
                       <span class="admin-badge admin-badge-amber" id="boundaryCountBadge">0 rows</span>
                     </div>
                     <div class="lp-telemetry-table-wrap">
@@ -1179,7 +1179,7 @@
 
                   <div class="lp-telemetry-table-card">
                     <div class="lp-telemetry-card-head">
-                      <div class="lp-telemetry-card-title">Telemetry Feed</div>
+                      <div class="lp-telemetry-card-title">System Events</div>
                       <span class="admin-badge admin-badge-indigo" id="telemetryFeedCountBadge">0 rows</span>
                     </div>
                     <div class="lp-telemetry-table-wrap">
@@ -1465,7 +1465,7 @@
       const body = document.getElementById(tbodyId);
       if (!body) return;
       if (!Array.isArray(rows) || rows.length === 0) {
-        body.innerHTML = `<tr><td colspan="${colspan}" class="lp-telemetry-empty">No data available.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="${colspan}" class="lp-telemetry-empty">No records available.</td></tr>`;
         return;
       }
       body.innerHTML = rows.map(mapper).join('');
@@ -1521,11 +1521,29 @@
       `).join('')}</div>`;
     }
 
+    function normalizeAlertStatus(row = {}) {
+      const raw = String(row.status || '').trim().toLowerCase();
+      if (raw) return raw;
+      if (row.resolved_at) return 'resolved';
+      if (row.acknowledged_at || row.metadata?.acknowledged_at) return 'acknowledged';
+      return 'open';
+    }
+
+    function emptyTableMessage(tbodyId, colspan, message) {
+      const body = document.getElementById(tbodyId);
+      if (!body) return;
+      body.innerHTML = `<tr><td colspan="${colspan}" class="lp-telemetry-empty">${escapeHtml(message)}</td></tr>`;
+    }
+
     function renderAlerts(data = {}) {
       const rows = normalizeRows(data.result || data);
       setText('alertsCountBadge', `${rows.length} rows`);
+      if (!rows.length) {
+        emptyTableMessage('monitoringAlertsBody', 6, 'No open incidents');
+        return;
+      }
       renderRows('monitoringAlertsBody', rows, row => {
-        const status = String(row.status || (row.resolved_at ? 'resolved' : row.acknowledged_at ? 'acknowledged' : 'open')).toLowerCase();
+        const status = normalizeAlertStatus(row);
         const canAck = !!row.id && status === 'open';
         const canResolve = !!row.id && status !== 'resolved';
         return `
@@ -1581,6 +1599,10 @@
     function renderBreakers(data = {}) {
       const rows = normalizeRows(data.result || data).filter(row => row.breaker_state || row.state || row.last_alert_type);
       setText('breakerCountBadge', `${rows.length} rows`);
+      if (!rows.length) {
+        emptyTableMessage('monitoringBreakersBody', 4, 'No circuit breakers are currently open');
+        return;
+      }
       renderRows('monitoringBreakersBody', rows, row => `
         <tr>
           <td class="lp-mono">${escapeHtml(row.provider || row.subsystem || row.name || '—')}</td>
@@ -1594,6 +1616,10 @@
     function renderCosts(data = {}) {
       const rows = normalizeRows(data.result || data);
       setText('costCountBadge', `${rows.length} rows`);
+      if (!rows.length) {
+        emptyTableMessage('monitoringCostsBody', 6, 'No provider usage recorded in selected window');
+        return;
+      }
       renderRows('monitoringCostsBody', rows, row => `
         <tr>
           <td class="lp-mono">${escapeHtml(row.model_id || row.model || '—')}</td>
@@ -1609,6 +1635,10 @@
     function renderProviders(data = {}) {
       const rows = normalizeRows(data.result || data);
       setText('providersCountBadge', `${rows.length} rows`);
+      if (!rows.length) {
+        emptyTableMessage('monitoringProvidersBody', 5, 'No provider health records found');
+        return;
+      }
       renderRows('monitoringProvidersBody', rows, row => `
         <tr>
           <td class="lp-mono">${escapeHtml(row.provider || row.model || '—')}</td>
@@ -1623,6 +1653,10 @@
     function renderBoundary(data = {}) {
       const rows = normalizeRows(data.result || data);
       setText('boundaryCountBadge', `${rows.length} rows`);
+      if (!rows.length) {
+        emptyTableMessage('monitoringBoundaryBody', 5, 'No guardrail violations detected');
+        return;
+      }
       renderRows('monitoringBoundaryBody', rows, row => `
         <tr>
           <td>${severityPill(row.severity)}</td>
@@ -1638,6 +1672,10 @@
       const result = data.result || data;
       const rows = normalizeRows(result.events ? result.events : result.items ? result.items : result.feed ? result.feed : result.recent_events ? result.recent_events : result);
       setText('telemetryFeedCountBadge', `${rows.length} rows`);
+      if (!rows.length) {
+        emptyTableMessage('monitoringFeedBody', 4, 'No recent system events');
+        return;
+      }
       renderRows('monitoringFeedBody', rows, row => `
         <tr>
           <td>${escapeHtml(formatDateTime(row.occurred_at || row.created_at || row.last_event_at))}</td>
@@ -1648,7 +1686,12 @@
       `, 4);
     }
 
-    async function loadMonitoringDashboard() {
+    let monitoringActionBusy = false;
+    let monitoringAutoRefreshTimer = null;
+    const MONITORING_AUTO_REFRESH_MS = 60000;
+
+    async function loadMonitoringDashboard(options = {}) {
+      const { silent = false } = options;
       const windowValue = document.getElementById('monitoringWindow')?.value || '15m';
       const severity = (document.getElementById('monitoringSeverity')?.value || 'all').toLowerCase();
 
@@ -1667,13 +1710,52 @@
     }
 
     function wireTelemetry() {
-      document.getElementById('btnMonitoringRefresh')?.addEventListener('click', () => {
-        loadMonitoringDashboard().catch(err => {
-          if (window.LPAdmin) LPAdmin.toast(`Monitoring refresh failed: ${err.message}`, 'error', 4000);
-        });
+      const refreshBtn = document.getElementById('btnMonitoringRefresh');
+      const evaluateBtn = document.getElementById('btnMonitoringEvaluate');
+      const autoRefreshEl = document.getElementById('monitoringAutoRefresh');
+      const severityEl = document.getElementById('monitoringSeverity');
+      const windowEl = document.getElementById('monitoringWindow');
+
+      const stopAutoRefresh = () => {
+        if (monitoringAutoRefreshTimer) {
+          clearInterval(monitoringAutoRefreshTimer);
+          monitoringAutoRefreshTimer = null;
+        }
+      };
+
+      const startAutoRefresh = () => {
+        stopAutoRefresh();
+        monitoringAutoRefreshTimer = setInterval(() => {
+          const active = document.getElementById('tab-telemetry')?.classList.contains('active');
+          const autoOn = !!autoRefreshEl?.checked;
+          if (active && autoOn && !document.hidden) {
+            loadMonitoringDashboard({ silent: true }).catch(() => {});
+          }
+        }, MONITORING_AUTO_REFRESH_MS);
+      };
+
+      const syncAutoRefresh = () => {
+        if (autoRefreshEl?.checked) startAutoRefresh();
+        else stopAutoRefresh();
+      };
+
+      refreshBtn?.addEventListener('click', async () => {
+        if (monitoringActionBusy) return;
+        refreshBtn.disabled = true;
+        try {
+          await loadMonitoringDashboard();
+        } catch (err) {
+          window.LPAdmin?.toast(`Monitoring refresh failed: ${err.message}`, 'error', 4000);
+        } finally {
+          refreshBtn.disabled = false;
+        }
       });
 
-      document.getElementById('btnMonitoringEvaluate')?.addEventListener('click', async () => {
+      evaluateBtn?.addEventListener('click', async () => {
+        if (monitoringActionBusy) return;
+        monitoringActionBusy = true;
+        if (refreshBtn) refreshBtn.disabled = true;
+        if (evaluateBtn) evaluateBtn.disabled = true;
         try {
           const res = await postTelemetryAction('monitoring_evaluate_alerts', {});
           const message = res?.message || 'Monitoring evaluation completed';
@@ -1681,22 +1763,24 @@
           await loadMonitoringDashboard();
         } catch (err) {
           window.LPAdmin?.toast(`Alert evaluation failed: ${err.message}`, 'error', 4000);
+        } finally {
+          monitoringActionBusy = false;
+          if (refreshBtn) refreshBtn.disabled = false;
+          if (evaluateBtn) evaluateBtn.disabled = false;
         }
       });
 
-      let timer = null;
-      const start = () => {
-        if (timer) clearInterval(timer);
-        timer = setInterval(() => {
-          const active = document.getElementById('tab-telemetry')?.classList.contains('active');
-          const autoOn = !!document.getElementById('monitoringAutoRefresh')?.checked;
-          if (active && autoOn) loadMonitoringDashboard().catch(() => {});
-        }, 60000);
-      };
-      start();
+      autoRefreshEl?.addEventListener('change', syncAutoRefresh);
+      severityEl?.addEventListener('change', () => loadMonitoringDashboard().catch(() => {}));
+      windowEl?.addEventListener('change', () => loadMonitoringDashboard().catch(() => {}));
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && autoRefreshEl?.checked) {
+          loadMonitoringDashboard({ silent: true }).catch(() => {});
+        }
+      });
+      window.addEventListener('beforeunload', stopAutoRefresh);
 
-      document.getElementById('monitoringSeverity')?.addEventListener('change', () => loadMonitoringDashboard().catch(() => {}));
-      document.getElementById('monitoringWindow')?.addEventListener('change', () => loadMonitoringDashboard().catch(() => {}));
+      syncAutoRefresh();
     }
 
     function setFlagEditorFromRow(row) {
