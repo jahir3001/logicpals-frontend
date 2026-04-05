@@ -1753,8 +1753,10 @@
       selectedIncidentKey = row?.incident_key || '';
     }
 
-    function displayActor(actor) {
-      return escapeHtml(actor || '—');
+    function displayActor(actor, timestamp = null, fallbackLabel = 'admin') {
+      if (actor) return escapeHtml(actor);
+      if (timestamp) return escapeHtml(fallbackLabel);
+      return '—';
     }
 
     function getSelectedAlertSource() {
@@ -1827,8 +1829,8 @@
           <td class="lp-cell-stack"><span>${escapeHtml(row.title || '—')}</span><span class="lp-cell-subtle lp-mono">${escapeHtml(row.incident_key || '')}</span></td>
           <td>${escapeHtml(formatDateTime(row.first_seen_at))}</td>
           <td>${escapeHtml(formatDateTime(row.last_seen_at))}</td>
-          <td>${displayActor(row.acknowledged_by)}</td>
-          <td>${displayActor(row.resolved_by)}</td>
+          <td>${displayActor(row.acknowledged_by, row.acknowledged_at, 'admin')}</td>
+          <td>${displayActor(row.resolved_by, row.resolved_at, 'admin')}</td>
           <td>${incidentStatusPill(row.status || 'open')}</td>
           <td>
             <div class="lp-monitoring-actions-row">
@@ -1931,7 +1933,7 @@
           try {
             await incidentAcknowledge(incidentId);
             window.LPAdmin?.toast('Incident acknowledged', 'success', 2200);
-            await loadMonitoringDashboard();
+            await Promise.all([loadMonitoringDashboard(), loadOverviewIncidentSnapshot()]);
           } catch (err) {
             btn.disabled = false;
             window.LPAdmin?.toast(`Incident acknowledge failed: ${err.message}`, 'error', 4000);
@@ -1947,7 +1949,7 @@
           try {
             await incidentResolve(incidentId);
             window.LPAdmin?.toast('Incident resolved', 'success', 2200);
-            await loadMonitoringDashboard();
+            await Promise.all([loadMonitoringDashboard(), loadOverviewIncidentSnapshot()]);
           } catch (err) {
             btn.disabled = false;
             window.LPAdmin?.toast(`Incident resolve failed: ${err.message}`, 'error', 4000);
@@ -1965,7 +1967,7 @@
           try {
             await incidentAddNote(incidentId, note.trim());
             window.LPAdmin?.toast('Incident note added', 'success', 2200);
-            await loadMonitoringDashboard();
+            await Promise.all([loadMonitoringDashboard(), loadOverviewIncidentSnapshot()]);
           } catch (err) {
             btn.disabled = false;
             window.LPAdmin?.toast(`Incident note failed: ${err.message}`, 'error', 4000);
@@ -2038,7 +2040,7 @@
           try {
             await postTelemetryAction('monitoring_ack_alert', { alert_id: alertId });
             window.LPAdmin?.toast('Alert acknowledged', 'success', 2200);
-            await loadMonitoringDashboard();
+            await Promise.all([loadMonitoringDashboard(), loadOverviewIncidentSnapshot()]);
           } catch (err) {
             btn.disabled = false;
             window.LPAdmin?.toast(`Acknowledge failed: ${err.message}`, 'error', 4000);
@@ -2054,7 +2056,7 @@
           try {
             await postTelemetryAction('monitoring_resolve_alert', { alert_id: alertId });
             window.LPAdmin?.toast('Alert resolved', 'success', 2200);
-            await loadMonitoringDashboard();
+            await Promise.all([loadMonitoringDashboard(), loadOverviewIncidentSnapshot()]);
           } catch (err) {
             btn.disabled = false;
             window.LPAdmin?.toast(`Resolve failed: ${err.message}`, 'error', 4000);
@@ -2247,7 +2249,7 @@
         if (monitoringActionBusy) return;
         refreshBtn.disabled = true;
         try {
-          await loadMonitoringDashboard();
+          await Promise.all([loadMonitoringDashboard(), loadOverviewIncidentSnapshot()]);
         } catch (err) {
           window.LPAdmin?.toast(`Monitoring refresh failed: ${err.message}`, 'error', 4000);
         } finally {
@@ -2264,7 +2266,7 @@
           const res = await postTelemetryAction('monitoring_evaluate_alerts', {});
           const message = res?.message || 'Monitoring evaluation completed';
           window.LPAdmin?.toast(message, 'success', 2600);
-          await loadMonitoringDashboard();
+          await Promise.all([loadMonitoringDashboard(), loadOverviewIncidentSnapshot()]);
         } catch (err) {
           window.LPAdmin?.toast(`Alert evaluation failed: ${err.message}`, 'error', 4000);
         } finally {
@@ -2295,7 +2297,7 @@
           const opened = Number(res?.opened || 0);
           const resolved = Number(res?.resolved || 0);
           window.LPAdmin?.toast(`Incident sync complete: opened ${opened}, resolved ${resolved}`, 'success', 2600);
-          await loadMonitoringDashboard();
+          await Promise.all([loadMonitoringDashboard(), loadOverviewIncidentSnapshot()]);
         } catch (err) {
           window.LPAdmin?.toast(`Incident sync failed: ${err.message}`, 'error', 4000);
         } finally {
