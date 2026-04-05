@@ -509,40 +509,6 @@ async function handleIncidents(supabase, statusFilter) {
   return { rows };
 }
 
-async function handleIncidentEvents(supabase, incidentId) {
-  const id = String(incidentId || "").trim();
-  if (!id) throw new Error("missing_incident_id");
-
-  const { data, error } = await supabase
-    .from("incident_events")
-    .select(`
-      incident_id,
-      event_type,
-      actor_type,
-      actor_user_id,
-      message,
-      metadata,
-      occurred_at
-    `)
-    .eq("incident_id", id)
-    .order("occurred_at", { ascending: false })
-    .limit(100);
-
-  if (error) throw error;
-
-  return {
-    rows: (data || []).map(r => ({
-      incident_id: r.incident_id,
-      event_type: r.event_type || "incident_note",
-      actor_type: r.actor_type || "system",
-      actor_user_id: r.actor_user_id || null,
-      message: r.message || "",
-      metadata: r.metadata || {},
-      occurred_at: r.occurred_at || null
-    }))
-  };
-}
-
 module.exports = async (req, res) => {
   if (!["GET", "POST"].includes(req.method)) {
     return jsonErr(res, 405, "method_not_allowed", null);
@@ -578,6 +544,40 @@ module.exports = async (req, res) => {
       const payload = await handleMonitoringAction(userSb, body, action);
       return jsonOk(res, payload);
     }
+
+	async function handleIncidentEvents(supabase, incidentId) {
+  const id = String(incidentId || "").trim();
+  if (!id) throw new Error("missing_incident_id");
+
+  const { data, error } = await supabase
+    .from("incident_events")
+    .select(`
+      incident_id,
+      event_type,
+      actor_type,
+      actor_user_id,
+      message,
+      metadata,
+      occurred_at
+    `)
+    .eq("incident_id", id)
+    .order("occurred_at", { ascending: false })
+    .limit(100);
+
+  if (error) throw error;
+
+  return {
+    rows: (data || []).map(r => ({
+      incident_id: r.incident_id,
+      event_type: r.event_type || "incident_note",
+      actor_type: r.actor_type || "system",
+      actor_user_id: r.actor_user_id || null,
+      message: r.message || "",
+      metadata: r.metadata || {},
+      occurred_at: r.occurred_at || null
+    }))
+  };
+}
 
     switch (type) {
   case "summary":
