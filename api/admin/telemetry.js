@@ -386,6 +386,129 @@ async function handleSystemHealth(supabase) {
   return { services };
 }
 
+async function handleIncidentAction(userSb, body, action) {
+  switch (action) {
+    case "incident_acknowledge": {
+      const incidentId = String(body.incident_id || "").trim();
+      if (!incidentId) {
+        throw new Error("missing_incident_id");
+      }
+
+      return {
+        result: await rpcOrThrow(userSb, "admin_incident_acknowledge", {
+          p_incident_id: incidentId,
+        }),
+      };
+    }
+
+    case "incident_resolve": {
+      const incidentId = String(body.incident_id || "").trim();
+      if (!incidentId) {
+        throw new Error("missing_incident_id");
+      }
+
+      return {
+        result: await rpcOrThrow(userSb, "admin_incident_resolve", {
+          p_incident_id: incidentId,
+        }),
+      };
+    }
+
+    case "incident_add_note": {
+      const incidentId = String(body.incident_id || "").trim();
+      const message = String(body.message || "").trim();
+
+      if (!incidentId) {
+        throw new Error("missing_incident_id");
+      }
+      if (!message) {
+        throw new Error("missing_note_message");
+      }
+      if (message.length > 4000) {
+        throw new Error("note_message_too_long");
+      }
+
+      return {
+        result: await rpcOrThrow(userSb, "admin_incident_add_note", {
+          p_incident_id: incidentId,
+          p_message: message,
+        }),
+      };
+    }
+
+    case "monitoring_sync_incidents":
+      return {
+        result: await rpcOrThrow(userSb, "admin_monitoring_sync_incidents"),
+      };
+
+    default:
+      throw new Error(`unsupported_incident_action:${action || "unknown"}`);
+  }
+}
+
+async function handleIncidents(supabase, statusFilter) {
+  let q = supabase
+    .from("incidents")
+    .select(`
+      id,
+      incident_key,
+      title,
+      source,
+      severity,
+      status,
+      summary,
+      first_seen_at,
+      last_seen_at,
+      acknowledged_at,
+      acknowledged_by,
+      resolved_at,
+      resolved_by,
+      auto_opened,
+      metadata,
+      created_at,
+      updated_at
+    `)
+    .order("updated_at", { ascending: false })
+    .limit(100);
+
+  const normalizedStatus = String(statusFilter || "open")
+    .trim()
+    .toLowerCase();
+
+  if (normalizedStatus === "open") {
+    q = q.in("status", ["open", "acknowledged"]);
+  } else if (normalizedStatus === "resolved") {
+    q = q.eq("status", "resolved");
+  } else if (normalizedStatus !== "all") {
+    q = q.eq("status", normalizedStatus);
+  }
+
+  const { data, error } = await q;
+  if (error) throw error;
+
+  const rows = (data || []).map((r) => ({
+    id: r.id,
+    incident_key: r.incident_key,
+    title: r.title || "",
+    source: r.source || "system",
+    severity: r.severity || "warning",
+    status: r.status || "open",
+    summary: r.summary || "",
+    first_seen_at: r.first_seen_at || null,
+    last_seen_at: r.last_seen_at || null,
+    acknowledged_at: r.acknowledged_at || null,
+    acknowledged_by: r.acknowledged_by || null,
+    resolved_at: r.resolved_at || null,
+    resolved_by: r.resolved_by || null,
+    auto_opened: !!r.auto_opened,
+    metadata: r.metadata || {},
+    created_at: r.created_at || null,
+    updated_at: r.updated_at || null,
+  }));
+
+  return { rows };
+}
+
 module.exports = async (req, res) => {
   if (!["GET", "POST"].includes(req.method)) {
     return jsonErr(res, 405, "method_not_allowed", null);
@@ -408,9 +531,19 @@ module.exports = async (req, res) => {
     await requireAdmin(userSb);
 
     if (req.method === "POST") {
-      const payload = await handleMonitoringAction(userSb, body, action);
-      return jsonOk(res, payload);
-    }
+  if (
+    action === "incident_acknowledge" ||
+    action === "incident_resolve" ||
+    action === "incident_add_note" ||
+    action === "monitoring_sync_incidents"
+  ) {
+    const payload = await handleIncidentAction(userSb, body, action);
+    return jsonOk(res, payload);
+  }
+
+  const payload = await handleMonitoringAction(userSb, body, action);
+  return jsonOk(res, payload);
+}
 
     switch (type) {
       case "summary":
@@ -434,6 +567,16 @@ module.exports = async (req, res) => {
         });
       case "system_health":
  	 return jsonOk(res, await handleSystemHealth(userSb));
+      case "incidents":
+  	return jsonOk(
+    	res,
+   	 await handleIncidents(
+      		userSb,
+      		String(req.query.incident_status || body.incident_status || "open")
+        	.trim()
+        	.toLowerCase()
+   		 )
+  		);
 
       default:
         return jsonErr(
@@ -444,13 +587,26 @@ module.exports = async (req, res) => {
         );
     }
   } catch (err) {
-    const message = err?.message || String(err);
-    const status =
-      message === "missing_bearer_token"
-        ? 401
-        : message === "admin_required" || /admin access required/i.test(message)
-          ? 403
-          : 400;
+  const message = err?.message || String(err);
+
+  const status =
+    message === "missing_bearer_token"
+      ? 401
+      : message === "admin_required" || /admin access required/i.test(message)
+        ? 403
+        : [
+            "missing_incident_id",
+            "missing_note_message",
+            "note_message_too_long",
+            "missing_alert_id",
+          ].includes(message)
+          ? 400
+          : /not_found/i.test(message)
+            ? 404
+            : 400;
+
+  return jsonErr(res, status, "telemetry_failed", message);
+}
 
     return jsonErr(res, status, "telemetry_failed", message);
   }
