@@ -843,9 +843,9 @@
                   <div class="lp-telemetry-table-wrap">
                     <table class="lp-telemetry-table">
                       <thead>
-                        <tr><th>Severity</th><th>Title</th><th>Status</th><th>Actions</th></tr>
+                        <tr><th>Severity</th><th>Title</th><th>First Seen</th><th>Last Seen</th><th>Acknowledged By</th><th>Resolved By</th><th>Status</th><th>Actions</th></tr>
                       </thead>
-                      <tbody id="overviewIncidentQueueBody"><tr><td colspan="4" class="lp-telemetry-empty">Loading…</td></tr></tbody>
+                      <tbody id="overviewIncidentQueueBody"><tr><td colspan="8" class="lp-telemetry-empty">Loading…</td></tr></tbody>
                     </table>
                   </div>
                 </div>
@@ -1226,7 +1226,14 @@
                   <div class="lp-telemetry-table-card">
                     <div class="lp-telemetry-card-head">
                       <div class="lp-telemetry-card-title">Open Alerts</div>
-                      <span class="admin-badge admin-badge-red" id="alertsCountBadge">0 rows</span>
+                      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                        <select class="admin-select" id="monitoringAlertSource" style="min-width:140px">
+                          <option value="all" selected>All sources</option>
+                        </select>
+                        <button class="admin-btn admin-btn-ghost admin-btn-sm" type="button" id="btnMonitoringAckAll">Acknowledge all</button>
+                        <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" id="btnMonitoringResolveAll">Resolve all</button>
+                        <span class="admin-badge admin-badge-red" id="alertsCountBadge">0 rows</span>
+                      </div>
                     </div>
                     <div class="lp-telemetry-table-wrap">
                       <table class="lp-telemetry-table">
@@ -1698,6 +1705,8 @@
     let selectedIncidentId = null;
     let selectedIncidentTitle = '';
     let selectedIncidentKey = '';
+    let latestAlertRows = [];
+    let latestVisibleAlertRows = [];
     const globalOpsState = {
       criticalIncidents: 0,
       openAlerts: 0
@@ -1744,6 +1753,60 @@
       selectedIncidentKey = row?.incident_key || '';
     }
 
+    function displayActor(actor) {
+      return escapeHtml(actor || '—');
+    }
+
+    function getSelectedAlertSource() {
+      return String(document.getElementById('monitoringAlertSource')?.value || 'all').trim().toLowerCase();
+    }
+
+    function applyAlertSourceFilter(rows = []) {
+      const sourceFilter = getSelectedAlertSource();
+      if (!sourceFilter || sourceFilter === 'all') return rows;
+      return rows.filter(row => String(row.source || row.alert_type || 'system').trim().toLowerCase() === sourceFilter);
+    }
+
+    function populateAlertSourceFilter(rows = []) {
+      const el = document.getElementById('monitoringAlertSource');
+      if (!el) return;
+      const current = getSelectedAlertSource();
+      const sources = Array.from(new Set((rows || []).map(row => String(row.source || row.alert_type || 'system').trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+      el.innerHTML = `<option value="all">All sources</option>${sources.map(source => `<option value="${escapeHtml(source.toLowerCase())}">${escapeHtml(source)}</option>`).join('')}`;
+      el.value = sources.some(source => source.toLowerCase() === current) ? current : 'all';
+    }
+
+    async function runBulkAlertAction(action) {
+      const targetRows = (latestVisibleAlertRows || []).filter(row => {
+        const status = normalizeAlertStatus(row);
+        if (!row.id) return false;
+        if (action === 'monitoring_ack_alert') return status === 'open';
+        if (action === 'monitoring_resolve_alert') return status !== 'resolved';
+        return false;
+      });
+
+      if (!targetRows.length) {
+        window.LPAdmin?.toast(action === 'monitoring_ack_alert' ? 'No open alerts to acknowledge' : 'No alerts to resolve', 'info', 2200);
+        return;
+      }
+
+      const confirmed = window.confirm(`${action === 'monitoring_ack_alert' ? 'Acknowledge' : 'Resolve'} ${targetRows.length} visible alert(s)?`);
+      if (!confirmed) return;
+
+      for (const row of targetRows) {
+        await postTelemetryAction(action, { alert_id: row.id });
+      }
+
+      window.LPAdmin?.toast(
+        action === 'monitoring_ack_alert'
+          ? `Acknowledged ${targetRows.length} alert(s)`
+          : `Resolved ${targetRows.length} alert(s)`,
+        'success',
+        2600
+      );
+      await loadMonitoringDashboard();
+    }
+
     function renderOverviewIncidentSnapshot(data = {}) {
       const rows = normalizeRows(data.result || data);
       const openRows = rows.filter(row => String(row.status || 'open').toLowerCase() !== 'resolved').slice(0, 5);
@@ -1754,7 +1817,7 @@
       setText('overviewIncidentCountBadge', `${openRows.length} open`);
       setGlobalOpsCounts({ criticalIncidents: criticalCount });
       if (!openRows.length) {
-        emptyTableMessage('overviewIncidentQueueBody', 4, 'No open incidents');
+        emptyTableMessage('overviewIncidentQueueBody', 8, 'No open incidents');
         return;
       }
 
@@ -1762,6 +1825,10 @@
         <tr>
           <td>${severityPill(row.severity)}</td>
           <td class="lp-cell-stack"><span>${escapeHtml(row.title || '—')}</span><span class="lp-cell-subtle lp-mono">${escapeHtml(row.incident_key || '')}</span></td>
+          <td>${escapeHtml(formatDateTime(row.first_seen_at))}</td>
+          <td>${escapeHtml(formatDateTime(row.last_seen_at))}</td>
+          <td>${displayActor(row.acknowledged_by)}</td>
+          <td>${displayActor(row.resolved_by)}</td>
           <td>${incidentStatusPill(row.status || 'open')}</td>
           <td>
             <div class="lp-monitoring-actions-row">
@@ -1769,7 +1836,7 @@
             </div>
           </td>
         </tr>
-      `, 4);
+      `, 8);
 
       document.querySelectorAll('[data-overview-incident-timeline]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1929,10 +1996,17 @@
     }
 
     function renderAlerts(data = {}) {
-      const rows = normalizeRows(data.result || data);
+      latestAlertRows = normalizeRows(data.result || data);
+      populateAlertSourceFilter(latestAlertRows);
+      const rows = applyAlertSourceFilter(latestAlertRows);
+      latestVisibleAlertRows = rows;
       setText('alertsCountBadge', `${rows.length} rows`);
+      const ackAllBtn = document.getElementById('btnMonitoringAckAll');
+      const resolveAllBtn = document.getElementById('btnMonitoringResolveAll');
+      if (ackAllBtn) ackAllBtn.disabled = !rows.some(row => row.id && normalizeAlertStatus(row) === 'open');
+      if (resolveAllBtn) resolveAllBtn.disabled = !rows.some(row => row.id && normalizeAlertStatus(row) !== 'resolved');
       if (!rows.length) {
-        emptyTableMessage('monitoringAlertsBody', 6, 'No open incidents');
+        emptyTableMessage('monitoringAlertsBody', 6, 'No open alerts for the selected filters');
         return;
       }
       renderRows('monitoringAlertsBody', rows, row => {
@@ -2139,6 +2213,9 @@
       const autoRefreshEl = document.getElementById('monitoringAutoRefresh');
       const severityEl = document.getElementById('monitoringSeverity');
       const windowEl = document.getElementById('monitoringWindow');
+      const alertSourceEl = document.getElementById('monitoringAlertSource');
+      const ackAllBtn = document.getElementById('btnMonitoringAckAll');
+      const resolveAllBtn = document.getElementById('btnMonitoringResolveAll');
       const incidentStatusEl = document.getElementById('incidentStatusFilter');
       const incidentSyncBtn = document.getElementById('btnIncidentSync');
       const overviewOpenMonitoringBtn = document.getElementById('btnOverviewOpenMonitoring');
@@ -2226,6 +2303,42 @@
           if (refreshBtn) refreshBtn.disabled = false;
           if (evaluateBtn) evaluateBtn.disabled = false;
           if (incidentSyncBtn) incidentSyncBtn.disabled = false;
+        }
+      });
+
+      alertSourceEl?.addEventListener('change', () => {
+        renderAlerts({ rows: latestAlertRows });
+      });
+
+      ackAllBtn?.addEventListener('click', async () => {
+        if (monitoringActionBusy) return;
+        monitoringActionBusy = true;
+        if (ackAllBtn) ackAllBtn.disabled = true;
+        if (resolveAllBtn) resolveAllBtn.disabled = true;
+        try {
+          await runBulkAlertAction('monitoring_ack_alert');
+        } catch (err) {
+          window.LPAdmin?.toast(`Bulk acknowledge failed: ${err.message}`, 'error', 4000);
+        } finally {
+          monitoringActionBusy = false;
+          if (ackAllBtn) ackAllBtn.disabled = false;
+          if (resolveAllBtn) resolveAllBtn.disabled = false;
+        }
+      });
+
+      resolveAllBtn?.addEventListener('click', async () => {
+        if (monitoringActionBusy) return;
+        monitoringActionBusy = true;
+        if (ackAllBtn) ackAllBtn.disabled = true;
+        if (resolveAllBtn) resolveAllBtn.disabled = true;
+        try {
+          await runBulkAlertAction('monitoring_resolve_alert');
+        } catch (err) {
+          window.LPAdmin?.toast(`Bulk resolve failed: ${err.message}`, 'error', 4000);
+        } finally {
+          monitoringActionBusy = false;
+          if (ackAllBtn) ackAllBtn.disabled = false;
+          if (resolveAllBtn) resolveAllBtn.disabled = false;
         }
       });
 
