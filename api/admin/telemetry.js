@@ -544,6 +544,131 @@ async function handleIncidentEvents(supabase, incidentId) {
   };
 }
 
+async function handleNotificationTargets(supabase) {
+  const { data, error } = await supabase
+    .from("v_notification_targets_active")
+    .select(`
+      id,
+      target_key,
+      channel,
+      name,
+      destination,
+      enabled,
+      severity_filter,
+      source_filter,
+      is_default,
+      metadata,
+      created_at,
+      updated_at
+    `)
+    .order("channel", { ascending: true })
+    .order("target_key", { ascending: true });
+
+  if (error) throw error;
+
+  return {
+    rows: (data || []).map((r) => ({
+      id: r.id,
+      target_key: r.target_key || "",
+      channel: r.channel || "dashboard",
+      name: r.name || "",
+      destination: r.destination || "",
+      enabled: !!r.enabled,
+      severity_filter: Array.isArray(r.severity_filter) ? r.severity_filter : [],
+      source_filter: Array.isArray(r.source_filter) ? r.source_filter : [],
+      is_default: !!r.is_default,
+      metadata: r.metadata || {},
+      created_at: r.created_at || null,
+      updated_at: r.updated_at || null,
+    })),
+  };
+}
+
+async function handleNotificationLogRecent(supabase) {
+  const { data, error } = await supabase
+    .from("v_notification_log_recent")
+    .select(`
+      id,
+      incident_id,
+      incident_key,
+      incident_title,
+      alert_rule_id,
+      rule_key,
+      channel,
+      target,
+      status,
+      attempted_at,
+      delivered_at,
+      error_message,
+      payload
+    `)
+    .order("attempted_at", { ascending: false })
+    .limit(100);
+
+  if (error) throw error;
+
+  return {
+    rows: (data || []).map((r) => ({
+      id: r.id,
+      incident_id: r.incident_id || null,
+      incident_key: r.incident_key || null,
+      incident_title: r.incident_title || null,
+      alert_rule_id: r.alert_rule_id || null,
+      rule_key: r.rule_key || null,
+      channel: r.channel || "dashboard",
+      target: r.target || "",
+      status: r.status || "queued",
+      attempted_at: r.attempted_at || null,
+      delivered_at: r.delivered_at || null,
+      error_message: r.error_message || null,
+      payload: r.payload || {},
+    })),
+  };
+}
+
+async function handleNotificationAction(userSb, body, action) {
+  switch (action) {
+    case "send_test_notification": {
+      const targetKey = String(body.target_key || "").trim();
+      const message = String(body.message || "LogicPals test notification").trim();
+      const channel = String(body.channel || "").trim() || null;
+
+      if (!targetKey) {
+        throw new Error("missing_target_key");
+      }
+      if (!message) {
+        throw new Error("missing_notification_message");
+      }
+      if (message.length > 4000) {
+        throw new Error("notification_message_too_long");
+      }
+
+      return {
+        result: await rpcOrThrow(userSb, "admin_send_test_notification", {
+          p_target_key: targetKey,
+          p_message: message,
+          p_channel: channel,
+        }),
+      };
+    }
+
+    case "dispatch_incident_notifications": {
+      const incidentId = String(body.incident_id || "").trim();
+      if (!incidentId) {
+        throw new Error("missing_incident_id");
+      }
+
+      return {
+        result: await rpcOrThrow(userSb, "admin_dispatch_incident_notifications", {
+          p_incident_id: incidentId,
+        }),
+      };
+    }
+
+    default:
+      throw new Error(`unsupported_notification_action:${action || "unknown"}`);
+  }
+}
 module.exports = async (req, res) => {
   if (!["GET", "POST"].includes(req.method)) {
     return jsonErr(res, 405, "method_not_allowed", null);
@@ -566,19 +691,27 @@ module.exports = async (req, res) => {
     await requireAdmin(userSb);
 
     if (req.method === "POST") {
-      if (
-        action === "incident_acknowledge" ||
-        action === "incident_resolve" ||
-        action === "incident_add_note" ||
-        action === "monitoring_sync_incidents"
-      ) {
-        const payload = await handleIncidentAction(userSb, body, action);
-        return jsonOk(res, payload);
-      }
+  if (
+    action === "incident_acknowledge" ||
+    action === "incident_resolve" ||
+    action === "incident_add_note" ||
+    action === "monitoring_sync_incidents"
+  ) {
+    const payload = await handleIncidentAction(userSb, body, action);
+    return jsonOk(res, payload);
+  }
 
-      const payload = await handleMonitoringAction(userSb, body, action);
-      return jsonOk(res, payload);
-    }
+  if (
+    action === "send_test_notification" ||
+    action === "dispatch_incident_notifications"
+  ) {
+    const payload = await handleNotificationAction(userSb, body, action);
+    return jsonOk(res, payload);
+  }
+
+  const payload = await handleMonitoringAction(userSb, body, action);
+  return jsonOk(res, payload);
+}
 
     switch (type) {
   case "summary":
@@ -623,6 +756,11 @@ module.exports = async (req, res) => {
         String(req.query.incident_id || body.incident_id || "").trim()
       )
     );
+	case "notification_targets":
+ 	  return jsonOk(res, await handleNotificationTargets(userSb));
+
+	case "notification_log_recent":
+  	  return jsonOk(res, await handleNotificationLogRecent(userSb));
 
   default:
     return jsonErr(
@@ -636,20 +774,26 @@ module.exports = async (req, res) => {
     const message = err?.message || String(err);
 
     const status =
-      message === "missing_bearer_token"
-        ? 401
-        : message === "admin_required" || /admin access required/i.test(message)
-          ? 403
-          : [
-              "missing_incident_id",
-              "missing_note_message",
-              "note_message_too_long",
-              "missing_alert_id",
-            ].includes(message)
-            ? 400
-            : /not_found/i.test(message)
-              ? 404
-              : 500;
+  message === "missing_bearer_token"
+    ? 401
+    : message === "admin_required" || /admin access required/i.test(message)
+      ? 403
+      : [
+          "missing_incident_id",
+          "missing_note_message",
+          "note_message_too_long",
+          "missing_alert_id",
+          "missing_target_key",
+          "missing_notification_message",
+          "notification_message_too_long",
+          "notification_channel_mismatch",
+          "invalid_notification_channel",
+          "invalid_notification_status",
+        ].includes(message)
+        ? 400
+        : /not_found/i.test(message)
+          ? 404
+          : 500;
 
     return jsonErr(res, status, "telemetry_failed", message);
   }
