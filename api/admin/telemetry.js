@@ -509,6 +509,40 @@ async function handleIncidents(supabase, statusFilter) {
   return { rows };
 }
 
+async function handleIncidentEvents(supabase, incidentId) {
+  const id = String(incidentId || "").trim();
+  if (!id) throw new Error("missing_incident_id");
+
+  const { data, error } = await supabase
+    .from("incident_events")
+    .select(`
+      incident_id,
+      event_type,
+      actor_type,
+      actor_user_id,
+      message,
+      metadata,
+      occurred_at
+    `)
+    .eq("incident_id", id)
+    .order("occurred_at", { ascending: false })
+    .limit(100);
+
+  if (error) throw error;
+
+  return {
+    rows: (data || []).map(r => ({
+      incident_id: r.incident_id,
+      event_type: r.event_type || "incident_note",
+      actor_type: r.actor_type || "system",
+      actor_user_id: r.actor_user_id || null,
+      message: r.message || "",
+      metadata: r.metadata || {},
+      occurred_at: r.occurred_at || null
+    }))
+  };
+}
+
 module.exports = async (req, res) => {
   if (!["GET", "POST"].includes(req.method)) {
     return jsonErr(res, 405, "method_not_allowed", null);
@@ -546,48 +580,44 @@ module.exports = async (req, res) => {
     }
 
     switch (type) {
-      case "summary":
-        return jsonOk(res, await handleSummary(userSb));
+  case "summary":
+    return jsonOk(res, await handleSummary(userSb, params));
 
-      case "alerts":
-        return jsonOk(res, await handleAlerts(userSb, severity));
+  case "system_health":
+    return jsonOk(res, await handleSystemHealth(userSb, params));
 
-      case "boundary":
-        return jsonOk(res, await handleBoundary(userSb));
+  case "alerts":
+    return jsonOk(res, await handleAlerts(userSb, params));
 
-      case "costs":
-        return jsonOk(res, await handleCosts(userSb));
+  case "providers":
+    return jsonOk(res, await handleProviders(userSb, params));
 
-      case "providers":
-        return jsonOk(res, await handleProviders(userSb));
+  case "costs":
+    return jsonOk(res, await handleCosts(userSb, params));
 
-      case "monitoring":
-        return jsonOk(res, {
-          result: await rpcOrThrow(userSb, "admin_monitoring_dashboard_bundle"),
-        });
+  case "boundary":
+    return jsonOk(res, await handleBoundary(userSb, params));
 
-      case "system_health":
-        return jsonOk(res, await handleSystemHealth(userSb));
+  case "monitoring":
+    return jsonOk(res, await handleMonitoringFeed(userSb, params));
 
-      case "incidents":
-        return jsonOk(
-          res,
-          await handleIncidents(
-            userSb,
-            String(req.query.incident_status || body.incident_status || "open")
-              .trim()
-              .toLowerCase()
-          )
-        );
+  /* INCIDENT QUEUE */
+  case "incidents":
+    return jsonOk(res, await handleIncidents(userSb, params));
 
-      default:
-        return jsonErr(
-          res,
-          400,
-          "invalid_telemetry_type",
-          `Unsupported type: ${type}`
-        );
-    }
+  /* INCIDENT TIMELINE */
+  case "incident_events":
+    return jsonOk(
+      res,
+      await handleIncidentEvents(
+        userSb,
+        String(req.query.incident_id || "").trim()
+      )
+    );
+
+  default:
+    return jsonErr(res, 400, "invalid_telemetry_type", `Unsupported type: ${type}`);
+}
   } catch (err) {
     const message = err?.message || String(err);
 
