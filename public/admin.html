@@ -1320,6 +1320,60 @@
                     </div>
                   </div>
                 </div>
+
+                <div class="admin-grid admin-grid-2" style="gap:12px;margin-top:12px">
+                  <div class="lp-telemetry-table-card">
+                    <div class="lp-telemetry-card-head">
+                      <div>
+                        <div class="lp-telemetry-card-title">Notification Targets</div>
+                        <div class="lp-cell-subtle" style="margin-top:4px">Dashboard, email, and webhook destinations configured for incident dispatch.</div>
+                      </div>
+                      <span class="admin-badge admin-badge-indigo" id="notificationTargetsCountBadge">0 rows</span>
+                    </div>
+                    <div style="padding:14px 14px 0 14px;display:grid;grid-template-columns:minmax(180px,220px) minmax(220px,1fr) auto;gap:10px;align-items:end">
+                      <div class="admin-field" style="margin:0">
+                        <label class="admin-label" for="notificationTargetSelect">Target</label>
+                        <select class="admin-select" id="notificationTargetSelect">
+                          <option value="">Select target</option>
+                        </select>
+                      </div>
+                      <div class="admin-field" style="margin:0">
+                        <label class="admin-label" for="notificationTestMessage">Test message</label>
+                        <input class="admin-input" id="notificationTestMessage" type="text" maxlength="4000" value="LogicPals notification test" placeholder="Enter a test notification message" />
+                      </div>
+                      <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" id="btnSendTestNotification">Send Test</button>
+                    </div>
+                    <div class="lp-telemetry-table-wrap" style="margin-top:12px">
+                      <table class="lp-telemetry-table">
+                        <thead>
+                          <tr><th>Channel</th><th>Name</th><th>Destination</th><th>Severity</th><th>Default</th></tr>
+                        </thead>
+                        <tbody id="notificationTargetsBody"><tr><td colspan="5" class="lp-telemetry-empty">Loading…</td></tr></tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div class="lp-telemetry-table-card">
+                    <div class="lp-telemetry-card-head">
+                      <div>
+                        <div class="lp-telemetry-card-title">Notification Activity</div>
+                        <div class="lp-cell-subtle" id="notificationDispatchTarget" style="margin-top:4px">Select an incident to dispatch notifications</div>
+                      </div>
+                      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                        <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" id="btnDispatchSelectedIncident" disabled>Dispatch Selected</button>
+                        <span class="admin-badge admin-badge-indigo" id="notificationLogCountBadge">0 rows</span>
+                      </div>
+                    </div>
+                    <div class="lp-telemetry-table-wrap">
+                      <table class="lp-telemetry-table">
+                        <thead>
+                          <tr><th>Time</th><th>Incident</th><th>Channel</th><th>Target</th><th>Status</th></tr>
+                        </thead>
+                        <tbody id="notificationLogBody"><tr><td colspan="5" class="lp-telemetry-empty">Loading…</td></tr></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1702,11 +1756,32 @@
       return fetchMonitoringType('incident_events', { incident_id: incidentId });
     }
 
+    async function fetchNotificationTargets() {
+      return fetchMonitoringType('notification_targets');
+    }
+
+    async function fetchNotificationLogRecent() {
+      return fetchMonitoringType('notification_log_recent');
+    }
+
+    async function sendTestNotification(targetKey, message) {
+      return postTelemetryAction('send_test_notification', {
+        target_key: targetKey,
+        message,
+        channel: 'dashboard'
+      });
+    }
+
+    async function dispatchIncidentNotifications(incidentId) {
+      return postTelemetryAction('dispatch_incident_notifications', { incident_id: incidentId });
+    }
+
     let selectedIncidentId = null;
     let selectedIncidentTitle = '';
     let selectedIncidentKey = '';
     let latestAlertRows = [];
     let latestVisibleAlertRows = [];
+    let latestNotificationTargets = [];
     const globalOpsState = {
       criticalIncidents: 0,
       openAlerts: 0
@@ -1751,6 +1826,7 @@
       selectedIncidentId = row?.id || null;
       selectedIncidentTitle = row?.title || '';
       selectedIncidentKey = row?.incident_key || '';
+      refreshNotificationDispatchState();
     }
 
     function displayActor(actor, timestamp = null, fallbackLabel = 'admin') {
@@ -1809,6 +1885,69 @@
       await loadMonitoringDashboard();
     }
 
+
+    function refreshNotificationDispatchState() {
+      const btn = document.getElementById('btnDispatchSelectedIncident');
+      const target = document.getElementById('notificationDispatchTarget');
+      if (target) {
+        target.textContent = selectedIncidentId
+          ? `${selectedIncidentTitle || 'Selected incident'} · ${selectedIncidentKey || selectedIncidentId}`
+          : 'Select an incident to dispatch notifications';
+      }
+      if (btn) {
+        btn.disabled = !selectedIncidentId;
+      }
+    }
+
+    function renderNotificationTargets(data = {}) {
+      const rows = normalizeRows(data.result || data);
+      latestNotificationTargets = rows;
+      setText('notificationTargetsCountBadge', `${rows.length} rows`);
+
+      const select = document.getElementById('notificationTargetSelect');
+      if (select) {
+        const current = String(select.value || '').trim();
+        select.innerHTML = `<option value="">Select target</option>${rows.map(row => `<option value="${escapeHtml(row.target_key || '')}">${escapeHtml((row.name || row.target_key || '').trim() || 'Unnamed target')} · ${escapeHtml(row.channel || 'dashboard')}</option>`).join('')}`;
+        if (rows.some(row => String(row.target_key || '') === current)) {
+          select.value = current;
+        } else if (rows[0]?.target_key) {
+          select.value = rows[0].target_key;
+        }
+      }
+
+      if (!rows.length) {
+        emptyTableMessage('notificationTargetsBody', 5, 'No active notification targets configured');
+        return;
+      }
+
+      renderRows('notificationTargetsBody', rows, row => `
+        <tr>
+          <td>${escapeHtml(row.channel || 'dashboard')}</td>
+          <td class="lp-cell-stack"><span>${escapeHtml(row.name || row.target_key || '—')}</span><span class="lp-cell-subtle lp-mono">${escapeHtml(row.target_key || '')}</span></td>
+          <td class="lp-mono">${escapeHtml(row.destination || '—')}</td>
+          <td>${escapeHtml((Array.isArray(row.severity_filter) ? row.severity_filter : []).join(', ') || 'all')}</td>
+          <td>${row.is_default ? '<span class="admin-badge admin-badge-indigo">default</span>' : '—'}</td>
+        </tr>
+      `, 5);
+    }
+
+    function renderNotificationLog(data = {}) {
+      const rows = normalizeRows(data.result || data);
+      setText('notificationLogCountBadge', `${rows.length} rows`);
+      if (!rows.length) {
+        emptyTableMessage('notificationLogBody', 5, 'No notification activity recorded yet');
+        return;
+      }
+      renderRows('notificationLogBody', rows, row => `
+        <tr>
+          <td>${escapeHtml(formatDateTime(row.attempted_at || row.delivered_at))}</td>
+          <td class="lp-cell-stack"><span>${escapeHtml(row.incident_title || row.incident_key || 'Test notification')}</span><span class="lp-cell-subtle lp-mono">${escapeHtml(row.incident_key || '')}</span></td>
+          <td>${escapeHtml(row.channel || 'dashboard')}</td>
+          <td class="lp-mono">${escapeHtml(row.target || '—')}</td>
+          <td>${statusPill(row.status || 'queued')}</td>
+        </tr>
+      `, 5);
+    }
     function renderOverviewIncidentSnapshot(data = {}) {
       const rows = normalizeRows(data.result || data);
       const openRows = rows.filter(row => String(row.status || 'open').toLowerCase() !== 'resolved').slice(0, 5);
@@ -1918,6 +2057,7 @@
                 <button class="admin-btn admin-btn-ghost admin-btn-sm" type="button" data-incident-ack="${escapeHtml(row.id || '')}" ${canAck ? '' : 'disabled'}>Acknowledge</button>
                 <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" data-incident-resolve="${escapeHtml(row.id || '')}" ${canResolve ? '' : 'disabled'}>Resolve</button>
                 <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" data-incident-note="${escapeHtml(row.id || '')}" ${canNote ? '' : 'disabled'}>Add Note</button>
+                <button class="admin-btn admin-btn-ghost admin-btn-sm" type="button" data-incident-dispatch="${escapeHtml(row.id || '')}" ${row.id ? '' : 'disabled'}>Dispatch</button>
                 <button class="admin-btn admin-btn-ghost admin-btn-sm" type="button" data-incident-timeline="${escapeHtml(row.id || '')}" ${row.id ? '' : 'disabled'}>View Timeline</button>
               </div>
             </td>
@@ -1975,6 +2115,24 @@
         });
       });
  
+
+      document.querySelectorAll('[data-incident-dispatch]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const incidentId = btn.getAttribute('data-incident-dispatch');
+          const row = rows.find(r => String(r.id || '') === String(incidentId || ''));
+          if (!row?.id) return;
+          btn.disabled = true;
+          try {
+            setSelectedIncident(row);
+            await dispatchIncidentNotifications(row.id);
+            window.LPAdmin?.toast('Incident notifications dispatched', 'success', 2400);
+            await Promise.all([loadMonitoringDashboard(), loadOverviewIncidentSnapshot()]);
+          } catch (err) {
+            btn.disabled = false;
+            window.LPAdmin?.toast(`Notification dispatch failed: ${err.message}`, 'error', 4000);
+          }
+        });
+      });
 
       document.querySelectorAll('[data-incident-timeline]').forEach(btn => {
         btn.addEventListener('click', async () => {
@@ -2184,6 +2342,7 @@
               setText('incidentTimelineCountBadge', '0 events');
             }
           } else {
+            setSelectedIncident(null);
             setText('incidentTimelineTarget', 'Select an incident to inspect its history');
             setText('incidentTimelineCountBadge', '0 events');
             emptyTableMessage('incidentTimelineBody', 4, 'No incidents available for the selected filter');
@@ -2203,6 +2362,8 @@
         fetchMonitoringType('costs', { window: windowValue }).then(renderCosts).catch(err => renderPanelError('monitoringCostsBody', err.message, 6, true)),
         fetchMonitoringType('boundary', { window: windowValue, severity }).then(renderBoundary).catch(err => renderPanelError('monitoringBoundaryBody', err.message, 5, true)),
         fetchMonitoringType('monitoring', { window: windowValue }).then(renderTelemetryFeed).catch(err => renderPanelError('monitoringFeedBody', err.message, 4, true)),
+        fetchNotificationTargets().then(renderNotificationTargets).catch(err => renderPanelError('notificationTargetsBody', err.message, 5, true)),
+        fetchNotificationLogRecent().then(renderNotificationLog).catch(err => renderPanelError('notificationLogBody', err.message, 5, true)),
       ];
 
       await Promise.allSettled(tasks);
@@ -2221,6 +2382,8 @@
       const incidentStatusEl = document.getElementById('incidentStatusFilter');
       const incidentSyncBtn = document.getElementById('btnIncidentSync');
       const overviewOpenMonitoringBtn = document.getElementById('btnOverviewOpenMonitoring');
+      const sendTestBtn = document.getElementById('btnSendTestNotification');
+      const dispatchSelectedBtn = document.getElementById('btnDispatchSelectedIncident');
 
       const stopAutoRefresh = () => {
         if (monitoringAutoRefreshTimer) {
@@ -2354,6 +2517,7 @@
       });
       window.addEventListener('beforeunload', stopAutoRefresh);
 
+      refreshNotificationDispatchState();
       syncAutoRefresh();
     }
 
