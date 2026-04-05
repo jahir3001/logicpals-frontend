@@ -113,7 +113,7 @@ async function handleSummary(supabase) {
 async function handleAlerts(supabase, severity) {
   let q = supabase
     .from("alert_log")
-    .select("created_at, alert_type, severity, message, metadata, resolved_at")
+    .select("id,created_at, alert_type, severity, message, metadata, resolved_at")
     .order("created_at", { ascending: false })
     .limit(50);
 
