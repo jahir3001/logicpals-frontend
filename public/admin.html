@@ -774,24 +774,62 @@
                 <h3 class="admin-subheading" style="margin-bottom:14px">Quick Actions</h3>
                 <div class="lp-telemetry-table-card" style="margin-bottom:12px">
                   <div class="lp-telemetry-card-head">
-                    <div class="lp-telemetry-card-title">Incident Queue</div>
+                    <div class="lp-telemetry-card-title">Incident Snapshot</div>
                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                      <select class="admin-select" id="incidentStatusFilter" style="min-width:120px">
-                        <option value="open" selected>Open</option>
-                        <option value="resolved">Resolved</option>
-                        <option value="all">All</option>
-                      </select>
-                      <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" id="btnIncidentSync">Sync Incidents</button>
-                      <span class="admin-badge admin-badge-indigo" id="incidentQueueCountBadge">0 rows</span>
+                      <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" id="btnOverviewOpenMonitoring">Open Monitoring</button>
+                      <span class="admin-badge admin-badge-indigo" id="overviewIncidentCountBadge">0 open</span>
                     </div>
                   </div>
                   <div class="lp-telemetry-table-wrap">
                     <table class="lp-telemetry-table">
                       <thead>
-                        <tr><th>Severity</th><th>Title</th><th>Source</th><th>Status</th><th>Last Seen</th><th>Actions</th></tr>
+                        <tr><th>Severity</th><th>Title</th><th>Status</th><th>Actions</th></tr>
                       </thead>
-                      <tbody id="incidentQueueBody"><tr><td colspan="6" class="lp-telemetry-empty">Loading…</td></tr></tbody>
+                      <tbody id="overviewIncidentQueueBody"><tr><td colspan="4" class="lp-telemetry-empty">Loading…</td></tr></tbody>
                     </table>
+                  </div>
+                </div>
+
+                <div class="admin-grid admin-grid-2" style="gap:12px">
+                  <div class="lp-telemetry-table-card">
+                    <div class="lp-telemetry-card-head">
+                      <div class="lp-telemetry-card-title">Incident Queue</div>
+                      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                        <select class="admin-select" id="incidentStatusFilter" style="min-width:120px">
+                          <option value="open" selected>Open</option>
+                          <option value="resolved">Resolved</option>
+                          <option value="all">All</option>
+                        </select>
+                        <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" id="btnIncidentSync">Sync Incidents</button>
+                        <span class="admin-badge admin-badge-indigo" id="incidentQueueCountBadge">0 rows</span>
+                      </div>
+                    </div>
+                    <div class="lp-telemetry-table-wrap">
+                      <table class="lp-telemetry-table">
+                        <thead>
+                          <tr><th>Severity</th><th>Title</th><th>Source</th><th>Status</th><th>Last Seen</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="incidentQueueBody"><tr><td colspan="6" class="lp-telemetry-empty">Loading…</td></tr></tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div class="lp-telemetry-table-card">
+                    <div class="lp-telemetry-card-head">
+                      <div>
+                        <div class="lp-telemetry-card-title">Incident Timeline</div>
+                        <div class="lp-cell-subtle" id="incidentTimelineTarget" style="margin-top:4px">Select an incident to inspect its history</div>
+                      </div>
+                      <span class="admin-badge admin-badge-indigo" id="incidentTimelineCountBadge">0 events</span>
+                    </div>
+                    <div class="lp-telemetry-table-wrap">
+                      <table class="lp-telemetry-table">
+                        <thead>
+                          <tr><th>Time</th><th>Event</th><th>Actor</th><th>Message</th></tr>
+                        </thead>
+                        <tbody id="incidentTimelineBody"><tr><td colspan="4" class="lp-telemetry-empty">Select an incident to load its timeline.</td></tr></tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
 
@@ -1288,6 +1326,7 @@
           const key = tab.getAttribute('data-tab');
           panels[key]?.classList.add('active');
           if (key === 'telemetry') loadMonitoringDashboard().catch(() => {});
+          if (key === 'overview') loadOverviewIncidentSnapshot().catch(() => {});
           if (key === 'flags') loadFeatureFlags().catch(() => {});
 
         });
@@ -1563,6 +1602,14 @@
       return statusPill(String(status || 'open').toLowerCase());
     }
 
+    function incidentEventPill(eventType) {
+      const normalized = String(eventType || 'incident_note').toLowerCase();
+      if (normalized.includes('resolved')) return statusPill('resolved');
+      if (normalized.includes('acknowledged')) return statusPill('acknowledged');
+      if (normalized.includes('opened') || normalized.includes('reopened')) return statusPill('open');
+      return statusPill('info');
+    }
+
     async function syncIncidents() {
       const res = await postTelemetryAction('monitoring_sync_incidents', {});
       return res?.result || res;
@@ -1584,7 +1631,92 @@
       return postTelemetryAction('incident_add_note', { incident_id: incidentId, message });
     }
 
-    function renderIncidentQueue(data = {}) {
+    async function fetchIncidentEvents(incidentId) {
+      return fetchMonitoringType('incident_events', { incident_id: incidentId });
+    }
+
+    let selectedIncidentId = null;
+    let selectedIncidentTitle = '';
+    let selectedIncidentKey = '';
+
+    function setSelectedIncident(row = {}) {
+      selectedIncidentId = row?.id || null;
+      selectedIncidentTitle = row?.title || '';
+      selectedIncidentKey = row?.incident_key || '';
+    }
+
+    function renderOverviewIncidentSnapshot(data = {}) {
+      const rows = normalizeRows(data.result || data);
+      const openRows = rows.filter(row => String(row.status || 'open').toLowerCase() !== 'resolved').slice(0, 5);
+      setText('overviewIncidentCountBadge', `${openRows.length} open`);
+      if (!openRows.length) {
+        emptyTableMessage('overviewIncidentQueueBody', 4, 'No open incidents');
+        return;
+      }
+
+      renderRows('overviewIncidentQueueBody', openRows, row => `
+        <tr>
+          <td>${severityPill(row.severity)}</td>
+          <td class="lp-cell-stack"><span>${escapeHtml(row.title || '—')}</span><span class="lp-cell-subtle lp-mono">${escapeHtml(row.incident_key || '')}</span></td>
+          <td>${incidentStatusPill(row.status || 'open')}</td>
+          <td>
+            <div class="lp-monitoring-actions-row">
+              <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" data-overview-incident-timeline="${escapeHtml(row.id || '')}">View Timeline</button>
+            </div>
+          </td>
+        </tr>
+      `, 4);
+
+      document.querySelectorAll('[data-overview-incident-timeline]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const incidentId = btn.getAttribute('data-overview-incident-timeline');
+          const row = openRows.find(r => String(r.id || '') === String(incidentId || ''));
+          if (!row) return;
+          setSelectedIncident(row);
+          document.querySelector('.lp-tab[data-tab="telemetry"]')?.click();
+        });
+      });
+    }
+
+    function renderIncidentTimeline(data = {}, row = null) {
+      const events = normalizeRows(data.result || data);
+      const activeTitle = row?.title || selectedIncidentTitle || 'Incident timeline';
+      const activeKey = row?.incident_key || selectedIncidentKey || '';
+      setText('incidentTimelineTarget', activeKey ? `${activeTitle} · ${activeKey}` : activeTitle);
+      setText('incidentTimelineCountBadge', `${events.length} events`);
+      if (!events.length) {
+        emptyTableMessage('incidentTimelineBody', 4, 'No timeline events recorded for this incident');
+        return;
+      }
+
+      renderRows('incidentTimelineBody', events, evt => `
+        <tr>
+          <td>${escapeHtml(formatDateTime(evt.occurred_at || evt.created_at))}</td>
+          <td>${incidentEventPill(evt.event_type || 'incident_note')}</td>
+          <td>${escapeHtml(evt.actor_type || 'system')}</td>
+          <td class="lp-cell-stack"><span>${escapeHtml(evt.message || '—')}</span><span class="lp-cell-subtle lp-mono">${escapeHtml(evt.event_type || '')}</span></td>
+        </tr>
+      `, 4);
+    }
+
+    async function showIncidentTimeline(row, options = {}) {
+      if (!row?.id) return;
+      setSelectedIncident(row);
+      if (options.activateMonitoring) {
+        document.querySelector('.lp-tab[data-tab="telemetry"]')?.click();
+        return;
+      }
+      try {
+        const data = await fetchIncidentEvents(row.id);
+        renderIncidentTimeline(data, row);
+      } catch (err) {
+        renderPanelError('incidentTimelineBody', err.message, 4, true);
+        setText('incidentTimelineTarget', row.title || 'Incident timeline');
+        setText('incidentTimelineCountBadge', '0 events');
+      }
+    }
+
+    function renderMonitoringIncidentQueue(data = {}) {
       const rows = normalizeRows(data.result || data);
       setText('incidentQueueCountBadge', `${rows.length} rows`);
       if (!rows.length) {
@@ -1613,6 +1745,7 @@
                 <button class="admin-btn admin-btn-ghost admin-btn-sm" type="button" data-incident-ack="${escapeHtml(row.id || '')}" ${canAck ? '' : 'disabled'}>Acknowledge</button>
                 <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" data-incident-resolve="${escapeHtml(row.id || '')}" ${canResolve ? '' : 'disabled'}>Resolve</button>
                 <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" data-incident-note="${escapeHtml(row.id || '')}" ${canNote ? '' : 'disabled'}>Add Note</button>
+                <button class="admin-btn admin-btn-ghost admin-btn-sm" type="button" data-incident-timeline="${escapeHtml(row.id || '')}" ${row.id ? '' : 'disabled'}>View Timeline</button>
               </div>
             </td>
           </tr>
@@ -1668,6 +1801,26 @@
           }
         });
       });
+ 
+
+      document.querySelectorAll('[data-incident-timeline]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const incidentId = btn.getAttribute('data-incident-timeline');
+          const row = rows.find(r => String(r.id || '') === String(incidentId || ''));
+          if (!row) return;
+          await showIncidentTimeline(row);
+        });
+      });
+    }
+
+    async function loadOverviewIncidentSnapshot() {
+      try {
+        const data = await fetchIncidents('open');
+        renderOverviewIncidentSnapshot(data);
+      } catch (err) {
+        setText('overviewIncidentCountBadge', '0 open');
+        emptyTableMessage('overviewIncidentQueueBody', 4, `Snapshot failed: ${err.message}`);
+      }
     }
 
     function renderAlerts(data = {}) {
@@ -1833,10 +1986,37 @@
         .trim()
         .toLowerCase();
 
+      const incidentTask = fetchMonitoringType('incidents', { incident_status: incidentStatus })
+        .then(async data => {
+          const rows = normalizeRows(data.result || data);
+          renderMonitoringIncidentQueue(rows);
+
+          const selectedRow = rows.find(r => String(r.id || '') === String(selectedIncidentId || '')) || rows[0] || null;
+          if (selectedRow) {
+            setSelectedIncident(selectedRow);
+            try {
+              const timelineData = await fetchIncidentEvents(selectedRow.id);
+              renderIncidentTimeline(timelineData, selectedRow);
+            } catch (err) {
+              renderPanelError('incidentTimelineBody', err.message, 4, true);
+              setText('incidentTimelineTarget', selectedRow.title || 'Incident timeline');
+              setText('incidentTimelineCountBadge', '0 events');
+            }
+          } else {
+            setText('incidentTimelineTarget', 'Select an incident to inspect its history');
+            setText('incidentTimelineCountBadge', '0 events');
+            emptyTableMessage('incidentTimelineBody', 4, 'No incidents available for the selected filter');
+          }
+        })
+        .catch(err => {
+          renderPanelError('incidentQueueBody', err.message, 6, true);
+          renderPanelError('incidentTimelineBody', err.message, 4, true);
+        });
+
       const tasks = [
         fetchMonitoringType('summary', { window: windowValue }).then(renderMonitoringSummary).catch(err => renderPanelError('metricActiveAlerts', err.message)),
         fetchMonitoringType('system_health', { window: windowValue }).then(renderSystemHealth).catch(err => renderPanelError('monitoringSystemHealth', err.message)),
-        fetchMonitoringType('incidents', { incident_status: incidentStatus }).then(renderIncidentQueue).catch(err => renderPanelError('incidentQueueBody', err.message, 6, true)),
+        incidentTask,
         fetchMonitoringType('alerts', { window: windowValue, severity }).then(renderAlerts).catch(err => renderPanelError('monitoringAlertsBody', err.message, 6, true)),
         fetchMonitoringType('providers', { window: windowValue }).then(data => { renderProviders(data); renderBreakers(data); }).catch(err => { renderPanelError('monitoringProvidersBody', err.message, 5, true); renderPanelError('monitoringBreakersBody', err.message, 4, true); }),
         fetchMonitoringType('costs', { window: windowValue }).then(renderCosts).catch(err => renderPanelError('monitoringCostsBody', err.message, 6, true)),
@@ -1856,6 +2036,7 @@
       const windowEl = document.getElementById('monitoringWindow');
       const incidentStatusEl = document.getElementById('incidentStatusFilter');
       const incidentSyncBtn = document.getElementById('btnIncidentSync');
+      const overviewOpenMonitoringBtn = document.getElementById('btnOverviewOpenMonitoring');
 
       const stopAutoRefresh = () => {
         if (monitoringAutoRefreshTimer) {
@@ -1909,6 +2090,10 @@
           if (refreshBtn) refreshBtn.disabled = false;
           if (evaluateBtn) evaluateBtn.disabled = false;
         }
+      });
+
+      overviewOpenMonitoringBtn?.addEventListener('click', () => {
+        document.querySelector('.lp-tab[data-tab="telemetry"]')?.click();
       });
 
       incidentStatusEl?.addEventListener('change', () => {
@@ -2178,6 +2363,9 @@
 
         // Preload feature flags for admin control plane
         loadFeatureFlags().catch(() => {});
+
+        // Preload overview incident snapshot
+        loadOverviewIncidentSnapshot().catch(() => {});
 
         // Prime monitoring control center once admin is verified
         loadMonitoringDashboard().catch(() => {});
