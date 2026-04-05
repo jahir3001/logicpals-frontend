@@ -576,6 +576,54 @@
     }
 
 
+
+    .lp-global-ops-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-right: 8px;
+      flex-wrap: wrap;
+    }
+
+    .lp-global-ops-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: .02em;
+      border: 1px solid transparent;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .lp-global-ops-pill svg {
+      width: 12px;
+      height: 12px;
+      flex: 0 0 auto;
+    }
+
+    .lp-global-ops-pill.critical {
+      background: var(--lp-danger-bg);
+      color: var(--lp-danger-text);
+      border-color: var(--lp-danger-border);
+    }
+
+    .lp-global-ops-pill.warning {
+      background: var(--lp-warning-bg);
+      color: var(--lp-warning-text);
+      border-color: var(--lp-warning-border);
+    }
+
+    .lp-global-ops-pill.ok {
+      background: rgba(34,197,94,.08);
+      color: #166534;
+      border-color: rgba(34,197,94,.18);
+    }
+
+
     /* ─── Feature flags admin ───────────────────────────────── */
     .lp-flag-grid {
       display: grid;
@@ -628,6 +676,18 @@
           </nav>
         </div>
         <div class="admin-topbar-right">
+          <div class="lp-global-ops-badge" id="globalOpsBadge" aria-live="polite">
+            <span class="lp-global-ops-pill critical" id="globalCriticalBadge" title="Open critical incidents">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+              <span id="globalCriticalCount">0</span>
+              <span>Critical Incidents</span>
+            </span>
+            <span class="lp-global-ops-pill warning" id="globalAlertBadge" title="Open alerts">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+              <span id="globalOpenAlertCount">0</span>
+              <span>Open Alerts</span>
+            </span>
+          </div>
           <span class="admin-pill" id="statusPill">
             <span class="admin-dot" id="dot"></span>
             <span id="statusTxt">Loading…</span>
@@ -1638,6 +1698,45 @@
     let selectedIncidentId = null;
     let selectedIncidentTitle = '';
     let selectedIncidentKey = '';
+    const globalOpsState = {
+      criticalIncidents: 0,
+      openAlerts: 0
+    };
+
+    function updateGlobalOpsBadge() {
+      const critical = Math.max(0, Number(globalOpsState.criticalIncidents || 0));
+      const alerts = Math.max(0, Number(globalOpsState.openAlerts || 0));
+
+      setText('globalCriticalCount', String(critical));
+      setText('globalOpenAlertCount', String(alerts));
+
+      const criticalBadge = document.getElementById('globalCriticalBadge');
+      const alertBadge = document.getElementById('globalAlertBadge');
+
+      if (criticalBadge) {
+        criticalBadge.className = `lp-global-ops-pill ${critical > 0 ? 'critical' : 'ok'}`;
+        criticalBadge.title = critical > 0
+          ? `${critical} open critical incidents`
+          : 'No open critical incidents';
+      }
+
+      if (alertBadge) {
+        alertBadge.className = `lp-global-ops-pill ${alerts > 0 ? 'warning' : 'ok'}`;
+        alertBadge.title = alerts > 0
+          ? `${alerts} open alerts`
+          : 'No open alerts';
+      }
+    }
+
+    function setGlobalOpsCounts(patch = {}) {
+      if (Object.prototype.hasOwnProperty.call(patch, 'criticalIncidents')) {
+        globalOpsState.criticalIncidents = Math.max(0, Number(patch.criticalIncidents || 0));
+      }
+      if (Object.prototype.hasOwnProperty.call(patch, 'openAlerts')) {
+        globalOpsState.openAlerts = Math.max(0, Number(patch.openAlerts || 0));
+      }
+      updateGlobalOpsBadge();
+    }
 
     function setSelectedIncident(row = {}) {
       selectedIncidentId = row?.id || null;
@@ -1648,7 +1747,12 @@
     function renderOverviewIncidentSnapshot(data = {}) {
       const rows = normalizeRows(data.result || data);
       const openRows = rows.filter(row => String(row.status || 'open').toLowerCase() !== 'resolved').slice(0, 5);
+      const criticalCount = rows.filter(row =>
+        String(row.status || 'open').toLowerCase() !== 'resolved' &&
+        String(row.severity || '').toLowerCase() === 'critical'
+      ).length;
       setText('overviewIncidentCountBadge', `${openRows.length} open`);
+      setGlobalOpsCounts({ criticalIncidents: criticalCount });
       if (!openRows.length) {
         emptyTableMessage('overviewIncidentQueueBody', 4, 'No open incidents');
         return;
@@ -1819,6 +1923,7 @@
         renderOverviewIncidentSnapshot(data);
       } catch (err) {
         setText('overviewIncidentCountBadge', '0 open');
+        setGlobalOpsCounts({ criticalIncidents: 0 });
         emptyTableMessage('overviewIncidentQueueBody', 4, `Snapshot failed: ${err.message}`);
       }
     }
@@ -2339,6 +2444,7 @@
     wireNav();
     wireTelemetry();
     wireFeatureFlags();
+    updateGlobalOpsBadge();
 
     LPAdmin.init({
       page:         'overview',
