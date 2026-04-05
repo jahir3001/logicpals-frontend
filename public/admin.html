@@ -772,6 +772,29 @@
               <!-- Right: action cards grid -->
               <div>
                 <h3 class="admin-subheading" style="margin-bottom:14px">Quick Actions</h3>
+                <div class="lp-telemetry-table-card" style="margin-bottom:12px">
+                  <div class="lp-telemetry-card-head">
+                    <div class="lp-telemetry-card-title">Incident Queue</div>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                      <select class="admin-select" id="incidentStatusFilter" style="min-width:120px">
+                        <option value="open" selected>Open</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="all">All</option>
+                      </select>
+                      <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" id="btnIncidentSync">Sync Incidents</button>
+                      <span class="admin-badge admin-badge-indigo" id="incidentQueueCountBadge">0 rows</span>
+                    </div>
+                  </div>
+                  <div class="lp-telemetry-table-wrap">
+                    <table class="lp-telemetry-table">
+                      <thead>
+                        <tr><th>Severity</th><th>Title</th><th>Source</th><th>Status</th><th>Last Seen</th><th>Actions</th></tr>
+                      </thead>
+                      <tbody id="incidentQueueBody"><tr><td colspan="6" class="lp-telemetry-empty">Loading…</td></tr></tbody>
+                    </table>
+                  </div>
+                </div>
+
                 <div class="admin-grid admin-grid-2" style="gap:12px">
 
                   <!-- Regular Review -->
@@ -1104,7 +1127,7 @@
                 <div class="admin-grid admin-grid-2" style="gap:12px">
                   <div class="lp-telemetry-table-card">
                     <div class="lp-telemetry-card-head">
-                      <div class="lp-telemetry-card-title">Open Incidents</div>
+                      <div class="lp-telemetry-card-title">Open Alerts</div>
                       <span class="admin-badge admin-badge-red" id="alertsCountBadge">0 rows</span>
                     </div>
                     <div class="lp-telemetry-table-wrap">
@@ -1535,6 +1558,118 @@
       body.innerHTML = `<tr><td colspan="${colspan}" class="lp-telemetry-empty">${escapeHtml(message)}</td></tr>`;
     }
 
+
+    function incidentStatusPill(status) {
+      return statusPill(String(status || 'open').toLowerCase());
+    }
+
+    async function syncIncidents() {
+      const res = await postTelemetryAction('monitoring_sync_incidents', {});
+      return res?.result || res;
+    }
+
+    async function fetchIncidents(status = 'open') {
+      return fetchMonitoringType('incidents', { incident_status: status });
+    }
+
+    async function incidentAcknowledge(incidentId) {
+      return postTelemetryAction('incident_acknowledge', { incident_id: incidentId });
+    }
+
+    async function incidentResolve(incidentId) {
+      return postTelemetryAction('incident_resolve', { incident_id: incidentId });
+    }
+
+    async function incidentAddNote(incidentId, message) {
+      return postTelemetryAction('incident_add_note', { incident_id: incidentId, message });
+    }
+
+    function renderIncidentQueue(data = {}) {
+      const rows = normalizeRows(data.result || data);
+      setText('incidentQueueCountBadge', `${rows.length} rows`);
+      if (!rows.length) {
+        emptyTableMessage('incidentQueueBody', 6, 'No incidents found for the selected filter');
+        return;
+      }
+
+      renderRows('incidentQueueBody', rows, row => {
+        const status = String(row.status || 'open').toLowerCase();
+        const canAck = !!row.id && status === 'open';
+        const canResolve = !!row.id && status !== 'resolved';
+        const canNote = !!row.id;
+
+        return `
+          <tr>
+            <td>${severityPill(row.severity)}</td>
+            <td class="lp-cell-stack">
+              <span>${escapeHtml(row.title || '—')}</span>
+              <span class="lp-cell-subtle lp-mono">${escapeHtml(row.incident_key || '')}</span>
+            </td>
+            <td>${escapeHtml(row.source || 'system')}</td>
+            <td>${incidentStatusPill(status)}</td>
+            <td>${escapeHtml(formatDateTime(row.last_seen_at))}</td>
+            <td>
+              <div class="lp-monitoring-actions-row">
+                <button class="admin-btn admin-btn-ghost admin-btn-sm" type="button" data-incident-ack="${escapeHtml(row.id || '')}" ${canAck ? '' : 'disabled'}>Acknowledge</button>
+                <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" data-incident-resolve="${escapeHtml(row.id || '')}" ${canResolve ? '' : 'disabled'}>Resolve</button>
+                <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" data-incident-note="${escapeHtml(row.id || '')}" ${canNote ? '' : 'disabled'}>Add Note</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }, 6);
+
+      document.querySelectorAll('[data-incident-ack]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const incidentId = btn.getAttribute('data-incident-ack');
+          if (!incidentId) return;
+          btn.disabled = true;
+          try {
+            await incidentAcknowledge(incidentId);
+            window.LPAdmin?.toast('Incident acknowledged', 'success', 2200);
+            await loadMonitoringDashboard();
+          } catch (err) {
+            btn.disabled = false;
+            window.LPAdmin?.toast(`Incident acknowledge failed: ${err.message}`, 'error', 4000);
+          }
+        });
+      });
+
+      document.querySelectorAll('[data-incident-resolve]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const incidentId = btn.getAttribute('data-incident-resolve');
+          if (!incidentId) return;
+          btn.disabled = true;
+          try {
+            await incidentResolve(incidentId);
+            window.LPAdmin?.toast('Incident resolved', 'success', 2200);
+            await loadMonitoringDashboard();
+          } catch (err) {
+            btn.disabled = false;
+            window.LPAdmin?.toast(`Incident resolve failed: ${err.message}`, 'error', 4000);
+          }
+        });
+      });
+
+      document.querySelectorAll('[data-incident-note]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const incidentId = btn.getAttribute('data-incident-note');
+          if (!incidentId) return;
+          const note = window.prompt('Add incident note:');
+          if (!note || !note.trim()) return;
+          btn.disabled = true;
+          try {
+            await incidentAddNote(incidentId, note.trim());
+            window.LPAdmin?.toast('Incident note added', 'success', 2200);
+            await loadMonitoringDashboard();
+          } catch (err) {
+            btn.disabled = false;
+            window.LPAdmin?.toast(`Incident note failed: ${err.message}`, 'error', 4000);
+          }
+        });
+      });
+    }
+
     function renderAlerts(data = {}) {
       const rows = normalizeRows(data.result || data);
       setText('alertsCountBadge', `${rows.length} rows`);
@@ -1694,10 +1829,14 @@
       const { silent = false } = options;
       const windowValue = document.getElementById('monitoringWindow')?.value || '15m';
       const severity = (document.getElementById('monitoringSeverity')?.value || 'all').toLowerCase();
+      const incidentStatus = (document.getElementById('incidentStatusFilter')?.value || 'open')
+        .trim()
+        .toLowerCase();
 
       const tasks = [
         fetchMonitoringType('summary', { window: windowValue }).then(renderMonitoringSummary).catch(err => renderPanelError('metricActiveAlerts', err.message)),
         fetchMonitoringType('system_health', { window: windowValue }).then(renderSystemHealth).catch(err => renderPanelError('monitoringSystemHealth', err.message)),
+        fetchMonitoringType('incidents', { incident_status: incidentStatus }).then(renderIncidentQueue).catch(err => renderPanelError('incidentQueueBody', err.message, 6, true)),
         fetchMonitoringType('alerts', { window: windowValue, severity }).then(renderAlerts).catch(err => renderPanelError('monitoringAlertsBody', err.message, 6, true)),
         fetchMonitoringType('providers', { window: windowValue }).then(data => { renderProviders(data); renderBreakers(data); }).catch(err => { renderPanelError('monitoringProvidersBody', err.message, 5, true); renderPanelError('monitoringBreakersBody', err.message, 4, true); }),
         fetchMonitoringType('costs', { window: windowValue }).then(renderCosts).catch(err => renderPanelError('monitoringCostsBody', err.message, 6, true)),
@@ -1715,6 +1854,8 @@
       const autoRefreshEl = document.getElementById('monitoringAutoRefresh');
       const severityEl = document.getElementById('monitoringSeverity');
       const windowEl = document.getElementById('monitoringWindow');
+      const incidentStatusEl = document.getElementById('incidentStatusFilter');
+      const incidentSyncBtn = document.getElementById('btnIncidentSync');
 
       const stopAutoRefresh = () => {
         if (monitoringAutoRefreshTimer) {
@@ -1767,6 +1908,34 @@
           monitoringActionBusy = false;
           if (refreshBtn) refreshBtn.disabled = false;
           if (evaluateBtn) evaluateBtn.disabled = false;
+        }
+      });
+
+      incidentStatusEl?.addEventListener('change', () => {
+        loadMonitoringDashboard().catch(err => {
+          window.LPAdmin?.toast(`Incident filter failed: ${err.message}`, 'error', 4000);
+        });
+      });
+
+      incidentSyncBtn?.addEventListener('click', async () => {
+        if (monitoringActionBusy) return;
+        monitoringActionBusy = true;
+        if (refreshBtn) refreshBtn.disabled = true;
+        if (evaluateBtn) evaluateBtn.disabled = true;
+        if (incidentSyncBtn) incidentSyncBtn.disabled = true;
+        try {
+          const res = await syncIncidents();
+          const opened = Number(res?.opened || 0);
+          const resolved = Number(res?.resolved || 0);
+          window.LPAdmin?.toast(`Incident sync complete: opened ${opened}, resolved ${resolved}`, 'success', 2600);
+          await loadMonitoringDashboard();
+        } catch (err) {
+          window.LPAdmin?.toast(`Incident sync failed: ${err.message}`, 'error', 4000);
+        } finally {
+          monitoringActionBusy = false;
+          if (refreshBtn) refreshBtn.disabled = false;
+          if (evaluateBtn) evaluateBtn.disabled = false;
+          if (incidentSyncBtn) incidentSyncBtn.disabled = false;
         }
       });
 
