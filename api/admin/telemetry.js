@@ -693,11 +693,17 @@ async function handleEscalationLogRecent(supabase, incidentId) {
       id,
       incident_id,
       escalation_rule_id,
+      action,
       decision,
+      escalation_number,
+      incident_status,
+      incident_severity,
+      notification_log_id,
+      message,
       metadata,
-      created_at
+      occurred_at
     `)
-    .order("created_at", { ascending: false })
+    .order("occurred_at", { ascending: false })
     .limit(100);
 
   const id = String(incidentId || "").trim();
@@ -716,9 +722,15 @@ async function handleEscalationLogRecent(supabase, incidentId) {
       id: r.id,
       incident_id: r.incident_id || null,
       escalation_rule_id: r.escalation_rule_id || null,
+      action: r.action || "",
       decision: r.decision || "",
+      escalation_number: safeNum(r.escalation_number),
+      incident_status: r.incident_status || "",
+      incident_severity: r.incident_severity || "",
+      notification_log_id: r.notification_log_id || null,
+      message: r.message || "",
       metadata: r.metadata || {},
-      created_at: r.created_at || null,
+      occurred_at: r.occurred_at || null,
     })),
   };
 }
