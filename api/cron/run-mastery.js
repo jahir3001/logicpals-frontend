@@ -59,21 +59,65 @@ async function runMasteryJob(supabase) {
 }
 
 async function runEscalationsJob(supabase) {
+  const start = new Date().toISOString();
+
+  // heartbeat before run
+  await supabase.rpc("rpc_upsert_automation_watchdog_runtime_state", {
+    p_automation_key: "escalation_automation",
+    p_automation_enabled: true,
+    p_cron_enabled: true,
+    p_last_cron_seen_at: new Date().toISOString(),
+    p_source: "cron-pre-run"
+  });
+
   const { data, error } = await supabase.rpc("run_open_incident_escalations_core", {
     p_trigger_source: "cron",
   });
 
   if (error) {
+    // mark failure
+    await supabase.rpc("rpc_upsert_automation_watchdog_runtime_state", {
+      p_automation_key: "escalation_automation",
+      p_last_run_status: "error",
+      p_last_run_error_count: 1,
+      p_last_cron_seen_at: new Date().toISOString(),
+      p_source: "cron-exception"
+    });
+
+    await supabase.rpc("rpc_eval_automation_watchdog", {
+      p_automation_key: "escalation_automation",
+      p_trigger_source: "cron_exception"
+    });
+
     throw new Error(error.message || "cron_escalation_run_failed");
   }
 
-  return data || {
+  const result = data || {
     ok: true,
     pairs_checked: 0,
     executed_count: 0,
     skipped_count: 0,
     error_count: 0,
   };
+
+  // update runtime state after run
+  await supabase.rpc("rpc_upsert_automation_watchdog_runtime_state", {
+    p_automation_key: "escalation_automation",
+    p_last_run_started_at: start,
+    p_last_run_finished_at: new Date().toISOString(),
+    p_last_run_status: "ok",
+    p_last_run_error_count: result.error_count || 0,
+    p_reported_backlog_count: result.backlog_count || 0,
+    p_last_cron_seen_at: new Date().toISOString(),
+    p_source: "cron-post-run"
+  });
+
+  await supabase.rpc("rpc_eval_automation_watchdog", {
+    p_automation_key: "escalation_automation",
+    p_trigger_source: "cron"
+  });
+
+  return result;
 }
 
 module.exports = async function handler(req, res) {

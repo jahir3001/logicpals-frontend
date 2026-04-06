@@ -296,6 +296,41 @@ async function rpcOrThrow(supabase, fnName, params = {}) {
   return data;
 }
 
+async function upsertAutomationWatchdogRuntimeState(userSb, payload = {}) {
+  return await rpcOrThrow(userSb, "rpc_upsert_automation_watchdog_runtime_state", {
+    p_automation_key: payload.automation_key || "escalation_automation",
+    p_automation_enabled: payload.automation_enabled ?? null,
+    p_cron_enabled: payload.cron_enabled ?? null,
+    p_last_cron_seen_at: payload.last_cron_seen_at ?? null,
+    p_reported_backlog_count: payload.reported_backlog_count ?? null,
+    p_last_run_id: payload.last_run_id ?? null,
+    p_last_run_started_at: payload.last_run_started_at ?? null,
+    p_last_run_finished_at: payload.last_run_finished_at ?? null,
+    p_last_run_status: payload.last_run_status ?? null,
+    p_last_run_error_count: payload.last_run_error_count ?? null,
+    p_source: payload.source || "telemetry",
+    p_updated_by: payload.updated_by ?? null
+  });
+}
+
+async function evalAutomationWatchdog(userSb, triggerSource = "telemetry") {
+  return await rpcOrThrow(userSb, "rpc_eval_automation_watchdog", {
+    p_automation_key: "escalation_automation",
+    p_trigger_source: triggerSource
+  });
+}
+
+async function handleAutomationWatchdog(userSb) {
+  const { data, error } = await userSb
+    .from("v_automation_watchdog_health")
+    .select("*")
+    .eq("automation_key", "escalation_automation")
+    .maybeSingle();
+
+  if (error) throw error;
+  return data || {};
+}
+
 async function handleMonitoringAction(userSb, body, action) {
   switch (action) {
     case "monitoring_dashboard_bundle":
@@ -1025,6 +1060,30 @@ module.exports = async (req, res) => {
       );
   case "escalation_run_dashboard":
       return jsonOk(res, await handleEscalationRunDashboard(userSb));
+
+     case "automation_watchdog":
+  return jsonOk(res, await handleAutomationWatchdog(userSb));
+
+case "automation_watchdog_run":
+  return jsonOk(res, {
+    result: await evalAutomationWatchdog(userSb, "admin")
+  });
+
+case "automation_watchdog_heartbeat": {
+  const payload = {
+    automation_key: "escalation_automation",
+    automation_enabled: true,
+    cron_enabled: true,
+    last_cron_seen_at: new Date().toISOString(),
+    source: "admin_heartbeat"
+  };
+
+  await upsertAutomationWatchdogRuntimeState(userSb, payload);
+
+  return jsonOk(res, {
+    result: await evalAutomationWatchdog(userSb, "heartbeat")
+  });
+}
 
   default:
     return jsonErr(
