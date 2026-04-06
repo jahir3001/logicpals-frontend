@@ -729,6 +729,7 @@
       .lp-escalation-grid { grid-template-columns: 1fr; }
       .lp-escalation-form-grid { grid-template-columns: 1fr 1fr; }
       .lp-escalation-manual-fields { grid-template-columns: 1fr; }
+      .lp-escalation-automation-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 760px) {
@@ -744,8 +745,49 @@
       }
       .lp-mobile-list { display: block; }
       .lp-escalation-grid .lp-table-wrap,
-      #escalationHistoryCard .lp-table-wrap { display: none; }
+      #escalationHistoryCard .lp-table-wrap,
+      #escalationRunHistoryCard .lp-telemetry-table-wrap { display: none; }
       .lp-mobile-meta-grid { grid-template-columns: 1fr; }
+      .lp-escalation-latest-grid { grid-template-columns: 1fr; }
+    }
+
+
+    .lp-escalation-automation-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .lp-escalation-latest-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 12px;
+    }
+
+    .lp-escalation-latest-metric {
+      display: grid;
+      gap: 4px;
+      padding: 10px 12px;
+      border: 1px solid var(--lp-border);
+      border-radius: 12px;
+      background: var(--lp-surface);
+    }
+
+    .lp-escalation-latest-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--lp-muted);
+    }
+
+    .lp-escalation-latest-value {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--lp-text);
+      line-height: 1.4;
+      word-break: break-word;
     }
 
 
@@ -1498,6 +1540,52 @@
                       </table>
                     </div>
                   </div>
+                <div class="lp-telemetry-table-card" style="margin-top:12px" id="escalationAutomationCard">
+                  <div class="lp-telemetry-card-head">
+                    <div>
+                      <div class="lp-telemetry-card-title">Escalation Automation</div>
+                      <div class="lp-cell-subtle" style="margin-top:4px">Visibility for automated and manual escalation runs, freshness, and execution health.</div>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                      <span class="admin-badge admin-badge-teal" id="escalationAutomationFreshnessBadge">Freshness: —</span>
+                      <span class="admin-badge admin-badge-indigo" id="escalationAutomationRunsBadge">0 runs</span>
+                    </div>
+                  </div>
+
+                  <div class="lp-escalation-automation-grid">
+                    <div class="lp-telemetry-table-card">
+                      <div class="lp-telemetry-card-head">
+                        <div class="lp-telemetry-card-title">Latest Run</div>
+                        <span class="admin-badge admin-badge-indigo" id="escalationLatestRunSourceBadge">—</span>
+                      </div>
+                      <div id="escalationLatestRunCard" style="padding:14px">
+                        <div class="lp-telemetry-empty">Loading latest escalation run…</div>
+                      </div>
+                    </div>
+
+                    <div class="lp-telemetry-table-card" id="escalationRunHistoryCard">
+                      <div class="lp-telemetry-card-head">
+                        <div>
+                          <div class="lp-telemetry-card-title">Escalation Run History</div>
+                          <div class="lp-cell-subtle" style="margin-top:4px">Recent cron and admin-triggered execution runs.</div>
+                        </div>
+                        <span class="admin-badge admin-badge-indigo" id="escalationRunHistoryCountBadge">0 rows</span>
+                      </div>
+
+                      <div class="lp-mobile-list" id="escalationRunHistoryMobile"></div>
+
+                      <div class="lp-telemetry-table-wrap">
+                        <table class="lp-telemetry-table">
+                          <thead>
+                            <tr><th>Started</th><th>Source</th><th>Status</th><th>Checked</th><th>Executed</th><th>Skipped</th><th>Errors</th><th>Finished</th></tr>
+                          </thead>
+                          <tbody id="escalationRunHistoryBody"><tr><td colspan="8" class="lp-telemetry-empty">Loading escalation run history…</td></tr></tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="lp-telemetry-table-card" style="margin-top:12px">
                   <div class="lp-telemetry-card-head">
                     <div>
@@ -2012,6 +2100,10 @@
       const extra = {};
       if (incidentId) extra.incident_id = incidentId;
       return fetchMonitoringType('escalation_log_recent', extra);
+    }
+
+    async function fetchEscalationRunDashboard() {
+      return fetchMonitoringType('escalation_run_dashboard');
     }
 
     async function evaluateIncidentEscalation(incidentId, ruleId) {
@@ -2794,6 +2886,118 @@
       `, 6);
     }
 
+    function getEscalationFreshness(startedAt) {
+      if (!startedAt) return { label: 'Unknown', tone: 'warning' };
+      const diffMs = Date.now() - new Date(startedAt).getTime();
+      const diffMin = Math.max(0, Math.floor(diffMs / 60000));
+      if (diffMin <= 10) return { label: `Fresh · ${diffMin}m`, tone: 'teal' };
+      if (diffMin <= 30) return { label: `Aging · ${diffMin}m`, tone: 'warning' };
+      return { label: `Stale · ${diffMin}m`, tone: 'red' };
+    }
+
+    function renderEscalationLatestRun(latest = {}) {
+      const container = document.getElementById('escalationLatestRunCard');
+      const sourceBadge = document.getElementById('escalationLatestRunSourceBadge');
+      const freshnessBadge = document.getElementById('escalationAutomationFreshnessBadge');
+      if (!container) return;
+
+      const source = String(latest.trigger_source || '—').toLowerCase();
+      const status = String(latest.status || 'unknown').toLowerCase();
+      const freshness = getEscalationFreshness(latest.started_at || null);
+
+      if (sourceBadge) {
+        sourceBadge.textContent = source ? source.toUpperCase() : '—';
+        sourceBadge.className = `admin-badge ${source === 'cron' ? 'admin-badge-teal' : 'admin-badge-indigo'}`;
+      }
+
+      if (freshnessBadge) {
+        freshnessBadge.textContent = `Freshness: ${freshness.label}`;
+        freshnessBadge.className = freshness.tone === 'red'
+          ? 'admin-badge admin-badge-red'
+          : freshness.tone === 'warning'
+            ? 'admin-badge admin-badge-amber'
+            : 'admin-badge admin-badge-teal';
+      }
+
+      if (!latest || !latest.id) {
+        container.innerHTML = '<div class="lp-telemetry-empty">No escalation automation runs recorded yet.</div>';
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="lp-escalation-latest-grid">
+          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Run ID</div><div class="lp-escalation-latest-value lp-mono">${escapeHtml(latest.id || '—')}</div></div>
+          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Status</div><div class="lp-escalation-latest-value">${statusPill(status)}</div></div>
+          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Started</div><div class="lp-escalation-latest-value">${escapeHtml(formatDateTime(latest.started_at))}</div></div>
+          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Finished</div><div class="lp-escalation-latest-value">${escapeHtml(formatDateTime(latest.finished_at))}</div></div>
+          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Pairs Checked</div><div class="lp-escalation-latest-value">${formatNum(latest.pairs_checked ?? 0)}</div></div>
+          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Executed</div><div class="lp-escalation-latest-value">${formatNum(latest.executed_count ?? 0)}</div></div>
+          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Skipped</div><div class="lp-escalation-latest-value">${formatNum(latest.skipped_count ?? 0)}</div></div>
+          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Errors</div><div class="lp-escalation-latest-value">${formatNum(latest.error_count ?? 0)}</div></div>
+        </div>`;
+    }
+
+    function renderEscalationRunHistory(rows = []) {
+      const badge = document.getElementById('escalationRunHistoryCountBadge');
+      const topBadge = document.getElementById('escalationAutomationRunsBadge');
+      const mobile = document.getElementById('escalationRunHistoryMobile');
+      if (badge) badge.textContent = `${rows.length} rows`;
+      if (topBadge) topBadge.textContent = `${rows.length} runs`;
+
+      if (mobile) {
+        mobile.innerHTML = rows.length ? rows.map(row => `
+          <div class="lp-mobile-item">
+            <div class="lp-mobile-title-row">
+              <div class="lp-mobile-title">${escapeHtml(formatDateTime(row.started_at))}</div>
+              <div>${statusPill(row.status || 'unknown')}</div>
+            </div>
+            <div class="lp-mobile-meta-grid">
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Source</div><div class="lp-mobile-meta-value">${escapeHtml(row.trigger_source || '—')}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Checked</div><div class="lp-mobile-meta-value">${formatNum(row.pairs_checked ?? 0)}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Executed</div><div class="lp-mobile-meta-value">${formatNum(row.executed_count ?? 0)}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Skipped</div><div class="lp-mobile-meta-value">${formatNum(row.skipped_count ?? 0)}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Errors</div><div class="lp-mobile-meta-value">${formatNum(row.error_count ?? 0)}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Finished</div><div class="lp-mobile-meta-value">${escapeHtml(formatDateTime(row.finished_at))}</div></div>
+            </div>
+          </div>`).join('') : '<div class="lp-mobile-item"><div class="lp-telemetry-empty">No escalation run history available.</div></div>';
+      }
+
+      if (!rows.length) {
+        emptyTableMessage('escalationRunHistoryBody', 8, 'No escalation run history available');
+        return;
+      }
+
+      renderRows('escalationRunHistoryBody', rows, row => `
+        <tr>
+          <td>${escapeHtml(formatDateTime(row.started_at))}</td>
+          <td>${escapeHtml(row.trigger_source || '—')}</td>
+          <td>${statusPill(row.status || 'unknown')}</td>
+          <td>${formatNum(row.pairs_checked ?? 0)}</td>
+          <td>${formatNum(row.executed_count ?? 0)}</td>
+          <td>${formatNum(row.skipped_count ?? 0)}</td>
+          <td>${formatNum(row.error_count ?? 0)}</td>
+          <td>${escapeHtml(formatDateTime(row.finished_at))}</td>
+        </tr>
+      `, 8);
+    }
+
+    async function loadEscalationAutomationDashboard() {
+      try {
+        const data = await fetchEscalationRunDashboard();
+        const payload = data.result || data || {};
+        renderEscalationLatestRun(payload.latest || {});
+        renderEscalationRunHistory(Array.isArray(payload.runs) ? payload.runs : []);
+      } catch (err) {
+        const latest = document.getElementById('escalationLatestRunCard');
+        if (latest) {
+          latest.innerHTML = `<div class="lp-telemetry-empty">${escapeHtml(err.message || 'Failed to load escalation automation data')}</div>`;
+        }
+        renderPanelError('escalationRunHistoryBody', err.message, 8, true);
+        const mobile = document.getElementById('escalationRunHistoryMobile');
+        if (mobile) mobile.innerHTML = `<div class="lp-mobile-item"><div class="lp-telemetry-empty">${escapeHtml(err.message)}</div></div>`;
+      }
+    }
+
     async function loadEscalationDashboard(options = {}) {
       const { incidentId = '' } = options;
       await Promise.allSettled([
@@ -2864,6 +3068,7 @@
         fetchMonitoringType('monitoring', { window: windowValue }).then(renderTelemetryFeed).catch(err => renderPanelError('monitoringFeedBody', err.message, 4, true)),
         fetchNotificationTargets().then(renderNotificationTargets).catch(err => renderPanelError('notificationTargetsBody', err.message, 5, true)),
         fetchNotificationLogRecent().then(renderNotificationLog).catch(err => renderPanelError('notificationLogBody', err.message, 5, true)),
+        loadEscalationAutomationDashboard(),
         loadEscalationDashboard({ incidentId: selectedIncidentId || '' }),
       ];
 
@@ -3030,7 +3235,7 @@
       escalationRefreshBtn?.addEventListener('click', async () => {
         try {
           escalationRefreshBtn.disabled = true;
-          await loadEscalationDashboard({ incidentId: selectedIncidentId || escalationIncidentSelect?.value || '' });
+          await Promise.all([loadEscalationAutomationDashboard(), loadEscalationDashboard({ incidentId: selectedIncidentId || escalationIncidentSelect?.value || '' })]);
           window.LPAdmin?.toast('Escalation controls refreshed', 'success', 2200);
         } catch (err) {
           window.LPAdmin?.toast(`Escalation refresh failed: ${err.message}`, 'error', 4000);
@@ -3046,7 +3251,7 @@
           const checked = res?.result?.pairs_checked ?? res?.pairs_checked ?? 0;
           updateEscalationActionResult(`Open incident evaluation completed. Pairs checked: ${checked}.`, 'success');
           window.LPAdmin?.toast(`Escalation evaluation completed: ${checked} pairs checked`, 'success', 2600);
-          await loadEscalationDashboard({ incidentId: selectedIncidentId || escalationIncidentSelect?.value || '' });
+          await Promise.all([loadEscalationAutomationDashboard(), loadEscalationDashboard({ incidentId: selectedIncidentId || escalationIncidentSelect?.value || '' })]);
         } catch (err) {
           updateEscalationActionResult(`Open incident evaluation failed: ${err.message}`, 'error');
           window.LPAdmin?.toast(`Escalation evaluation failed: ${err.message}`, 'error', 4000);
@@ -3129,7 +3334,7 @@
           const result = res?.result || res;
           updateEscalationActionResult(`Evaluation result: ${result?.decision || 'unknown'} · rule ${result?.rule_key || ruleId} · elapsed ${formatNum(result?.elapsed_minutes ?? 0)} minutes.`, 'success');
           window.LPAdmin?.toast(`Escalation evaluate: ${result?.decision || 'completed'}`, 'success', 2600);
-          await loadEscalationDashboard({ incidentId });
+          await Promise.all([loadEscalationAutomationDashboard(), loadEscalationDashboard({ incidentId })]);
         } catch (err) {
           updateEscalationActionResult(`Evaluation failed: ${err.message}`, 'error');
           window.LPAdmin?.toast(`Escalation evaluate failed: ${err.message}`, 'error', 4000);
