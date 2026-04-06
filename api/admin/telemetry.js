@@ -626,6 +626,220 @@ async function handleNotificationLogRecent(supabase) {
   };
 }
 
+function isUuid(v) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    String(v || "").trim()
+  );
+}
+
+function safePositiveInt(v, fallback, max = 500) {
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) return fallback;
+  return Math.min(Math.floor(n), max);
+}
+
+async function handleEscalationRules(supabase) {
+  const { data, error } = await supabase
+    .from("incident_escalation_rules")
+    .select(`
+      id,
+      rule_key,
+      enabled,
+      priority,
+      incident_severity,
+      incident_source,
+      min_open_minutes,
+      cooldown_minutes,
+      max_escalations,
+      notify_target_key,
+      created_at,
+      updated_at
+    `)
+    .order("priority", { ascending: true })
+    .order("rule_key", { ascending: true })
+    .limit(100);
+
+  if (error) throw error;
+
+  return {
+    rows: (data || []).map((r) => ({
+      id: r.id,
+      rule_key: r.rule_key || "",
+      enabled: !!r.enabled,
+      priority: safeNum(r.priority),
+      incident_severity: r.incident_severity || null,
+      incident_source: r.incident_source || null,
+      min_open_minutes: safeNum(r.min_open_minutes),
+      cooldown_minutes: safeNum(r.cooldown_minutes),
+      max_escalations: safeNum(r.max_escalations),
+      notify_target_key: r.notify_target_key || null,
+      created_at: r.created_at || null,
+      updated_at: r.updated_at || null,
+    })),
+  };
+}
+
+async function handleEscalationLogRecent(supabase, incidentId) {
+  let q = supabase
+    .from("incident_escalation_log")
+    .select(`
+      id,
+      incident_id,
+      escalation_rule_id,
+      escalation_count,
+      decision,
+      reason,
+      metadata,
+      created_at
+    `)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  const id = String(incidentId || "").trim();
+  if (id) {
+    if (!isUuid(id)) {
+      throw new Error("invalid_incident_id");
+    }
+    q = q.eq("incident_id", id);
+  }
+
+  const { data, error } = await q;
+  if (error) throw error;
+
+  return {
+    rows: (data || []).map((r) => ({
+      id: r.id,
+      incident_id: r.incident_id || null,
+      escalation_rule_id: r.escalation_rule_id || null,
+      escalation_count: safeNum(r.escalation_count),
+      decision: r.decision || "",
+      reason: r.reason || "",
+      metadata: r.metadata || {},
+      created_at: r.created_at || null,
+    })),
+  };
+}
+
+async function handleEscalationState(supabase, incidentId) {
+  let q = supabase
+    .from("incident_escalation_state")
+    .select(`
+      id,
+      incident_id,
+      escalation_rule_id,
+      escalation_count,
+      cooldown_until,
+      last_decision,
+      last_checked_at,
+      created_at,
+      updated_at
+    `)
+    .order("updated_at", { ascending: false })
+    .limit(100);
+
+  const id = String(incidentId || "").trim();
+  if (id) {
+    if (!isUuid(id)) {
+      throw new Error("invalid_incident_id");
+    }
+    q = q.eq("incident_id", id);
+  }
+
+  const { data, error } = await q;
+  if (error) throw error;
+
+  return {
+    rows: (data || []).map((r) => ({
+      id: r.id,
+      incident_id: r.incident_id || null,
+      escalation_rule_id: r.escalation_rule_id || null,
+      escalation_count: safeNum(r.escalation_count),
+      cooldown_until: r.cooldown_until || null,
+      last_decision: r.last_decision || "",
+      last_checked_at: r.last_checked_at || null,
+      created_at: r.created_at || null,
+      updated_at: r.updated_at || null,
+    })),
+  };
+}
+
+async function handleEscalationAction(userSb, body, action) {
+  switch (action) {
+    case "evaluate_incident_escalation": {
+      const incidentId = String(body.incident_id || "").trim();
+      const ruleId = String(body.rule_id || "").trim();
+
+      if (!incidentId) {
+        throw new Error("missing_incident_id");
+      }
+      if (!ruleId) {
+        throw new Error("missing_rule_id");
+      }
+      if (!isUuid(incidentId)) {
+        throw new Error("invalid_incident_id");
+      }
+      if (!isUuid(ruleId)) {
+        throw new Error("invalid_rule_id");
+      }
+
+      return {
+        result: await rpcOrThrow(userSb, "admin_evaluate_incident_escalation", {
+          p_incident_id: incidentId,
+          p_rule_id: ruleId,
+        }),
+      };
+    }
+
+    case "execute_incident_escalation": {
+      const incidentId = String(body.incident_id || "").trim();
+      const ruleId = String(body.rule_id || "").trim();
+
+      if (!incidentId) {
+        throw new Error("missing_incident_id");
+      }
+      if (!ruleId) {
+        throw new Error("missing_rule_id");
+      }
+      if (!isUuid(incidentId)) {
+        throw new Error("invalid_incident_id");
+      }
+      if (!isUuid(ruleId)) {
+        throw new Error("invalid_rule_id");
+      }
+
+      return {
+        result: await rpcOrThrow(userSb, "admin_execute_incident_escalation", {
+          p_incident_id: incidentId,
+          p_rule_id: ruleId,
+        }),
+      };
+    }
+
+    case "evaluate_open_incident_escalations": {
+      const limitRaw =
+        body.limit ??
+        body.batch_limit ??
+        body.max_rows ??
+        100;
+
+      const limit = safePositiveInt(limitRaw, 100, 500);
+
+      return {
+        result: await rpcOrThrow(
+          userSb,
+          "evaluate_open_incident_escalations_core",
+          {
+            p_limit: limit,
+          }
+        ),
+      };
+    }
+
+    default:
+      throw new Error(`unsupported_escalation_action:${action || "unknown"}`);
+  }
+}
+
 async function handleNotificationAction(userSb, body, action) {
   switch (action) {
     case "send_test_notification": {
@@ -690,28 +904,37 @@ module.exports = async (req, res) => {
     const userSb = sbForJwt(jwt);
     await requireAdmin(userSb);
 
-    if (req.method === "POST") {
-  if (
-    action === "incident_acknowledge" ||
-    action === "incident_resolve" ||
-    action === "incident_add_note" ||
-    action === "monitoring_sync_incidents"
-  ) {
-    const payload = await handleIncidentAction(userSb, body, action);
-    return jsonOk(res, payload);
-  }
+        if (req.method === "POST") {
+      if (
+        action === "incident_acknowledge" ||
+        action === "incident_resolve" ||
+        action === "incident_add_note" ||
+        action === "monitoring_sync_incidents"
+      ) {
+        const payload = await handleIncidentAction(userSb, body, action);
+        return jsonOk(res, payload);
+      }
 
-  if (
-    action === "send_test_notification" ||
-    action === "dispatch_incident_notifications"
-  ) {
-    const payload = await handleNotificationAction(userSb, body, action);
-    return jsonOk(res, payload);
-  }
+      if (
+        action === "send_test_notification" ||
+        action === "dispatch_incident_notifications"
+      ) {
+        const payload = await handleNotificationAction(userSb, body, action);
+        return jsonOk(res, payload);
+      }
 
-  const payload = await handleMonitoringAction(userSb, body, action);
-  return jsonOk(res, payload);
-}
+      if (
+        action === "evaluate_incident_escalation" ||
+        action === "execute_incident_escalation" ||
+        action === "evaluate_open_incident_escalations"
+      ) {
+        const payload = await handleEscalationAction(userSb, body, action);
+        return jsonOk(res, payload);
+      }
+
+      const payload = await handleMonitoringAction(userSb, body, action);
+      return jsonOk(res, payload);
+    }
 
     switch (type) {
   case "summary":
@@ -762,6 +985,27 @@ module.exports = async (req, res) => {
 	case "notification_log_recent":
   	  return jsonOk(res, await handleNotificationLogRecent(userSb));
 
+    case "escalation_rules":
+      return jsonOk(res, await handleEscalationRules(userSb));
+
+    case "escalation_log_recent":
+      return jsonOk(
+        res,
+        await handleEscalationLogRecent(
+          userSb,
+          String(req.query.incident_id || body.incident_id || "").trim()
+        )
+      );
+
+    case "escalation_state":
+      return jsonOk(
+        res,
+        await handleEscalationState(
+          userSb,
+          String(req.query.incident_id || body.incident_id || "").trim()
+        )
+      );
+
   default:
     return jsonErr(
       res,
@@ -773,27 +1017,31 @@ module.exports = async (req, res) => {
   } catch (err) {
     const message = err?.message || String(err);
 
-    const status =
-  message === "missing_bearer_token"
-    ? 401
-    : message === "admin_required" || /admin access required/i.test(message)
-      ? 403
-      : [
-          "missing_incident_id",
-          "missing_note_message",
-          "note_message_too_long",
-          "missing_alert_id",
-          "missing_target_key",
-          "missing_notification_message",
-          "notification_message_too_long",
-          "notification_channel_mismatch",
-          "invalid_notification_channel",
-          "invalid_notification_status",
-        ].includes(message)
-        ? 400
-        : /not_found/i.test(message)
-          ? 404
-          : 500;
+        const status =
+      message === "missing_bearer_token"
+        ? 401
+        : message === "admin_required" || /admin access required/i.test(message)
+          ? 403
+          : [
+              "missing_incident_id",
+              "missing_note_message",
+              "note_message_too_long",
+              "missing_alert_id",
+              "missing_target_key",
+              "missing_notification_message",
+              "notification_message_too_long",
+              "notification_channel_mismatch",
+              "invalid_notification_channel",
+              "invalid_notification_status",
+              "missing_rule_id",
+              "invalid_incident_id",
+              "invalid_rule_id",
+              "invalid_escalation_limit",
+            ].includes(message)
+            ? 400
+            : /not_found/i.test(message)
+              ? 404
+              : 500;
 
     return jsonErr(res, status, "telemetry_failed", message);
   }
