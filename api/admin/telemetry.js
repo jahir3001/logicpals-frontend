@@ -838,6 +838,14 @@ async function handleEscalationAction(userSb, body, action) {
         ),
       };
     }
+    case "run_open_incident_escalations": {
+      return {
+        result: await rpcOrThrow(
+          userSb,
+          "admin_run_open_incident_escalations"
+        ),
+      };
+    }
 
     default:
       throw new Error(`unsupported_escalation_action:${action || "unknown"}`);
@@ -927,10 +935,11 @@ module.exports = async (req, res) => {
         return jsonOk(res, payload);
       }
 
-      if (
+            if (
         action === "evaluate_incident_escalation" ||
         action === "execute_incident_escalation" ||
-        action === "evaluate_open_incident_escalations"
+        action === "evaluate_open_incident_escalations" ||
+        action === "run_open_incident_escalations"
       ) {
         const payload = await handleEscalationAction(userSb, body, action);
         return jsonOk(res, payload);
