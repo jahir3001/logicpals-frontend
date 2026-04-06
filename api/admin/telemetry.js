@@ -831,21 +831,10 @@ async function handleEscalationAction(userSb, body, action) {
     }
 
     case "evaluate_open_incident_escalations": {
-      const limitRaw =
-        body.limit ??
-        body.batch_limit ??
-        body.max_rows ??
-        100;
-
-      const limit = safePositiveInt(limitRaw, 100, 500);
-
       return {
         result: await rpcOrThrow(
           userSb,
-          "evaluate_open_incident_escalations_core",
-          {
-            p_limit: limit,
-          }
+          "admin_evaluate_open_incident_escalations"
         ),
       };
     }
