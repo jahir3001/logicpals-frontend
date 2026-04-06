@@ -1,22 +1,162 @@
 const { createClient } = require("@supabase/supabase-js");
 const { runMasteryWorkerOnce } = require("../../worker/mastery/logic.js");
 
+function getEnv() {
+  const SUPABASE_URL =
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const CRON_SECRET = process.env.CRON_SECRET;
+
+  if (!CRON_SECRET) {
+    throw new Error("missing_cron_secret");
+  }
+  if (!SUPABASE_URL) {
+    throw new Error("missing_supabase_url");
+  }
+  if (!SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("missing_supabase_service_role_key");
+  }
+
+  return {
+    SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY,
+    CRON_SECRET,
+  };
+}
+
+function createSupabaseAdmin() {
+  const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = getEnv();
+
+  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false },
+  });
+}
+
+function getBearer(req) {
+  const auth = req.headers["authorization"] || "";
+  const match = auth.match(/^Bearer\s+(.+)$/i);
+  return match ? match[1] : null;
+}
+
+function getJob(req) {
+  return String(req.query.job || req.body?.job || "mastery")
+    .trim()
+    .toLowerCase();
+}
+
+function json(res, status, payload) {
+  return res.status(status).json(payload);
+}
+
+async function runMasteryJob(supabase) {
+  const result = await runMasteryWorkerOnce(supabase);
+
+  return {
+    ok: true,
+    processed: (result && result.processed) || 0,
+    raw: result || {},
+  };
+}
+
+async function runEscalationsJob(supabase) {
+  const { data, error } = await supabase.rpc("run_open_incident_escalations_core", {
+    p_trigger_source: "cron",
+  });
+
+  if (error) {
+    throw new Error(error.message || "cron_escalation_run_failed");
+  }
+
+  return data || {
+    ok: true,
+    pairs_checked: 0,
+    executed_count: 0,
+    skipped_count: 0,
+    error_count: 0,
+  };
+}
+
 module.exports = async function handler(req, res) {
   try {
-    if (!process.env.CRON_SECRET) return res.status(500).send("Missing CRON_SECRET");
-    if (!process.env.SUPABASE_URL) return res.status(500).send("Missing SUPABASE_URL");
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return res.status(500).send("Missing SUPABASE_SERVICE_ROLE_KEY");
+    if (!["GET", "POST"].includes(req.method)) {
+      return json(res, 405, {
+        ok: false,
+        error: "method_not_allowed",
+      });
+    }
 
-    const auth = req.headers["authorization"];
-    const expected = `Bearer ${process.env.CRON_SECRET}`;
-    if (!auth || auth !== expected) return res.status(401).send("Unauthorized");
+    const { CRON_SECRET } = getEnv();
 
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-    const result = await runMasteryWorkerOnce(supabase);
+    const suppliedBearer = getBearer(req);
+    const suppliedSecret =
+      suppliedBearer ||
+      req.headers["x-cron-secret"] ||
+      req.headers["x-vercel-cron-secret"] ||
+      req.query.secret ||
+      null;
 
-    return res.status(200).json({ status: "ok", processed: (result && result.processed) || 0 });
+    if (!suppliedSecret || suppliedSecret !== CRON_SECRET) {
+      return json(res, 401, {
+        ok: false,
+        error: "unauthorized",
+      });
+    }
+
+    const supabase = createSupabaseAdmin();
+    const job = getJob(req);
+
+    if (job === "mastery") {
+      const result = await runMasteryJob(supabase);
+      return json(res, 200, {
+        ok: true,
+        job: "mastery",
+        result,
+      });
+    }
+
+    if (job === "escalations") {
+      const result = await runEscalationsJob(supabase);
+      return json(res, 200, {
+        ok: true,
+        job: "escalations",
+        result,
+      });
+    }
+
+    if (job === "all") {
+      const mastery = await runMasteryJob(supabase);
+      const escalations = await runEscalationsJob(supabase);
+
+      return json(res, 200, {
+        ok: true,
+        job: "all",
+        result: {
+          mastery,
+          escalations,
+        },
+      });
+    }
+
+    return json(res, 400, {
+      ok: false,
+      error: "invalid_job",
+      details: `Unsupported cron job: ${job}`,
+    });
   } catch (e) {
-    console.error("run-mastery error:", e);
-    return res.status(500).send("FUNCTION_INVOCATION_FAILED");
+    console.error("run-mastery cron error:", e);
+
+    const message = e?.message || String(e);
+    const status =
+      message === "missing_cron_secret" ||
+      message === "missing_supabase_url" ||
+      message === "missing_supabase_service_role_key"
+        ? 500
+        : 500;
+
+    return json(res, status, {
+      ok: false,
+      error: "FUNCTION_INVOCATION_FAILED",
+      details: message,
+    });
   }
 };
