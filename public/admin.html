@@ -1472,7 +1472,8 @@
                     </div>
                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                       <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" id="btnEscalationRefresh">Refresh</button>
-                      <button class="admin-btn admin-btn-primary admin-btn-sm" type="button" id="btnEscalationEvaluateOpen">Evaluate Open Incidents</button>
+                      <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" id="btnEscalationEvaluateOpen">Evaluate Open Incidents</button>
+                      <button class="admin-btn admin-btn-primary admin-btn-sm" type="button" id="btnRunOpenEscalations">Run Escalations Now</button>
                     </div>
                   </div>
 
@@ -1981,6 +1982,10 @@
 
     async function evaluateOpenIncidentEscalations() {
       return postTelemetryAction('evaluate_open_incident_escalations', {});
+    }
+
+    async function runOpenIncidentEscalations() {
+      return postTelemetryAction('run_open_incident_escalations', {});
     }
 
     async function sendTestNotification(targetKey, message) {
@@ -2923,6 +2928,7 @@
 
       const escalationRefreshBtn = document.getElementById('btnEscalationRefresh');
       const escalationEvaluateOpenBtn = document.getElementById('btnEscalationEvaluateOpen');
+      const escalationRunOpenBtn = document.getElementById('btnRunOpenEscalations');
       const escalationEvaluateOneBtn = document.getElementById('btnEscalationEvaluateOne');
       const escalationExecuteOneBtn = document.getElementById('btnEscalationExecuteOne');
       const escalationIncidentSelect = document.getElementById('escalationIncidentSelect');
@@ -2953,6 +2959,26 @@
           window.LPAdmin?.toast(`Escalation evaluation failed: ${err.message}`, 'error', 4000);
         } finally {
           escalationEvaluateOpenBtn.disabled = false;
+        }
+      });
+
+      escalationRunOpenBtn?.addEventListener('click', async () => {
+        try {
+          escalationRunOpenBtn.disabled = true;
+          const res = await runOpenIncidentEscalations();
+          const result = res?.result || res || {};
+          const checked = Number(result?.pairs_checked || 0);
+          const executed = Number(result?.executed_count || 0);
+          const skipped = Number(result?.skipped_count || 0);
+          const errors = Number(result?.error_count || 0);
+          updateEscalationActionResult(`Escalation run completed. Checked ${checked} pairs · executed ${executed} · skipped ${skipped} · errors ${errors}.`, errors > 0 ? 'error' : 'success');
+          window.LPAdmin?.toast(`Escalation run completed: ${executed} executed / ${checked} checked`, errors > 0 ? 'warning' : 'success', 3200);
+          await loadEscalationDashboard({ incidentId: selectedIncidentId || escalationIncidentSelect?.value || '' });
+        } catch (err) {
+          updateEscalationActionResult(`Escalation run failed: ${err.message}`, 'error');
+          window.LPAdmin?.toast(`Escalation run failed: ${err.message}`, 'error', 4200);
+        } finally {
+          escalationRunOpenBtn.disabled = false;
         }
       });
 
