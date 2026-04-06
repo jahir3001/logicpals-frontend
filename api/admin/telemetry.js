@@ -694,7 +694,6 @@ async function handleEscalationLogRecent(supabase, incidentId) {
       incident_id,
       escalation_rule_id,
       decision,
-      reason,
       metadata,
       created_at
     `)
@@ -718,7 +717,6 @@ async function handleEscalationLogRecent(supabase, incidentId) {
       incident_id: r.incident_id || null,
       escalation_rule_id: r.escalation_rule_id || null,
       decision: r.decision || "",
-      reason: r.reason || "",
       metadata: r.metadata || {},
       created_at: r.created_at || null,
     })),
