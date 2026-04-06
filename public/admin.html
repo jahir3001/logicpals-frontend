@@ -640,6 +640,30 @@
       padding: 14px 14px 0 14px;
     }
 
+
+    .lp-escalation-manual-wrap {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .lp-escalation-manual-fields {
+      display: grid;
+      grid-template-columns: minmax(240px, 1.3fr) minmax(240px, 1fr);
+      gap: 10px;
+    }
+
+    .lp-escalation-manual-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .lp-escalation-manual-actions .admin-btn {
+      min-width: 140px;
+    }
+
     .lp-mobile-list { display: none; }
 
     .lp-mobile-item {
@@ -704,10 +728,20 @@
     @media (max-width: 980px) {
       .lp-escalation-grid { grid-template-columns: 1fr; }
       .lp-escalation-form-grid { grid-template-columns: 1fr 1fr; }
+      .lp-escalation-manual-fields { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 760px) {
       .lp-escalation-form-grid { grid-template-columns: 1fr; padding: 14px; }
+      .lp-escalation-manual-fields { grid-template-columns: 1fr; }
+      .lp-escalation-manual-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .lp-escalation-manual-actions .admin-btn {
+        width: 100%;
+        min-width: 0;
+      }
       .lp-mobile-list { display: block; }
       .lp-escalation-grid .lp-table-wrap,
       #escalationHistoryCard .lp-table-wrap { display: none; }
@@ -1525,22 +1559,30 @@
                       </div>
                       <span class="admin-badge admin-badge-teal" id="escalationSelectionBadge">RPC only</span>
                     </div>
-                    <div class="lp-escalation-form-grid">
-                      <div class="admin-field" style="margin:0">
-                        <label class="admin-label" for="escalationIncidentSelect">Incident</label>
-                        <select class="admin-select" id="escalationIncidentSelect">
-                          <option value="">Select incident</option>
-                        </select>
+
+                    <div class="lp-escalation-manual-wrap">
+                      <div class="lp-escalation-manual-fields">
+                        <div class="admin-field" style="margin:0">
+                          <label class="admin-label" for="escalationIncidentSelect">Incident</label>
+                          <select class="admin-select" id="escalationIncidentSelect">
+                            <option value="">Select incident</option>
+                          </select>
+                        </div>
+                        <div class="admin-field" style="margin:0">
+                          <label class="admin-label" for="escalationRuleSelect">Rule</label>
+                          <select class="admin-select" id="escalationRuleSelect">
+                            <option value="">Select rule</option>
+                          </select>
+                        </div>
                       </div>
-                      <div class="admin-field" style="margin:0">
-                        <label class="admin-label" for="escalationRuleSelect">Rule</label>
-                        <select class="admin-select" id="escalationRuleSelect">
-                          <option value="">Select rule</option>
-                        </select>
+
+                      <div class="lp-escalation-manual-actions">
+                        <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" id="btnEscalationEvaluateOne">Evaluate Selected</button>
+                        <button class="admin-btn admin-btn-primary admin-btn-sm" type="button" id="btnEscalationExecuteOne">Execute Selected</button>
+                        <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" id="btnRunOpenEscalationsManual">Run Escalations Now</button>
                       </div>
-                      <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" id="btnEscalationEvaluateOne">Evaluate Selected</button>
-                      <button class="admin-btn admin-btn-primary admin-btn-sm" type="button" id="btnEscalationExecuteOne">Execute Selected</button>
                     </div>
+
                     <div style="padding:14px">
                       <div class="lp-monitoring-inline-error" id="escalationActionResult" style="display:none;background:var(--lp-surface);border-color:var(--lp-border);color:var(--lp-text-2)">Awaiting action.</div>
                     </div>
@@ -2054,6 +2096,8 @@
       selectedIncidentTitle = row?.title || '';
       selectedIncidentKey = row?.incident_key || '';
       refreshNotificationDispatchState();
+      syncEscalationIncidentSelect();
+      refreshEscalationSelectionTarget();
     }
 
     function displayActor(actor, timestamp = null, fallbackLabel = 'admin') {
@@ -2541,6 +2585,43 @@
     }
 
 
+    function syncEscalationIncidentSelect() {
+      const incidentSelect = document.getElementById('escalationIncidentSelect');
+      if (!incidentSelect) return;
+
+      const desired = String(selectedIncidentId || '');
+      if (!desired) return;
+
+      const hasOption = Array.from(incidentSelect.options || []).some(
+        opt => String(opt.value || '') === desired
+      );
+
+      if (hasOption) {
+        incidentSelect.value = desired;
+      }
+    }
+
+    function refreshEscalationSelectionTarget() {
+      const el = document.getElementById('escalationSelectionTarget');
+      const incidentSelect = document.getElementById('escalationIncidentSelect');
+      const ruleSelect = document.getElementById('escalationRuleSelect');
+
+      if (!el) return;
+
+      const incidentValue = String(incidentSelect?.value || '');
+      const ruleValue = String(ruleSelect?.value || '');
+
+      const incidentText = incidentValue
+        ? (incidentSelect?.selectedOptions?.[0]?.textContent?.trim() || selectedIncidentTitle || selectedIncidentKey || incidentValue)
+        : 'No incident selected';
+
+      const ruleText = ruleValue
+        ? (ruleSelect?.selectedOptions?.[0]?.textContent?.trim() || ruleValue)
+        : 'No rule selected';
+
+      el.textContent = `${incidentText} · ${ruleText}`;
+    }
+
     function updateEscalationActionResult(message, tone = 'info') {
       const el = document.getElementById('escalationActionResult');
       if (!el) return;
@@ -2564,26 +2645,37 @@
     function populateEscalationSelectors() {
       const incidentSelect = document.getElementById('escalationIncidentSelect');
       const ruleSelect = document.getElementById('escalationRuleSelect');
+
       if (incidentSelect) {
+        const currentValue = String(incidentSelect.value || '');
         const incidentRows = latestVisibleAlertRows.length ? latestVisibleAlertRows : [];
         incidentSelect.innerHTML = '<option value="">Select incident</option>' + incidentRows.map(row => {
           const label = `${row.title || row.incident_key || row.id || 'Incident'} · ${row.severity || 'unknown'} · ${row.status || 'open'}`;
           return `<option value="${escapeHtml(row.id || '')}">${escapeHtml(label)}</option>`;
         }).join('');
-        if (selectedIncidentId) incidentSelect.value = selectedIncidentId;
+
+        const desiredIncidentId = String(selectedIncidentId || currentValue || '');
+        const hasIncidentOption = Array.from(incidentSelect.options || []).some(
+          opt => String(opt.value || '') === desiredIncidentId
+        );
+        incidentSelect.value = hasIncidentOption ? desiredIncidentId : '';
       }
+
       if (ruleSelect) {
+        const currentRuleValue = String(ruleSelect.value || '');
         ruleSelect.innerHTML = '<option value="">Select rule</option>' + latestEscalationRules.map(row => {
           const label = `${row.rule_key || row.name || row.id} · ${row.severity || 'all'} · ${row.trigger_mode || 'trigger'} ${row.trigger_threshold_minutes != null ? `(${row.trigger_threshold_minutes}m)` : ''}`;
           return `<option value="${escapeHtml(row.id || '')}">${escapeHtml(label)}</option>`;
         }).join('');
+
+        const hasRuleOption = Array.from(ruleSelect.options || []).some(
+          opt => String(opt.value || '') === currentRuleValue
+        );
+        ruleSelect.value = hasRuleOption ? currentRuleValue : '';
       }
-      const target = document.getElementById('escalationSelectionTarget');
-      if (target) {
-        target.textContent = selectedIncidentId
-          ? `${selectedIncidentTitle || 'Selected incident'} · ${selectedIncidentKey || selectedIncidentId}`
-          : 'Choose an incident and rule, then evaluate or execute through audited RPC actions.';
-      }
+
+      syncEscalationIncidentSelect();
+      refreshEscalationSelectionTarget();
     }
 
     function renderEscalationRules(data = {}) {
@@ -2929,6 +3021,7 @@
       const escalationRefreshBtn = document.getElementById('btnEscalationRefresh');
       const escalationEvaluateOpenBtn = document.getElementById('btnEscalationEvaluateOpen');
       const escalationRunOpenBtn = document.getElementById('btnRunOpenEscalations');
+      const escalationRunOpenManualBtn = document.getElementById('btnRunOpenEscalationsManual');
       const escalationEvaluateOneBtn = document.getElementById('btnEscalationEvaluateOne');
       const escalationExecuteOneBtn = document.getElementById('btnEscalationExecuteOne');
       const escalationIncidentSelect = document.getElementById('escalationIncidentSelect');
@@ -2962,43 +3055,72 @@
         }
       });
 
-      escalationRunOpenBtn?.addEventListener('click', async () => {
+      async function handleRunOpenEscalations(buttonEl) {
+        if (!buttonEl) return;
+        const previous = buttonEl.textContent;
         try {
-          escalationRunOpenBtn.disabled = true;
+          buttonEl.disabled = true;
+          buttonEl.textContent = 'Running…';
           const res = await runOpenIncidentEscalations();
           const result = res?.result || res || {};
-          const checked = Number(result?.pairs_checked || 0);
-          const executed = Number(result?.executed_count || 0);
-          const skipped = Number(result?.skipped_count || 0);
-          const errors = Number(result?.error_count || 0);
-          updateEscalationActionResult(`Escalation run completed. Checked ${checked} pairs · executed ${executed} · skipped ${skipped} · errors ${errors}.`, errors > 0 ? 'error' : 'success');
-          window.LPAdmin?.toast(`Escalation run completed: ${executed} executed / ${checked} checked`, errors > 0 ? 'warning' : 'success', 3200);
-          await loadEscalationDashboard({ incidentId: selectedIncidentId || escalationIncidentSelect?.value || '' });
+          updateEscalationActionResult(
+            `Escalation run completed. Checked ${formatNum(result?.pairs_checked ?? 0)} pair(s), executed ${formatNum(result?.executed_count ?? 0)}, skipped ${formatNum(result?.skipped_count ?? 0)}, errors ${formatNum(result?.error_count ?? 0)}.`,
+            'success'
+          );
+          window.LPAdmin?.toast(
+            `Escalation run completed: executed ${formatNum(result?.executed_count ?? 0)} / checked ${formatNum(result?.pairs_checked ?? 0)}`,
+            'success',
+            3200
+          );
+          await Promise.all([loadMonitoringDashboard({ silent: true }), loadOverviewIncidentSnapshot()]);
         } catch (err) {
           updateEscalationActionResult(`Escalation run failed: ${err.message}`, 'error');
-          window.LPAdmin?.toast(`Escalation run failed: ${err.message}`, 'error', 4200);
+          window.LPAdmin?.toast(`Escalation run failed: ${err.message}`, 'error', 4000);
         } finally {
-          escalationRunOpenBtn.disabled = false;
+          buttonEl.disabled = false;
+          buttonEl.textContent = previous;
         }
+      }
+
+      escalationRunOpenBtn?.addEventListener('click', async () => {
+        await handleRunOpenEscalations(escalationRunOpenBtn);
+      });
+
+      escalationRunOpenManualBtn?.addEventListener('click', async () => {
+        await handleRunOpenEscalations(escalationRunOpenManualBtn);
       });
 
       escalationIncidentSelect?.addEventListener('change', () => {
         const selected = latestVisibleAlertRows.find(r => String(r.id || '') === String(escalationIncidentSelect.value || '')) || null;
-        if (selected) setSelectedIncident(selected);
+
+        if (selected) {
+          setSelectedIncident(selected);
+        } else {
+          selectedIncidentId = null;
+          selectedIncidentTitle = '';
+          selectedIncidentKey = '';
+          refreshNotificationDispatchState();
+        }
+
+        refreshEscalationSelectionTarget();
         loadEscalationDashboard({ incidentId: escalationIncidentSelect.value || '' }).catch(() => {});
       });
 
       escalationRuleSelect?.addEventListener('change', () => {
         const row = latestEscalationRules.find(r => String(r.id || '') === String(escalationRuleSelect.value || ''));
-        if (row) updateEscalationActionResult(`Selected rule ${row.rule_key || row.name || row.id}. Ready for evaluation or execution.`, 'info');
+        if (row) {
+          updateEscalationActionResult(`Selected rule ${row.rule_key || row.name || row.id}. Ready for evaluation or execution.`, 'info');
+        }
+        refreshEscalationSelectionTarget();
       });
 
       escalationEvaluateOneBtn?.addEventListener('click', async () => {
-        const incidentId = escalationIncidentSelect?.value || selectedIncidentId || '';
-        const ruleId = escalationRuleSelect?.value || '';
+        const incidentId = String(escalationIncidentSelect?.value || selectedIncidentId || '');
+        const ruleId = String(escalationRuleSelect?.value || '');
+
         if (!incidentId || !ruleId) {
-          updateEscalationActionResult('Select both incident and rule before evaluating.', 'error');
-          window.LPAdmin?.toast('Select both incident and rule before evaluating', 'error', 3200);
+          updateEscalationActionResult('Choose both an incident and a rule from the dropdowns before evaluating.', 'error');
+          window.LPAdmin?.toast('Choose both an incident and a rule before evaluating.', 'error', 3200);
           return;
         }
         try {
@@ -3017,11 +3139,12 @@
       });
 
       escalationExecuteOneBtn?.addEventListener('click', async () => {
-        const incidentId = escalationIncidentSelect?.value || selectedIncidentId || '';
-        const ruleId = escalationRuleSelect?.value || '';
+        const incidentId = String(escalationIncidentSelect?.value || selectedIncidentId || '');
+        const ruleId = String(escalationRuleSelect?.value || '');
+
         if (!incidentId || !ruleId) {
-          updateEscalationActionResult('Select both incident and rule before executing.', 'error');
-          window.LPAdmin?.toast('Select both incident and rule before executing', 'error', 3200);
+          updateEscalationActionResult('Choose both an incident and a rule from the dropdowns before executing.', 'error');
+          window.LPAdmin?.toast('Choose both an incident and a rule before executing.', 'error', 3200);
           return;
         }
         try {
@@ -3040,6 +3163,7 @@
       });
 
       refreshNotificationDispatchState();
+      refreshEscalationSelectionTarget();
       syncAutoRefresh();
     }
 
