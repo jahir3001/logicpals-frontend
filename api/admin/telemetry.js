@@ -645,17 +645,9 @@ async function handleEscalationRules(supabase) {
       id,
       rule_key,
       enabled,
-      priority,
-      incident_severity,
-      incident_source,
-      min_open_minutes,
-      cooldown_minutes,
-      max_escalations,
-      notify_target_key,
       created_at,
       updated_at
     `)
-    .order("priority", { ascending: true })
     .order("rule_key", { ascending: true })
     .limit(100);
 
@@ -666,13 +658,6 @@ async function handleEscalationRules(supabase) {
       id: r.id,
       rule_key: r.rule_key || "",
       enabled: !!r.enabled,
-      priority: safeNum(r.priority),
-      incident_severity: r.incident_severity || null,
-      incident_source: r.incident_source || null,
-      min_open_minutes: safeNum(r.min_open_minutes),
-      cooldown_minutes: safeNum(r.cooldown_minutes),
-      max_escalations: safeNum(r.max_escalations),
-      notify_target_key: r.notify_target_key || null,
       created_at: r.created_at || null,
       updated_at: r.updated_at || null,
     })),
