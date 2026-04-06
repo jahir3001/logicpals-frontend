@@ -778,6 +778,11 @@ async function handleEscalationState(supabase, incidentId) {
   };
 }
 
+async function handleEscalationRunDashboard(supabase) {
+  const data = await rpcOrThrow(supabase, "admin_incident_escalation_run_dashboard");
+  return data || { ok: true, latest: {}, runs: [] };
+}
+
 async function handleEscalationAction(userSb, body, action) {
   switch (action) {
     case "evaluate_incident_escalation": {
@@ -1018,6 +1023,8 @@ module.exports = async (req, res) => {
           String(req.query.incident_id || body.incident_id || "").trim()
         )
       );
+  case "escalation_run_dashboard":
+      return jsonOk(res, await handleEscalationRunDashboard(userSb));
 
   default:
     return jsonErr(
