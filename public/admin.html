@@ -624,6 +624,97 @@
     }
 
 
+    /* ─── Escalation controls ───────────────────────────────── */
+    .lp-escalation-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .lp-escalation-form-grid {
+      display: grid;
+      grid-template-columns: minmax(220px, 1.25fr) minmax(220px, 1fr) auto auto;
+      gap: 10px;
+      align-items: end;
+      padding: 14px 14px 0 14px;
+    }
+
+    .lp-mobile-list { display: none; }
+
+    .lp-mobile-item {
+      border-top: 1px solid var(--lp-border);
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      background: var(--lp-card);
+    }
+
+    .lp-mobile-item:first-child { border-top: none; }
+
+    .lp-mobile-title-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .lp-mobile-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--lp-text);
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .lp-mobile-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 10px;
+    }
+
+    .lp-mobile-meta {
+      display: grid;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .lp-mobile-meta-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: var(--lp-muted);
+    }
+
+    .lp-mobile-meta-value {
+      font-size: 12.5px;
+      color: var(--lp-text-2);
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .lp-mobile-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 980px) {
+      .lp-escalation-grid { grid-template-columns: 1fr; }
+      .lp-escalation-form-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 760px) {
+      .lp-escalation-form-grid { grid-template-columns: 1fr; padding: 14px; }
+      .lp-mobile-list { display: block; }
+      .lp-escalation-grid .lp-table-wrap,
+      #escalationHistoryCard .lp-table-wrap { display: none; }
+      .lp-mobile-meta-grid { grid-template-columns: 1fr; }
+    }
+
+
     /* ─── Feature flags admin ───────────────────────────────── */
     .lp-flag-grid {
       display: grid;
@@ -1373,6 +1464,105 @@
                       </table>
                     </div>
                   </div>
+                <div class="lp-telemetry-table-card" style="margin-top:12px">
+                  <div class="lp-telemetry-card-head">
+                    <div>
+                      <div class="lp-telemetry-card-title">Escalation Controls</div>
+                      <div class="lp-cell-subtle" style="margin-top:4px">Admin-only escalation rules, state, history, and controlled execution through the merged telemetry gateway.</div>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                      <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" id="btnEscalationRefresh">Refresh</button>
+                      <button class="admin-btn admin-btn-primary admin-btn-sm" type="button" id="btnEscalationEvaluateOpen">Evaluate Open Incidents</button>
+                    </div>
+                  </div>
+
+                  <div class="lp-escalation-grid">
+                    <div class="lp-telemetry-table-card">
+                      <div class="lp-telemetry-card-head">
+                        <div>
+                          <div class="lp-telemetry-card-title">Escalation Rules</div>
+                          <div class="lp-cell-subtle" style="margin-top:4px">Live rules currently eligible to evaluate and dispatch notifications.</div>
+                        </div>
+                        <span class="admin-badge admin-badge-indigo" id="escalationRulesCountBadge">0 rows</span>
+                      </div>
+                      <div class="lp-mobile-list" id="escalationRulesMobile"></div>
+                      <div class="lp-telemetry-table-wrap">
+                        <table class="lp-telemetry-table">
+                          <thead>
+                            <tr><th>Rule</th><th>Severity</th><th>Trigger</th><th>Cooldown</th><th>Max</th><th>Notify</th><th>Status</th></tr>
+                          </thead>
+                          <tbody id="escalationRulesBody"><tr><td colspan="7" class="lp-telemetry-empty">Loading…</td></tr></tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <div class="lp-telemetry-table-card">
+                      <div class="lp-telemetry-card-head">
+                        <div>
+                          <div class="lp-telemetry-card-title">Escalation State</div>
+                          <div class="lp-cell-subtle" style="margin-top:4px">Per-incident cooldown, count, and latest decision state.</div>
+                        </div>
+                        <span class="admin-badge admin-badge-indigo" id="escalationStateCountBadge">0 rows</span>
+                      </div>
+                      <div class="lp-mobile-list" id="escalationStateMobile"></div>
+                      <div class="lp-telemetry-table-wrap">
+                        <table class="lp-telemetry-table">
+                          <thead>
+                            <tr><th>Incident</th><th>Rule ID</th><th>Count</th><th>Last Decision</th><th>Cooldown Until</th><th>Last Checked</th></tr>
+                          </thead>
+                          <tbody id="escalationStateBody"><tr><td colspan="6" class="lp-telemetry-empty">Loading…</td></tr></tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="lp-telemetry-table-card" style="margin-top:12px">
+                    <div class="lp-telemetry-card-head">
+                      <div>
+                        <div class="lp-telemetry-card-title">Manual Incident Escalation</div>
+                        <div class="lp-cell-subtle" id="escalationSelectionTarget" style="margin-top:4px">Choose an incident and rule, then evaluate or execute through audited RPC actions.</div>
+                      </div>
+                      <span class="admin-badge admin-badge-teal" id="escalationSelectionBadge">RPC only</span>
+                    </div>
+                    <div class="lp-escalation-form-grid">
+                      <div class="admin-field" style="margin:0">
+                        <label class="admin-label" for="escalationIncidentSelect">Incident</label>
+                        <select class="admin-select" id="escalationIncidentSelect">
+                          <option value="">Select incident</option>
+                        </select>
+                      </div>
+                      <div class="admin-field" style="margin:0">
+                        <label class="admin-label" for="escalationRuleSelect">Rule</label>
+                        <select class="admin-select" id="escalationRuleSelect">
+                          <option value="">Select rule</option>
+                        </select>
+                      </div>
+                      <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" id="btnEscalationEvaluateOne">Evaluate Selected</button>
+                      <button class="admin-btn admin-btn-primary admin-btn-sm" type="button" id="btnEscalationExecuteOne">Execute Selected</button>
+                    </div>
+                    <div style="padding:14px">
+                      <div class="lp-monitoring-inline-error" id="escalationActionResult" style="display:none;background:var(--lp-surface);border-color:var(--lp-border);color:var(--lp-text-2)">Awaiting action.</div>
+                    </div>
+                  </div>
+
+                  <div class="lp-telemetry-table-card" id="escalationHistoryCard" style="margin-top:12px">
+                    <div class="lp-telemetry-card-head">
+                      <div>
+                        <div class="lp-telemetry-card-title">Escalation History</div>
+                        <div class="lp-cell-subtle" id="escalationHistoryTarget" style="margin-top:4px">Recent escalation evaluations and executions across incidents.</div>
+                      </div>
+                      <span class="admin-badge admin-badge-indigo" id="escalationHistoryCountBadge">0 rows</span>
+                    </div>
+                    <div class="lp-mobile-list" id="escalationHistoryMobile"></div>
+                    <div class="lp-telemetry-table-wrap">
+                      <table class="lp-telemetry-table">
+                        <thead>
+                          <tr><th>Occurred</th><th>Action</th><th>Decision</th><th>Incident</th><th>Severity</th><th>Message</th></tr>
+                        </thead>
+                        <tbody id="escalationHistoryBody"><tr><td colspan="6" class="lp-telemetry-empty">Loading…</td></tr></tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1764,6 +1954,35 @@
       return fetchMonitoringType('notification_log_recent');
     }
 
+
+    async function fetchEscalationRules() {
+      return fetchMonitoringType('escalation_rules');
+    }
+
+    async function fetchEscalationState(incidentId = '') {
+      const extra = {};
+      if (incidentId) extra.incident_id = incidentId;
+      return fetchMonitoringType('escalation_state', extra);
+    }
+
+    async function fetchEscalationLogRecent(incidentId = '') {
+      const extra = {};
+      if (incidentId) extra.incident_id = incidentId;
+      return fetchMonitoringType('escalation_log_recent', extra);
+    }
+
+    async function evaluateIncidentEscalation(incidentId, ruleId) {
+      return postTelemetryAction('evaluate_incident_escalation', { incident_id: incidentId, rule_id: ruleId });
+    }
+
+    async function executeIncidentEscalation(incidentId, ruleId) {
+      return postTelemetryAction('execute_incident_escalation', { incident_id: incidentId, rule_id: ruleId });
+    }
+
+    async function evaluateOpenIncidentEscalations() {
+      return postTelemetryAction('evaluate_open_incident_escalations', {});
+    }
+
     async function sendTestNotification(targetKey, message) {
       return postTelemetryAction('send_test_notification', {
         target_key: targetKey,
@@ -1782,6 +2001,9 @@
     let latestAlertRows = [];
     let latestVisibleAlertRows = [];
     let latestNotificationTargets = [];
+    let latestEscalationRules = [];
+    let latestEscalationStateRows = [];
+    let latestEscalationHistoryRows = [];
     const globalOpsState = {
       criticalIncidents: 0,
       openAlerts: 0
@@ -2313,6 +2535,187 @@
       `, 4);
     }
 
+
+    function updateEscalationActionResult(message, tone = 'info') {
+      const el = document.getElementById('escalationActionResult');
+      if (!el) return;
+      el.style.display = 'block';
+      el.textContent = message || 'Awaiting action.';
+      if (tone === 'success') {
+        el.style.background = 'rgba(34,197,94,.08)';
+        el.style.borderColor = 'rgba(34,197,94,.18)';
+        el.style.color = '#166534';
+      } else if (tone === 'error') {
+        el.style.background = 'var(--lp-danger-bg)';
+        el.style.borderColor = 'var(--lp-danger-border)';
+        el.style.color = 'var(--lp-danger-text)';
+      } else {
+        el.style.background = 'var(--lp-surface)';
+        el.style.borderColor = 'var(--lp-border)';
+        el.style.color = 'var(--lp-text-2)';
+      }
+    }
+
+    function populateEscalationSelectors() {
+      const incidentSelect = document.getElementById('escalationIncidentSelect');
+      const ruleSelect = document.getElementById('escalationRuleSelect');
+      if (incidentSelect) {
+        const incidentRows = latestVisibleAlertRows.length ? latestVisibleAlertRows : [];
+        incidentSelect.innerHTML = '<option value="">Select incident</option>' + incidentRows.map(row => {
+          const label = `${row.title || row.incident_key || row.id || 'Incident'} · ${row.severity || 'unknown'} · ${row.status || 'open'}`;
+          return `<option value="${escapeHtml(row.id || '')}">${escapeHtml(label)}</option>`;
+        }).join('');
+        if (selectedIncidentId) incidentSelect.value = selectedIncidentId;
+      }
+      if (ruleSelect) {
+        ruleSelect.innerHTML = '<option value="">Select rule</option>' + latestEscalationRules.map(row => {
+          const label = `${row.rule_key || row.name || row.id} · ${row.severity || 'all'} · ${row.trigger_mode || 'trigger'} ${row.trigger_threshold_minutes != null ? `(${row.trigger_threshold_minutes}m)` : ''}`;
+          return `<option value="${escapeHtml(row.id || '')}">${escapeHtml(label)}</option>`;
+        }).join('');
+      }
+      const target = document.getElementById('escalationSelectionTarget');
+      if (target) {
+        target.textContent = selectedIncidentId
+          ? `${selectedIncidentTitle || 'Selected incident'} · ${selectedIncidentKey || selectedIncidentId}`
+          : 'Choose an incident and rule, then evaluate or execute through audited RPC actions.';
+      }
+    }
+
+    function renderEscalationRules(data = {}) {
+      const rows = normalizeRows(data.result || data);
+      latestEscalationRules = rows;
+      setText('escalationRulesCountBadge', `${rows.length} rows`);
+      const mobile = document.getElementById('escalationRulesMobile');
+      if (mobile) {
+        mobile.innerHTML = rows.length ? rows.map(row => `
+          <div class="lp-mobile-item">
+            <div class="lp-mobile-title-row">
+              <div class="lp-mobile-title">${escapeHtml(row.rule_key || row.name || row.id || 'Rule')}</div>
+              ${row.enabled ? '<span class="admin-badge admin-badge-green">enabled</span>' : '<span class="admin-badge admin-badge-amber">disabled</span>'}
+            </div>
+            <div class="lp-mobile-meta-grid">
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Severity</div><div class="lp-mobile-meta-value">${escapeHtml(row.severity || 'all')}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Trigger</div><div class="lp-mobile-meta-value">${escapeHtml(`${row.trigger_mode || 'trigger'} ${row.trigger_threshold_minutes != null ? `· ${row.trigger_threshold_minutes}m` : ''}`)}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Cooldown</div><div class="lp-mobile-meta-value">${escapeHtml(`${formatNum(row.cooldown_minutes ?? 0)} min`)}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Max Escalations</div><div class="lp-mobile-meta-value">${escapeHtml(String(row.max_escalations_per_incident ?? 0))}</div></div>
+            </div>
+          </div>
+        `).join('') : '<div class="lp-mobile-item"><div class="lp-telemetry-empty">No escalation rules available.</div></div>';
+      }
+      if (!rows.length) {
+        emptyTableMessage('escalationRulesBody', 7, 'No escalation rules available');
+        populateEscalationSelectors();
+        return;
+      }
+      renderRows('escalationRulesBody', rows, row => `
+        <tr>
+          <td class="lp-cell-stack"><span>${escapeHtml(row.rule_key || row.name || '—')}</span><span class="lp-cell-subtle">${escapeHtml(row.description || row.id || '')}</span></td>
+          <td>${severityPill(row.severity || 'info')}</td>
+          <td class="lp-cell-stack"><span>${escapeHtml(row.trigger_mode || 'trigger')}</span><span class="lp-cell-subtle">${escapeHtml(`${formatNum(row.trigger_threshold_minutes ?? 0)} min`)}</span></td>
+          <td>${escapeHtml(`${formatNum(row.cooldown_minutes ?? 0)} min`)}</td>
+          <td>${escapeHtml(formatNum(row.max_escalations_per_incident ?? 0))}</td>
+          <td class="lp-mono">${escapeHtml(row.notification_target_id || '—')}</td>
+          <td>${row.enabled ? '<span class="admin-badge admin-badge-green">enabled</span>' : '<span class="admin-badge admin-badge-amber">disabled</span>'}</td>
+        </tr>
+      `, 7);
+      populateEscalationSelectors();
+    }
+
+    function renderEscalationState(data = {}) {
+      const rows = normalizeRows(data.result || data);
+      latestEscalationStateRows = rows;
+      setText('escalationStateCountBadge', `${rows.length} rows`);
+      const mobile = document.getElementById('escalationStateMobile');
+      if (mobile) {
+        mobile.innerHTML = rows.length ? rows.map(row => `
+          <div class="lp-mobile-item">
+            <div class="lp-mobile-title-row">
+              <div class="lp-mobile-title">${escapeHtml(row.incident_id || 'Incident')}</div>
+              ${statusPill(row.last_decision || 'unknown')}
+            </div>
+            <div class="lp-mobile-meta-grid">
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Rule</div><div class="lp-mobile-meta-value lp-mono">${escapeHtml(row.escalation_rule_id || '—')}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Count</div><div class="lp-mobile-meta-value">${escapeHtml(formatNum(row.escalation_count ?? 0))}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Cooldown Until</div><div class="lp-mobile-meta-value">${escapeHtml(formatDateTime(row.cooldown_until))}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Last Checked</div><div class="lp-mobile-meta-value">${escapeHtml(formatDateTime(row.last_checked_at))}</div></div>
+            </div>
+          </div>
+        `).join('') : '<div class="lp-mobile-item"><div class="lp-telemetry-empty">No escalation state rows available.</div></div>';
+      }
+      if (!rows.length) {
+        emptyTableMessage('escalationStateBody', 6, 'No escalation state rows available');
+        return;
+      }
+      renderRows('escalationStateBody', rows, row => `
+        <tr>
+          <td class="lp-mono">${escapeHtml(row.incident_id || '—')}</td>
+          <td class="lp-mono">${escapeHtml(row.escalation_rule_id || '—')}</td>
+          <td>${escapeHtml(formatNum(row.escalation_count ?? 0))}</td>
+          <td>${statusPill(row.last_decision || 'unknown')}</td>
+          <td>${escapeHtml(formatDateTime(row.cooldown_until))}</td>
+          <td>${escapeHtml(formatDateTime(row.last_checked_at))}</td>
+        </tr>
+      `, 6);
+    }
+
+    function renderEscalationHistory(data = {}) {
+      const rows = normalizeRows(data.result || data);
+      latestEscalationHistoryRows = rows;
+      setText('escalationHistoryCountBadge', `${rows.length} rows`);
+      const target = document.getElementById('escalationHistoryTarget');
+      if (target) target.textContent = selectedIncidentId ? `${selectedIncidentTitle || 'Selected incident'} · recent escalation events` : 'Recent escalation evaluations and executions across incidents.';
+      const mobile = document.getElementById('escalationHistoryMobile');
+      if (mobile) {
+        mobile.innerHTML = rows.length ? rows.map(row => `
+          <div class="lp-mobile-item">
+            <div class="lp-mobile-title-row">
+              <div class="lp-mobile-title">${escapeHtml(row.action || 'event')} · ${escapeHtml(row.decision || 'unknown')}</div>
+              ${severityPill(row.incident_severity || 'info')}
+            </div>
+            <div class="lp-mobile-meta-grid">
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Occurred</div><div class="lp-mobile-meta-value">${escapeHtml(formatDateTime(row.occurred_at))}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Incident</div><div class="lp-mobile-meta-value lp-mono">${escapeHtml(row.incident_id || '—')}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Escalation #</div><div class="lp-mobile-meta-value">${escapeHtml(formatNum(row.escalation_number ?? 0))}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Message</div><div class="lp-mobile-meta-value">${escapeHtml(row.message || '—')}</div></div>
+            </div>
+          </div>
+        `).join('') : '<div class="lp-mobile-item"><div class="lp-telemetry-empty">No escalation history available.</div></div>';
+      }
+      if (!rows.length) {
+        emptyTableMessage('escalationHistoryBody', 6, 'No escalation history available');
+        return;
+      }
+      renderRows('escalationHistoryBody', rows, row => `
+        <tr>
+          <td>${escapeHtml(formatDateTime(row.occurred_at))}</td>
+          <td class="lp-cell-stack"><span>${escapeHtml(row.action || '—')}</span><span class="lp-cell-subtle">${escapeHtml(`Escalation #${formatNum(row.escalation_number ?? 0)}`)}</span></td>
+          <td>${statusPill(row.decision || 'unknown')}</td>
+          <td class="lp-cell-stack"><span class="lp-mono">${escapeHtml(row.incident_id || '—')}</span><span class="lp-cell-subtle lp-mono">${escapeHtml(row.escalation_rule_id || '')}</span></td>
+          <td>${severityPill(row.incident_severity || 'info')}</td>
+          <td class="lp-cell-stack"><span>${escapeHtml(row.message || '—')}</span><span class="lp-cell-subtle">${escapeHtml(row.incident_status || '')}</span></td>
+        </tr>
+      `, 6);
+    }
+
+    async function loadEscalationDashboard(options = {}) {
+      const { incidentId = '' } = options;
+      await Promise.allSettled([
+        fetchEscalationRules().then(renderEscalationRules).catch(err => {
+          renderPanelError('escalationRulesBody', err.message, 7, true);
+          const mobile = document.getElementById('escalationRulesMobile'); if (mobile) mobile.innerHTML = `<div class="lp-mobile-item"><div class="lp-telemetry-empty">${escapeHtml(err.message)}</div></div>`;
+        }),
+        fetchEscalationState(incidentId).then(renderEscalationState).catch(err => {
+          renderPanelError('escalationStateBody', err.message, 6, true);
+          const mobile = document.getElementById('escalationStateMobile'); if (mobile) mobile.innerHTML = `<div class="lp-mobile-item"><div class="lp-telemetry-empty">${escapeHtml(err.message)}</div></div>`;
+        }),
+        fetchEscalationLogRecent(incidentId).then(renderEscalationHistory).catch(err => {
+          renderPanelError('escalationHistoryBody', err.message, 6, true);
+          const mobile = document.getElementById('escalationHistoryMobile'); if (mobile) mobile.innerHTML = `<div class="lp-mobile-item"><div class="lp-telemetry-empty">${escapeHtml(err.message)}</div></div>`;
+        })
+      ]);
+      populateEscalationSelectors();
+    }
+
     let monitoringActionBusy = false;
     let monitoringAutoRefreshTimer = null;
     const MONITORING_AUTO_REFRESH_MS = 60000;
@@ -2364,6 +2767,7 @@
         fetchMonitoringType('monitoring', { window: windowValue }).then(renderTelemetryFeed).catch(err => renderPanelError('monitoringFeedBody', err.message, 4, true)),
         fetchNotificationTargets().then(renderNotificationTargets).catch(err => renderPanelError('notificationTargetsBody', err.message, 5, true)),
         fetchNotificationLogRecent().then(renderNotificationLog).catch(err => renderPanelError('notificationLogBody', err.message, 5, true)),
+        loadEscalationDashboard({ incidentId: selectedIncidentId || '' }),
       ];
 
       await Promise.allSettled(tasks);
@@ -2516,6 +2920,98 @@
         }
       });
       window.addEventListener('beforeunload', stopAutoRefresh);
+
+      const escalationRefreshBtn = document.getElementById('btnEscalationRefresh');
+      const escalationEvaluateOpenBtn = document.getElementById('btnEscalationEvaluateOpen');
+      const escalationEvaluateOneBtn = document.getElementById('btnEscalationEvaluateOne');
+      const escalationExecuteOneBtn = document.getElementById('btnEscalationExecuteOne');
+      const escalationIncidentSelect = document.getElementById('escalationIncidentSelect');
+      const escalationRuleSelect = document.getElementById('escalationRuleSelect');
+
+      escalationRefreshBtn?.addEventListener('click', async () => {
+        try {
+          escalationRefreshBtn.disabled = true;
+          await loadEscalationDashboard({ incidentId: selectedIncidentId || escalationIncidentSelect?.value || '' });
+          window.LPAdmin?.toast('Escalation controls refreshed', 'success', 2200);
+        } catch (err) {
+          window.LPAdmin?.toast(`Escalation refresh failed: ${err.message}`, 'error', 4000);
+        } finally {
+          escalationRefreshBtn.disabled = false;
+        }
+      });
+
+      escalationEvaluateOpenBtn?.addEventListener('click', async () => {
+        try {
+          escalationEvaluateOpenBtn.disabled = true;
+          const res = await evaluateOpenIncidentEscalations();
+          const checked = res?.result?.pairs_checked ?? res?.pairs_checked ?? 0;
+          updateEscalationActionResult(`Open incident evaluation completed. Pairs checked: ${checked}.`, 'success');
+          window.LPAdmin?.toast(`Escalation evaluation completed: ${checked} pairs checked`, 'success', 2600);
+          await loadEscalationDashboard({ incidentId: selectedIncidentId || escalationIncidentSelect?.value || '' });
+        } catch (err) {
+          updateEscalationActionResult(`Open incident evaluation failed: ${err.message}`, 'error');
+          window.LPAdmin?.toast(`Escalation evaluation failed: ${err.message}`, 'error', 4000);
+        } finally {
+          escalationEvaluateOpenBtn.disabled = false;
+        }
+      });
+
+      escalationIncidentSelect?.addEventListener('change', () => {
+        const selected = latestVisibleAlertRows.find(r => String(r.id || '') === String(escalationIncidentSelect.value || '')) || null;
+        if (selected) setSelectedIncident(selected);
+        loadEscalationDashboard({ incidentId: escalationIncidentSelect.value || '' }).catch(() => {});
+      });
+
+      escalationRuleSelect?.addEventListener('change', () => {
+        const row = latestEscalationRules.find(r => String(r.id || '') === String(escalationRuleSelect.value || ''));
+        if (row) updateEscalationActionResult(`Selected rule ${row.rule_key || row.name || row.id}. Ready for evaluation or execution.`, 'info');
+      });
+
+      escalationEvaluateOneBtn?.addEventListener('click', async () => {
+        const incidentId = escalationIncidentSelect?.value || selectedIncidentId || '';
+        const ruleId = escalationRuleSelect?.value || '';
+        if (!incidentId || !ruleId) {
+          updateEscalationActionResult('Select both incident and rule before evaluating.', 'error');
+          window.LPAdmin?.toast('Select both incident and rule before evaluating', 'error', 3200);
+          return;
+        }
+        try {
+          escalationEvaluateOneBtn.disabled = true;
+          const res = await evaluateIncidentEscalation(incidentId, ruleId);
+          const result = res?.result || res;
+          updateEscalationActionResult(`Evaluation result: ${result?.decision || 'unknown'} · rule ${result?.rule_key || ruleId} · elapsed ${formatNum(result?.elapsed_minutes ?? 0)} minutes.`, 'success');
+          window.LPAdmin?.toast(`Escalation evaluate: ${result?.decision || 'completed'}`, 'success', 2600);
+          await loadEscalationDashboard({ incidentId });
+        } catch (err) {
+          updateEscalationActionResult(`Evaluation failed: ${err.message}`, 'error');
+          window.LPAdmin?.toast(`Escalation evaluate failed: ${err.message}`, 'error', 4000);
+        } finally {
+          escalationEvaluateOneBtn.disabled = false;
+        }
+      });
+
+      escalationExecuteOneBtn?.addEventListener('click', async () => {
+        const incidentId = escalationIncidentSelect?.value || selectedIncidentId || '';
+        const ruleId = escalationRuleSelect?.value || '';
+        if (!incidentId || !ruleId) {
+          updateEscalationActionResult('Select both incident and rule before executing.', 'error');
+          window.LPAdmin?.toast('Select both incident and rule before executing', 'error', 3200);
+          return;
+        }
+        try {
+          escalationExecuteOneBtn.disabled = true;
+          const res = await executeIncidentEscalation(incidentId, ruleId);
+          const result = res?.result || res;
+          updateEscalationActionResult(`Execution result: ${result?.executed ? 'executed' : result?.decision || 'completed'} · escalation count ${formatNum(result?.escalation_count ?? 0)}.`, 'success');
+          window.LPAdmin?.toast(`Escalation execute: ${result?.executed ? 'executed' : 'completed'}`, 'success', 2600);
+          await Promise.all([loadMonitoringDashboard({ silent: true }), loadOverviewIncidentSnapshot()]);
+        } catch (err) {
+          updateEscalationActionResult(`Execution failed: ${err.message}`, 'error');
+          window.LPAdmin?.toast(`Escalation execute failed: ${err.message}`, 'error', 4000);
+        } finally {
+          escalationExecuteOneBtn.disabled = false;
+        }
+      });
 
       refreshNotificationDispatchState();
       syncAutoRefresh();
