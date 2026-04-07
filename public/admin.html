@@ -2237,6 +2237,10 @@
       return postTelemetryAction('evaluate_auto_protection', { trigger_source: 'admin' });
     }
 
+    async function fetchAutoProtectionOpsSummary() {
+      return await fetchMonitoringType('auto_protection_ops_summary');
+    }
+
 
     let selectedIncidentId = null;
     let selectedIncidentTitle = '';
@@ -2250,6 +2254,7 @@
     let latestAutoProtectionRules = [];
     let latestAutoProtectionLatestRows = [];
     let latestAutoProtectionActionRows = [];
+    let latestAutoProtectionSummary = {};
     const globalOpsState = {
       criticalIncidents: 0,
       openAlerts: 0
@@ -3218,47 +3223,95 @@
       `, 7);
     }
 
-    function renderAutoProtectionSummary() {
-      const latestRows = Array.isArray(latestAutoProtectionLatestRows) ? latestAutoProtectionLatestRows : [];
-      const totalRules = Array.isArray(latestAutoProtectionRules) ? latestAutoProtectionRules.length : 0;
-      const executedCount = latestRows.filter(r => r.decision === 'eligible_executed').length;
-      const cooldownCount = latestRows.filter(r => r.decision === 'eligible_skipped_cooldown').length;
-      const failedCount = latestRows.filter(r => r.decision === 'execution_failed' || r.success === false).length;
-      const latestAt = latestRows.map(r => r.occurred_at).filter(Boolean).sort().reverse()[0] || null;
-      setText('autoProtectionSummaryUpdatedBadge', latestAt ? `Updated ${formatDateTime(latestAt)}` : 'Awaiting data');
+    function renderAutoProtectionSummary(data = null) {
+  const summary = data || latestAutoProtectionSummary || {};
+  latestAutoProtectionSummary = summary;
 
-      const target = document.getElementById('autoProtectionSummaryContent');
-      if (!target) return;
-      target.innerHTML = `
-        <div class="lp-escalation-latest-grid">
-          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Active Rules</div><div class="lp-escalation-latest-value">${formatNum(totalRules)}</div></div>
-          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Executed</div><div class="lp-escalation-latest-value">${formatNum(executedCount)}</div></div>
-          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Cooldown</div><div class="lp-escalation-latest-value">${formatNum(cooldownCount)}</div></div>
-          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Failures</div><div class="lp-escalation-latest-value">${formatNum(failedCount)}</div></div>
-          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Last Evaluation</div><div class="lp-escalation-latest-value">${escapeHtml(formatDateTime(latestAt))}</div></div>
-          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Posture</div><div class="lp-escalation-latest-value">${failedCount ? 'Intervention needed' : cooldownCount ? 'Cooldown active' : totalRules ? 'Healthy' : 'No rules'}</div></div>
-        </div>`;
-    }
+  const latestAt = summary.latest_action_at || summary.latest_evaluated_at || null;
+  setText(
+    'autoProtectionSummaryUpdatedBadge',
+    latestAt ? `Updated ${formatDateTime(latestAt)}` : 'Awaiting data'
+  );
+
+  const statusBadge = document.getElementById('autoProtectionStatusBadge');
+  if (statusBadge) {
+    const posture = String(summary.posture || 'unknown').toLowerCase();
+    const label = summary.posture_label || '—';
+    statusBadge.textContent = `State: ${label}`;
+    statusBadge.className =
+      `admin-badge ${
+        posture === 'critical'
+          ? 'admin-badge-danger'
+          : posture === 'warning'
+            ? 'admin-badge-warning'
+            : posture === 'healthy'
+              ? 'admin-badge-indigo'
+              : 'admin-badge-neutral'
+      }`;
+  }
+
+  const target = document.getElementById('autoProtectionSummaryContent');
+  if (!target) return;
+
+  target.innerHTML = `
+    <div class="lp-escalation-latest-grid">
+      <div class="lp-escalation-latest-metric">
+        <div class="lp-escalation-latest-label">Active Rules</div>
+        <div class="lp-escalation-latest-value">${formatNum(summary.total_rules || 0)}</div>
+      </div>
+      <div class="lp-escalation-latest-metric">
+        <div class="lp-escalation-latest-label">Executed</div>
+        <div class="lp-escalation-latest-value">${formatNum(summary.executed_count || 0)}</div>
+      </div>
+      <div class="lp-escalation-latest-metric">
+        <div class="lp-escalation-latest-label">Cooldown</div>
+        <div class="lp-escalation-latest-value">${formatNum(summary.cooldown_count || 0)}</div>
+      </div>
+      <div class="lp-escalation-latest-metric">
+        <div class="lp-escalation-latest-label">Daily Cap</div>
+        <div class="lp-escalation-latest-value">${formatNum(summary.daily_cap_count || 0)}</div>
+      </div>
+      <div class="lp-escalation-latest-metric">
+        <div class="lp-escalation-latest-label">Failures</div>
+        <div class="lp-escalation-latest-value">${formatNum(summary.failed_count || 0)}</div>
+      </div>
+      <div class="lp-escalation-latest-metric">
+        <div class="lp-escalation-latest-label">Posture</div>
+        <div class="lp-escalation-latest-value">${escapeHtml(summary.posture_label || '—')}</div>
+      </div>
+    </div>
+    <div class="lp-cell-subtle" style="margin-top:12px">
+      ${escapeHtml(summary.summary || 'No summary available.')}
+    </div>
+    <div class="lp-cell-subtle" style="margin-top:8px">
+      Escalation remains the second line of defense if Auto Protection cannot resolve the issue.
+    </div>
+  `;
+}
 
     async function loadAutoProtectionDashboard() {
-      try {
-        const [rulesData, latestData, logData] = await Promise.all([
-          fetchAutoProtectionRules(),
-          fetchAutoProtectionLatestByRule(),
-          fetchAutoProtectionActionLog(20)
-        ]);
-        renderAutoProtectionRules(rulesData);
-        renderAutoProtectionLatestByRule(latestData);
-        renderAutoProtectionActionLog(logData);
-        renderAutoProtectionSummary();
-      } catch (err) {
-        renderPanelError('autoProtectionRulesBody', err.message, 7, true);
-        renderPanelError('autoProtectionLatestBody', err.message, 7, true);
-        renderPanelError('autoProtectionActionBody', err.message, 7, true);
-        const target = document.getElementById('autoProtectionSummaryContent');
-        if (target) target.innerHTML = `<div class="lp-monitoring-inline-error">${escapeHtml(err.message || 'Failed to load auto protection data')}</div>`;
-      }
+  try {
+    const [rulesData, latestData, logData, summaryData] = await Promise.all([
+      fetchAutoProtectionRules(),
+      fetchAutoProtectionLatestByRule(),
+      fetchAutoProtectionActionLog(20),
+      fetchAutoProtectionOpsSummary()
+    ]);
+
+    renderAutoProtectionRules(rulesData);
+    renderAutoProtectionLatestByRule(latestData);
+    renderAutoProtectionActionLog(logData);
+    renderAutoProtectionSummary(summaryData);
+  } catch (err) {
+    renderPanelError('autoProtectionRulesBody', err.message, 7, true);
+    renderPanelError('autoProtectionLatestBody', err.message, 7, true);
+    renderPanelError('autoProtectionActionBody', err.message, 7, true);
+    const target = document.getElementById('autoProtectionSummaryContent');
+    if (target) {
+      target.innerHTML = `<div class="lp-monitoring-inline-error">${escapeHtml(err.message || 'Failed to load auto protection data')}</div>`;
     }
+  }
+}
 
     async function loadEscalationAutomationDashboard() {
       try {
@@ -3519,20 +3572,40 @@
       });
 
       autoProtectionEvaluateBtn?.addEventListener('click', async () => {
-        try {
-          autoProtectionEvaluateBtn.disabled = true;
-          const res = await runAutoProtectionEvaluation();
-          const resultRows = Array.isArray(res?.result?.results) ? res.result.results : [];
-          const successCount = resultRows.filter(r => r.success === true).length;
-          const failedCount = resultRows.filter(r => r.success === false).length;
-          await loadAutoProtectionDashboard();
-          window.LPAdmin?.toast(`Auto Protection evaluated: ${successCount} success, ${failedCount} failed`, failedCount ? 'warning' : 'success', 2800);
-        } catch (err) {
-          window.LPAdmin?.toast(`Auto Protection evaluation failed: ${err.message}`, 'error', 4000);
-        } finally {
-          autoProtectionEvaluateBtn.disabled = false;
-        }
-      });
+  if (monitoringActionBusy) return;
+  monitoringActionBusy = true;
+  autoProtectionEvaluateBtn.disabled = true;
+  if (autoProtectionRefreshBtn) autoProtectionRefreshBtn.disabled = true;
+
+  const previousText = autoProtectionEvaluateBtn.textContent;
+  autoProtectionEvaluateBtn.textContent = 'Evaluating…';
+
+  try {
+    const res = await runAutoProtectionEvaluation();
+    const results = Array.isArray(res?.result?.results) ? res.result.results : [];
+    const executed = results.filter(r => r.decision === 'eligible_executed').length;
+    const failed = results.filter(r => r.decision === 'execution_failed' || r.success === false).length;
+    const cooldown = results.filter(r => r.decision === 'eligible_skipped_cooldown').length;
+
+    await loadAutoProtectionDashboard();
+
+    const message =
+      failed > 0
+        ? `Auto Protection evaluated: ${executed} executed, ${failed} failed`
+        : cooldown > 0
+          ? `Auto Protection evaluated: ${executed} executed, ${cooldown} cooling down`
+          : `Auto Protection evaluated: ${executed} executed successfully`;
+
+    window.LPAdmin?.toast(message, failed > 0 ? 'warning' : 'success', 3200);
+  } catch (err) {
+    window.LPAdmin?.toast(`Auto Protection evaluation failed: ${err.message}`, 'error', 4200);
+  } finally {
+    monitoringActionBusy = false;
+    autoProtectionEvaluateBtn.disabled = false;
+    if (autoProtectionRefreshBtn) autoProtectionRefreshBtn.disabled = false;
+    autoProtectionEvaluateBtn.textContent = previousText;
+  }
+});
 
       const escalationRefreshBtn = document.getElementById('btnEscalationRefresh');
       const escalationEvaluateOpenBtn = document.getElementById('btnEscalationEvaluateOpen');

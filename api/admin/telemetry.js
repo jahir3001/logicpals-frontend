@@ -745,6 +745,17 @@ async function handleAutoProtectionActionLogRecent(supabase, limit = 50) {
   return { rows: data || [] };
 }
 
+async function handleAutoProtectionOpsSummary(supabase) {
+  const { data, error } = await supabase
+    .from("v_auto_protection_ops_summary")
+    .select("*")
+    .limit(1)
+    .single();
+
+  if (error) throw error;
+  return data || {};
+}
+
 async function handleEscalationRules(supabase) {
   const { data, error } = await supabase
     .from("incident_escalation_rules")
@@ -1159,6 +1170,9 @@ module.exports = async (req, res) => {
         req.query.limit || body.limit || 20
       )
     );
+
+case "auto_protection_ops_summary":
+  return jsonOk(res, await handleAutoProtectionOpsSummary(userSb));
 
 case "automation_watchdog_run":
   return jsonOk(res, {
