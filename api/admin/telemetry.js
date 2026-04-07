@@ -339,6 +339,13 @@ async function handleMonitoringAction(userSb, body, action) {
     case "monitoring_evaluate_alerts":
       return { result: await rpcOrThrow(userSb, "admin_monitoring_evaluate_alerts") };
 
+	    case "system_health_score_run":
+      return {
+        result: await rpcOrThrow(userSb, "rpc_compute_system_health_score", {
+          p_trigger_source: String(body.trigger_source || "admin").trim().toLowerCase(),
+        }),
+      };
+
     case "monitoring_ack_alert": {
       const alertId = String(body.alert_id || "").trim();
       if (!alertId) {
@@ -671,6 +678,30 @@ function safePositiveInt(v, fallback, max = 500) {
   const n = Number(v);
   if (!Number.isFinite(n) || n <= 0) return fallback;
   return Math.min(Math.floor(n), max);
+}
+
+async function handleSystemHealthScoreLatest(supabase) {
+  const { data, error } = await supabase
+    .from("v_system_health_score_latest")
+    .select("*")
+    .limit(1)
+    .single();
+
+  if (error) throw error;
+  return data || {};
+}
+
+async function handleSystemHealthScoreRecent(supabase, limit = 50) {
+  const safeLimit = safePositiveInt(limit, 20, 100);
+
+  const { data, error } = await supabase
+    .from("v_system_health_score_recent")
+    .select("*")
+    .order("score_at", { ascending: false })
+    .limit(safeLimit);
+
+  if (error) throw error;
+  return { rows: data || [] };
 }
 
 async function handleEscalationRules(supabase) {
@@ -1012,6 +1043,18 @@ module.exports = async (req, res) => {
 
   case "system_health":
     return jsonOk(res, await handleSystemHealth(userSb));
+
+  case "system_health_score":
+    return jsonOk(res, await handleSystemHealthScoreLatest(userSb));
+
+  case "system_health_score_recent":
+    return jsonOk(
+      res,
+      await handleSystemHealthScoreRecent(
+        userSb,
+        req.query.limit || body.limit || 20
+      )
+    );
 
   case "incidents":
     return jsonOk(
