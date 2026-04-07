@@ -370,6 +370,14 @@ async function handleMonitoringAction(userSb, body, action) {
       };
     }
 
+	    case "evaluate_auto_protection":
+      return {
+        result: await rpcOrThrow(userSb, "rpc_evaluate_auto_protection_rules", {
+          p_trigger_source: String(body.trigger_source || "admin").trim().toLowerCase(),
+          p_created_by: body.created_by || null,
+        }),
+      };
+
     default:
       throw new Error(`unsupported_monitoring_action:${action || "unknown"}`);
   }
@@ -698,6 +706,29 @@ async function handleSystemHealthScoreRecent(supabase, limit = 50) {
     .from("v_system_health_score_recent")
     .select("*")
     .order("score_at", { ascending: false })
+    .limit(safeLimit);
+
+  if (error) throw error;
+  return { rows: data || [] };
+}
+
+async function handleAutoProtectionRules(supabase) {
+  const { data, error } = await supabase
+    .from("v_auto_protection_rules_active")
+    .select("*")
+    .order("rule_key", { ascending: true });
+
+  if (error) throw error;
+  return { rows: data || [] };
+}
+
+async function handleAutoProtectionActionLogRecent(supabase, limit = 50) {
+  const safeLimit = safePositiveInt(limit, 20, 100);
+
+  const { data, error } = await supabase
+    .from("v_auto_protection_action_log_recent")
+    .select("*")
+    .order("occurred_at", { ascending: false })
     .limit(safeLimit);
 
   if (error) throw error;
@@ -1106,6 +1137,18 @@ module.exports = async (req, res) => {
 
      case "automation_watchdog":
   return jsonOk(res, await handleAutomationWatchdog(userSb));
+
+  case "auto_protection_rules":
+    return jsonOk(res, await handleAutoProtectionRules(userSb));
+
+  case "auto_protection_action_log_recent":
+    return jsonOk(
+      res,
+      await handleAutoProtectionActionLogRecent(
+        userSb,
+        req.query.limit || body.limit || 20
+      )
+    );
 
 case "automation_watchdog_run":
   return jsonOk(res, {
