@@ -337,7 +337,7 @@ async function handleMonitoringAction(userSb, body, action) {
       return { result: await rpcOrThrow(userSb, "admin_monitoring_dashboard_bundle") };
 
     case "monitoring_evaluate_alerts":
-      return { result: await rpcOrThrow(userSb, "admin_monitoring_evaluate_alerts") };
+      return { result: await rpcOrThrow(userSb, "internal_monitoring_evaluate_alerts") };
 
 	    case "system_health_score_run":
       return {
