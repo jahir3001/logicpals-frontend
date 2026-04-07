@@ -1586,22 +1586,91 @@
                   </div>
                 </div>
 
-
-                <div class="lp-telemetry-table-card" style="margin-top:12px" id="automationWatchdogCard">
+                <div class="lp-telemetry-table-card" style="margin-top:12px" id="autoProtectionCard">
                   <div class="lp-telemetry-card-head">
                     <div>
-                      <div class="lp-telemetry-card-title">Automation Watchdog</div>
-                      <div class="lp-cell-subtle" style="margin-top:4px">Monitors escalation automation health, cron heartbeat, failures, backlog, and execution freshness.</div>
+                      <div class="lp-telemetry-card-title">Auto Protection Engine</div>
+                      <div class="lp-cell-subtle" style="margin-top:4px">Bounded automated remediation, cooldown control, and audited recovery actions across the operations platform.</div>
                     </div>
                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                      <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" id="btnWatchdogRefresh">Refresh</button>
-                      <button class="admin-btn admin-btn-primary admin-btn-sm" type="button" id="btnWatchdogRun">Run Watchdog</button>
-                      <span class="admin-badge admin-badge-indigo" id="watchdogHealthBadge">Health: —</span>
+                      <button class="admin-btn admin-btn-secondary admin-btn-sm" type="button" id="btnAutoProtectionRefresh">Refresh</button>
+                      <button class="admin-btn admin-btn-primary admin-btn-sm" type="button" id="btnAutoProtectionEvaluate">Evaluate Auto Protection</button>
+                      <span class="admin-badge admin-badge-indigo" id="autoProtectionStatusBadge">State: —</span>
                     </div>
                   </div>
 
-                  <div id="automationWatchdogContent" style="padding:14px">
-                    <div class="lp-telemetry-empty">Loading automation watchdog…</div>
+                  <div class="lp-escalation-grid">
+                    <div class="lp-telemetry-table-card">
+                      <div class="lp-telemetry-card-head">
+                        <div>
+                          <div class="lp-telemetry-card-title">Protection Rules</div>
+                          <div class="lp-cell-subtle" style="margin-top:4px">Enabled rules, actions, cooldowns, and execution limits.</div>
+                        </div>
+                        <span class="admin-badge admin-badge-indigo" id="autoProtectionRulesCountBadge">0 rules</span>
+                      </div>
+                      <div class="lp-mobile-list" id="autoProtectionRulesMobile"></div>
+                      <div class="lp-telemetry-table-wrap">
+                        <table class="lp-telemetry-table">
+                          <thead>
+                            <tr><th>Rule</th><th>Condition</th><th>Action</th><th>Cooldown</th><th>Daily Cap</th><th>Last Decision</th><th>Last Executed</th></tr>
+                          </thead>
+                          <tbody id="autoProtectionRulesBody"><tr><td colspan="7" class="lp-telemetry-empty">Loading…</td></tr></tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <div class="lp-telemetry-table-card">
+                      <div class="lp-telemetry-card-head">
+                        <div>
+                          <div class="lp-telemetry-card-title">Latest Rule Outcomes</div>
+                          <div class="lp-cell-subtle" style="margin-top:4px">Most recent action outcome per rule for current operational state.</div>
+                        </div>
+                        <span class="admin-badge admin-badge-teal" id="autoProtectionLatestCountBadge">0 rows</span>
+                      </div>
+                      <div class="lp-mobile-list" id="autoProtectionLatestMobile"></div>
+                      <div class="lp-telemetry-table-wrap">
+                        <table class="lp-telemetry-table">
+                          <thead>
+                            <tr><th>Rule</th><th>Occurred</th><th>Decision</th><th>Action</th><th>Executed</th><th>Success</th><th>Reason</th></tr>
+                          </thead>
+                          <tbody id="autoProtectionLatestBody"><tr><td colspan="7" class="lp-telemetry-empty">Loading…</td></tr></tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="lp-escalation-grid" style="margin-top:12px">
+                    <div class="lp-telemetry-table-card">
+                      <div class="lp-telemetry-card-head">
+                        <div>
+                          <div class="lp-telemetry-card-title">Recent Protection Actions</div>
+                          <div class="lp-cell-subtle" style="margin-top:4px">Full audited history of automated interventions and skip decisions.</div>
+                        </div>
+                        <span class="admin-badge admin-badge-indigo" id="autoProtectionActionCountBadge">0 rows</span>
+                      </div>
+                      <div class="lp-mobile-list" id="autoProtectionActionMobile"></div>
+                      <div class="lp-telemetry-table-wrap">
+                        <table class="lp-telemetry-table">
+                          <thead>
+                            <tr><th>Occurred</th><th>Rule</th><th>Decision</th><th>Action</th><th>Executed</th><th>Success</th><th>Reason</th></tr>
+                          </thead>
+                          <tbody id="autoProtectionActionBody"><tr><td colspan="7" class="lp-telemetry-empty">Loading…</td></tr></tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <div class="lp-telemetry-table-card">
+                      <div class="lp-telemetry-card-head">
+                        <div>
+                          <div class="lp-telemetry-card-title">Operations Summary</div>
+                          <div class="lp-cell-subtle" style="margin-top:4px">Latest protection posture, execution count, and cooldown / failure signal overview.</div>
+                        </div>
+                        <span class="admin-badge admin-badge-indigo" id="autoProtectionSummaryUpdatedBadge">Awaiting data</span>
+                      </div>
+                      <div id="autoProtectionSummaryContent" style="padding:14px">
+                        <div class="lp-telemetry-empty">Loading auto protection summary…</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -2125,108 +2194,6 @@
       return fetchMonitoringType('escalation_run_dashboard');
     }
 
-
-    async function fetchAutomationWatchdog() {
-      return fetchMonitoringType('automation_watchdog');
-    }
-
-    async function runAutomationWatchdog() {
-      return postTelemetryAction('automation_watchdog_run', {});
-    }
-
-    function renderAutomationWatchdog(payload = {}) {
-      const data = firstObject(payload.result, payload.health, payload);
-      const target = document.getElementById('automationWatchdogContent');
-      const badge = document.getElementById('watchdogHealthBadge');
-      if (!target) return;
-
-      if (!data || Object.keys(data).length === 0) {
-        target.innerHTML = '<div class="lp-telemetry-empty">No automation watchdog data available.</div>';
-        if (badge) {
-          badge.textContent = 'Health: —';
-          badge.className = 'admin-badge admin-badge-indigo';
-        }
-        return;
-      }
-
-      const healthy = !!data.is_healthy;
-      const severity = String(data.severity || (healthy ? 'ok' : 'critical')).toLowerCase();
-      const reasons = Array.isArray(data.reasons) ? data.reasons : [];
-      const healthLabel = healthy ? 'Healthy' : 'Unhealthy';
-      const badgeTone = healthy ? 'admin-badge-teal' : (severity === 'warning' ? 'admin-badge-amber' : 'admin-badge-red');
-      const reasonText = reasons.length ? reasons.join(', ') : 'None';
-
-      if (badge) {
-        badge.textContent = `Health: ${healthLabel}`;
-        badge.className = `admin-badge ${badgeTone}`;
-      }
-
-      target.innerHTML = `<div class="lp-monitoring-health-grid">
-        <div class="lp-monitoring-health-card">
-          <div class="lp-monitoring-health-top">
-            <div class="lp-monitoring-health-title">Overall Health</div>
-            ${healthPill(healthy ? 'healthy' : severity)}
-          </div>
-          <div class="lp-monitoring-health-detail">Severity: ${escapeHtml(String(data.severity || 'unknown').toUpperCase())}</div>
-        </div>
-        <div class="lp-monitoring-health-card">
-          <div class="lp-monitoring-health-title">Automation Enabled</div>
-          <div class="lp-monitoring-health-detail">${data.automation_enabled ? 'Yes' : 'No'}</div>
-        </div>
-        <div class="lp-monitoring-health-card">
-          <div class="lp-monitoring-health-title">Cron Enabled</div>
-          <div class="lp-monitoring-health-detail">${data.cron_enabled ? 'Yes' : 'No'}</div>
-        </div>
-        <div class="lp-monitoring-health-card">
-          <div class="lp-monitoring-health-title">Minutes Since Last Run</div>
-          <div class="lp-monitoring-health-detail">${formatNum(data.minutes_since_last_run ?? 0)}</div>
-        </div>
-        <div class="lp-monitoring-health-card">
-          <div class="lp-monitoring-health-title">Minutes Since Cron Heartbeat</div>
-          <div class="lp-monitoring-health-detail">${formatNum(data.minutes_since_cron_heartbeat ?? 0)}</div>
-        </div>
-        <div class="lp-monitoring-health-card">
-          <div class="lp-monitoring-health-title">Backlog</div>
-          <div class="lp-monitoring-health-detail">${formatNum(data.backlog_count ?? 0)}</div>
-        </div>
-        <div class="lp-monitoring-health-card">
-          <div class="lp-monitoring-health-title">Consecutive Failures</div>
-          <div class="lp-monitoring-health-detail">${formatNum(data.consecutive_failures ?? 0)}</div>
-        </div>
-        <div class="lp-monitoring-health-card">
-          <div class="lp-monitoring-health-title">Last Run Errors</div>
-          <div class="lp-monitoring-health-detail">${formatNum(data.last_run_error_count ?? 0)}</div>
-        </div>
-        <div class="lp-monitoring-health-card">
-          <div class="lp-monitoring-health-title">Raise Incident</div>
-          <div class="lp-monitoring-health-detail">${data.should_raise_incident ? 'Yes' : 'No'}</div>
-        </div>
-        <div class="lp-monitoring-health-card" style="grid-column: span 3;">
-          <div class="lp-monitoring-health-title">Reasons</div>
-          <div class="lp-monitoring-health-detail">${escapeHtml(reasonText)}</div>
-        </div>
-      </div>`;
-    }
-
-    async function loadAutomationWatchdog(options = {}) {
-      const { silent = false } = options;
-      try {
-        const payload = await fetchAutomationWatchdog();
-        renderAutomationWatchdog(payload);
-      } catch (err) {
-        const target = document.getElementById('automationWatchdogContent');
-        const badge = document.getElementById('watchdogHealthBadge');
-        if (badge) {
-          badge.textContent = 'Health: Error';
-          badge.className = 'admin-badge admin-badge-red';
-        }
-        if (target) {
-          target.innerHTML = `<div class="lp-telemetry-empty">${escapeHtml(err.message || 'Failed to load automation watchdog')}</div>`;
-        }
-        if (!silent) throw err;
-      }
-    }
-
     async function evaluateIncidentEscalation(incidentId, ruleId) {
       return postTelemetryAction('evaluate_incident_escalation', { incident_id: incidentId, rule_id: ruleId });
     }
@@ -2254,6 +2221,22 @@
     async function dispatchIncidentNotifications(incidentId) {
       return postTelemetryAction('dispatch_incident_notifications', { incident_id: incidentId });
     }
+    async function fetchAutoProtectionRules() {
+      return fetchMonitoringType('auto_protection_rules');
+    }
+
+    async function fetchAutoProtectionLatestByRule() {
+      return fetchMonitoringType('auto_protection_action_log_latest_by_rule');
+    }
+
+    async function fetchAutoProtectionActionLog(limit = 20) {
+      return fetchMonitoringType('auto_protection_action_log_recent', { limit });
+    }
+
+    async function runAutoProtectionEvaluation() {
+      return postTelemetryAction('evaluate_auto_protection', { trigger_source: 'admin' });
+    }
+
 
     let selectedIncidentId = null;
     let selectedIncidentTitle = '';
@@ -2264,6 +2247,9 @@
     let latestEscalationRules = [];
     let latestEscalationStateRows = [];
     let latestEscalationHistoryRows = [];
+    let latestAutoProtectionRules = [];
+    let latestAutoProtectionLatestRows = [];
+    let latestAutoProtectionActionRows = [];
     const globalOpsState = {
       criticalIncidents: 0,
       openAlerts: 0
@@ -3102,6 +3088,178 @@
       `, 8);
     }
 
+    function renderAutoProtectionRules(data = {}) {
+      const rows = normalizeRows(data.result || data);
+      latestAutoProtectionRules = rows;
+      setText('autoProtectionRulesCountBadge', `${rows.length} rules`);
+
+      const mobile = document.getElementById('autoProtectionRulesMobile');
+      if (mobile) {
+        mobile.innerHTML = rows.length ? rows.map(row => `
+          <div class="lp-mobile-item">
+            <div class="lp-mobile-title-row">
+              <div class="lp-mobile-title">${escapeHtml(row.name || row.rule_key || 'Protection rule')}</div>
+              <div>${statusPill(String(row.last_decision || (row.enabled ? 'ok' : 'unknown')).toLowerCase())}</div>
+            </div>
+            <div class="lp-mobile-meta-grid">
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Rule Key</div><div class="lp-mobile-meta-value lp-mono">${escapeHtml(row.rule_key || '—')}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Condition</div><div class="lp-mobile-meta-value">${escapeHtml(row.condition_type || '—')}${row.condition_threshold != null ? ` · ${escapeHtml(String(row.condition_threshold))}` : ''}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Action</div><div class="lp-mobile-meta-value">${escapeHtml(row.action_type || '—')}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Cooldown</div><div class="lp-mobile-meta-value">${formatNum(row.cooldown_minutes || 0)} min</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Daily Cap</div><div class="lp-mobile-meta-value">${formatNum(row.max_runs_per_day || 0)}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Last Executed</div><div class="lp-mobile-meta-value">${escapeHtml(formatDateTime(row.last_executed_at))}</div></div>
+            </div>
+          </div>`).join('') : '<div class="lp-mobile-item"><div class="lp-telemetry-empty">No active auto protection rules.</div></div>';
+      }
+
+      if (!rows.length) {
+        emptyTableMessage('autoProtectionRulesBody', 7, 'No active auto protection rules');
+        return;
+      }
+
+      renderRows('autoProtectionRulesBody', rows, row => `
+        <tr>
+          <td class="lp-cell-stack"><span>${escapeHtml(row.name || row.rule_key || '—')}</span><span class="lp-cell-subtle lp-mono">${escapeHtml(row.rule_key || '')}</span></td>
+          <td>${escapeHtml(row.condition_type || '—')}${row.condition_threshold != null ? `<div class="lp-cell-subtle">Threshold: ${escapeHtml(String(row.condition_threshold))}</div>` : ''}</td>
+          <td>${escapeHtml(row.action_type || '—')}</td>
+          <td>${formatNum(row.cooldown_minutes || 0)} min</td>
+          <td>${formatNum(row.max_runs_per_day || 0)}</td>
+          <td>${statusPill(String(row.last_decision || (row.enabled ? 'ok' : 'unknown')).toLowerCase())}</td>
+          <td>${escapeHtml(formatDateTime(row.last_executed_at))}</td>
+        </tr>
+      `, 7);
+    }
+
+    function renderAutoProtectionLatestByRule(data = {}) {
+      const rows = normalizeRows(data.result || data);
+      latestAutoProtectionLatestRows = rows;
+      setText('autoProtectionLatestCountBadge', `${rows.length} rows`);
+      const statusBadge = document.getElementById('autoProtectionStatusBadge');
+      if (statusBadge) {
+        const failed = rows.some(row => row.decision === 'execution_failed' || row.success === false);
+        const warning = !failed && rows.some(row => row.decision === 'eligible_skipped_cooldown' || row.decision === 'eligible_skipped_daily_cap');
+        statusBadge.textContent = failed ? 'State: Intervention Needed' : warning ? 'State: Cooldown Active' : rows.length ? 'State: Healthy' : 'State: —';
+        statusBadge.className = `admin-badge ${failed ? 'admin-badge-danger' : warning ? 'admin-badge-warning' : 'admin-badge-indigo'}`;
+      }
+
+      const mobile = document.getElementById('autoProtectionLatestMobile');
+      if (mobile) {
+        mobile.innerHTML = rows.length ? rows.map(row => `
+          <div class="lp-mobile-item">
+            <div class="lp-mobile-title-row">
+              <div class="lp-mobile-title">${escapeHtml(row.rule_key || '—')}</div>
+              <div>${statusPill(String(row.decision || 'unknown').toLowerCase())}</div>
+            </div>
+            <div class="lp-mobile-meta-grid">
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Occurred</div><div class="lp-mobile-meta-value">${escapeHtml(formatDateTime(row.occurred_at))}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Action</div><div class="lp-mobile-meta-value">${escapeHtml(row.action_type || '—')}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Executed</div><div class="lp-mobile-meta-value">${row.executed ? 'Yes' : 'No'}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Success</div><div class="lp-mobile-meta-value">${row.success === null || row.success === undefined ? '—' : row.success ? 'true' : 'false'}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Reason</div><div class="lp-mobile-meta-value">${escapeHtml(row.reason || '—')}</div></div>
+            </div>
+          </div>`).join('') : '<div class="lp-mobile-item"><div class="lp-telemetry-empty">No latest rule outcomes available.</div></div>';
+      }
+
+      if (!rows.length) {
+        emptyTableMessage('autoProtectionLatestBody', 7, 'No latest rule outcomes available');
+        return;
+      }
+
+      renderRows('autoProtectionLatestBody', rows, row => `
+        <tr>
+          <td class="lp-cell-stack"><span>${escapeHtml(row.rule_key || '—')}</span><span class="lp-cell-subtle">${escapeHtml(row.trigger_source || '')}</span></td>
+          <td>${escapeHtml(formatDateTime(row.occurred_at))}</td>
+          <td>${statusPill(String(row.decision || 'unknown').toLowerCase())}</td>
+          <td>${escapeHtml(row.action_type || '—')}</td>
+          <td>${row.executed ? 'Yes' : 'No'}</td>
+          <td>${row.success === null || row.success === undefined ? '—' : row.success ? 'true' : 'false'}</td>
+          <td>${escapeHtml(row.reason || '—')}</td>
+        </tr>
+      `, 7);
+    }
+
+    function renderAutoProtectionActionLog(data = {}) {
+      const rows = normalizeRows(data.result || data);
+      latestAutoProtectionActionRows = rows;
+      setText('autoProtectionActionCountBadge', `${rows.length} rows`);
+      const mobile = document.getElementById('autoProtectionActionMobile');
+      if (mobile) {
+        mobile.innerHTML = rows.length ? rows.map(row => `
+          <div class="lp-mobile-item">
+            <div class="lp-mobile-title-row">
+              <div class="lp-mobile-title">${escapeHtml(row.rule_key || '—')}</div>
+              <div>${statusPill(String(row.decision || 'unknown').toLowerCase())}</div>
+            </div>
+            <div class="lp-mobile-meta-grid">
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Occurred</div><div class="lp-mobile-meta-value">${escapeHtml(formatDateTime(row.occurred_at))}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Action</div><div class="lp-mobile-meta-value">${escapeHtml(row.action_type || '—')}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Executed</div><div class="lp-mobile-meta-value">${row.executed ? 'Yes' : 'No'}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Success</div><div class="lp-mobile-meta-value">${row.success === null || row.success === undefined ? '—' : row.success ? 'true' : 'false'}</div></div>
+              <div class="lp-mobile-meta"><div class="lp-mobile-meta-label">Reason</div><div class="lp-mobile-meta-value">${escapeHtml(row.reason || '—')}</div></div>
+            </div>
+          </div>`).join('') : '<div class="lp-mobile-item"><div class="lp-telemetry-empty">No protection actions recorded yet.</div></div>';
+      }
+
+      if (!rows.length) {
+        emptyTableMessage('autoProtectionActionBody', 7, 'No protection actions recorded yet');
+        return;
+      }
+
+      renderRows('autoProtectionActionBody', rows, row => `
+        <tr>
+          <td>${escapeHtml(formatDateTime(row.occurred_at))}</td>
+          <td class="lp-cell-stack"><span>${escapeHtml(row.rule_key || '—')}</span><span class="lp-cell-subtle">${escapeHtml(row.trigger_source || '')}</span></td>
+          <td>${statusPill(String(row.decision || 'unknown').toLowerCase())}</td>
+          <td>${escapeHtml(row.action_type || '—')}</td>
+          <td>${row.executed ? 'Yes' : 'No'}</td>
+          <td>${row.success === null || row.success === undefined ? '—' : row.success ? 'true' : 'false'}</td>
+          <td>${escapeHtml(row.reason || '—')}</td>
+        </tr>
+      `, 7);
+    }
+
+    function renderAutoProtectionSummary() {
+      const latestRows = Array.isArray(latestAutoProtectionLatestRows) ? latestAutoProtectionLatestRows : [];
+      const totalRules = Array.isArray(latestAutoProtectionRules) ? latestAutoProtectionRules.length : 0;
+      const executedCount = latestRows.filter(r => r.decision === 'eligible_executed').length;
+      const cooldownCount = latestRows.filter(r => r.decision === 'eligible_skipped_cooldown').length;
+      const failedCount = latestRows.filter(r => r.decision === 'execution_failed' || r.success === false).length;
+      const latestAt = latestRows.map(r => r.occurred_at).filter(Boolean).sort().reverse()[0] || null;
+      setText('autoProtectionSummaryUpdatedBadge', latestAt ? `Updated ${formatDateTime(latestAt)}` : 'Awaiting data');
+
+      const target = document.getElementById('autoProtectionSummaryContent');
+      if (!target) return;
+      target.innerHTML = `
+        <div class="lp-escalation-latest-grid">
+          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Active Rules</div><div class="lp-escalation-latest-value">${formatNum(totalRules)}</div></div>
+          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Executed</div><div class="lp-escalation-latest-value">${formatNum(executedCount)}</div></div>
+          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Cooldown</div><div class="lp-escalation-latest-value">${formatNum(cooldownCount)}</div></div>
+          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Failures</div><div class="lp-escalation-latest-value">${formatNum(failedCount)}</div></div>
+          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Last Evaluation</div><div class="lp-escalation-latest-value">${escapeHtml(formatDateTime(latestAt))}</div></div>
+          <div class="lp-escalation-latest-metric"><div class="lp-escalation-latest-label">Posture</div><div class="lp-escalation-latest-value">${failedCount ? 'Intervention needed' : cooldownCount ? 'Cooldown active' : totalRules ? 'Healthy' : 'No rules'}</div></div>
+        </div>`;
+    }
+
+    async function loadAutoProtectionDashboard() {
+      try {
+        const [rulesData, latestData, logData] = await Promise.all([
+          fetchAutoProtectionRules(),
+          fetchAutoProtectionLatestByRule(),
+          fetchAutoProtectionActionLog(20)
+        ]);
+        renderAutoProtectionRules(rulesData);
+        renderAutoProtectionLatestByRule(latestData);
+        renderAutoProtectionActionLog(logData);
+        renderAutoProtectionSummary();
+      } catch (err) {
+        renderPanelError('autoProtectionRulesBody', err.message, 7, true);
+        renderPanelError('autoProtectionLatestBody', err.message, 7, true);
+        renderPanelError('autoProtectionActionBody', err.message, 7, true);
+        const target = document.getElementById('autoProtectionSummaryContent');
+        if (target) target.innerHTML = `<div class="lp-monitoring-inline-error">${escapeHtml(err.message || 'Failed to load auto protection data')}</div>`;
+      }
+    }
+
     async function loadEscalationAutomationDashboard() {
       try {
         const data = await fetchEscalationRunDashboard();
@@ -3190,7 +3348,7 @@
         fetchNotificationTargets().then(renderNotificationTargets).catch(err => renderPanelError('notificationTargetsBody', err.message, 5, true)),
         fetchNotificationLogRecent().then(renderNotificationLog).catch(err => renderPanelError('notificationLogBody', err.message, 5, true)),
         loadEscalationAutomationDashboard(),
-        loadAutomationWatchdog({ silent: true }),
+        loadAutoProtectionDashboard(),
         loadEscalationDashboard({ incidentId: selectedIncidentId || '' }),
       ];
 
@@ -3212,8 +3370,6 @@
       const overviewOpenMonitoringBtn = document.getElementById('btnOverviewOpenMonitoring');
       const sendTestBtn = document.getElementById('btnSendTestNotification');
       const dispatchSelectedBtn = document.getElementById('btnDispatchSelectedIncident');
-      const watchdogRefreshBtn = document.getElementById('btnWatchdogRefresh');
-      const watchdogRunBtn = document.getElementById('btnWatchdogRun');
 
       const stopAutoRefresh = () => {
         if (monitoringAutoRefreshTimer) {
@@ -3271,37 +3427,6 @@
 
       overviewOpenMonitoringBtn?.addEventListener('click', () => {
         document.querySelector('.lp-tab[data-tab="telemetry"]')?.click();
-      });
-
-      watchdogRefreshBtn?.addEventListener('click', async () => {
-        if (monitoringActionBusy) return;
-        watchdogRefreshBtn.disabled = true;
-        try {
-          await loadAutomationWatchdog();
-          window.LPAdmin?.toast('Automation watchdog refreshed', 'success', 2200);
-        } catch (err) {
-          window.LPAdmin?.toast(`Automation watchdog refresh failed: ${err.message}`, 'error', 4000);
-        } finally {
-          watchdogRefreshBtn.disabled = false;
-        }
-      });
-
-      watchdogRunBtn?.addEventListener('click', async () => {
-        if (monitoringActionBusy) return;
-        watchdogRunBtn.disabled = true;
-        if (watchdogRefreshBtn) watchdogRefreshBtn.disabled = true;
-        try {
-          const res = await runAutomationWatchdog();
-          const payload = firstObject(res.result, res);
-          const message = payload?.message || 'Automation watchdog evaluation completed';
-          await loadAutomationWatchdog({ silent: true });
-          window.LPAdmin?.toast(message, 'success', 2400);
-        } catch (err) {
-          window.LPAdmin?.toast(`Automation watchdog run failed: ${err.message}`, 'error', 4000);
-        } finally {
-          watchdogRunBtn.disabled = false;
-          if (watchdogRefreshBtn) watchdogRefreshBtn.disabled = false;
-        }
       });
 
       incidentStatusEl?.addEventListener('change', () => {
@@ -3377,6 +3502,37 @@
         }
       });
       window.addEventListener('beforeunload', stopAutoRefresh);
+
+      const autoProtectionRefreshBtn = document.getElementById('btnAutoProtectionRefresh');
+      const autoProtectionEvaluateBtn = document.getElementById('btnAutoProtectionEvaluate');
+
+      autoProtectionRefreshBtn?.addEventListener('click', async () => {
+        try {
+          autoProtectionRefreshBtn.disabled = true;
+          await loadAutoProtectionDashboard();
+          window.LPAdmin?.toast('Auto Protection data refreshed', 'success', 2200);
+        } catch (err) {
+          window.LPAdmin?.toast(`Auto Protection refresh failed: ${err.message}`, 'error', 4000);
+        } finally {
+          autoProtectionRefreshBtn.disabled = false;
+        }
+      });
+
+      autoProtectionEvaluateBtn?.addEventListener('click', async () => {
+        try {
+          autoProtectionEvaluateBtn.disabled = true;
+          const res = await runAutoProtectionEvaluation();
+          const resultRows = Array.isArray(res?.result?.results) ? res.result.results : [];
+          const successCount = resultRows.filter(r => r.success === true).length;
+          const failedCount = resultRows.filter(r => r.success === false).length;
+          await loadAutoProtectionDashboard();
+          window.LPAdmin?.toast(`Auto Protection evaluated: ${successCount} success, ${failedCount} failed`, failedCount ? 'warning' : 'success', 2800);
+        } catch (err) {
+          window.LPAdmin?.toast(`Auto Protection evaluation failed: ${err.message}`, 'error', 4000);
+        } finally {
+          autoProtectionEvaluateBtn.disabled = false;
+        }
+      });
 
       const escalationRefreshBtn = document.getElementById('btnEscalationRefresh');
       const escalationEvaluateOpenBtn = document.getElementById('btnEscalationEvaluateOpen');
