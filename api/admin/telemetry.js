@@ -722,6 +722,16 @@ async function handleAutoProtectionRules(supabase) {
   return { rows: data || [] };
 }
 
+async function handleAutoProtectionActionLogLatestByRule(supabase) {
+  const { data, error } = await supabase
+    .from("v_auto_protection_action_log_latest_by_rule")
+    .select("*")
+    .order("rule_key", { ascending: true });
+
+  if (error) throw error;
+  return { rows: data || [] };
+}
+
 async function handleAutoProtectionActionLogRecent(supabase, limit = 50) {
   const safeLimit = safePositiveInt(limit, 20, 100);
 
@@ -1170,6 +1180,9 @@ case "automation_watchdog_heartbeat": {
     result: await evalAutomationWatchdog(userSb, "heartbeat")
   });
 }
+
+case "auto_protection_action_log_latest_by_rule":
+  return jsonOk(res, await handleAutoProtectionActionLogLatestByRule(userSb));
 
   default:
     return jsonErr(
