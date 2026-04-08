@@ -712,6 +712,46 @@ async function handleSystemHealthScoreRecent(supabase, limit = 50) {
   return { rows: data || [] };
 }
 
+async function handleAutoProtectionCircuitState(userSb) {
+  const { data, error } = await userSb
+    .from("v_auto_protection_circuit_state")
+    .select("*")
+    .order("rule_key", { ascending: true });
+
+  if (error) throw error;
+  return { rows: data || [] };
+}
+
+async function handleAutoProtectionFailures(userSb) {
+  const { data, error } = await userSb
+    .from("v_auto_protection_failures")
+    .select("*")
+    .order("last_failure_at", { ascending: false });
+
+  if (error) throw error;
+  return { rows: data || [] };
+}
+
+async function handleAutoProtectionBlockedActions(userSb) {
+  const { data, error } = await userSb
+    .from("v_auto_protection_blocked_actions")
+    .select("*")
+    .order("last_blocked_at", { ascending: false });
+
+  if (error) throw error;
+  return { rows: data || [] };
+}
+
+async function handleAutoProtectionCircuitOpsSummary(userSb) {
+  const { data, error } = await userSb
+    .from("v_auto_protection_circuit_ops_summary")
+    .select("*")
+    .limit(1);
+
+  if (error) throw error;
+  return { row: data?.[0] || null };
+}
+
 async function handleAutoProtectionRules(supabase) {
   const { data, error } = await supabase
     .from("v_auto_protection_rules_active")
