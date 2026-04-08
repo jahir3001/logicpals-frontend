@@ -1108,6 +1108,18 @@ module.exports = async (req, res) => {
       )
     );
 
+	case "auto_protection_circuit_state":
+  return jsonOk(res, await handleAutoProtectionCircuitState(userSb));
+
+case "auto_protection_failures":
+  return jsonOk(res, await handleAutoProtectionFailures(userSb));
+
+case "auto_protection_blocked_actions":
+  return jsonOk(res, await handleAutoProtectionBlockedActions(userSb));
+
+case "auto_protection_circuit_ops_summary":
+  return jsonOk(res, await handleAutoProtectionCircuitOpsSummary(userSb));
+
   case "incidents":
     return jsonOk(
       res,
