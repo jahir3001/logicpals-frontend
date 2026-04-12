@@ -47,7 +47,7 @@
       --font-semibold: 600;
       --sidebar-w: 276px;
       --header-h: 72px;
-      --drawer-w: 420px;
+      --drawer-w: 500px;
     }
 
     * { box-sizing: border-box; }
@@ -849,6 +849,206 @@
     .impact-icon { font-size: 18px; flex-shrink: 0; }
     .impact-count { font-weight: 700; color: var(--color-text-primary); }
     .impact-desc { color: var(--color-text-secondary); font-size: 12px; margin-top: 1px; }
+
+    /* ── SYSTEM MODE BANNER ─────────────────────────────────────── */
+    .mode-banner {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: var(--text-sm);
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+    .mode-banner.auto {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+      color: #15803d;
+    }
+    .mode-banner.manual {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #b91c1c;
+      animation: banner-pulse 3s ease-in-out infinite;
+    }
+    @keyframes banner-pulse {
+      0%,100% { box-shadow: none; }
+      50% { box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
+    }
+    .mode-banner-dot {
+      width: 10px; height: 10px;
+      border-radius: 999px;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    /* ── KPI DELTA ───────────────────────────────────────────────── */
+    .kpi-delta {
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+    .kpi-delta.up   { color: var(--color-critical); }
+    .kpi-delta.down { color: var(--color-healthy);  }
+    .kpi-delta.flat { color: var(--color-text-secondary); }
+
+    /* ── DRAWER REBUILD ──────────────────────────────────────────── */
+    .drawer-section {
+      padding-bottom: var(--space-5);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .drawer-section:last-child { border-bottom: none; padding-bottom: 0; }
+    .drawer-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--color-text-secondary);
+      margin: 0 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .drawer-header-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .drawer-meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--color-surface-muted);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-pill);
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+
+    /* timeline — enhanced */
+    .tl-item {
+      display: grid;
+      grid-template-columns: 60px 12px 1fr;
+      gap: 0 10px;
+      align-items: start;
+      margin-bottom: 14px;
+      position: relative;
+    }
+    .tl-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 71px;
+      top: 14px;
+      bottom: -14px;
+      width: 1px;
+      background: var(--color-border);
+    }
+    .tl-time {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      text-align: right;
+      padding-top: 1px;
+      white-space: nowrap;
+    }
+    .tl-dot {
+      width: 12px; height: 12px;
+      border-radius: 999px;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .tl-card {
+      font-size: var(--text-sm);
+    }
+    .tl-card strong { font-weight: 600; }
+    .tl-card .tl-actor {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      margin-top: 2px;
+    }
+
+    /* failure analysis bars */
+    .fa-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .fa-label { font-size: var(--text-sm); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fa-bar-wrap { flex: 1.2; height: 6px; border-radius: 999px; background: #f1f5f9; overflow: hidden; }
+    .fa-bar-fill { height: 100%; border-radius: 999px; background: var(--color-critical); }
+    .fa-bar-fill.b2 { background: var(--color-warning); }
+    .fa-bar-fill.b3 { background: var(--color-info); }
+    .fa-pct { font-size: 12px; font-weight: 700; color: var(--color-text-secondary); min-width: 28px; text-align: right; }
+
+    /* protected events in drawer */
+    .pe-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      background: #fafbff;
+      margin-bottom: 8px;
+      font-size: var(--text-sm);
+    }
+    .pe-icon { font-size: 16px; flex-shrink: 0; }
+    .pe-count { font-weight: 700; }
+
+    /* retry strategy */
+    .retry-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+    }
+    .retry-box {
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 12px;
+      background: #fafbff;
+    }
+    .retry-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
+    .retry-value { font-weight: 700; font-size: var(--text-base); }
+
+    /* drawer footer actions — three clear buttons */
+    .drawer-action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: var(--space-2);
+    }
+    .drawer-action-grid .btn {
+      justify-content: center;
+      font-size: var(--text-sm);
+    }
+
+    /* tooltip */
+    [data-tip] { position: relative; cursor: help; }
+    [data-tip]::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: white;
+      font-size: 11px;
+      font-weight: 400;
+      padding: 5px 9px;
+      border-radius: 7px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .15s ease;
+      z-index: 100;
+      max-width: 240px;
+      white-space: normal;
+      text-align: center;
+    }
+    [data-tip]:hover::after { opacity: 1; }
   </style>
   <script src="/assets/js/env-loader.js"></script>
   <script src="/assets/js/admin-auth.js"></script>
@@ -962,17 +1162,22 @@
             <p class="page-subtitle">System protection, failover control, and operator actions for observe → decide → act workflows.</p>
           </div>
           <div class="page-actions">
-            <button class="btn btn-primary" id="btnReevaluate">⟳ Re-evaluate All</button>
+            <button class="btn btn-primary" id="btnReevaluate" data-tip="Re-evaluates all protection rules against current failure metrics">⟳ Re-evaluate All</button>
             <button class="btn btn-secondary" id="btnRefresh">↻ Refresh</button>
             <button class="btn btn-danger-strong" id="btnTriggerEscalation">⚡ Trigger Escalation</button>
           </div>
+        </div>
+
+        <div id="modeBanner" class="mode-banner auto">
+          <span class="mode-banner-dot"></span>
+          <span id="modeBannerText">🟢 System Mode: Automatic Protection Active</span>
         </div>
 
         <section class="grid-summary" id="summaryCards">
           <article class="card">
             <div class="kpi-label-row"><span class="kpi-label" style="margin:0">Total Breakers</span></div>
             <div class="kpi-value" id="kpiTotalRules">—</div>
-            <div class="kpi-trend">System-wide protection rules</div>
+            <div class="kpi-delta flat" id="kpiTotalDelta">— vs last hour</div>
           </article>
           <article class="card" id="kpiCardOpen">
             <div class="kpi-label-row">
@@ -980,7 +1185,7 @@
               <span class="kpi-alert-badge" id="kpiOpenBadge" style="display:none">ALERT</span>
             </div>
             <div class="kpi-value" id="kpiOpenRules" style="color:var(--color-critical)">—</div>
-            <div class="kpi-trend">Immediate containment required</div>
+            <div class="kpi-delta flat" id="kpiOpenDelta">— vs last hour</div>
           </article>
           <article class="card" id="kpiCardDegraded">
             <div class="kpi-label-row">
@@ -988,12 +1193,12 @@
               <span class="kpi-alert-badge" id="kpiDegradedBadge" style="display:none;background:#fffbeb;border-color:#fde68a;color:#92400e;">WARN</span>
             </div>
             <div class="kpi-value" id="kpiDegraded" style="color:var(--color-warning)">—</div>
-            <div class="kpi-trend">Half-open / recent failures</div>
+            <div class="kpi-delta flat" id="kpiDegradedDelta">— vs last hour</div>
           </article>
           <article class="card">
             <div class="kpi-label-row"><span class="kpi-label" style="margin:0">Protected Events</span></div>
             <div class="kpi-value" id="kpiBlocked">—</div>
-            <div class="kpi-trend">Actions blocked by guard (24h)</div>
+            <div class="kpi-delta flat" id="kpiBlockedDelta">— vs last hour</div>
           </article>
         </section>
 
@@ -1030,7 +1235,7 @@
                       <span class="toggle-track"></span>
                       <span id="toggleProviderFailoverLabel" style="font-size:var(--text-sm);font-weight:600;">Standby</span>
                     </label>
-                    <div style="font-size:11px;color:var(--color-text-secondary);margin-top:4px;">Enable to activate Gemini fallback path</div>
+                    <div style="font-size:11px;color:var(--color-text-secondary);margin-top:4px;" data-tip="When active, failed OpenAI calls automatically route to Gemini Flash">Enable to activate Gemini fallback path</div>
                   </div>
                 </div>
 
@@ -1123,48 +1328,94 @@
   </div>
 
   <aside class="drawer" id="detailDrawer" aria-hidden="true">
+    <!-- ── Header ── -->
     <div class="drawer-header">
       <div class="drawer-topline">
-        <div>
-          <div class="dim" style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;">Breaker Details</div>
-          <h3 id="drawerTitle" style="margin:6px 0 0;font-size:24px;">—</h3>
+        <div style="min-width:0">
+          <div class="dim" style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;">Circuit Breaker</div>
+          <h3 id="drawerTitle" style="margin:4px 0 0;font-size:22px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</h3>
         </div>
-        <button class="drawer-close" id="btnCloseDrawer">✕</button>
+        <button class="drawer-close" id="btnCloseDrawer" aria-label="Close drawer">✕</button>
       </div>
-      <div id="drawerBadge"></div>
+      <div class="drawer-header-meta">
+        <div id="drawerBadge"></div>
+        <div class="drawer-meta-pill">🕐 <span id="drawerLastTrigger">—</span></div>
+        <div class="drawer-meta-pill" id="drawerOverridePill" style="display:none">⚙ Override Active</div>
+      </div>
     </div>
 
-    <div class="drawer-body">
-      <section>
-        <h4 style="margin:0 0 12px;">Control Snapshot</h4>
-        <div class="metrics-grid" id="drawerMetrics"></div>
-      </section>
+    <!-- ── Body ── -->
+    <div class="drawer-body" style="gap:0;padding:0;">
 
-      <section>
-        <h4 style="margin:0 0 12px;">Trigger Reason</h4>
-        <div class="card" style="padding:16px" id="drawerReason">No trigger reason recorded.</div>
-      </section>
+      <!-- 1. Timeline -->
+      <div class="drawer-section" style="padding:var(--space-5);">
+        <div class="drawer-section-title">📋 Breaker Timeline</div>
+        <div id="drawerTimeline">
+          <div class="empty">No timeline events.</div>
+        </div>
+      </div>
 
-      <section>
-        <h4 style="margin:0 0 12px;">Linked Incidents</h4>
-        <div class="mini-list" id="drawerIncidents">
+      <!-- 2. Failure Analysis -->
+      <div class="drawer-section" style="padding:var(--space-5);">
+        <div class="drawer-section-title">🔥 Failure Analysis</div>
+        <div id="drawerFailureAnalysis">
+          <div class="empty dim" style="font-size:var(--text-sm)">No failure data.</div>
+        </div>
+      </div>
+
+      <!-- 3. Linked Incidents -->
+      <div class="drawer-section" style="padding:var(--space-5);">
+        <div class="drawer-section-title">🔗 Linked Incidents</div>
+        <div id="drawerIncidents">
           <div class="empty">No linked incidents.</div>
         </div>
-      </section>
+      </div>
 
-      <section>
-        <h4 style="margin:0 0 12px;">Timeline</h4>
-        <div class="timeline" id="drawerTimeline">
-          <div class="empty">No timeline events yet.</div>
+      <!-- 4. Protected Events -->
+      <div class="drawer-section" style="padding:var(--space-5);">
+        <div class="drawer-section-title">🛡 Protected Events</div>
+        <div id="drawerProtectedEvents">
+          <div class="empty dim" style="font-size:var(--text-sm)">No blocked events recorded.</div>
         </div>
-      </section>
+      </div>
+
+      <!-- 5. Retry Strategy -->
+      <div class="drawer-section" style="padding:var(--space-5);">
+        <div class="drawer-section-title">🔄 Retry Strategy</div>
+        <div class="retry-grid" id="drawerRetryStrategy">
+          <div class="retry-box">
+            <div class="retry-label">Next Retry</div>
+            <div class="retry-value" id="drawerNextRetry">—</div>
+          </div>
+          <div class="retry-box">
+            <div class="retry-label">Strategy</div>
+            <div class="retry-value">Exponential backoff</div>
+          </div>
+          <div class="retry-box">
+            <div class="retry-label">Consecutive Fails</div>
+            <div class="retry-value" id="drawerConsecFails">—</div>
+          </div>
+          <div class="retry-box">
+            <div class="retry-label">Success Since Open</div>
+            <div class="retry-value" id="drawerSuccessSinceOpen">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Trigger Reason -->
+      <div class="drawer-section" style="padding:var(--space-5);">
+        <div class="drawer-section-title">⚡ Trigger Reason</div>
+        <div style="font-size:var(--text-sm);color:var(--color-text-secondary);background:#f8fafc;border:1px solid var(--color-border);border-radius:10px;padding:12px;line-height:1.6;" id="drawerReason">No trigger reason recorded.</div>
+      </div>
+
     </div>
 
+    <!-- ── Footer Actions ── -->
     <div class="drawer-footer">
-      <div class="action-row">
-        <button class="btn btn-secondary" id="btnDrawerForceOpen">Force Open</button>
-        <button class="btn btn-secondary" id="btnDrawerForceClose">Force Close</button>
-        <button class="btn btn-danger" id="btnDrawerResetOverride">Reset Override</button>
+      <div class="drawer-action-grid">
+        <button class="btn btn-primary" id="btnDrawerReevaluate" data-tip="Re-evaluates all protection rules">⟳ Re-evaluate</button>
+        <button class="btn btn-secondary" id="btnDrawerReset" data-tip="Returns breaker to automatic mode">↺ Reset Breaker</button>
+        <button class="btn btn-danger-strong" id="btnDrawerForceOpen" data-tip="Immediately blocks all traffic through this service">Force Open ⚠</button>
       </div>
     </div>
   </aside>
@@ -1209,7 +1460,8 @@
       opsSummary: null,
       selected: null,
       lastLoadedAt: null,
-      autoRefreshTimer: null
+      autoRefreshTimer: null,
+      prevSummary: null
     };
 
     // ── Modal ─────────────────────────────────────────────────────
@@ -1263,13 +1515,19 @@
       breakerTableBody:document.getElementById('breakerTableBody'),
       failureSummary:  document.getElementById('failureSummary'),
       blockedSummary:  document.getElementById('blockedSummary'),
-      drawer:          document.getElementById('detailDrawer'),
-      drawerTitle:     document.getElementById('drawerTitle'),
-      drawerBadge:     document.getElementById('drawerBadge'),
-      drawerMetrics:   document.getElementById('drawerMetrics'),
-      drawerReason:    document.getElementById('drawerReason'),
-      drawerIncidents: document.getElementById('drawerIncidents'),
-      drawerTimeline:  document.getElementById('drawerTimeline'),
+      drawer:               document.getElementById('detailDrawer'),
+      drawerTitle:          document.getElementById('drawerTitle'),
+      drawerBadge:          document.getElementById('drawerBadge'),
+      drawerLastTrigger:    document.getElementById('drawerLastTrigger'),
+      drawerOverridePill:   document.getElementById('drawerOverridePill'),
+      drawerTimeline:       document.getElementById('drawerTimeline'),
+      drawerFailureAnalysis:document.getElementById('drawerFailureAnalysis'),
+      drawerIncidents:      document.getElementById('drawerIncidents'),
+      drawerProtectedEvents:document.getElementById('drawerProtectedEvents'),
+      drawerNextRetry:      document.getElementById('drawerNextRetry'),
+      drawerConsecFails:    document.getElementById('drawerConsecFails'),
+      drawerSuccessSinceOpen:document.getElementById('drawerSuccessSinceOpen'),
+      drawerReason:         document.getElementById('drawerReason'),
       filterSearch:    document.getElementById('filterSearch'),
       filterState:     document.getElementById('filterState'),
       filterOverride:  document.getElementById('filterOverride'),
@@ -1396,6 +1654,36 @@
 
       document.getElementById('headerAlertCount').textContent =
         `${openCount + degraded} Alerts`;
+
+      // Mode banner
+      const hasOverride = state.breakers.some(b => b.admin_override_state);
+      const banner = document.getElementById('modeBanner');
+      const bannerText = document.getElementById('modeBannerText');
+      if (hasOverride) {
+        banner.className = 'mode-banner manual';
+        bannerText.textContent = '🔴 Manual Override Mode Enabled — Some breakers are under admin control';
+      } else {
+        banner.className = 'mode-banner auto';
+        bannerText.textContent = '🟢 System Mode: Automatic Protection Active';
+      }
+
+      // KPI deltas — static until a history endpoint is available
+      // Pattern: show count change vs previous load if state.prevSummary exists
+      const prev = state.prevSummary || {};
+      function deltaHtml(curr, prevVal, elId) {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        if (prevVal === undefined) { el.textContent = '— vs last load'; el.className = 'kpi-delta flat'; return; }
+        const diff = Number(curr) - Number(prevVal);
+        if (diff === 0) { el.textContent = 'No change'; el.className = 'kpi-delta flat'; }
+        else if (diff > 0) { el.textContent = `↑ +${diff} vs last load`; el.className = 'kpi-delta up'; }
+        else { el.textContent = `↓ ${diff} vs last load`; el.className = 'kpi-delta down'; }
+      }
+      deltaHtml(s.total_rules    ?? 0, prev.total_rules,    'kpiTotalDelta');
+      deltaHtml(openCount,             prev.open_rules,     'kpiOpenDelta');
+      deltaHtml(degraded,              prev.degraded,       'kpiDegradedDelta');
+      deltaHtml(s.total_blocked_count ?? 0, prev.total_blocked_count, 'kpiBlockedDelta');
+      state.prevSummary = { ...s, open_rules: openCount, degraded };
     }
 
     // ── Failure sources render ────────────────────────────────────
@@ -1511,9 +1799,10 @@
             </td>
             <td>
               <div class="action-row">
-                <button class="action-mini action-mini-primary" data-action="view"       data-rule="${row.rule_key}">View</button>
-                <button class="action-mini"                    data-action="force-close" data-rule="${row.rule_key}">Reset</button>
-                <button class="action-mini action-mini-danger" data-action="force-open"  data-rule="${row.rule_key}">Force Open</button>
+                <button class="action-mini action-mini-primary" data-action="view"         data-rule="${row.rule_key}" title="Open detail drawer">View Details</button>
+                <button class="action-mini action-mini-warning" data-action="reevaluate" data-rule="${row.rule_key}" title="Re-evaluate this rule">Re-evaluate</button>
+                <button class="action-mini"                     data-action="force-close" data-rule="${row.rule_key}" title="Reset to auto mode">Reset</button>
+                <button class="action-mini action-mini-danger"  data-action="force-open"  data-rule="${row.rule_key}" title="Force open — blocks all traffic immediately">Force Open ⚠</button>
               </div>
             </td>
           </tr>`;
@@ -1531,17 +1820,65 @@
       return mergeRows().find(r => r.rule_key === ruleKey) || null;
     }
 
-    function buildTimeline(row) {
-      const items = [];
-      if (row.last_failure_at)       items.push({ label: 'Last Failure',       detail: fmtDate(row.last_failure_at),       tone: 'critical' });
-      if (row.opened_at)             items.push({ label: 'Opened',             detail: fmtDate(row.opened_at),             tone: 'critical' });
-      if (row.half_open_entered_at)  items.push({ label: 'Half Open Entered',  detail: fmtDate(row.half_open_entered_at),  tone: 'degraded' });
-      if (row.last_success_at)       items.push({ label: 'Last Success',       detail: fmtDate(row.last_success_at),       tone: 'healthy'  });
-      if (row.last_blocked_at)       items.push({ label: 'Last Blocked',       detail: `${fmtDate(row.last_blocked_at)} · ${row.last_blocked_reason || '—'}`, tone: 'critical' });
-      return items;
+    function fmtTime(value) {
+      if (!value) return '—';
+      try {
+        const d = new Date(value);
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) +
+               ' · ' + d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      } catch { return value; }
     }
 
-    function openDrawer(ruleKey) {
+    // Build timeline combining row timestamps + action log entries
+    function buildTimeline(row, actionLogEntries = []) {
+      const events = [];
+
+      // State-change events from row timestamps
+      if (row.last_failure_at)
+        events.push({ at: row.last_failure_at, label: 'Last Failure',      actor: 'system', tone: 'critical' });
+      if (row.opened_at)
+        events.push({ at: row.opened_at,       label: '→ Opened',          actor: 'system', tone: 'critical' });
+      if (row.half_open_entered_at)
+        events.push({ at: row.half_open_entered_at, label: '→ Half-Open', actor: 'system', tone: 'degraded' });
+      if (row.last_success_at)
+        events.push({ at: row.last_success_at, label: 'Last Success',      actor: 'system', tone: 'healthy'  });
+      if (row.last_blocked_at)
+        events.push({ at: row.last_blocked_at, label: 'Last Blocked',      actor: 'system',
+                      note: row.last_blocked_reason || '', tone: 'critical' });
+
+      // Admin action log entries for this rule
+      actionLogEntries
+        .filter(e => e.rule_key === row.rule_key)
+        .forEach(e => {
+          const label = {
+            'force_open':     '⚙ Force Opened',
+            'force_closed':   '⚙ Force Closed',
+            'reset_override': '⚙ Override Reset',
+            'reevaluate':     '⟳ Re-evaluated',
+          }[e.action_type] || `⚙ ${e.action_type}`;
+          events.push({
+            at: e.occurred_at,
+            label,
+            actor: e.trigger_source || 'operator',
+            note: e.metadata?.reason || '',
+            tone: 'info'
+          });
+        });
+
+      // Sort newest first
+      return events
+        .filter(e => e.at)
+        .sort((a, b) => new Date(b.at) - new Date(a.at));
+    }
+
+    function dotColor(tone) {
+      return tone === 'critical' ? 'var(--color-critical)'
+           : tone === 'degraded' ? 'var(--color-warning)'
+           : tone === 'info'     ? 'var(--color-info)'
+           : 'var(--color-success)';
+    }
+
+    async function openDrawer(ruleKey) {
       const row = findBreaker(ruleKey);
       if (!row) return;
       state.selected = row;
@@ -1549,62 +1886,113 @@
       const isOpen     = row.circuit_state === 'open';
       const isHalfOpen = row.circuit_state === 'half_open';
 
+      // ── Header ──────────────────────────────────────────────────
       els.drawerTitle.textContent = serviceName(row.rule_key);
       els.drawerBadge.innerHTML   = badge(
         isOpen ? 'Open' : isHalfOpen ? 'Half Open' : 'Healthy', row.circuit_state
       );
+      const lastTrig = row.last_failure_at || row.opened_at || row.last_success_at;
+      els.drawerLastTrigger.textContent = fmtTime(lastTrig);
+      els.drawerOverridePill.style.display = row.admin_override_state ? 'inline-flex' : 'none';
 
-      els.drawerMetrics.innerHTML = [
-        ['Failure Count',        row.failure_count               ?? 0],
-        ['Consecutive Failures', row.consecutive_failure_count   ?? 0],
-        ['Success Since Open',   row.success_count_since_open    ?? 0],
-        ['Next Retry',           fmtCountdown(row.next_retry_at)     ],
-        ['Override State',       row.admin_override_state || 'Auto'  ],
-        ['Protected Events',     row.blocked_stats?.total_blocked_actions ?? 0]
-      ].map(([label, value]) => `
-        <div class="metric-box">
-          <div class="metric-label">${label}</div>
-          <div class="metric-value">${value}</div>
-        </div>`).join('');
-
-      els.drawerReason.textContent =
-        row.last_blocked_reason || row.admin_override_reason || row.trigger_reason ||
-        'No trigger reason recorded.';
-
-      // Incident linking
-      const incId    = row.linked_incident_id    || row.metadata?.linked_incident_id    || null;
-      const incTitle = row.linked_incident_title  || row.metadata?.linked_incident_title  || null;
-      const incKey   = row.linked_incident_key    || row.metadata?.linked_incident_key    || null;
-      els.drawerIncidents.innerHTML = incId
-        ? `<div class="mini-item">
-             <div class="mini-top">
-               <div class="mini-title">${incTitle || incKey || 'Linked Incident'}</div>
-               ${badge('Linked', 'acknowledged')}
-             </div>
-             <div class="mini-meta">ID: <span class="mono">${incId}</span></div>
-             <div style="margin-top:8px;">
-               <a href="/admin.html#incidents-${incId}" class="btn btn-secondary" style="font-size:12px;padding:6px 10px;">View Incident →</a>
-             </div>
-           </div>`
-        : '<div class="empty">No linked incidents.</div>';
-
-      const timeline = buildTimeline(row);
-      els.drawerTimeline.innerHTML = timeline.length
-        ? timeline.map(item => `
-          <div class="timeline-item">
-            <div class="timeline-marker" style="background:${
-              item.tone === 'critical' ? 'var(--color-critical)' :
-              item.tone === 'degraded' ? 'var(--color-warning)'  : 'var(--color-success)'}">
-            </div>
-            <div class="timeline-card">
-              <div style="font-weight:600">${item.label}</div>
-              <div class="dim" style="margin-top:6px">${item.detail}</div>
-            </div>
-          </div>`).join('')
-        : '<div class="empty">No timeline events yet.</div>';
-
+      // Open drawer immediately so user sees it while data loads
       els.drawer.classList.add('open');
       els.drawer.setAttribute('aria-hidden', 'false');
+
+      // ── Failure Analysis ────────────────────────────────────────
+      const failures = state.failures.filter(f => f.rule_key === row.rule_key);
+      // Build pseudo-breakdown from rule metadata if available, else use total
+      const totalFails = row.failure_stats?.total_failures ?? row.failure_count ?? 0;
+      if (totalFails > 0) {
+        // If we have a breakdown in metadata, use it; else show single bar
+        const sources = row.metadata?.failure_sources ||
+          [{ label: serviceName(row.rule_key) + ' errors', pct: 100 }];
+        els.drawerFailureAnalysis.innerHTML = sources.map((s, i) => {
+          const cls = i === 0 ? '' : i === 1 ? 'b2' : 'b3';
+          return `<div class="fa-row">
+            <span class="fa-label">${s.label}</span>
+            <div class="fa-bar-wrap"><div class="fa-bar-fill ${cls}" style="width:${s.pct}%"></div></div>
+            <span class="fa-pct">${s.pct}%</span>
+          </div>`;
+        }).join('') +
+        `<div style="font-size:11px;color:var(--color-text-secondary);margin-top:8px;">
+           Total: <strong>${totalFails}</strong> failures recorded &nbsp;·&nbsp;
+           24h: <strong>${row.failure_stats?.failures_last_24h ?? 0}</strong>
+         </div>`;
+      } else {
+        els.drawerFailureAnalysis.innerHTML =
+          '<div class="empty dim" style="font-size:var(--text-sm)">No failures recorded for this rule.</div>';
+      }
+
+      // ── Protected Events ────────────────────────────────────────
+      const blocked = row.blocked_stats?.total_blocked_actions ?? 0;
+      const lastBlk  = row.blocked_stats?.last_blocked_at || row.last_blocked_at;
+      els.drawerProtectedEvents.innerHTML = blocked > 0
+        ? `<div class="pe-item"><span class="pe-icon">🛡</span>
+             <div><span class="pe-count">${blocked}</span> total blocked actions
+               <div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px;">
+                 Last: ${fmtDate(lastBlk)}
+                 ${row.last_blocked_reason ? ' · ' + row.last_blocked_reason : ''}
+               </div>
+             </div>
+           </div>`
+        : '<div class="empty dim" style="font-size:var(--text-sm)">No blocked events recorded.</div>';
+
+      // ── Retry Strategy ──────────────────────────────────────────
+      els.drawerNextRetry.textContent          = fmtCountdown(row.next_retry_at) || '—';
+      els.drawerConsecFails.textContent        = row.consecutive_failure_count ?? 0;
+      els.drawerSuccessSinceOpen.textContent   = row.success_count_since_open  ?? 0;
+
+      // ── Trigger Reason ──────────────────────────────────────────
+      els.drawerReason.textContent =
+        row.last_blocked_reason || row.admin_override_reason ||
+        row.trigger_reason || 'No trigger reason recorded.';
+
+      // ── Linked Incidents ────────────────────────────────────────
+      const incId    = row.linked_incident_id    || row.metadata?.linked_incident_id    || null;
+      const incTitle = row.linked_incident_title || row.metadata?.linked_incident_title || null;
+      const incKey   = row.linked_incident_key   || row.metadata?.linked_incident_key   || null;
+
+      // Support multiple incidents from metadata array if present
+      const incList  = row.metadata?.linked_incidents || (incId ? [{ id: incId, title: incTitle, key: incKey }] : []);
+      els.drawerIncidents.innerHTML = incList.length
+        ? incList.map(inc => `
+            <div class="mini-item" style="margin-bottom:8px;">
+              <div class="mini-top">
+                <div class="mini-title">${inc.title || inc.key || 'Linked Incident'}</div>
+                ${badge('Linked', 'acknowledged')}
+              </div>
+              <div class="mini-meta mono" style="margin-top:4px;font-size:11px;">${inc.id}</div>
+              <div style="margin-top:8px;">
+                <a href="/admin.html#incidents" class="btn btn-secondary" style="font-size:12px;padding:6px 10px;">
+                  View Incident →
+                </a>
+              </div>
+            </div>`).join('')
+        : '<div class="empty">No linked incidents.</div>';
+
+      // ── Timeline — fetch action log async ───────────────────────
+      els.drawerTimeline.innerHTML = '<div class="dim" style="font-size:var(--text-sm);padding:8px 0;">Loading timeline…</div>';
+      let actionLogEntries = [];
+      try {
+        const logData = await apiGet('auto_protection_action_log_recent');
+        actionLogEntries = (logData.rows || []);
+      } catch (_) { /* timeline still works from row timestamps */ }
+
+      const events = buildTimeline(row, actionLogEntries);
+      els.drawerTimeline.innerHTML = events.length
+        ? events.map(ev => `
+            <div class="tl-item">
+              <div class="tl-time">${fmtTime(ev.at)}</div>
+              <div class="tl-dot" style="background:${dotColor(ev.tone)}"></div>
+              <div class="tl-card">
+                <strong>${ev.label}</strong>
+                ${ev.note ? `<div class="tl-actor">${ev.note}</div>` : ''}
+                ${ev.actor && ev.actor !== 'system'
+                  ? `<div class="tl-actor">by ${ev.actor}</div>` : ''}
+              </div>
+            </div>`).join('')
+        : '<div class="empty">No timeline events yet.</div>';
     }
 
     function closeDrawer() {
@@ -1755,10 +2143,16 @@
     // Drawer actions
     document.getElementById('btnDrawerForceOpen').addEventListener('click',
       () => state.selected && actOnRule('force-open',  state.selected.rule_key));
-    document.getElementById('btnDrawerForceClose').addEventListener('click',
-      () => state.selected && actOnRule('force-close', state.selected.rule_key));
-    document.getElementById('btnDrawerResetOverride').addEventListener('click',
-      () => state.selected && actOnRule('reset',       state.selected.rule_key));
+    document.getElementById('btnDrawerReset').addEventListener('click',
+      () => state.selected && actOnRule('reset', state.selected.rule_key));
+    document.getElementById('btnDrawerReevaluate').addEventListener('click', async () => {
+      try {
+        await apiPost('auto_protection_reevaluate', { trigger_source: 'admin' });
+        showToast('Re-evaluation triggered for all rules');
+        await loadAll();
+        if (state.selected) openDrawer(state.selected.rule_key);
+      } catch (err) { showToast(err.message || 'Re-evaluate failed', true); }
+    });
 
     // Table filter
     els.filterSearch.addEventListener('input',   renderTable);
@@ -1766,11 +2160,19 @@
     els.filterOverride.addEventListener('change', renderTable);
 
     // Table row actions
-    els.breakerTableBody.addEventListener('click', (e) => {
+    els.breakerTableBody.addEventListener('click', async (e) => {
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
       const { action, rule } = btn.dataset;
       if (action === 'view') return openDrawer(rule);
+      if (action === 'reevaluate') {
+        try {
+          await apiPost('auto_protection_reevaluate', { trigger_source: 'admin' });
+          showToast(`Re-evaluated all rules (incl. ${serviceName(rule)})`);
+          await loadAll();
+        } catch (err) { showToast(err.message || 'Re-evaluate failed', true); }
+        return;
+      }
       actOnRule(action, rule);
     });
 
