@@ -796,6 +796,63 @@ async function handleAutoProtectionOpsSummary(supabase) {
   return data || {};
 }
 
+// ── Circuit Breaker Command Handlers ──────────────────────────────────────────
+
+async function handleCircuitForceOpen(userSb, body) {
+  const ruleKey = String(body.rule_key || "").trim();
+  const reason  = String(body.reason  || "").trim();
+
+  if (!ruleKey) throw new Error("missing_rule_key");
+  if (!reason)  throw new Error("missing_reason");
+  if (reason.length > 1000) throw new Error("reason_too_long");
+
+  const result = await rpcOrThrow(userSb, "admin_breaker_force_open", {
+    p_rule_key:       ruleKey,
+    p_reason:         reason,
+    p_trigger_source: String(body.trigger_source || "admin").trim(),
+    p_created_by:     body.created_by || null,
+  });
+
+  return { result };
+}
+
+async function handleCircuitForceClosed(userSb, body) {
+  const ruleKey = String(body.rule_key || "").trim();
+  const reason  = String(body.reason  || "").trim();
+
+  if (!ruleKey) throw new Error("missing_rule_key");
+  if (!reason)  throw new Error("missing_reason");
+  if (reason.length > 1000) throw new Error("reason_too_long");
+
+  const result = await rpcOrThrow(userSb, "admin_breaker_manual_override", {
+    p_rule_key:       ruleKey,
+    p_override_mode:  "force_closed",
+    p_reason:         reason,
+    p_trigger_source: String(body.trigger_source || "admin").trim(),
+    p_created_by:     body.created_by || null,
+  });
+
+  return { result };
+}
+
+async function handleCircuitResetOverride(userSb, body) {
+  const ruleKey = String(body.rule_key || "").trim();
+  const reason  = String(body.reason  || "").trim();
+
+  if (!ruleKey) throw new Error("missing_rule_key");
+  if (!reason)  throw new Error("missing_reason");
+  if (reason.length > 1000) throw new Error("reason_too_long");
+
+  const result = await rpcOrThrow(userSb, "admin_breaker_reset", {
+    p_rule_key:       ruleKey,
+    p_reason:         reason,
+    p_trigger_source: String(body.trigger_source || "admin").trim(),
+    p_created_by:     body.created_by || null,
+  });
+
+  return { result };
+}
+
 async function handleEscalationRules(supabase) {
   const { data, error } = await supabase
     .from("incident_escalation_rules")
@@ -1130,6 +1187,21 @@ if (action === "trigger_escalation") {
   return jsonOk(res, { ok: true, result: data });
 }
 
+if (action === "circuit_force_open") {
+  const payload = await handleCircuitForceOpen(userSb, body);
+  return jsonOk(res, payload);
+}
+
+if (action === "circuit_force_closed") {
+  const payload = await handleCircuitForceClosed(userSb, body);
+  return jsonOk(res, payload);
+}
+
+if (action === "circuit_reset_override") {
+  const payload = await handleCircuitResetOverride(userSb, body);
+  return jsonOk(res, payload);
+}
+
       const payload = await handleMonitoringAction(userSb, body, action);
       return jsonOk(res, payload);
     }
@@ -1303,6 +1375,9 @@ case "auto_protection_action_log_latest_by_rule":
               "invalid_incident_id",
               "invalid_rule_id",
               "invalid_escalation_limit",
+              "missing_rule_key",
+              "missing_reason",
+              "reason_too_long",
             ].includes(message)
             ? 400
             : /not_found/i.test(message)

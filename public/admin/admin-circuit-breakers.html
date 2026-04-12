@@ -626,6 +626,229 @@
       .control-grid { grid-template-columns: 1fr; }
       .page-header { flex-direction: column; }
     }
+
+    /* ── CRITICALITY & SEVERITY SYSTEM ─────────────────────────── */
+    .kpi-card-open {
+      border-left: 4px solid var(--color-critical) !important;
+      background: linear-gradient(135deg, #fff, #fff5f5);
+    }
+    .kpi-card-half-open {
+      border-left: 4px solid var(--color-warning) !important;
+      background: linear-gradient(135deg, #fff, #fffbeb);
+    }
+    .kpi-alert-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+      border-radius: var(--radius-pill);
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-left: 8px;
+    }
+    .kpi-label-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: var(--space-2);
+    }
+
+    /* Table row severity highlighting */
+    tbody tr.row-open {
+      border-left: 4px solid var(--color-critical);
+      background: #fff8f8;
+    }
+    tbody tr.row-half-open {
+      border-left: 4px solid var(--color-warning);
+      background: #fffdf0;
+    }
+    tbody tr.row-open:hover { background: #fff0f0; }
+    tbody tr.row-half-open:hover { background: #fff9e0; }
+
+    /* Action button semantic colours */
+    .action-mini-primary {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+      color: #1d4ed8;
+    }
+    .action-mini-danger {
+      background: #fff1f2;
+      border-color: #fecdd3;
+      color: #be123c;
+    }
+    .action-mini-warning {
+      background: #fffbeb;
+      border-color: #fde68a;
+      color: #92400e;
+    }
+
+    /* ── CONTROL PANEL ZONES ────────────────────────────────────── */
+    .control-zone {
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .control-zone-header {
+      background: #f8fafc;
+      border-bottom: 1px solid var(--color-border);
+      padding: 10px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-text-secondary);
+    }
+    .control-zone-body {
+      padding: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+    .control-zone-emergency {
+      border-color: #fecaca;
+      background: #fff8f8;
+    }
+    .control-zone-emergency .control-zone-header {
+      background: #fef2f2;
+      border-bottom-color: #fecaca;
+      color: #b91c1c;
+    }
+    .control-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: var(--space-4);
+    }
+
+    /* ── LIVE INDICATOR ─────────────────────────────────────────── */
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: var(--text-xs);
+      font-weight: 600;
+      color: var(--color-text-secondary);
+    }
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--color-healthy);
+      animation: pulse-live 2s ease-in-out infinite;
+    }
+    @keyframes pulse-live {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+      50% { opacity: 0.75; box-shadow: 0 0 0 4px rgba(16,185,129,0); }
+    }
+    .last-updated {
+      font-size: var(--text-xs);
+      color: var(--color-text-secondary);
+      margin-left: 4px;
+    }
+
+    /* ── CONFIRMATION MODAL ─────────────────────────────────────── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.45);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      padding: var(--space-6);
+      max-width: 440px;
+      width: 90%;
+      box-shadow: 0 24px 48px rgba(15,23,42,0.18);
+      transform: translateY(8px);
+      transition: transform 0.2s ease;
+    }
+    .modal-backdrop.open .modal { transform: translateY(0); }
+    .modal-title { font-size: var(--text-xl); font-weight: 700; margin: 0 0 8px; }
+    .modal-desc { color: var(--color-text-secondary); font-size: var(--text-sm); margin: 0 0 var(--space-5); line-height: 1.6; }
+    .modal-reason {
+      width: 100%;
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+      font-size: var(--text-sm);
+      color: var(--color-text-primary);
+      background: var(--color-surface-muted);
+      margin-bottom: var(--space-5);
+      resize: vertical;
+      min-height: 72px;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-2);
+    }
+    .btn-danger-strong {
+      background: var(--color-critical);
+      border-color: var(--color-critical);
+      color: white;
+      font-weight: 700;
+    }
+    .btn-danger-strong:hover { background: #dc2626; }
+
+    /* ── FAILURE SOURCE BAR ─────────────────────────────────────── */
+    .failure-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-top: var(--space-2);
+    }
+    .failure-bar-track {
+      flex: 1;
+      height: 6px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      overflow: hidden;
+    }
+    .failure-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--color-critical);
+      transition: width 0.4s ease;
+    }
+    .failure-bar-fill.medium { background: var(--color-warning); }
+    .failure-bar-fill.low { background: var(--color-info); }
+    .failure-bar-pct {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-text-secondary);
+      min-width: 32px;
+      text-align: right;
+    }
+
+    /* ── BUSINESS IMPACT TAGS ───────────────────────────────────── */
+    .impact-tag {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: 10px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      background: #fafbff;
+      font-size: var(--text-sm);
+    }
+    .impact-icon { font-size: 18px; flex-shrink: 0; }
+    .impact-count { font-weight: 700; color: var(--color-text-primary); }
+    .impact-desc { color: var(--color-text-secondary); font-size: 12px; margin-top: 1px; }
   </style>
   <script src="/assets/js/env-loader.js"></script>
   <script src="/assets/js/admin-auth.js"></script>
@@ -666,14 +889,26 @@
         </div>
 
         <div class="nav-group">
-          <div class="nav-label">Operations</div>
+          <div class="nav-label">Monitoring</div>
           <div class="nav-list">
             <a class="nav-item" href="#"><span class="nav-dot"></span>Monitoring</a>
+            <a class="nav-item" href="#"><span class="nav-dot"></span>System Health</a>
+          </div>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-label">Incident Management</div>
+          <div class="nav-list">
             <a class="nav-item" href="#"><span class="nav-dot"></span>Incidents</a>
             <a class="nav-item" href="#"><span class="nav-dot"></span>Alerts</a>
             <a class="nav-item" href="#"><span class="nav-dot"></span>Escalations</a>
+          </div>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-label">Protection</div>
+          <div class="nav-list">
             <a class="nav-item active" href="#"><span class="nav-dot"></span>Circuit Breakers</a>
-            <a class="nav-item" href="#"><span class="nav-dot"></span>System Health</a>
           </div>
         </div>
 
@@ -710,6 +945,10 @@
           </div>
         </div>
         <div class="topbar-right">
+          <div class="live-indicator">
+            <span class="live-dot"></span>Live
+            <span class="last-updated" id="lastUpdatedLabel">—</span>
+          </div>
           <div class="top-pill"><span class="status-dot" style="color: var(--color-healthy)"></span>Operational</div>
           <div class="top-pill"><span class="status-dot" style="color: var(--color-critical)"></span><span id="headerAlertCount">2 Alerts</span></div>
           <div class="avatar">JU</div>
@@ -723,32 +962,38 @@
             <p class="page-subtitle">System protection, failover control, and operator actions for observe → decide → act workflows.</p>
           </div>
           <div class="page-actions">
-            <button class="btn btn-primary" id="btnReevaluate">⟳ Re-evaluate</button>
+            <button class="btn btn-primary" id="btnReevaluate">⟳ Re-evaluate All</button>
             <button class="btn btn-secondary" id="btnRefresh">↻ Refresh</button>
-            <button class="btn btn-danger" id="btnTriggerEscalation">⚡ Trigger Escalation</button>
+            <button class="btn btn-danger-strong" id="btnTriggerEscalation">⚡ Trigger Escalation</button>
           </div>
         </div>
 
         <section class="grid-summary" id="summaryCards">
           <article class="card">
-            <div class="kpi-label">Total Breakers</div>
+            <div class="kpi-label-row"><span class="kpi-label" style="margin:0">Total Breakers</span></div>
             <div class="kpi-value" id="kpiTotalRules">—</div>
             <div class="kpi-trend">System-wide protection rules</div>
           </article>
-          <article class="card">
-            <div class="kpi-label">Open Breakers</div>
-            <div class="kpi-value" id="kpiOpenRules">—</div>
+          <article class="card" id="kpiCardOpen">
+            <div class="kpi-label-row">
+              <span class="kpi-label" style="margin:0">🚨 Open Breakers</span>
+              <span class="kpi-alert-badge" id="kpiOpenBadge" style="display:none">ALERT</span>
+            </div>
+            <div class="kpi-value" id="kpiOpenRules" style="color:var(--color-critical)">—</div>
             <div class="kpi-trend">Immediate containment required</div>
           </article>
-          <article class="card">
-            <div class="kpi-label">Degraded Systems</div>
-            <div class="kpi-value" id="kpiDegraded">—</div>
+          <article class="card" id="kpiCardDegraded">
+            <div class="kpi-label-row">
+              <span class="kpi-label" style="margin:0">⚠ Degraded Systems</span>
+              <span class="kpi-alert-badge" id="kpiDegradedBadge" style="display:none;background:#fffbeb;border-color:#fde68a;color:#92400e;">WARN</span>
+            </div>
+            <div class="kpi-value" id="kpiDegraded" style="color:var(--color-warning)">—</div>
             <div class="kpi-trend">Half-open / recent failures</div>
           </article>
           <article class="card">
-            <div class="kpi-label">Protected Events</div>
+            <div class="kpi-label-row"><span class="kpi-label" style="margin:0">Protected Events</span></div>
             <div class="kpi-value" id="kpiBlocked">—</div>
-            <div class="kpi-trend">Actions blocked by guard</div>
+            <div class="kpi-trend">Actions blocked by guard (24h)</div>
           </article>
         </section>
 
@@ -758,30 +1003,46 @@
               <div class="card-header">
                 <div>
                   <h2 class="card-title">Critical Control Panel</h2>
-                  <p class="card-subtitle">Direct operational controls for containment, provider failover posture, and escalation triggers.</p>
+                  <p class="card-subtitle">Observe → Decide → Act. Three zones: system mode, failover posture, emergency actions.</p>
                 </div>
               </div>
-              <div class="control-grid">
-                <div class="control-tile">
-                  <div class="control-meta">Circuit breaker master mode</div>
-                  <label class="toggle">
-                    <input id="toggleCircuitMaster" type="checkbox" checked />
-                    <span class="toggle-track"></span>
-                    <span id="toggleCircuitMasterLabel">Automatic protection enabled</span>
-                  </label>
+              <div class="control-grid-3">
+
+                <div class="control-zone">
+                  <div class="control-zone-header">🔹 System Mode</div>
+                  <div class="control-zone-body">
+                    <div style="font-size:var(--text-sm);color:var(--color-text-secondary);">Circuit breaker master mode</div>
+                    <label class="toggle">
+                      <input id="toggleCircuitMaster" type="checkbox" checked />
+                      <span class="toggle-track"></span>
+                      <span id="toggleCircuitMasterLabel" style="font-size:var(--text-sm);font-weight:600;">Auto protection on</span>
+                    </label>
+                    <div style="font-size:11px;color:var(--color-text-secondary);margin-top:4px;">Switch off to enter manual override mode</div>
+                  </div>
                 </div>
-                <div class="control-tile">
-                  <div class="control-meta">Provider failover readiness</div>
-                  <label class="toggle">
-                    <input id="toggleProviderFailover" type="checkbox" />
-                    <span class="toggle-track"></span>
-                    <span id="toggleProviderFailoverLabel">Manual failover standby</span>
-                  </label>
+
+                <div class="control-zone">
+                  <div class="control-zone-header">🔹 Failover Control</div>
+                  <div class="control-zone-body">
+                    <div style="font-size:var(--text-sm);color:var(--color-text-secondary);">Provider failover readiness</div>
+                    <label class="toggle">
+                      <input id="toggleProviderFailover" type="checkbox" />
+                      <span class="toggle-track"></span>
+                      <span id="toggleProviderFailoverLabel" style="font-size:var(--text-sm);font-weight:600;">Standby</span>
+                    </label>
+                    <div style="font-size:11px;color:var(--color-text-secondary);margin-top:4px;">Enable to activate Gemini fallback path</div>
+                  </div>
                 </div>
-                <div class="control-tile">
-                  <div class="control-meta">Emergency operator action</div>
-                  <button class="btn btn-danger" style="width:100%" id="btnPanelEscalate">Trigger escalation</button>
+
+                <div class="control-zone control-zone-emergency">
+                  <div class="control-zone-header">⚠ Emergency Actions</div>
+                  <div class="control-zone-body">
+                    <button class="btn btn-danger-strong" style="width:100%;justify-content:center;" id="btnPanelEscalate">⚡ Trigger Escalation</button>
+                    <button class="btn btn-primary" style="width:100%;justify-content:center;" id="btnPanelReevaluate">⟳ Re-evaluate System</button>
+                    <button class="btn btn-secondary" style="width:100%;justify-content:center;" id="btnPanelResetAll">↺ Reset All Overrides</button>
+                  </div>
                 </div>
+
               </div>
             </article>
 
@@ -814,15 +1075,17 @@
                     <tr>
                       <th>Service</th>
                       <th>Status</th>
+                      <th>Severity</th>
                       <th>Last Triggered</th>
                       <th>Failure Rate</th>
                       <th>Protected Events</th>
+                      <th>Incident</th>
                       <th>Next Retry</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody id="breakerTableBody">
-                    <tr><td colspan="7" class="empty">Loading circuit breakers…</td></tr>
+                    <tr><td colspan="9" class="empty">Loading circuit breakers…</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -833,24 +1096,24 @@
             <article class="card">
               <div class="card-header">
                 <div>
-                  <h2 class="card-title">Failure Summary</h2>
-                  <p class="card-subtitle">Recent instability and error concentration across breakers.</p>
+                  <h2 class="card-title">Top Failure Sources</h2>
+                  <p class="card-subtitle">Error concentration by service — last 24h.</p>
                 </div>
               </div>
               <div id="failureSummary" class="mini-list">
-                <div class="empty">Loading failures…</div>
+                <div class="empty">Loading failure sources…</div>
               </div>
             </article>
 
             <article class="card">
               <div class="card-header">
                 <div>
-                  <h2 class="card-title">Blocked Actions</h2>
-                  <p class="card-subtitle">System-protected events prevented by active breaker logic.</p>
+                  <h2 class="card-title">Protected Events (24h)</h2>
+                  <p class="card-subtitle">Business impact prevented by active breaker guards.</p>
                 </div>
               </div>
               <div id="blockedSummary" class="mini-list">
-                <div class="empty">Loading blocked actions…</div>
+                <div class="empty">Loading protected events…</div>
               </div>
             </article>
           </div>
@@ -906,6 +1169,20 @@
     </div>
   </aside>
 
+
+  <!-- ── Confirmation Modal ────────────────────────────────────── -->
+  <div class="modal-backdrop" id="confirmModal" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal-title" id="modalTitle">Confirm Action</div>
+      <div class="modal-desc" id="modalDesc">Are you sure you want to perform this action?</div>
+      <textarea class="modal-reason" id="modalReason" placeholder="Enter operator reason (required)…"></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="modalCancel">Cancel</button>
+        <button class="btn btn-danger-strong" id="modalConfirm">Confirm</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script>
@@ -914,6 +1191,7 @@
       adminOps: '/api/admin/telemetry'
     };
 
+    // ── Auth ──────────────────────────────────────────────────────
     function getAdminJwt() {
       try {
         const raw = localStorage.getItem('lp_admin_auth');
@@ -923,50 +1201,112 @@
       } catch (_) { return null; }
     }
 
+    // ── State ─────────────────────────────────────────────────────
     const state = {
       breakers: [],
       failures: [],
       blocked: [],
       opsSummary: null,
-      selected: null
+      selected: null,
+      lastLoadedAt: null,
+      autoRefreshTimer: null
     };
 
+    // ── Modal ─────────────────────────────────────────────────────
+    const modal = {
+      el: document.getElementById('confirmModal'),
+      title: document.getElementById('modalTitle'),
+      desc: document.getElementById('modalDesc'),
+      reason: document.getElementById('modalReason'),
+      confirm: document.getElementById('modalConfirm'),
+      cancel: document.getElementById('modalCancel'),
+      _resolve: null,
+
+      open(title, desc, confirmLabel = 'Confirm', isDanger = true) {
+        this.title.textContent = title;
+        this.desc.textContent = desc;
+        this.reason.value = '';
+        this.confirm.textContent = confirmLabel;
+        this.confirm.className = isDanger ? 'btn btn-danger-strong' : 'btn btn-primary';
+        this.el.classList.add('open');
+        this.reason.focus();
+        return new Promise(resolve => { this._resolve = resolve; });
+      },
+
+      close(value) {
+        this.el.classList.remove('open');
+        if (this._resolve) { this._resolve(value); this._resolve = null; }
+      }
+    };
+
+    document.getElementById('modalCancel').addEventListener('click', () => modal.close(null));
+    document.getElementById('modalConfirm').addEventListener('click', () => {
+      const r = modal.reason.value.trim();
+      if (!r) { modal.reason.style.borderColor = 'var(--color-critical)'; return; }
+      modal.reason.style.borderColor = '';
+      modal.close(r);
+    });
+    document.getElementById('confirmModal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) modal.close(null);
+    });
+
+    // ── DOM refs ──────────────────────────────────────────────────
     const els = {
-      kpiTotalRules: document.getElementById('kpiTotalRules'),
-      kpiOpenRules: document.getElementById('kpiOpenRules'),
-      kpiDegraded: document.getElementById('kpiDegraded'),
-      kpiBlocked: document.getElementById('kpiBlocked'),
-      breakerTableBody: document.getElementById('breakerTableBody'),
-      failureSummary: document.getElementById('failureSummary'),
-      blockedSummary: document.getElementById('blockedSummary'),
-      drawer: document.getElementById('detailDrawer'),
-      drawerTitle: document.getElementById('drawerTitle'),
-      drawerBadge: document.getElementById('drawerBadge'),
-      drawerMetrics: document.getElementById('drawerMetrics'),
-      drawerReason: document.getElementById('drawerReason'),
+      kpiTotalRules:   document.getElementById('kpiTotalRules'),
+      kpiOpenRules:    document.getElementById('kpiOpenRules'),
+      kpiDegraded:     document.getElementById('kpiDegraded'),
+      kpiBlocked:      document.getElementById('kpiBlocked'),
+      kpiCardOpen:     document.getElementById('kpiCardOpen'),
+      kpiCardDegraded: document.getElementById('kpiCardDegraded'),
+      kpiOpenBadge:    document.getElementById('kpiOpenBadge'),
+      kpiDegradedBadge:document.getElementById('kpiDegradedBadge'),
+      breakerTableBody:document.getElementById('breakerTableBody'),
+      failureSummary:  document.getElementById('failureSummary'),
+      blockedSummary:  document.getElementById('blockedSummary'),
+      drawer:          document.getElementById('detailDrawer'),
+      drawerTitle:     document.getElementById('drawerTitle'),
+      drawerBadge:     document.getElementById('drawerBadge'),
+      drawerMetrics:   document.getElementById('drawerMetrics'),
+      drawerReason:    document.getElementById('drawerReason'),
       drawerIncidents: document.getElementById('drawerIncidents'),
-      drawerTimeline: document.getElementById('drawerTimeline'),
-      filterSearch: document.getElementById('filterSearch'),
-      filterState: document.getElementById('filterState'),
-      filterOverride: document.getElementById('filterOverride'),
-      toast: document.getElementById('toast')
+      drawerTimeline:  document.getElementById('drawerTimeline'),
+      filterSearch:    document.getElementById('filterSearch'),
+      filterState:     document.getElementById('filterState'),
+      filterOverride:  document.getElementById('filterOverride'),
+      lastUpdatedLabel:document.getElementById('lastUpdatedLabel'),
+      toast:           document.getElementById('toast')
     };
 
+    // ── Toast ─────────────────────────────────────────────────────
     function showToast(message, isError = false) {
       els.toast.textContent = message;
       els.toast.style.background = isError ? '#7f1d1d' : '#111827';
       els.toast.classList.add('show');
       clearTimeout(showToast._timer);
-      showToast._timer = setTimeout(() => els.toast.classList.remove('show'), 2400);
+      showToast._timer = setTimeout(() => els.toast.classList.remove('show'), 2800);
     }
 
+    // ── Formatters ────────────────────────────────────────────────
     function fmtDate(value) {
       if (!value) return '—';
-      try {
-        return new Date(value).toLocaleString();
-      } catch {
-        return value;
-      }
+      try { return new Date(value).toLocaleString(); } catch { return value; }
+    }
+
+    function fmtCountdown(isoDate) {
+      if (!isoDate) return '—';
+      const diff = new Date(isoDate) - Date.now();
+      if (diff <= 0) return 'Now';
+      const m = Math.floor(diff / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      return m > 0 ? `${m}m ${s}s` : `${s}s`;
+    }
+
+    function timeAgo(date) {
+      if (!date) return '—';
+      const s = Math.floor((Date.now() - date) / 1000);
+      if (s < 5) return 'just now';
+      if (s < 60) return `${s}s ago`;
+      return `${Math.floor(s / 60)}m ago`;
     }
 
     function toArray(payload) {
@@ -984,17 +1324,24 @@
       return `<span class="status-badge ${statusClass(status)}"><span class="status-dot"></span>${label}</span>`;
     }
 
+    function severityBadge(circuitState, failRate) {
+      if (circuitState === 'open') return badge('Critical', 'critical');
+      if (circuitState === 'half_open') return badge('High', 'degraded');
+      if (Number(failRate) > 0) return badge('Medium', 'acknowledged');
+      return badge('Normal', 'healthy');
+    }
+
     function serviceName(ruleKey) {
       return String(ruleKey || '').replaceAll('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
     }
 
+    // ── API ───────────────────────────────────────────────────────
     async function apiGet(type) {
       const jwt = getAdminJwt();
       const headers = { 'Content-Type': 'application/json' };
       if (jwt) headers['Authorization'] = `Bearer ${jwt}`;
       const res = await fetch(`${API.telemetry}?type=${encodeURIComponent(type)}`, {
-        credentials: 'include',
-        headers
+        credentials: 'include', headers
       });
       if (res.status === 401) throw new Error('Session expired. Please log in again.');
       if (res.status === 403) throw new Error('Admin access required.');
@@ -1008,9 +1355,7 @@
       const headers = { 'Content-Type': 'application/json' };
       if (jwt) headers['Authorization'] = `Bearer ${jwt}`;
       const res = await fetch(API.adminOps, {
-        method: 'POST',
-        credentials: 'include',
-        headers,
+        method: 'POST', credentials: 'include', headers,
         body: JSON.stringify({ action, ...body })
       });
       if (res.status === 401) throw new Error('Session expired. Please log in again.');
@@ -1020,6 +1365,7 @@
       return json;
     }
 
+    // ── Data merge ────────────────────────────────────────────────
     function mergeRows() {
       const failureMap = new Map(state.failures.map(r => [r.rule_key, r]));
       const blockedMap = new Map(state.blocked.map(r => [r.rule_key, r]));
@@ -1030,111 +1376,168 @@
       }));
     }
 
+    // ── KPI render ────────────────────────────────────────────────
     function renderSummary() {
       const s = state.opsSummary || {};
-      const degraded = (Number(s.half_open_rules || 0) + state.failures.filter(f => Number(f.failures_last_24h || 0) > 0).length);
+      const openCount = Number(s.total_open_rules ?? s.open_rules ?? 0);
+      const degraded = Number(s.half_open_rules || 0) +
+        state.failures.filter(f => Number(f.failures_last_24h || 0) > 0).length;
+
       els.kpiTotalRules.textContent = s.total_rules ?? '0';
-      els.kpiOpenRules.textContent = s.open_rules ?? '0';
-      els.kpiDegraded.textContent = degraded;
-      els.kpiBlocked.textContent = s.total_blocked_count ?? '0';
-      document.getElementById('headerAlertCount').textContent = `${Number(s.open_rules || 0) + Number(degraded || 0)} Alerts`;
+      els.kpiOpenRules.textContent  = openCount;
+      els.kpiDegraded.textContent   = degraded;
+      els.kpiBlocked.textContent    = s.total_blocked_count ?? '0';
+
+      // State-aware KPI card styling
+      els.kpiCardOpen.className = 'card' + (openCount > 0 ? ' kpi-card-open' : '');
+      els.kpiOpenBadge.style.display = openCount > 0 ? 'inline-flex' : 'none';
+      els.kpiCardDegraded.className = 'card' + (degraded > 0 ? ' kpi-card-half-open' : '');
+      els.kpiDegradedBadge.style.display = degraded > 0 ? 'inline-flex' : 'none';
+
+      document.getElementById('headerAlertCount').textContent =
+        `${openCount + degraded} Alerts`;
     }
 
+    // ── Failure sources render ────────────────────────────────────
     function renderFailures() {
       if (!state.failures.length) {
         els.failureSummary.innerHTML = '<div class="empty">No failure data available.</div>';
         return;
       }
-      els.failureSummary.innerHTML = state.failures.map(item => `
-        <div class="mini-item">
-          <div class="mini-top">
-            <div class="mini-title">${serviceName(item.rule_key)}</div>
-            ${badge((item.failures_last_24h || 0) > 0 ? 'Degraded' : 'Healthy', (item.failures_last_24h || 0) > 0 ? 'degraded' : 'healthy')}
-          </div>
-          <div class="mini-meta">Total failures: <strong>${item.total_failures ?? 0}</strong> · Last 24h: <strong>${item.failures_last_24h ?? 0}</strong></div>
-          <div class="mini-meta">Last failure: ${fmtDate(item.last_failure_at)}</div>
-        </div>
-      `).join('');
+      const total = state.failures.reduce((acc, f) => acc + Number(f.failures_last_24h || 0), 0) || 1;
+      const sorted = [...state.failures].sort((a, b) =>
+        Number(b.failures_last_24h || 0) - Number(a.failures_last_24h || 0));
+
+      els.failureSummary.innerHTML = sorted.map((item, i) => {
+        const cnt = Number(item.failures_last_24h || 0);
+        const pct = Math.round((cnt / total) * 100);
+        const fillClass = i === 0 ? '' : i === 1 ? 'medium' : 'low';
+        return `
+          <div class="mini-item">
+            <div class="mini-top">
+              <div class="mini-title">${serviceName(item.rule_key)}</div>
+              ${badge(cnt > 0 ? 'Degraded' : 'Healthy', cnt > 0 ? 'degraded' : 'healthy')}
+            </div>
+            <div class="failure-bar-wrap">
+              <div class="failure-bar-track">
+                <div class="failure-bar-fill ${fillClass}" style="width:${pct}%"></div>
+              </div>
+              <span class="failure-bar-pct">${pct}%</span>
+            </div>
+            <div class="mini-meta" style="margin-top:6px;">
+              24h failures: <strong>${cnt}</strong> &nbsp;·&nbsp; Total: <strong>${item.total_failures ?? 0}</strong>
+              &nbsp;·&nbsp; Last: ${fmtDate(item.last_failure_at)}
+            </div>
+          </div>`;
+      }).join('');
     }
 
+    // ── Protected events render ───────────────────────────────────
     function renderBlocked() {
       if (!state.blocked.length) {
-        els.blockedSummary.innerHTML = '<div class="empty">No blocked actions recorded.</div>';
+        els.blockedSummary.innerHTML = '<div class="empty">No protected events recorded.</div>';
         return;
       }
-      els.blockedSummary.innerHTML = state.blocked.map(item => `
-        <div class="mini-item">
-          <div class="mini-top">
-            <div class="mini-title">${serviceName(item.rule_key)}</div>
-            ${badge('Protected', 'critical')}
-          </div>
-          <div class="mini-meta">Blocked actions: <strong>${item.total_blocked_actions ?? 0}</strong></div>
-          <div class="mini-meta">Last blocked: ${fmtDate(item.last_blocked_at)}</div>
-          <div class="mini-meta">Reason: ${item.latest_blocked_reason || '—'}</div>
-        </div>
-      `).join('');
+      const icons = ['🛡️', '⚠️', '🚫', '🔒', '⛔'];
+      els.blockedSummary.innerHTML = state.blocked.map((item, i) => {
+        const cnt = Number(item.total_blocked_actions ?? 0);
+        return `
+          <div class="impact-tag">
+            <span class="impact-icon">${icons[i % icons.length]}</span>
+            <div>
+              <div><span class="impact-count">${cnt}</span> actions blocked</div>
+              <div class="impact-desc">${serviceName(item.rule_key)} · Last: ${fmtDate(item.last_blocked_at)}</div>
+              ${item.latest_blocked_reason ? `<div class="impact-desc" style="margin-top:2px;font-style:italic;">${item.latest_blocked_reason}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
     }
 
+    // ── Table render ──────────────────────────────────────────────
     function renderTable() {
-      const search = els.filterSearch.value.trim().toLowerCase();
-      const stateFilter = els.filterState.value;
-      const overrideFilter = els.filterOverride.value;
+      const search        = els.filterSearch.value.trim().toLowerCase();
+      const stateFilter   = els.filterState.value;
+      const overrideFilter= els.filterOverride.value;
 
       const rows = mergeRows().filter(row => {
-        const matchesSearch = !search || row.rule_key.toLowerCase().includes(search) || serviceName(row.rule_key).toLowerCase().includes(search);
-        const matchesState = stateFilter === 'all' || row.circuit_state === stateFilter;
-        const hasOverride = !!row.admin_override_state;
-        const matchesOverride = overrideFilter === 'all' || (overrideFilter === 'override' ? hasOverride : !hasOverride);
-        return matchesSearch && matchesState && matchesOverride;
+        const matchSearch   = !search || row.rule_key.toLowerCase().includes(search) ||
+                              serviceName(row.rule_key).toLowerCase().includes(search);
+        const matchState    = stateFilter === 'all' || row.circuit_state === stateFilter;
+        const hasOverride   = !!row.admin_override_state;
+        const matchOverride = overrideFilter === 'all' ||
+          (overrideFilter === 'override' ? hasOverride : !hasOverride);
+        return matchSearch && matchState && matchOverride;
       });
 
       if (!rows.length) {
-        els.breakerTableBody.innerHTML = '<tr><td colspan="7" class="empty">No breakers match current filters.</td></tr>';
+        els.breakerTableBody.innerHTML =
+          '<tr><td colspan="9" class="empty">No breakers match current filters.</td></tr>';
         return;
       }
 
       els.breakerTableBody.innerHTML = rows.map(row => {
-        const failureRate = row.failure_stats ? `${row.failure_stats.failures_last_24h || 0} / 24h` : '0 / 24h';
-        const protectedEvents = row.blocked_stats?.total_blocked_actions ?? 0;
-        const lastTriggered = row.last_failure_at || row.last_success_at || row.opened_at;
+        const isOpen     = row.circuit_state === 'open';
+        const isHalfOpen = row.circuit_state === 'half_open';
+        const rowClass   = isOpen ? 'row-open' : isHalfOpen ? 'row-half-open' : '';
+        const failRate   = row.failure_stats?.failures_last_24h ?? 0;
+        const protected_ = row.blocked_stats?.total_blocked_actions ?? 0;
+        const lastTrig   = row.last_failure_at || row.last_success_at || row.opened_at;
+        const incidentId = row.linked_incident_id || row.metadata?.linked_incident_id || null;
+        const incidentTitle = row.linked_incident_title || row.metadata?.linked_incident_title || null;
+        const incidentHtml = incidentId
+          ? `<span style="font-size:12px;color:var(--color-info);font-weight:600;">
+               ${incidentTitle || 'Incident'}<br>
+               <a href="#" style="color:var(--color-primary);font-size:11px;" onclick="return false;">View →</a>
+             </span>`
+          : '<span class="dim" style="font-size:12px;">—</span>';
+
         return `
-          <tr>
+          <tr class="${rowClass}">
             <td>
               <div style="font-weight:600">${serviceName(row.rule_key)}</div>
               <div class="mono dim">${row.rule_key}</div>
             </td>
-            <td>
-              ${badge(row.circuit_state === 'open' ? 'Open' : row.circuit_state === 'half_open' ? 'Half Open' : 'Healthy', row.circuit_state || 'closed')}
+            <td>${badge(
+              isOpen ? 'Open' : isHalfOpen ? 'Half Open' : 'Healthy',
+              row.circuit_state || 'closed'
+            )}</td>
+            <td>${severityBadge(row.circuit_state, failRate)}</td>
+            <td>${fmtDate(lastTrig)}</td>
+            <td>${failRate} / 24h</td>
+            <td>${protected_}</td>
+            <td>${incidentHtml}</td>
+            <td style="font-size:12px;font-weight:600;color:${row.next_retry_at ? 'var(--color-info)' : 'var(--color-text-secondary)'}">
+              ${fmtCountdown(row.next_retry_at)}
             </td>
-            <td>${fmtDate(lastTriggered)}</td>
-            <td>${failureRate}</td>
-            <td>${protectedEvents}</td>
-            <td>${fmtDate(row.next_retry_at)}</td>
             <td>
               <div class="action-row">
-                <button class="action-mini" data-action="view" data-rule="${row.rule_key}">View</button>
-                <button class="action-mini" data-action="force-open" data-rule="${row.rule_key}">Force Open</button>
-                <button class="action-mini" data-action="force-close" data-rule="${row.rule_key}">Force Close</button>
-                <button class="action-mini" data-action="reset" data-rule="${row.rule_key}">Reset Override</button>
+                <button class="action-mini action-mini-primary" data-action="view"       data-rule="${row.rule_key}">View</button>
+                <button class="action-mini"                    data-action="force-close" data-rule="${row.rule_key}">Reset</button>
+                <button class="action-mini action-mini-danger" data-action="force-open"  data-rule="${row.rule_key}">Force Open</button>
               </div>
             </td>
-          </tr>
-        `;
+          </tr>`;
       }).join('');
     }
 
+    // ── Last-updated ticker ───────────────────────────────────────
+    function updateLastUpdatedLabel() {
+      if (!state.lastLoadedAt) return;
+      els.lastUpdatedLabel.textContent = `· updated ${timeAgo(state.lastLoadedAt)}`;
+    }
+
+    // ── Drawer ────────────────────────────────────────────────────
     function findBreaker(ruleKey) {
-      const row = mergeRows().find(r => r.rule_key === ruleKey);
-      return row || null;
+      return mergeRows().find(r => r.rule_key === ruleKey) || null;
     }
 
     function buildTimeline(row) {
       const items = [];
-      if (row.last_failure_at) items.push({ label: 'Last Failure', detail: fmtDate(row.last_failure_at), tone: 'critical' });
-      if (row.opened_at) items.push({ label: 'Opened', detail: fmtDate(row.opened_at), tone: 'critical' });
-      if (row.half_open_entered_at) items.push({ label: 'Half Open Entered', detail: fmtDate(row.half_open_entered_at), tone: 'degraded' });
-      if (row.last_success_at) items.push({ label: 'Last Success', detail: fmtDate(row.last_success_at), tone: 'healthy' });
-      if (row.last_blocked_at) items.push({ label: 'Last Blocked', detail: `${fmtDate(row.last_blocked_at)} · ${row.last_blocked_reason || '—'}`, tone: 'critical' });
+      if (row.last_failure_at)       items.push({ label: 'Last Failure',       detail: fmtDate(row.last_failure_at),       tone: 'critical' });
+      if (row.opened_at)             items.push({ label: 'Opened',             detail: fmtDate(row.opened_at),             tone: 'critical' });
+      if (row.half_open_entered_at)  items.push({ label: 'Half Open Entered',  detail: fmtDate(row.half_open_entered_at),  tone: 'degraded' });
+      if (row.last_success_at)       items.push({ label: 'Last Success',       detail: fmtDate(row.last_success_at),       tone: 'healthy'  });
+      if (row.last_blocked_at)       items.push({ label: 'Last Blocked',       detail: `${fmtDate(row.last_blocked_at)} · ${row.last_blocked_reason || '—'}`, tone: 'critical' });
       return items;
     }
 
@@ -1142,40 +1545,63 @@
       const row = findBreaker(ruleKey);
       if (!row) return;
       state.selected = row;
+
+      const isOpen     = row.circuit_state === 'open';
+      const isHalfOpen = row.circuit_state === 'half_open';
+
       els.drawerTitle.textContent = serviceName(row.rule_key);
-      els.drawerBadge.innerHTML = badge(row.circuit_state === 'open' ? 'Open' : row.circuit_state === 'half_open' ? 'Half Open' : 'Healthy', row.circuit_state);
+      els.drawerBadge.innerHTML   = badge(
+        isOpen ? 'Open' : isHalfOpen ? 'Half Open' : 'Healthy', row.circuit_state
+      );
+
       els.drawerMetrics.innerHTML = [
-        ['Failure Count', row.failure_count ?? 0],
-        ['Consecutive Failures', row.consecutive_failure_count ?? 0],
-        ['Success Since Open', row.success_count_since_open ?? 0],
-        ['Next Retry', fmtDate(row.next_retry_at)],
-        ['Override State', row.admin_override_state || 'Auto'],
-        ['Protected Events', row.blocked_stats?.total_blocked_actions ?? 0]
+        ['Failure Count',        row.failure_count               ?? 0],
+        ['Consecutive Failures', row.consecutive_failure_count   ?? 0],
+        ['Success Since Open',   row.success_count_since_open    ?? 0],
+        ['Next Retry',           fmtCountdown(row.next_retry_at)     ],
+        ['Override State',       row.admin_override_state || 'Auto'  ],
+        ['Protected Events',     row.blocked_stats?.total_blocked_actions ?? 0]
       ].map(([label, value]) => `
         <div class="metric-box">
           <div class="metric-label">${label}</div>
           <div class="metric-value">${value}</div>
-        </div>
-      `).join('');
+        </div>`).join('');
 
-      els.drawerReason.textContent = row.last_blocked_reason || row.admin_override_reason || 'No trigger reason recorded.';
-      els.drawerIncidents.innerHTML = `
-        <div class="mini-item">
-          <div class="mini-top"><div class="mini-title">Operational linkage</div>${badge('Info', 'info')}</div>
-          <div class="mini-meta">Linked incidents will appear here when incident correlation is enabled.</div>
-        </div>
-      `;
+      els.drawerReason.textContent =
+        row.last_blocked_reason || row.admin_override_reason || row.trigger_reason ||
+        'No trigger reason recorded.';
+
+      // Incident linking
+      const incId    = row.linked_incident_id    || row.metadata?.linked_incident_id    || null;
+      const incTitle = row.linked_incident_title  || row.metadata?.linked_incident_title  || null;
+      const incKey   = row.linked_incident_key    || row.metadata?.linked_incident_key    || null;
+      els.drawerIncidents.innerHTML = incId
+        ? `<div class="mini-item">
+             <div class="mini-top">
+               <div class="mini-title">${incTitle || incKey || 'Linked Incident'}</div>
+               ${badge('Linked', 'acknowledged')}
+             </div>
+             <div class="mini-meta">ID: <span class="mono">${incId}</span></div>
+             <div style="margin-top:8px;">
+               <a href="/admin.html#incidents-${incId}" class="btn btn-secondary" style="font-size:12px;padding:6px 10px;">View Incident →</a>
+             </div>
+           </div>`
+        : '<div class="empty">No linked incidents.</div>';
 
       const timeline = buildTimeline(row);
-      els.drawerTimeline.innerHTML = timeline.length ? timeline.map(item => `
-        <div class="timeline-item">
-          <div class="timeline-marker" style="background:${item.tone === 'critical' ? 'var(--color-critical)' : item.tone === 'degraded' ? 'var(--color-warning)' : 'var(--color-success)'}"></div>
-          <div class="timeline-card">
-            <div style="font-weight:600">${item.label}</div>
-            <div class="dim" style="margin-top:6px">${item.detail}</div>
-          </div>
-        </div>
-      `).join('') : '<div class="empty">No timeline events yet.</div>';
+      els.drawerTimeline.innerHTML = timeline.length
+        ? timeline.map(item => `
+          <div class="timeline-item">
+            <div class="timeline-marker" style="background:${
+              item.tone === 'critical' ? 'var(--color-critical)' :
+              item.tone === 'degraded' ? 'var(--color-warning)'  : 'var(--color-success)'}">
+            </div>
+            <div class="timeline-card">
+              <div style="font-weight:600">${item.label}</div>
+              <div class="dim" style="margin-top:6px">${item.detail}</div>
+            </div>
+          </div>`).join('')
+        : '<div class="empty">No timeline events yet.</div>';
 
       els.drawer.classList.add('open');
       els.drawer.setAttribute('aria-hidden', 'false');
@@ -1187,6 +1613,7 @@
       state.selected = null;
     }
 
+    // ── Load all ──────────────────────────────────────────────────
     async function loadAll() {
       try {
         const [circuitState, failures, blocked, opsSummary] = await Promise.all([
@@ -1196,38 +1623,56 @@
           apiGet('auto_protection_circuit_ops_summary')
         ]);
 
-        state.breakers = toArray(circuitState);
-        state.failures = toArray(failures);
-        state.blocked = toArray(blocked);
-        state.opsSummary = opsSummary.row || null;
+        state.breakers    = toArray(circuitState);
+        state.failures    = toArray(failures);
+        state.blocked     = toArray(blocked);
+        state.opsSummary  = opsSummary.row || null;
+        state.lastLoadedAt = Date.now();
 
         renderSummary();
         renderFailures();
         renderBlocked();
         renderTable();
+        updateLastUpdatedLabel();
       } catch (err) {
         console.error(err);
         showToast(err.message || 'Failed to load telemetry', true);
       }
     }
 
+    // ── Auto-refresh ──────────────────────────────────────────────
+    function startAutoRefresh() {
+      if (state.autoRefreshTimer) clearInterval(state.autoRefreshTimer);
+      state.autoRefreshTimer = setInterval(() => {
+        loadAll();
+      }, 10000);
+      // Update "X ago" label every 5s without re-fetching
+      setInterval(updateLastUpdatedLabel, 5000);
+    }
+
+    // ── Actions ───────────────────────────────────────────────────
     async function actOnRule(action, ruleKey) {
-      const row = findBreaker(ruleKey);
-      if (!row) return;
-      const reasonDefault = action === 'force-open'
-        ? 'admin_manual_open_for_ops'
-        : action === 'force-close'
-          ? 'admin_manual_close_after_review'
-          : 'return_to_auto_mode';
-      const reason = prompt('Enter operator reason', reasonDefault);
+      const titles = {
+        'force-open':  'Force Open Breaker',
+        'force-close': 'Force Close Breaker',
+        'reset':       'Reset Override'
+      };
+      const descs = {
+        'force-open':  `This will force-open the "${serviceName(ruleKey)}" breaker, blocking all traffic immediately. Enter your reason.`,
+        'force-close': `This will force-close the "${serviceName(ruleKey)}" breaker and resume traffic. Enter your reason.`,
+        'reset':       `This will reset the admin override on "${serviceName(ruleKey)}" and return it to automatic mode. Enter your reason.`
+      };
+      const labels = { 'force-open': 'Force Open', 'force-close': 'Force Close', 'reset': 'Reset' };
+
+      const reason = await modal.open(titles[action] || 'Confirm', descs[action] || '', labels[action] || 'Confirm', action === 'force-open');
       if (!reason) return;
 
       try {
         if (action === 'force-open') {
-          await apiPost('circuit_force_open', { rule_key: ruleKey, reason });
+          await apiPost('circuit_force_open',     { rule_key: ruleKey, reason });
           showToast(`Forced open: ${serviceName(ruleKey)}`);
         } else if (action === 'force-close') {
-          await apiPost('circuit_force_closed', { rule_key: ruleKey, reason });
+          await apiPost('circuit_force_closed',   { rule_key: ruleKey, reason });
           showToast(`Forced closed: ${serviceName(ruleKey)}`);
         } else if (action === 'reset') {
           await apiPost('circuit_reset_override', { rule_key: ruleKey, reason });
@@ -1241,19 +1686,86 @@
       }
     }
 
+    // ── Event wiring ──────────────────────────────────────────────
     document.getElementById('btnRefresh').addEventListener('click', loadAll);
     document.getElementById('btnCloseDrawer').addEventListener('click', closeDrawer);
-    document.getElementById('btnReevaluate').addEventListener('click', () => showToast('Wire to admin re-evaluate endpoint'));
-    document.getElementById('btnTriggerEscalation').addEventListener('click', () => showToast('Wire to escalation trigger action'));
-    document.getElementById('btnPanelEscalate').addEventListener('click', () => showToast('Wire to escalation trigger action'));
-    document.getElementById('btnDrawerForceOpen').addEventListener('click', () => state.selected && actOnRule('force-open', state.selected.rule_key));
-    document.getElementById('btnDrawerForceClose').addEventListener('click', () => state.selected && actOnRule('force-close', state.selected.rule_key));
-    document.getElementById('btnDrawerResetOverride').addEventListener('click', () => state.selected && actOnRule('reset', state.selected.rule_key));
 
-    els.filterSearch.addEventListener('input', renderTable);
-    els.filterState.addEventListener('change', renderTable);
+    // Re-evaluate — wired to real telemetry.js action
+    document.getElementById('btnReevaluate').addEventListener('click', async () => {
+      try {
+        await apiPost('auto_protection_reevaluate', { trigger_source: 'admin' });
+        showToast('Re-evaluation triggered');
+        await loadAll();
+      } catch (err) { showToast(err.message || 'Re-evaluate failed', true); }
+    });
+    document.getElementById('btnPanelReevaluate')?.addEventListener('click', async () => {
+      try {
+        await apiPost('auto_protection_reevaluate', { trigger_source: 'admin' });
+        showToast('Re-evaluation triggered');
+        await loadAll();
+      } catch (err) { showToast(err.message || 'Re-evaluate failed', true); }
+    });
+
+    // Trigger escalation — wired to real telemetry.js action
+    async function triggerEscalation() {
+      const reason = await modal.open(
+        '⚡ Trigger Escalation',
+        'This will fire the escalation automation immediately for all open incidents. Confirm only if you have verified the system state.',
+        'Trigger Now', true
+      );
+      if (!reason) return;
+      try {
+        await apiPost('trigger_escalation', { trigger_source: 'admin', reason });
+        showToast('Escalation triggered');
+      } catch (err) { showToast(err.message || 'Escalation failed', true); }
+    }
+    document.getElementById('btnTriggerEscalation').addEventListener('click', triggerEscalation);
+    document.getElementById('btnPanelEscalate').addEventListener('click', triggerEscalation);
+
+    // Reset all overrides
+    document.getElementById('btnPanelResetAll')?.addEventListener('click', async () => {
+      const reason = await modal.open(
+        'Reset All Overrides',
+        'This will reset every admin override across all breakers, returning them to automatic mode.',
+        'Reset All', false
+      );
+      if (!reason) return;
+      try {
+        const ruleKeys = state.breakers
+          .filter(r => r.admin_override_state)
+          .map(r => r.rule_key);
+        await Promise.all(ruleKeys.map(k =>
+          apiPost('circuit_reset_override', { rule_key: k, reason })
+        ));
+        showToast(`Reset ${ruleKeys.length} override(s)`);
+        await loadAll();
+      } catch (err) { showToast(err.message || 'Reset failed', true); }
+    });
+
+    // Toggle labels
+    document.getElementById('toggleCircuitMaster').addEventListener('change', (e) => {
+      document.getElementById('toggleCircuitMasterLabel').textContent =
+        e.target.checked ? 'Auto protection on' : 'Manual mode active';
+    });
+    document.getElementById('toggleProviderFailover').addEventListener('change', (e) => {
+      document.getElementById('toggleProviderFailoverLabel').textContent =
+        e.target.checked ? 'Failover active' : 'Standby';
+    });
+
+    // Drawer actions
+    document.getElementById('btnDrawerForceOpen').addEventListener('click',
+      () => state.selected && actOnRule('force-open',  state.selected.rule_key));
+    document.getElementById('btnDrawerForceClose').addEventListener('click',
+      () => state.selected && actOnRule('force-close', state.selected.rule_key));
+    document.getElementById('btnDrawerResetOverride').addEventListener('click',
+      () => state.selected && actOnRule('reset',       state.selected.rule_key));
+
+    // Table filter
+    els.filterSearch.addEventListener('input',   renderTable);
+    els.filterState.addEventListener('change',   renderTable);
     els.filterOverride.addEventListener('change', renderTable);
 
+    // Table row actions
     els.breakerTableBody.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
@@ -1263,10 +1775,12 @@
     });
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeDrawer();
+      if (e.key === 'Escape') { closeDrawer(); modal.close(null); }
     });
 
+    // ── Boot ──────────────────────────────────────────────────────
     loadAll();
+    startAutoRefresh();
   </script>
 </body>
 </html>
