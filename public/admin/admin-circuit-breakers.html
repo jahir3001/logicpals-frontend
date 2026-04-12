@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <title>Operations OS — Circuit Breakers</title>
   <style>
     :root {
@@ -621,6 +627,8 @@
       .page-header { flex-direction: column; }
     }
   </style>
+  <script src="/assets/js/env-loader.js"></script>
+  <script src="/assets/js/admin-auth.js"></script>
 </head>
 <body>
   <div class="app-shell">
@@ -637,7 +645,7 @@
         <div class="nav-group">
           <div class="nav-label">Overview</div>
           <div class="nav-list">
-            <a class="nav-item" href="#"><span class="nav-dot"></span>Executive Dashboard</a>
+            <a class="nav-item" href="/admin.html"><span class="nav-dot"></span>Executive Dashboard</a>
           </div>
         </div>
 
@@ -906,6 +914,15 @@
       adminOps: '/api/admin/telemetry'
     };
 
+    function getAdminJwt() {
+      try {
+        const raw = localStorage.getItem('lp_admin_auth');
+        if (!raw) return null;
+        const session = JSON.parse(raw);
+        return session?.access_token || null;
+      } catch (_) { return null; }
+    }
+
     const state = {
       breakers: [],
       failures: [],
@@ -972,22 +989,32 @@
     }
 
     async function apiGet(type) {
+      const jwt = getAdminJwt();
+      const headers = { 'Content-Type': 'application/json' };
+      if (jwt) headers['Authorization'] = `Bearer ${jwt}`;
       const res = await fetch(`${API.telemetry}?type=${encodeURIComponent(type)}`, {
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+        headers
       });
+      if (res.status === 401) throw new Error('Session expired. Please log in again.');
+      if (res.status === 403) throw new Error('Admin access required.');
       const json = await res.json();
       if (!res.ok || json.ok === false) throw new Error(json.details || json.error || 'Request failed');
       return json;
     }
 
     async function apiPost(action, body = {}) {
+      const jwt = getAdminJwt();
+      const headers = { 'Content-Type': 'application/json' };
+      if (jwt) headers['Authorization'] = `Bearer ${jwt}`;
       const res = await fetch(API.adminOps, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ action, ...body })
       });
+      if (res.status === 401) throw new Error('Session expired. Please log in again.');
+      if (res.status === 403) throw new Error('Admin access required.');
       const json = await res.json();
       if (!res.ok || json.ok === false) throw new Error(json.details || json.error || 'Action failed');
       return json;
@@ -1243,5 +1270,3 @@
   </script>
 </body>
 </html>
-``` 
-Continue your response from here. We need the full html + JS implementation. Here’s the complete continuation exactly where it stopped: We need answer continue full html+js implementation from previous partial. Need not repeat all? User explicitly asks continue from there and full html + JS implementation. Need provide code continuation from truncated previous answer. Since not enough room maybe provide artifact via canmore? Maybe easier use canmore update existing textdoc? There is a created textdoc already with full code! But user wants continue from stopped. We can simply say I put the full file in canvas? But should not mention maybe. Better provide the remainder or note the full file is in canvas. Since canmore created full file unseen maybe. But user explicitly asks continue response from there. Need answer with full HTML+JS implementation. Could respond succinctely: 
