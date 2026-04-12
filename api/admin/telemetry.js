@@ -1108,6 +1108,28 @@ module.exports = async (req, res) => {
         return jsonOk(res, payload);
       }
 
+	if (action === "auto_protection_reevaluate") {
+  const { data, error } = await userSb.rpc("rpc_evaluate_auto_protection_rules", {
+    p_trigger_source: body.trigger_source || "admin",
+    p_created_by: null
+  });
+  if (error) throw error;
+  return jsonOk(res, { ok: true, result: data });
+}
+
+if (action === "trigger_escalation") {
+  const { data, error } = await userSb.rpc("rpc_execute_auto_protection_action_guarded", {
+    p_rule_id: "1de59015-6da7-4e37-a84b-0a927168d688",
+    p_rule_key: "watchdog_unhealthy_run_escalation",
+    p_action_type: "run_escalation_automation",
+    p_action_payload: {},
+    p_trigger_source: body.trigger_source || "admin",
+    p_created_by: null
+  });
+  if (error) throw error;
+  return jsonOk(res, { ok: true, result: data });
+}
+
       const payload = await handleMonitoringAction(userSb, body, action);
       return jsonOk(res, payload);
     }
