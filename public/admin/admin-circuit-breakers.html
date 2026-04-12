@@ -136,13 +136,17 @@
       font-weight: var(--font-semibold);
     }
 
-    .nav-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: currentColor;
-      opacity: 0.7;
+    .nav-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      opacity: 0.55;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
+    .nav-item:hover .nav-icon { opacity: 0.8; }
+    .nav-item.active .nav-icon { opacity: 1; color: var(--color-primary-strong); }
 
     .main {
       min-width: 0;
@@ -465,17 +469,20 @@
 
     .action-row {
       display: flex;
-      gap: var(--space-2);
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 5px;
     }
 
     .action-mini {
       border: 1px solid var(--color-border);
       background: var(--color-surface);
       color: var(--color-text-primary);
-      border-radius: 10px;
-      padding: 8px 10px;
-      font-size: var(--text-sm);
+      border-radius: 8px;
+      padding: 5px 9px;
+      font-size: 12px;
+      white-space: nowrap;
+      text-align: center;
+      width: 100%;
     }
 
     .stack {
@@ -1068,69 +1075,69 @@
         <div class="nav-group">
           <div class="nav-label">Overview</div>
           <div class="nav-list">
-            <a class="nav-item" href="/admin.html"><span class="nav-dot"></span>Executive Dashboard</a>
+            <a class="nav-item" href="/admin.html"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg></span>Executive Dashboard</a>
           </div>
         </div>
 
         <div class="nav-group">
           <div class="nav-label">Core</div>
           <div class="nav-list">
-            <a class="nav-item" href="#"><span class="nav-dot"></span>Users</a>
-            <a class="nav-item" href="#"><span class="nav-dot"></span>Learning Ops</a>
-            <a class="nav-item" href="#"><span class="nav-dot"></span>Finance</a>
+            <a class="nav-item" href="#"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5" r="2.5"/><path d="M1 14c0-2.76 2.24-5 5-5s5 2.24 5 5"/><circle cx="12" cy="5" r="2"/><path d="M12 10c1.66 0 3 1.34 3 3"/></svg></span>Users</a>
+            <a class="nav-item" href="#"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2L1 6l7 4 7-4-7-4z"/><path d="M1 6v5c0 1.1 3.13 2 7 2s7-.9 7-2V6"/></svg></span>Learning Ops</a>
+            <a class="nav-item" href="#"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="7"/><path d="M8 4v1.5M8 10.5V12M10.5 6.5c0-.83-.67-1.5-1.5-1.5H7.5C6.67 5 6 5.67 6 6.5s.67 1.5 1.5 1.5h1c.83 0 1.5.67 1.5 1.5S9.33 11 8.5 11h-1C6.67 11 6 10.33 6 9.5"/></svg></span>Finance</a>
           </div>
         </div>
 
         <div class="nav-group">
           <div class="nav-label">Product</div>
           <div class="nav-list">
-            <a class="nav-item" href="#"><span class="nav-dot"></span>Product &amp; Growth</a>
+            <a class="nav-item" href="#"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 11 5 7 9 9 15 3"/><polyline points="11 3 15 3 15 7"/></svg></span>Product &amp; Growth</a>
           </div>
         </div>
 
         <div class="nav-group">
           <div class="nav-label">Monitoring</div>
           <div class="nav-list">
-            <a class="nav-item" href="#"><span class="nav-dot"></span>Monitoring</a>
-            <a class="nav-item" href="#"><span class="nav-dot"></span>System Health</a>
+            <a class="nav-item" href="#"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 9 4 5 7 8 10 4 13 7"/><rect x="1" y="1" width="14" height="11" rx="1.5"/><line x1="5" y1="15" x2="11" y2="15"/><line x1="8" y1="12" x2="8" y2="15"/></svg></span>Monitoring</a>
+            <a class="nav-item" href="#"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 14s-6-3.6-6-8a4 4 0 0 1 6-3.44A4 4 0 0 1 14 6c0 4.4-6 8-6 8z"/></svg></span>System Health</a>
           </div>
         </div>
 
         <div class="nav-group">
           <div class="nav-label">Incident Management</div>
           <div class="nav-list">
-            <a class="nav-item" href="#"><span class="nav-dot"></span>Incidents</a>
-            <a class="nav-item" href="#"><span class="nav-dot"></span>Alerts</a>
-            <a class="nav-item" href="#"><span class="nav-dot"></span>Escalations</a>
+            <a class="nav-item" href="#"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.13 1.5L1 13.5h14L8.87 1.5a1 1 0 0 0-1.74 0z"/><line x1="8" y1="6" x2="8" y2="9"/><circle cx="8" cy="11.5" r=".5" fill="currentColor"/></svg></span>Incidents</a>
+            <a class="nav-item" href="#"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6A4 4 0 0 0 4 6c0 4-2 5-2 5h12s-2-1-2-5"/><path d="M9.73 13a2 2 0 0 1-3.46 0"/></svg></span>Alerts</a>
+            <a class="nav-item" href="#"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 8 13"/><polyline points="4 7 8 3 12 7"/><line x1="4" y1="13" x2="12" y2="13"/></svg></span>Escalations</a>
           </div>
         </div>
 
         <div class="nav-group">
           <div class="nav-label">Protection</div>
           <div class="nav-list">
-            <a class="nav-item active" href="#"><span class="nav-dot"></span>Circuit Breakers</a>
+            <a class="nav-item active" href="#"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="9 1 3 9 8 9 7 15 13 7 8 7 9 1"/></svg></span>Circuit Breakers</a>
           </div>
         </div>
 
         <div class="nav-group">
           <div class="nav-label">Support</div>
           <div class="nav-list">
-            <a class="nav-item" href="#"><span class="nav-dot"></span>Support</a>
+            <a class="nav-item" href="#"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 11a6 6 0 0 0-12 0"/><circle cx="8" cy="5" r="4"/><line x1="5" y1="11" x2="5" y2="15"/><line x1="11" y1="11" x2="11" y2="15"/></svg></span>Support</a>
           </div>
         </div>
 
         <div class="nav-group">
           <div class="nav-label">Governance</div>
           <div class="nav-list">
-            <a class="nav-item" href="#"><span class="nav-dot"></span>Governance</a>
-            <a class="nav-item" href="#"><span class="nav-dot"></span>Audit Logs</a>
+            <a class="nav-item" href="#"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1l6 3v4c0 3.5-2.67 6.33-6 7C2.67 14.33 2 11.5 2 8V4l6-3z"/></svg></span>Governance</a>
+            <a class="nav-item" href="#"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="1" width="12" height="14" rx="1.5"/><line x1="5" y1="5" x2="11" y2="5"/><line x1="5" y1="8" x2="11" y2="8"/><line x1="5" y1="11" x2="8" y2="11"/></svg></span>Audit Logs</a>
           </div>
         </div>
 
         <div class="nav-group">
           <div class="nav-label">System</div>
           <div class="nav-list">
-            <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+            <a class="nav-item" href="#"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M2.93 2.93l1.41 1.41M11.66 11.66l1.41 1.41M2.93 13.07l1.41-1.41M11.66 4.34l1.41-1.41"/></svg></span>Settings</a>
           </div>
         </div>
       </nav>
@@ -1162,7 +1169,7 @@
             <p class="page-subtitle">System protection, failover control, and operator actions for observe → decide → act workflows.</p>
           </div>
           <div class="page-actions">
-            <button class="btn btn-primary" id="btnReevaluate" data-tip="Re-evaluates all protection rules against current failure metrics">⟳ Re-evaluate All</button>
+            <button class="btn btn-primary" id="btnReevaluate" data-tip="Re-evaluates all protection rules against current live metrics">⟳ Re-evaluate All</button>
             <button class="btn btn-secondary" id="btnRefresh">↻ Refresh</button>
             <button class="btn btn-danger-strong" id="btnTriggerEscalation">⚡ Trigger Escalation</button>
           </div>
@@ -1799,10 +1806,9 @@
             </td>
             <td>
               <div class="action-row">
-                <button class="action-mini action-mini-primary" data-action="view"         data-rule="${row.rule_key}" title="Open detail drawer">View Details</button>
-                <button class="action-mini action-mini-warning" data-action="reevaluate" data-rule="${row.rule_key}" title="Re-evaluate this rule">Re-evaluate</button>
-                <button class="action-mini"                     data-action="force-close" data-rule="${row.rule_key}" title="Reset to auto mode">Reset</button>
-                <button class="action-mini action-mini-danger"  data-action="force-open"  data-rule="${row.rule_key}" title="Force open — blocks all traffic immediately">Force Open ⚠</button>
+                <button class="action-mini action-mini-primary" data-action="view"        data-rule="${row.rule_key}" title="Open detail drawer">View Details</button>
+                <button class="action-mini"                    data-action="force-close" data-rule="${row.rule_key}" title="Reset to automatic mode">Reset</button>
+                <button class="action-mini action-mini-danger" data-action="force-open"  data-rule="${row.rule_key}" title="Force open — blocks traffic immediately">Force Open ⚠</button>
               </div>
             </td>
           </tr>`;
@@ -2146,11 +2152,15 @@
     document.getElementById('btnDrawerReset').addEventListener('click',
       () => state.selected && actOnRule('reset', state.selected.rule_key));
     document.getElementById('btnDrawerReevaluate').addEventListener('click', async () => {
+      if (!state.selected) return;
       try {
-        await apiPost('auto_protection_reevaluate', { trigger_source: 'admin' });
-        showToast('Re-evaluation triggered for all rules');
+        await apiPost('breaker_re_evaluate', {
+          rule_key: state.selected.rule_key,
+          trigger_source: 'admin'
+        });
+        showToast(`Re-evaluated: ${serviceName(state.selected.rule_key)}`);
         await loadAll();
-        if (state.selected) openDrawer(state.selected.rule_key);
+        openDrawer(state.selected.rule_key);
       } catch (err) { showToast(err.message || 'Re-evaluate failed', true); }
     });
 
@@ -2165,14 +2175,7 @@
       if (!btn) return;
       const { action, rule } = btn.dataset;
       if (action === 'view') return openDrawer(rule);
-      if (action === 'reevaluate') {
-        try {
-          await apiPost('auto_protection_reevaluate', { trigger_source: 'admin' });
-          showToast(`Re-evaluated all rules (incl. ${serviceName(rule)})`);
-          await loadAll();
-        } catch (err) { showToast(err.message || 'Re-evaluate failed', true); }
-        return;
-      }
+
       actOnRule(action, rule);
     });
 

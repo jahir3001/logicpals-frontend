@@ -853,6 +853,38 @@ async function handleCircuitResetOverride(userSb, body) {
   return { result };
 }
 
+// ── Circuit Breaker Per-Rule Re-Evaluate ──────────────────────────────────
+// Targets a single rule for immediate re-evaluation against live metrics.
+// Unlike auto_protection_reevaluate (which re-runs ALL rules), this scopes
+// the evaluation to exactly one rule_key and writes an audit log entry.
+async function handleCircuitReEvaluate(userSb, body) {
+  const ruleKey       = String(body.rule_key       || "").trim();
+  const triggerSource = String(body.trigger_source || "admin").trim().toLowerCase();
+
+  if (!ruleKey) throw new Error("missing_rule_key");
+
+  const actorId = body.created_by || null;
+
+  // Verify rule exists before calling evaluator
+  const { data: ruleRow, error: lookupErr } = await userSb
+    .from("auto_protection_rules")
+    .select("id, rule_key")
+    .eq("rule_key", ruleKey)
+    .maybeSingle();
+
+  if (lookupErr) throw lookupErr;
+  if (!ruleRow)  throw new Error(`rule_not_found: ${ruleKey}`);
+
+  // Call the per-rule evaluation RPC
+  const result = await rpcOrThrow(userSb, "admin_breaker_re_evaluate", {
+    p_rule_key:       ruleKey,
+    p_trigger_source: triggerSource,
+    p_created_by:     actorId,
+  });
+
+  return { result };
+}
+
 async function handleEscalationRules(supabase) {
   const { data, error } = await supabase
     .from("incident_escalation_rules")
@@ -1199,6 +1231,11 @@ if (action === "circuit_force_closed") {
 
 if (action === "circuit_reset_override") {
   const payload = await handleCircuitResetOverride(userSb, body);
+  return jsonOk(res, payload);
+}
+
+if (action === "breaker_re_evaluate") {
+  const payload = await handleCircuitReEvaluate(userSb, body);
   return jsonOk(res, payload);
 }
 
