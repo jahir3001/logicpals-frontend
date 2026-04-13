@@ -391,14 +391,42 @@
       overflow: auto;
       border: 1px solid var(--color-border);
       border-radius: 12px;
+      /* Scroll shadow hint — shows users there is more content to the right */
+      background:
+        linear-gradient(to right, white 30%, rgba(255,255,255,0)) center left,
+        linear-gradient(to left,  white 30%, rgba(255,255,255,0)) center right,
+        radial-gradient(farthest-side at 0   50%, rgba(0,0,0,.08), transparent) center left,
+        radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.08), transparent) center right;
+      background-repeat: no-repeat;
+      background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+      background-attachment: local, local, scroll, scroll;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 980px;
+      min-width: 820px;
       background: var(--color-surface);
     }
+
+    /* Sticky Actions column — always visible even when table scrolls */
+    thead th.th-actions {
+      position: sticky;
+      right: 0;
+      background: #f8fafc;
+      box-shadow: -2px 0 6px rgba(15,23,42,.06);
+      z-index: 2;
+    }
+    tbody td.td-actions {
+      position: sticky;
+      right: 0;
+      background: var(--color-surface);
+      box-shadow: -2px 0 6px rgba(15,23,42,.05);
+    }
+    tbody tr:hover td.td-actions { background: #fafbff; }
+    tbody tr.row-open td.td-actions   { background: #fff8f8; }
+    tbody tr.row-half-open td.td-actions { background: #fffdf0; }
+    tbody tr.row-selected td.td-actions { background: #eef2ff; }
 
     thead th {
       text-align: left;
@@ -1701,7 +1729,7 @@
                       <th data-tip="Total actions blocked by this breaker to protect system stability">Protected Events</th>
                       <th data-tip="Active incidents linked to this breaker">Incident</th>
                       <th>Next Retry</th>
-                      <th>Actions</th>
+                      <th class="th-actions">Actions</th>
                     </tr>
                   </thead>
                   <tbody id="breakerTableBody">
@@ -2519,9 +2547,28 @@
           ? `<strong>${protected_}</strong>${protected24h !== null ? `<div class="dim" style="font-size:11px;">${protected24h} today</div>` : ''}`
           : '<span class="dim">0</span>';
 
-        // Action buttons — disabled while row is acting
-        const dis = rowActing ? 'disabled' : '';
+        // Action buttons — conditional per state (Image 1 spec)
+        const dis  = rowActing ? 'disabled' : '';
         const spin = rowActing ? '<span class="btn-spinner"></span> ' : '';
+        const hasOverride = !!row.admin_override_state;
+
+        // View Details always shown
+        let actionBtns = `<button class="action-mini action-mini-primary" data-action="view" data-rule="${row.rule_key}" title="Open detail drawer">View Details</button>`;
+
+        if (hasOverride) {
+          // Admin override active — only meaningful action is to reset it
+          actionBtns += `<button class="action-mini action-mini-warning" data-action="reset" data-rule="${row.rule_key}" title="Clear admin override and return to auto mode" ${dis}>${spin}Reset Override</button>`;
+        } else if (isOpen) {
+          // Open → only action that makes sense is to close it
+          actionBtns += `<button class="action-mini action-mini-primary" data-action="force-close" data-rule="${row.rule_key}" title="Force close — resumes traffic" ${dis}>${spin}Force Close</button>`;
+        } else if (isHalfOpen) {
+          // Half-open → can reset to auto OR force close
+          actionBtns += `<button class="action-mini" data-action="reset" data-rule="${row.rule_key}" title="Reset to automatic mode" ${dis}>${spin}Reset</button>`;
+          actionBtns += `<button class="action-mini action-mini-primary" data-action="force-close" data-rule="${row.rule_key}" title="Force close immediately" ${dis}>${spin}Force Close</button>`;
+        } else {
+          // Closed → only force open makes sense
+          actionBtns += `<button class="action-mini action-mini-danger" data-action="force-open" data-rule="${row.rule_key}" title="Force open — blocks all traffic immediately" ${dis}>${spin}Force Open ⚠</button>`;
+        }
 
         // Risk badge per row
         const riskLevel = isOpen ? 'critical' : isHalfOpen ? 'high' :
@@ -2551,12 +2598,8 @@
             <td style="font-size:12px;font-weight:600;color:${row.next_retry_at ? 'var(--color-info)' : 'var(--color-text-secondary)'}">
               ${fmtCountdown(row.next_retry_at)}
             </td>
-            <td>
-              <div class="action-row">
-                <button class="action-mini action-mini-primary" data-action="view"        data-rule="${row.rule_key}" title="Open detail drawer">View Details</button>
-                <button class="action-mini"                    data-action="force-close" data-rule="${row.rule_key}" title="Reset to automatic mode" ${dis}>${spin}Reset</button>
-                <button class="action-mini action-mini-danger" data-action="force-open"  data-rule="${row.rule_key}" title="Force open — blocks traffic immediately" ${dis}>${spin}Force Open ⚠</button>
-              </div>
+            <td class="td-actions">
+              <div class="action-row">${actionBtns}</div>
             </td>
           </tr>`;
       }).join('');
