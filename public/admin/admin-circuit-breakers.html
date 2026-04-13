@@ -1323,11 +1323,117 @@
     .ops-summary-row:last-child { border-bottom: none; }
     .ops-summary-label { color: var(--color-text-secondary); }
     .ops-summary-value { font-weight: 700; color: var(--color-text-primary); }
+
+    /* ── GLOBAL BUSY OVERLAY ─────────────────────────────────────── */
+    .global-busy-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #6366f1 0%, #3b82f6 50%, #6366f1 100%);
+      background-size: 200% 100%;
+      animation: busy-slide 1.2s linear infinite;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity .15s ease;
+    }
+    .global-busy-bar.active { opacity: 1; }
+    @keyframes busy-slide { to { background-position: -200% 0; } }
+
+    /* ── ROW SELECTED / DRILL-IN ─────────────────────────────────── */
+    tbody tr.row-selected {
+      background: #eef2ff !important;
+      box-shadow: inset 3px 0 0 var(--color-primary);
+      outline: none;
+    }
+    tbody tr.row-selected:hover { background: #e0e7ff !important; }
+    tbody tr { cursor: pointer; transition: background .1s ease; }
+    /* Drawer open → dim main content slightly */
+    .app-shell.drawer-active .content { opacity: 0.96; }
+    .drawer.open {
+      box-shadow: -24px 0 60px rgba(15,23,42,0.16);
+    }
+
+    /* ── MERGED CONFIDENCE + OPS PANEL ──────────────────────────── */
+    .intel-card {
+      background: white;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+    }
+    .intel-card-top {
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-3);
+    }
+    .intel-score-block { flex-shrink: 0; text-align: right; }
+    .intel-score-pct {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--color-primary);
+    }
+    .intel-score-label { font-size: 10px; color: var(--color-text-secondary); margin-top: 2px; }
+    .intel-card-bar { padding: 0 var(--space-5) var(--space-3); }
+    .intel-card-rows {
+      padding: 0 var(--space-5) var(--space-4);
+      display: grid;
+      gap: 0;
+    }
+    .intel-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: var(--text-sm);
+    }
+    .intel-row:last-child { border-bottom: none; }
+    .intel-row-label { color: var(--color-text-secondary); }
+    .intel-row-value { font-weight: 700; }
+    .intel-signals {
+      padding: var(--space-3) var(--space-5) var(--space-4);
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    /* ── EMPTY STATES ────────────────────────────────────────────── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-6) var(--space-5);
+      gap: 8px;
+      text-align: center;
+    }
+    .empty-state-icon { font-size: 28px; opacity: .5; }
+    .empty-state-title { font-size: var(--text-sm); font-weight: 600; color: var(--color-text-primary); }
+    .empty-state-sub { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+
+    /* ── CONTROL PANEL HELP TEXT ─────────────────────────────────── */
+    .control-help {
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+    .control-help strong { color: var(--color-text-primary); }
   </style>
   <script src="/assets/js/env-loader.js"></script>
   <script src="/assets/js/admin-auth.js"></script>
 </head>
 <body>
+  <div class="global-busy-bar" id="globalBusyBar"></div>
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand">
@@ -1529,6 +1635,7 @@
                       <span id="toggleCircuitMasterLabel" style="font-size:var(--text-sm);font-weight:600;">Auto protection on</span>
                     </label>
                     <div style="font-size:11px;color:var(--color-text-secondary);margin-top:4px;">Switch off to enter manual override mode</div>
+                    <div class="control-help"><strong>Auto:</strong> breakers open/close automatically on failure thresholds. <strong>Manual:</strong> only admin actions change state.</div>
                   </div>
                 </div>
 
@@ -1542,6 +1649,7 @@
                       <span id="toggleProviderFailoverLabel" style="font-size:var(--text-sm);font-weight:600;">Standby</span>
                     </label>
                     <div style="font-size:11px;color:var(--color-text-secondary);margin-top:4px;" data-tip="When active, failed OpenAI calls automatically route to Gemini Flash">Enable to activate Gemini fallback path</div>
+                    <div class="control-help"><strong>Standby:</strong> Primary AI provider only. <strong>Active:</strong> automatic failover to Gemini Flash on error rate spike.</div>
                   </div>
                 </div>
 
@@ -1551,6 +1659,7 @@
                     <button class="btn btn-danger-strong" style="width:100%;justify-content:center;" id="btnPanelEscalate">⚡ Trigger Escalation</button>
                     <button class="btn btn-primary" style="width:100%;justify-content:center;" id="btnPanelReevaluate">⟳ Re-evaluate System</button>
                     <button class="btn btn-secondary" style="width:100%;justify-content:center;" id="btnPanelResetAll">↺ Reset All Overrides</button>
+                    <div class="control-help" style="margin-top:10px;"><strong>Escalation:</strong> fires incident automation now. <strong>Re-evaluate:</strong> runs threshold checks. <strong>Reset All:</strong> clears every admin override.</div>
                   </div>
                 </div>
 
@@ -1605,40 +1714,42 @@
 
           <div class="stack">
             <!-- Confidence Signal -->
-            <div class="confidence-card">
-              <div class="confidence-header">
+            <!-- Merged Intel Card: Confidence + Ops Summary -->
+            <div class="intel-card">
+              <div class="intel-card-top">
                 <div>
-                  <div class="confidence-title">System Confidence Score</div>
-                  <div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px;" data-tip="Composite score: breaker health + failure rate + blocked events + override status">How trustworthy is the current system state?</div>
+                  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--color-text-secondary);" data-tip="Composite score: breaker health + failure rate + blocked events + override status">System Intelligence</div>
+                  <div style="font-size:13px;font-weight:600;margin-top:3px;" id="confidenceSub">Calculating…</div>
                 </div>
-                <div class="confidence-pct" id="confidencePct">—</div>
+                <div class="intel-score-block">
+                  <div class="intel-score-pct" id="confidencePct">—</div>
+                  <div class="intel-score-label">Confidence</div>
+                </div>
               </div>
-              <div class="confidence-bar-track">
-                <div class="confidence-bar-fill" id="confidenceBar" style="width:0%"></div>
+              <div class="intel-card-bar">
+                <div class="confidence-bar-track" style="margin:0;">
+                  <div class="confidence-bar-fill" id="confidenceBar" style="width:0%"></div>
+                </div>
               </div>
-              <div class="confidence-sub" id="confidenceSub">Calculating…</div>
-              <div class="confidence-signals" id="confidenceSignals"></div>
-            </div>
-
-            <!-- Operational Summary -->
-            <div class="right-panel-summary">
-              <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--color-text-secondary);margin-bottom:10px;">Operational Summary</div>
-              <div class="ops-summary-row">
-                <span class="ops-summary-label">Total Rules</span>
-                <span class="ops-summary-value" id="opsTotalRules">—</span>
+              <div class="intel-card-rows">
+                <div class="intel-row">
+                  <span class="intel-row-label">Total Rules</span>
+                  <span class="intel-row-value" id="opsTotalRules">—</span>
+                </div>
+                <div class="intel-row">
+                  <span class="intel-row-label">Open Breakers</span>
+                  <span class="intel-row-value" id="opsOpenRules" style="color:var(--color-critical)">—</span>
+                </div>
+                <div class="intel-row">
+                  <span class="intel-row-label">Admin Overrides</span>
+                  <span class="intel-row-value" id="opsOverrides">—</span>
+                </div>
+                <div class="intel-row">
+                  <span class="intel-row-label">Last Evaluation</span>
+                  <span class="intel-row-value" id="opsLastEval">—</span>
+                </div>
               </div>
-              <div class="ops-summary-row">
-                <span class="ops-summary-label">Open Breakers</span>
-                <span class="ops-summary-value" id="opsOpenRules" style="color:var(--color-critical)">—</span>
-              </div>
-              <div class="ops-summary-row">
-                <span class="ops-summary-label">Admin Overrides Active</span>
-                <span class="ops-summary-value" id="opsOverrides">—</span>
-              </div>
-              <div class="ops-summary-row">
-                <span class="ops-summary-label">Last Evaluation</span>
-                <span class="ops-summary-value" id="opsLastEval">—</span>
-              </div>
+              <div class="intel-signals" id="confidenceSignals"></div>
             </div>
 
             <article class="card">
@@ -2246,7 +2357,12 @@
     // ── Failure sources render ────────────────────────────────────────
     function renderFailures() {
       if (!state.failures.length) {
-        els.failureSummary.innerHTML = '<div class="empty">No failure data available.</div>';
+        els.failureSummary.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">✓</div>
+            <div class="empty-state-title">No failures in current window</div>
+            <div class="empty-state-sub">All services are operating within normal failure thresholds.</div>
+          </div>`;
         return;
       }
       const total = state.failures.reduce((acc, f) => acc + Number(f.failures_last_24h || 0), 0) || 1;
@@ -2287,7 +2403,12 @@
     // ── Protected events render ───────────────────────────────────
     function renderBlocked() {
       if (!state.blocked.length) {
-        els.blockedSummary.innerHTML = '<div class="empty">No protected events recorded.</div>';
+        els.blockedSummary.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🛡</div>
+            <div class="empty-state-title">No blocked actions recorded</div>
+            <div class="empty-state-sub">Circuit breakers have not had to intervene. System is fully healthy.</div>
+          </div>`;
         return;
       }
       const icons = ['🛡️', '⚠️', '🚫', '🔒', '⛔'];
@@ -2490,6 +2611,11 @@
       // Open drawer immediately so user sees it while data loads
       els.drawer.classList.add('open');
       els.drawer.setAttribute('aria-hidden', 'false');
+      // Mark selected row + add drawer-active class for dim effect
+      document.querySelectorAll('tbody tr.row-selected').forEach(r => r.classList.remove('row-selected'));
+      const selectedTr = document.querySelector(`tr[data-rule-row="${ruleKey}"]`);
+      if (selectedTr) selectedTr.classList.add('row-selected');
+      document.querySelector('.app-shell')?.classList.add('drawer-active');
 
       // ── Breaker Metadata ────────────────────────────────────────
       els.metaRuleKey.textContent       = row.rule_key;
@@ -2622,7 +2748,11 @@
                 </div>
               </div>`;
           }).join('')
-        : '<div class="empty">No linked incidents for this breaker.</div>';
+        : `<div class="empty-state">
+            <div class="empty-state-icon">🔗</div>
+            <div class="empty-state-title">No linked incidents</div>
+            <div class="empty-state-sub">No incidents have been correlated with this breaker yet.</div>
+          </div>`;
 
       // ── Timeline — fetch action log async ───────────────────────
       els.drawerTimeline.innerHTML = '<div class="dim" style="font-size:var(--text-sm);padding:8px 0;">Loading timeline…</div>';
@@ -2645,13 +2775,19 @@
                   ? `<div class="tl-actor">by ${ev.actor}</div>` : ''}
               </div>
             </div>`).join('')
-        : '<div class="empty">No timeline events yet.</div>';
+        : `<div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <div class="empty-state-title">No timeline events recorded</div>
+            <div class="empty-state-sub">State-change events will appear here when the breaker is triggered.</div>
+          </div>`;
     }
 
     function closeDrawer() {
       els.drawer.classList.remove('open');
       els.drawer.setAttribute('aria-hidden', 'true');
       state.selected = null;
+      document.querySelectorAll('tbody tr.row-selected').forEach(r => r.classList.remove('row-selected'));
+      document.querySelector('.app-shell')?.classList.remove('drawer-active');
     }
 
     // ── Load all ──────────────────────────────────────────────────
@@ -2790,75 +2926,167 @@
       }
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // CENTRAL ACTION WRAPPER (Step 8M.10.5 §7.1)
+    // Every mutation flows through here — no silent failures possible.
+    // ══════════════════════════════════════════════════════════════
+    let globalBusy = false;
+
+    function setGlobalBusy(isBusy) {
+      globalBusy = isBusy;
+      // Progress bar
+      const bar = document.getElementById('globalBusyBar');
+      if (bar) bar.classList.toggle('active', isBusy);
+      // Disable all buttons except those marked data-allow-while-busy
+      document.querySelectorAll('button').forEach(btn => {
+        if (btn.dataset.allowWhileBusy === 'true') return;
+        btn.disabled = isBusy;
+        btn.style.opacity = isBusy ? '0.65' : '';
+      });
+    }
+
+    async function runAction({ action, body = {}, successMessage, refresh = true, skipConfirm = false }) {
+      if (globalBusy) return;  // hard no-double-submit guard
+      try {
+        setGlobalBusy(true);
+        const result = await apiPost(action, body);
+        showToast(successMessage || '✓ Action completed');
+        if (refresh) {
+          await loadAll();
+          // If drawer is open and the mutated row is the selected one, refresh drawer
+          if (state.selected?.rule_key) {
+            const next = findBreaker(state.selected.rule_key);
+            if (next) openDrawer(state.selected.rule_key);
+          }
+        }
+        return result;
+      } catch (err) {
+        console.error('[runAction]', action, err);
+        showToast('✗ ' + (err.message || 'Action failed — check console'), true);
+        throw err;           // let callers know it failed
+      } finally {
+        setGlobalBusy(false);
+      }
+    }
+
+    // ── Updated actOnRule — routes through runAction ──────────────
+    async function actOnRule(action, ruleKey) {
+      if (globalBusy) return;
+      const titles = {
+        'force-open':  'Force Open Breaker',
+        'force-close': 'Reset / Force Close Breaker',
+        'reset':       'Reset Override to Auto Mode'
+      };
+      const descs = {
+        'force-open':
+          `This will immediately force-open "${serviceName(ruleKey)}", blocking all traffic. ` +
+          `This is an emergency action. Enter your operator reason.`,
+        'force-close':
+          `This will force-close "${serviceName(ruleKey)}" and resume traffic. ` +
+          `Only do this after confirming the upstream service is stable.`,
+        'reset':
+          `This clears the admin override on "${serviceName(ruleKey)}" and returns it to ` +
+          `automatic protection mode. The next evaluation cycle sets the correct state.`
+      };
+      const labels = {
+        'force-open':  'Force Open Now',
+        'force-close': 'Force Close',
+        'reset':       'Reset to Auto'
+      };
+      const reason = await modal.open(
+        titles[action] || 'Confirm Action',
+        descs[action]  || 'Are you sure?',
+        labels[action] || 'Confirm',
+        action === 'force-open'
+      );
+      if (!reason) return;
+
+      const actionMap = {
+        'force-open':  { action: 'circuit_force_open',     msg: `✓ Forced open: ${serviceName(ruleKey)}`   },
+        'force-close': { action: 'circuit_force_closed',   msg: `✓ Forced closed: ${serviceName(ruleKey)}` },
+        'reset':       { action: 'circuit_reset_override', msg: `✓ Override reset: ${serviceName(ruleKey)}`}
+      };
+      const cfg = actionMap[action];
+      if (!cfg) return;
+
+      // Optimistic row highlight
+      setRowBusy(ruleKey, true);
+      try {
+        await runAction({ action: cfg.action, body: { rule_key: ruleKey, reason }, successMessage: cfg.msg });
+      } finally {
+        setRowBusy(ruleKey, false);
+      }
+    }
+
     // ── Event wiring ──────────────────────────────────────────────
-    document.getElementById('btnRefresh').addEventListener('click', loadAll);
+    document.getElementById('btnRefresh').addEventListener('click', async () => {
+      if (globalBusy) return;
+      await loadAll();
+      showToast('✓ Data refreshed');
+    });
     document.getElementById('btnCloseDrawer').addEventListener('click', closeDrawer);
 
-    // Re-evaluate — wired to real telemetry.js action
-    document.getElementById('btnReevaluate').addEventListener('click', async () => {
-      setPageBusy('btnReevaluate', true, 'Re-evaluating…');
-      try {
-        await apiPost('auto_protection_reevaluate', { trigger_source: 'admin' });
-        showToast('✓ All rules re-evaluated');
-        await loadAll();
-      } catch (err) { showToast('✗ ' + (err.message || 'Re-evaluate failed'), true); }
-      finally { setPageBusy('btnReevaluate', false); }
-    });
-    document.getElementById('btnPanelReevaluate')?.addEventListener('click', async () => {
-      setPageBusy('btnPanelReevaluate', true, 'Re-evaluating…');
-      try {
-        await apiPost('auto_protection_reevaluate', { trigger_source: 'admin' });
-        showToast('✓ All rules re-evaluated');
-        await loadAll();
-      } catch (err) { showToast('✗ ' + (err.message || 'Re-evaluate failed'), true); }
-      finally { setPageBusy('btnPanelReevaluate', false); }
-    });
+    // Re-evaluate All (§8.1)
+    document.getElementById('btnReevaluate').addEventListener('click', () =>
+      runAction({
+        action: 'auto_protection_reevaluate',
+        body: { trigger_source: 'admin' },
+        successMessage: '✓ System re-evaluation completed'
+      })
+    );
+    document.getElementById('btnPanelReevaluate')?.addEventListener('click', () =>
+      runAction({
+        action: 'auto_protection_reevaluate',
+        body: { trigger_source: 'admin' },
+        successMessage: '✓ System re-evaluation completed'
+      })
+    );
 
-    // Trigger escalation — wired to real telemetry.js action
+    // Trigger Escalation (§8.2) — confirmation required
     async function triggerEscalation() {
+      if (globalBusy) return;
       const reason = await modal.open(
         '⚡ Trigger Escalation',
-        'This will fire the escalation automation immediately for all open incidents. ' +
-        'Confirm only if you have verified the system state and the incident warrants escalation.',
+        'This will immediately fire the escalation automation for ALL open incidents. ' +
+        'Confirm only after verifying the system state warrants escalation.',
         'Trigger Now', true
       );
       if (!reason) return;
-      setPageBusy('btnTriggerEscalation', true, 'Triggering…');
-      setPageBusy('btnPanelEscalate', true, 'Triggering…');
-      try {
-        await apiPost('trigger_escalation', { trigger_source: 'admin', reason });
-        showToast('✓ Escalation triggered successfully');
-      } catch (err) {
-        showToast('✗ ' + (err.message || 'Escalation failed'), true);
-      } finally {
-        setPageBusy('btnTriggerEscalation', false);
-        setPageBusy('btnPanelEscalate', false);
-      }
+      await runAction({
+        action: 'trigger_escalation',
+        body: { trigger_source: 'admin', reason },
+        successMessage: '✓ Escalation triggered',
+        refresh: false
+      });
     }
     document.getElementById('btnTriggerEscalation').addEventListener('click', triggerEscalation);
     document.getElementById('btnPanelEscalate').addEventListener('click', triggerEscalation);
 
-    // Reset all overrides
+    // Reset All Overrides
     document.getElementById('btnPanelResetAll')?.addEventListener('click', async () => {
+      if (globalBusy) return;
       const reason = await modal.open(
         'Reset All Overrides',
-        'This will reset every admin override across all breakers, returning them to automatic mode.',
+        'This clears every admin override and returns all breakers to automatic mode. Enter your reason.',
         'Reset All', false
       );
       if (!reason) return;
+      const ruleKeys = state.breakers.filter(r => r.admin_override_state).map(r => r.rule_key);
+      if (!ruleKeys.length) { showToast('No overrides active'); return; }
+      setGlobalBusy(true);
       try {
-        const ruleKeys = state.breakers
-          .filter(r => r.admin_override_state)
-          .map(r => r.rule_key);
-        await Promise.all(ruleKeys.map(k =>
-          apiPost('circuit_reset_override', { rule_key: k, reason })
-        ));
-        showToast(`Reset ${ruleKeys.length} override(s)`);
+        await Promise.all(ruleKeys.map(k => apiPost('circuit_reset_override', { rule_key: k, reason })));
+        showToast(`✓ Reset ${ruleKeys.length} override(s)`);
         await loadAll();
-      } catch (err) { showToast(err.message || 'Reset failed', true); }
+        if (state.selected?.rule_key) openDrawer(state.selected.rule_key);
+      } catch (err) {
+        showToast('✗ ' + (err.message || 'Reset failed'), true);
+      } finally {
+        setGlobalBusy(false);
+      }
     });
 
-    // Toggle labels
+    // Toggle labels (informational only — no backend effect)
     document.getElementById('toggleCircuitMaster').addEventListener('change', (e) => {
       document.getElementById('toggleCircuitMasterLabel').textContent =
         e.target.checked ? 'Auto protection on' : 'Manual mode active';
@@ -2868,39 +3096,21 @@
         e.target.checked ? 'Failover active' : 'Standby';
     });
 
-    // Drawer actions
-    document.getElementById('btnDrawerForceOpen').addEventListener('click', async () => {
-      if (!state.selected) return;
-      setPageBusy('btnDrawerForceOpen', true, 'Processing…');
-      try {
-        await actOnRule('force-open', state.selected.rule_key);
-      } finally {
-        setPageBusy('btnDrawerForceOpen', false);
-      }
-    });
-    document.getElementById('btnDrawerReset').addEventListener('click', async () => {
-      if (!state.selected) return;
-      setPageBusy('btnDrawerReset', true, 'Resetting…');
-      try {
-        await actOnRule('reset', state.selected.rule_key);
-      } finally {
-        setPageBusy('btnDrawerReset', false);
-      }
-    });
+    // Drawer footer actions — all through runAction via actOnRule
+    document.getElementById('btnDrawerForceOpen').addEventListener('click', () =>
+      state.selected && actOnRule('force-open', state.selected.rule_key)
+    );
+    document.getElementById('btnDrawerReset').addEventListener('click', () =>
+      state.selected && actOnRule('reset', state.selected.rule_key)
+    );
     document.getElementById('btnDrawerReevaluate').addEventListener('click', async () => {
-      if (!state.selected) return;
+      if (!state.selected || globalBusy) return;
       const ruleKey = state.selected.rule_key;
-      setPageBusy('btnDrawerReevaluate', true, 'Re-evaluating…');
-      try {
-        await apiPost('breaker_re_evaluate', { rule_key: ruleKey, trigger_source: 'admin' });
-        showToast(`✓ Re-evaluated: ${serviceName(ruleKey)}`);
-        await loadAll();
-        openDrawer(ruleKey);
-      } catch (err) {
-        showToast('✗ ' + (err.message || 'Re-evaluate failed'), true);
-      } finally {
-        setPageBusy('btnDrawerReevaluate', false);
-      }
+      await runAction({
+        action: 'breaker_re_evaluate',
+        body: { rule_key: ruleKey, trigger_source: 'admin' },
+        successMessage: `✓ Re-evaluated: ${serviceName(ruleKey)}`
+      });
     });
 
     // Table filter
@@ -2908,13 +3118,18 @@
     els.filterState.addEventListener('change',   renderTable);
     els.filterOverride.addEventListener('change', renderTable);
 
-    // Table row actions
-    els.breakerTableBody.addEventListener('click', async (e) => {
+    // Table row clicks — view opens drawer, actions run through actOnRule
+    els.breakerTableBody.addEventListener('click', (e) => {
+      if (globalBusy) return;  // no row interaction during mutations
       const btn = e.target.closest('[data-action]');
-      if (!btn) return;
+      if (!btn) {
+        // Click anywhere on row → open drawer
+        const tr = e.target.closest('tr[data-rule-row]');
+        if (tr?.dataset.ruleRow) openDrawer(tr.dataset.ruleRow);
+        return;
+      }
       const { action, rule } = btn.dataset;
       if (action === 'view') return openDrawer(rule);
-
       actOnRule(action, rule);
     });
 
