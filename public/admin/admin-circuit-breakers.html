@@ -624,13 +624,58 @@
       padding: 12px 16px;
       border-radius: 12px;
       font-size: var(--text-sm);
-      box-shadow: var(--shadow-soft);
+      box-shadow: 0 8px 32px rgba(0,0,0,.35);
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s ease;
       z-index: 40;
+      max-width: 520px;
+      line-height: 1.5;
+      text-align: center;
     }
-    .toast.show { opacity: 1; }
+    .toast.show { opacity: 1; pointer-events: all; }
+    /* Schema error banner — persistent, dismissible */
+    .schema-error-banner {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 9997;
+      background: #1c1917;
+      border-top: 3px solid #f97316;
+      padding: 16px 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      font-size: 13px;
+      color: #fed7aa;
+      box-shadow: 0 -8px 32px rgba(0,0,0,.4);
+      animation: slideUp .25s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .schema-error-banner-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .schema-error-banner-body { flex: 1; }
+    .schema-error-banner-title { font-weight: 700; color: #fb923c; margin-bottom: 4px; font-size: 14px; }
+    .schema-error-banner-sql {
+      background: #292524;
+      border: 1px solid #44403c;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-family: ui-monospace, monospace;
+      font-size: 11px;
+      color: #d6d3d1;
+      margin-top: 8px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .schema-error-banner-close {
+      background: none;
+      border: 1px solid #57534e;
+      color: #d6d3d1;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
 
     @media (max-width: 1280px) {
       .grid-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2092,13 +2137,55 @@
       toast:           document.getElementById('toast')
     };
 
-    // ── Toast ─────────────────────────────────────────────────────
+    // ── Toast + Schema Error Handler ─────────────────────────────
     function showToast(message, isError = false) {
-      els.toast.textContent = message;
+      const msg = String(message || '');
+
+      // Detect schema errors — show persistent banner with fix instructions
+      if (isError && (
+        msg.includes('column') || msg.includes('does not exist') ||
+        msg.includes('schema_error') || msg.includes('relation') ||
+        msg.includes('operator does not exist') || msg.includes('ambiguous column')
+      )) {
+        showSchemaError(msg);
+        return;
+      }
+
+      els.toast.textContent = msg;
       els.toast.style.background = isError ? '#7f1d1d' : '#111827';
       els.toast.classList.add('show');
       clearTimeout(showToast._timer);
-      showToast._timer = setTimeout(() => els.toast.classList.remove('show'), 2800);
+      // Longer display for errors so operators can read them
+      showToast._timer = setTimeout(() => els.toast.classList.remove('show'), isError ? 5000 : 2800);
+    }
+
+    function showSchemaError(rawError) {
+      // Remove any existing schema banner
+      document.getElementById('schemaBanner')?.remove();
+
+      const banner = document.createElement('div');
+      banner.id = 'schemaBanner';
+      banner.className = 'schema-error-banner';
+
+      const diagSql = `-- Run in Supabase SQL Editor to find column names:
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_name = 'auto_protection_rules'
+ORDER BY ordinal_position;`;
+
+      banner.innerHTML = `
+        <div class="schema-error-banner-icon">🔧</div>
+        <div class="schema-error-banner-body">
+          <div class="schema-error-banner-title">Database Schema Mismatch — Action Blocked</div>
+          <div>The RPC references a column name that does not match your actual <code style="background:#292524;padding:1px 5px;border-radius:4px;">auto_protection_rules</code> table.</div>
+          <div style="margin-top:4px;color:#a8a29e;font-size:12px;">Error: \${rawError}</div>
+          <div style="margin-top:8px;font-weight:600;color:#fb923c;">Fix: Re-deploy <code style="background:#292524;padding:1px 5px;border-radius:4px;">breaker_rpcs_v2.sql</code> — it auto-detects your column names.</div>
+          <div class="schema-error-banner-sql">\${diagSql}</div>
+        </div>
+        <button class="schema-error-banner-close" onclick="document.getElementById('schemaBanner')?.remove()" data-allow-while-busy="true">Dismiss</button>
+      `;
+      document.body.appendChild(banner);
+      console.error('[Schema Error]', rawError);
     }
 
     // ── Formatters ────────────────────────────────────────────────
