@@ -2141,15 +2141,15 @@
     function showToast(message, isError = false) {
       const msg = String(message || '');
 
-      // Detect schema errors — show persistent banner with fix instructions
-      if (isError && (
+      // DB errors — show persistent banner so operator can read full message
+      const isDbError = isError && (
         msg.includes('column') || msg.includes('does not exist') ||
         msg.includes('schema_error') || msg.includes('relation') ||
-        msg.includes('operator does not exist') || msg.includes('ambiguous column')
-      )) {
-        showSchemaError(msg);
-        return;
-      }
+        msg.includes('function') || msg.includes('42703') || msg.includes('42883') ||
+        msg.includes('syntax error') || msg.includes('ambiguous') ||
+        msg.includes('operator does not exist')
+      );
+      if (isDbError) { showSchemaError(msg); return; }
 
       els.toast.textContent = msg;
       els.toast.style.background = isError ? '#7f1d1d' : '#111827';
@@ -2160,32 +2160,51 @@
     }
 
     function showSchemaError(rawError) {
-      // Remove any existing schema banner
       document.getElementById('schemaBanner')?.remove();
 
       const banner = document.createElement('div');
       banner.id = 'schemaBanner';
       banner.className = 'schema-error-banner';
 
-      const diagSql = `-- Run in Supabase SQL Editor to find column names:
-SELECT column_name, data_type
-FROM information_schema.columns
-WHERE table_name = 'auto_protection_rules'
-ORDER BY ordinal_position;`;
+      const icon = document.createElement('div');
+      icon.className = 'schema-error-banner-icon';
+      icon.textContent = '🔧';
 
-      banner.innerHTML = `
-        <div class="schema-error-banner-icon">🔧</div>
-        <div class="schema-error-banner-body">
-          <div class="schema-error-banner-title">Database Schema Mismatch — Action Blocked</div>
-          <div>The RPC references a column name that does not match your actual <code style="background:#292524;padding:1px 5px;border-radius:4px;">auto_protection_rules</code> table.</div>
-          <div style="margin-top:4px;color:#a8a29e;font-size:12px;">Error: \${rawError}</div>
-          <div style="margin-top:8px;font-weight:600;color:#fb923c;">Fix: Re-deploy <code style="background:#292524;padding:1px 5px;border-radius:4px;">breaker_rpcs_v2.sql</code> — it auto-detects your column names.</div>
-          <div class="schema-error-banner-sql">\${diagSql}</div>
-        </div>
-        <button class="schema-error-banner-close" onclick="document.getElementById('schemaBanner')?.remove()" data-allow-while-busy="true">Dismiss</button>
-      `;
+      const body = document.createElement('div');
+      body.className = 'schema-error-banner-body';
+
+      const title = document.createElement('div');
+      title.className = 'schema-error-banner-title';
+      title.textContent = 'Action Failed — Database Error';
+
+      const desc = document.createElement('div');
+      desc.style.cssText = 'font-size:13px;';
+      desc.textContent = 'The RPC returned a database error. Run breaker_rpcs_final.sql in Supabase SQL Editor, then retry.';
+
+      const errBox = document.createElement('div');
+      errBox.style.cssText = 'margin-top:6px;color:#fca5a5;font-size:11px;font-family:ui-monospace,monospace;background:#292524;padding:6px 10px;border-radius:6px;word-break:break-all;';
+      errBox.textContent = String(rawError || 'Unknown error — check browser console');
+
+      const fix = document.createElement('div');
+      fix.style.cssText = 'margin-top:8px;font-weight:700;color:#fb923c;font-size:12px;';
+      fix.textContent = 'File to deploy: breaker_rpcs_final.sql (latest version)';
+
+      body.appendChild(title);
+      body.appendChild(desc);
+      body.appendChild(errBox);
+      body.appendChild(fix);
+
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'schema-error-banner-close';
+      closeBtn.setAttribute('data-allow-while-busy', 'true');
+      closeBtn.textContent = 'Dismiss';
+      closeBtn.onclick = function() { document.getElementById('schemaBanner')?.remove(); };
+
+      banner.appendChild(icon);
+      banner.appendChild(body);
+      banner.appendChild(closeBtn);
       document.body.appendChild(banner);
-      console.error('[Schema Error]', rawError);
+      console.error('[DB Error]', rawError);
     }
 
     // ── Formatters ────────────────────────────────────────────────
