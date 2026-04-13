@@ -1920,14 +1920,54 @@
       adminOps: '/api/admin/telemetry'
     };
 
-    // ── Auth ──────────────────────────────────────────────────────
-    function getAdminJwt() {
+    // ── Auth — matches admin.html pattern exactly ────────────────
+    // Primary: LPAdmin.getClient() → sb.auth.getSession() (set by admin-auth.js)
+    // Fallback: scan localStorage for any Supabase session with access_token
+    async function getAdminToken() {
+      // Primary path — LPAdmin from admin-auth.js
+      if (window.LPAdmin?.getClient) {
+        try {
+          const sb = await window.LPAdmin.getClient();
+          const { data: { session } } = await sb.auth.getSession();
+          if (session?.access_token) return session.access_token;
+        } catch (_) { /* fall through to localStorage */ }
+      }
+
+      // Fallback 1: standard Supabase v2 localStorage key used by admin-auth.js
+      const keysToTry = [
+        'lp_admin_auth',
+        'logicpals.auth',
+        'sb-ovszuxerimbmzfblzkgd-auth-token', // Supabase project-specific key
+      ];
+      for (const key of keysToTry) {
+        try {
+          const raw = localStorage.getItem(key);
+          if (!raw) continue;
+          const parsed = JSON.parse(raw);
+          // Supabase v2 stores { access_token, ... } directly OR under { session: { access_token } }
+          const token = parsed?.access_token
+            || parsed?.session?.access_token
+            || parsed?.currentSession?.access_token;
+          if (token) return token;
+        } catch (_) { continue; }
+      }
+
+      // Fallback 2: scan all localStorage keys for anything that looks like a Supabase session
       try {
-        const raw = localStorage.getItem('lp_admin_auth');
-        if (!raw) return null;
-        const session = JSON.parse(raw);
-        return session?.access_token || null;
-      } catch (_) { return null; }
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (!key) continue;
+          const raw = localStorage.getItem(key);
+          if (!raw || !raw.includes('access_token')) continue;
+          try {
+            const parsed = JSON.parse(raw);
+            const token = parsed?.access_token || parsed?.session?.access_token;
+            if (token && token.startsWith('ey')) return token; // JWT format check
+          } catch (_) { continue; }
+        }
+      } catch (_) {}
+
+      return null;
     }
 
     // ── State ─────────────────────────────────────────────────────
@@ -2100,31 +2140,31 @@
 
     // ── API ───────────────────────────────────────────────────────
     async function apiGet(type) {
-      const jwt = getAdminJwt();
+      const jwt = await getAdminToken();
       const headers = { 'Content-Type': 'application/json' };
       if (jwt) headers['Authorization'] = `Bearer ${jwt}`;
       const res = await fetch(`${API.telemetry}?type=${encodeURIComponent(type)}`, {
         credentials: 'include', headers
       });
-      if (res.status === 401) throw new Error('Session expired. Please log in again.');
-      if (res.status === 403) throw new Error('Admin access required.');
-      const json = await res.json();
-      if (!res.ok || json.ok === false) throw new Error(json.details || json.error || 'Request failed');
+      if (res.status === 401) throw new Error('auth_required');
+      if (res.status === 403) throw new Error('admin_access_required');
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || json.ok === false) throw new Error(json.details || json.error || `Request failed (${res.status})`);
       return json;
     }
 
     async function apiPost(action, body = {}) {
-      const jwt = getAdminJwt();
+      const jwt = await getAdminToken();
       const headers = { 'Content-Type': 'application/json' };
       if (jwt) headers['Authorization'] = `Bearer ${jwt}`;
       const res = await fetch(API.adminOps, {
         method: 'POST', credentials: 'include', headers,
         body: JSON.stringify({ action, ...body })
       });
-      if (res.status === 401) throw new Error('Session expired. Please log in again.');
-      if (res.status === 403) throw new Error('Admin access required.');
-      const json = await res.json();
-      if (!res.ok || json.ok === false) throw new Error(json.details || json.error || 'Action failed');
+      if (res.status === 401) throw new Error('auth_required');
+      if (res.status === 403) throw new Error('admin_access_required');
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || json.ok === false) throw new Error(json.details || json.error || `Action failed (${res.status})`);
       return json;
     }
 
@@ -2791,14 +2831,60 @@
     }
 
     // ── Load all ──────────────────────────────────────────────────
+    // ── Auth error banner ─────────────────────────────────────────
+    function showAuthError(message) {
+      let banner = document.getElementById('authErrorBanner');
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'authErrorBanner';
+        banner.style.cssText = [
+          'position:fixed', 'top:0', 'left:0', 'right:0',
+          'z-index:9998',
+          'background:#7f1d1d',
+          'color:white',
+          'padding:14px 24px',
+          'display:flex',
+          'align-items:center',
+          'justify-content:space-between',
+          'gap:16px',
+          'font-size:14px',
+          'font-weight:600',
+          'box-shadow:0 4px 20px rgba(0,0,0,.35)',
+        ].join(';');
+        document.body.appendChild(banner);
+      }
+      banner.innerHTML = `
+        <span>⚠ ${message}</span>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <a href="/admin.html" style="background:rgba(255,255,255,.15);color:white;padding:6px 14px;border-radius:8px;font-weight:700;text-decoration:none;">Sign in to Admin →</a>
+          <button onclick="document.getElementById('authErrorBanner')?.remove()" data-allow-while-busy="true"
+            style="background:none;border:1px solid rgba(255,255,255,.3);color:white;padding:6px 10px;border-radius:8px;cursor:pointer;">Dismiss</button>
+        </div>`;
+    }
+
+    function hideAuthError() {
+      document.getElementById('authErrorBanner')?.remove();
+    }
+
     async function loadAll() {
       try {
+        // Pre-flight: check we have a token before firing 4 parallel requests
+        const jwt = await getAdminToken();
+        if (!jwt) {
+          showAuthError('No admin session found. Please sign in to the admin console.');
+          // Clear loading placeholders so page doesn't look stuck
+          renderEmptyState();
+          return;
+        }
+
         const [circuitState, failures, blocked, opsSummary] = await Promise.all([
           apiGet('auto_protection_circuit_state'),
           apiGet('auto_protection_failures'),
           apiGet('auto_protection_blocked_actions'),
           apiGet('auto_protection_circuit_ops_summary')
         ]);
+
+        hideAuthError();
 
         state.breakers    = toArray(circuitState);
         state.failures    = toArray(failures);
@@ -2815,9 +2901,36 @@
         renderOpsSummary();
         updateLastUpdatedLabel();
       } catch (err) {
-        console.error(err);
-        showToast(err.message || 'Failed to load telemetry', true);
+        console.error('[loadAll]', err);
+        const msg = err.message || '';
+        if (msg === 'auth_required' || msg === 'admin_access_required') {
+          showAuthError(
+            msg === 'admin_access_required'
+              ? 'Admin role required. Your session does not have permission.'
+              : 'Session expired or invalid. Please sign in again.'
+          );
+          // Stop auto-refresh on auth errors — no point hammering with 401s
+          if (state.autoRefreshTimer) { clearInterval(state.autoRefreshTimer); state.autoRefreshTimer = null; }
+          renderEmptyState();
+        } else {
+          showToast('✗ ' + (msg || 'Failed to load data — check network or console'), true);
+        }
       }
+    }
+
+    // Clear loading states on error so nothing looks stuck
+    function renderEmptyState() {
+      ['kpiTotalRules','kpiOpenRules','kpiDegraded','kpiBlocked'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '—';
+      });
+      if (els.breakerTableBody)
+        els.breakerTableBody.innerHTML = '<tr><td colspan="9" class="empty" style="color:#b91c1c;">⚠ Authentication required — data not loaded.</td></tr>';
+      if (els.failureSummary)
+        els.failureSummary.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔒</div><div class="empty-state-title">Authentication required</div><div class="empty-state-sub">Sign in to the admin console to load data.</div></div>';
+      if (els.blockedSummary)
+        els.blockedSummary.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔒</div><div class="empty-state-title">Authentication required</div></div>';
+      if (els.lastUpdatedLabel) els.lastUpdatedLabel.textContent = '· not loaded';
     }
 
     // ── Auto-refresh ──────────────────────────────────────────────
@@ -3138,8 +3251,33 @@
     });
 
     // ── Boot ──────────────────────────────────────────────────────
-    loadAll();
-    startAutoRefresh();
+    // If LPAdmin is available (admin-auth.js loaded), let it handle auth
+    // and call loadAll() only after session is confirmed.
+    // Falls back to direct loadAll() if LPAdmin isn't present.
+    if (window.LPAdmin?.init) {
+      window.LPAdmin.init({
+        page:         'circuit_breakers',
+        allowedRoles: ['super_admin', 'admin_regular'],
+        onAuth: async (session, role, sb) => {
+          // Update topbar avatar if element exists
+          const avatar = document.querySelector('.avatar');
+          if (avatar && session?.user?.email) {
+            const initials = session.user.email.split('@')[0].slice(0, 2).toUpperCase();
+            avatar.textContent = initials;
+          }
+          await loadAll();
+          startAutoRefresh();
+        },
+        onUnauthenticated: () => {
+          showAuthError('Not authenticated. Please sign in to the admin console.');
+          renderEmptyState();
+        }
+      });
+    } else {
+      // Fallback: admin-auth.js not loaded or unavailable — try direct load
+      loadAll();
+      startAutoRefresh();
+    }
   </script>
 </body>
 </html>
