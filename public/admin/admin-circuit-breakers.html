@@ -287,7 +287,7 @@
 
     .layout-main {
       display: grid;
-      grid-template-columns: minmax(0, 1.7fr) minmax(320px, 0.95fr);
+      grid-template-columns: minmax(0, 1.6fr) minmax(340px, 1.1fr);
       gap: var(--space-6);
       align-items: start;
     }
@@ -1056,6 +1056,273 @@
       text-align: center;
     }
     [data-tip]:hover::after { opacity: 1; }
+
+    /* ── PER-BUTTON LOADING STATES ──────────────────────────────── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-spinner {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+    }
+    .action-mini:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    tbody tr.row-acting {
+      background: #fafbff !important;
+      opacity: 0.85;
+    }
+
+    /* ── DRAWER METADATA GRID ───────────────────────────────────── */
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2);
+    }
+    .meta-cell {
+      background: var(--color-surface-muted);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 9px 12px;
+    }
+    .meta-cell-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--color-text-secondary);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .meta-cell-value {
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--color-text-primary);
+      word-break: break-all;
+    }
+    .meta-cell-value.mono { font-family: ui-monospace, monospace; font-size: 11px; }
+    .meta-cell-value.critical { color: var(--color-critical); }
+    .meta-cell-value.warning  { color: var(--color-warning);  }
+    .meta-cell-value.healthy  { color: var(--color-healthy);  }
+    .meta-cell-full { grid-column: 1 / -1; }
+
+    /* ── INCIDENT BADGE ─────────────────────────────────────────── */
+    .incident-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1d4ed8;
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* ── FAILURE RATE DISPLAY ───────────────────────────────────── */
+    .fail-rate-high { color: var(--color-critical); font-weight: 700; }
+    .fail-rate-med  { color: var(--color-warning);  font-weight: 600; }
+    .fail-rate-ok   { color: var(--color-text-secondary); }
+
+    /* ── DECISION SUMMARY BANNER ─────────────────────────────────── */
+    .decision-banner {
+      background: linear-gradient(135deg, #1e293b 0%, #1e3a5f 100%);
+      border-radius: var(--radius-card);
+      padding: var(--space-5) var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+      box-shadow: 0 4px 20px rgba(15,23,42,0.18);
+    }
+    .decision-banner-left { flex: 1; min-width: 0; }
+    .decision-banner-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+    .decision-banner-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: white;
+      margin: 0 0 6px;
+    }
+    .decision-banner-sub {
+      font-size: var(--text-sm);
+      color: #94a3b8;
+    }
+    .decision-priority-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      flex: 2;
+      justify-content: flex-end;
+    }
+    .priority-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 10px 14px;
+      min-width: 150px;
+    }
+    .priority-pill-icon { font-size: 18px; flex-shrink: 0; }
+    .priority-pill-label { font-size: 11px; color: #94a3b8; margin-bottom: 2px; }
+    .priority-pill-value { font-size: 14px; font-weight: 700; color: white; }
+    .priority-pill.urgent { border-color: rgba(239,68,68,.45); background: rgba(239,68,68,.1); }
+    .priority-pill.warn   { border-color: rgba(245,158,11,.45); background: rgba(245,158,11,.1); }
+    .priority-pill.ok     { border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.07); }
+
+    /* ── CONFIDENCE SIGNAL ──────────────────────────────────────── */
+    .confidence-card {
+      background: white;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: var(--space-4) var(--space-5);
+      box-shadow: var(--shadow-soft);
+    }
+    .confidence-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-3);
+    }
+    .confidence-title {
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-primary);
+    }
+    .confidence-pct {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--color-primary);
+    }
+    .confidence-bar-track {
+      height: 8px;
+      background: #f1f5f9;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+    .confidence-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #6366f1, #3b82f6);
+      transition: width 0.8s cubic-bezier(.4,0,.2,1);
+    }
+    .confidence-sub {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+    }
+    .confidence-signals {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .conf-signal {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid;
+    }
+    .conf-signal.green  { color: #15803d; background: #f0fdf4; border-color: #bbf7d0; }
+    .conf-signal.yellow { color: #92400e; background: #fffbeb; border-color: #fde68a; }
+    .conf-signal.gray   { color: #64748b; background: #f8fafc; border-color: #e2e8f0; }
+
+    /* ── STABILITY SIGNAL IN FAILURE SOURCES ────────────────────── */
+    .stability-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 10px;
+      font-weight: 800;
+      border: 1px solid;
+    }
+    .stability-high   { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
+    .stability-medium { color: #92400e; background: #fffbeb; border-color: #fde68a; }
+    .stability-low    { color: #15803d; background: #f0fdf4; border-color: #bbf7d0; }
+
+    /* ── RISK BADGE PER TABLE ROW ───────────────────────────────── */
+    .risk-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 5px;
+      border: 1px solid;
+      margin-top: 3px;
+    }
+    .risk-critical { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
+    .risk-high     { color: #92400e; background: #fffbeb; border-color: #fde68a; }
+    .risk-normal   { color: #15803d; background: #f0fdf4; border-color: #bbf7d0; }
+
+    /* ── RECOMMENDED ACTION IN DRAWER ──────────────────────────── */
+    .rec-action-card {
+      background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: var(--space-4);
+    }
+    .rec-action-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--color-primary);
+      margin-bottom: 6px;
+    }
+    .rec-action-text {
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .rec-action-reason {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+    }
+
+    /* ── RIGHT PANEL BALANCE ────────────────────────────────────── */
+    .right-panel-summary {
+      background: linear-gradient(135deg, #f8fafc, #eff6ff);
+      border: 1px solid #dbeafe;
+      border-radius: var(--radius-card);
+      padding: var(--space-4) var(--space-5);
+    }
+    .ops-summary-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--color-border);
+      font-size: var(--text-sm);
+    }
+    .ops-summary-row:last-child { border-bottom: none; }
+    .ops-summary-label { color: var(--color-text-secondary); }
+    .ops-summary-value { font-weight: 700; color: var(--color-text-primary); }
   </style>
   <script src="/assets/js/env-loader.js"></script>
   <script src="/assets/js/admin-auth.js"></script>
@@ -1169,9 +1436,41 @@
             <p class="page-subtitle">System protection, failover control, and operator actions for observe → decide → act workflows.</p>
           </div>
           <div class="page-actions">
+            <button class="btn btn-secondary" id="btnRefresh" data-tip="Refresh all data from the backend">↻ Refresh</button>
             <button class="btn btn-primary" id="btnReevaluate" data-tip="Re-evaluates all protection rules against current live metrics">⟳ Re-evaluate All</button>
-            <button class="btn btn-secondary" id="btnRefresh">↻ Refresh</button>
-            <button class="btn btn-danger-strong" id="btnTriggerEscalation">⚡ Trigger Escalation</button>
+            <button class="btn btn-danger-strong" id="btnTriggerEscalation" data-tip="Fires escalation automation for all open incidents immediately">⚡ Trigger Escalation</button>
+          </div>
+        </div>
+
+        <!-- ── Decision Summary Banner ── -->
+        <div class="decision-banner" id="decisionBanner">
+          <div class="decision-banner-left">
+            <div class="decision-banner-label">🧠 Decision Summary</div>
+            <h2 class="decision-banner-title" id="decisionTitle">System is healthy — no action required</h2>
+            <div class="decision-banner-sub" id="decisionSub">All breakers operational · Auto-protection active · Last evaluated just now</div>
+          </div>
+          <div class="decision-priority-row">
+            <div class="priority-pill ok" id="decisionPillStatus">
+              <span class="priority-pill-icon">🛡</span>
+              <div>
+                <div class="priority-pill-label">Protection Status</div>
+                <div class="priority-pill-value" id="dpStatus">Fully Protected</div>
+              </div>
+            </div>
+            <div class="priority-pill ok" id="decisionPillAction">
+              <span class="priority-pill-icon">⚡</span>
+              <div>
+                <div class="priority-pill-label">Priority Action</div>
+                <div class="priority-pill-value" id="dpAction">None Required</div>
+              </div>
+            </div>
+            <div class="priority-pill ok" id="decisionPillRisk">
+              <span class="priority-pill-icon">📊</span>
+              <div>
+                <div class="priority-pill-label">System Risk</div>
+                <div class="priority-pill-value" id="dpRisk">LOW</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1290,8 +1589,8 @@
                       <th>Severity</th>
                       <th>Last Triggered</th>
                       <th>Failure Rate</th>
-                      <th>Protected Events</th>
-                      <th>Incident</th>
+                      <th data-tip="Total actions blocked by this breaker to protect system stability">Protected Events</th>
+                      <th data-tip="Active incidents linked to this breaker">Incident</th>
                       <th>Next Retry</th>
                       <th>Actions</th>
                     </tr>
@@ -1305,6 +1604,43 @@
           </div>
 
           <div class="stack">
+            <!-- Confidence Signal -->
+            <div class="confidence-card">
+              <div class="confidence-header">
+                <div>
+                  <div class="confidence-title">System Confidence Score</div>
+                  <div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px;" data-tip="Composite score: breaker health + failure rate + blocked events + override status">How trustworthy is the current system state?</div>
+                </div>
+                <div class="confidence-pct" id="confidencePct">—</div>
+              </div>
+              <div class="confidence-bar-track">
+                <div class="confidence-bar-fill" id="confidenceBar" style="width:0%"></div>
+              </div>
+              <div class="confidence-sub" id="confidenceSub">Calculating…</div>
+              <div class="confidence-signals" id="confidenceSignals"></div>
+            </div>
+
+            <!-- Operational Summary -->
+            <div class="right-panel-summary">
+              <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--color-text-secondary);margin-bottom:10px;">Operational Summary</div>
+              <div class="ops-summary-row">
+                <span class="ops-summary-label">Total Rules</span>
+                <span class="ops-summary-value" id="opsTotalRules">—</span>
+              </div>
+              <div class="ops-summary-row">
+                <span class="ops-summary-label">Open Breakers</span>
+                <span class="ops-summary-value" id="opsOpenRules" style="color:var(--color-critical)">—</span>
+              </div>
+              <div class="ops-summary-row">
+                <span class="ops-summary-label">Admin Overrides Active</span>
+                <span class="ops-summary-value" id="opsOverrides">—</span>
+              </div>
+              <div class="ops-summary-row">
+                <span class="ops-summary-label">Last Evaluation</span>
+                <span class="ops-summary-value" id="opsLastEval">—</span>
+              </div>
+            </div>
+
             <article class="card">
               <div class="card-header">
                 <div>
@@ -1353,6 +1689,20 @@
 
     <!-- ── Body ── -->
     <div class="drawer-body" style="gap:0;padding:0;">
+
+      <!-- 0. Breaker Metadata -->
+      <div class="drawer-section" style="padding:var(--space-5);">
+        <div class="drawer-section-title">📦 Breaker Metadata</div>
+        <div class="meta-grid" id="drawerMetadata">
+          <div class="meta-cell"><div class="meta-cell-label">Rule Key</div><div class="meta-cell-value mono" id="metaRuleKey">—</div></div>
+          <div class="meta-cell"><div class="meta-cell-label">Circuit State</div><div class="meta-cell-value" id="metaCircuitState">—</div></div>
+          <div class="meta-cell"><div class="meta-cell-label">Override State</div><div class="meta-cell-value" id="metaOverrideState">—</div></div>
+          <div class="meta-cell"><div class="meta-cell-label">Protection Mode</div><div class="meta-cell-value" id="metaProtectionMode">—</div></div>
+          <div class="meta-cell"><div class="meta-cell-label">Last Failure</div><div class="meta-cell-value" id="metaLastFailure">—</div></div>
+          <div class="meta-cell"><div class="meta-cell-label">Failure Count</div><div class="meta-cell-value" id="metaFailureCount">—</div></div>
+          <div class="meta-cell meta-cell-full"><div class="meta-cell-label">Override Reason</div><div class="meta-cell-value" id="metaOverrideReason">—</div></div>
+        </div>
+      </div>
 
       <!-- 1. Timeline -->
       <div class="drawer-section" style="padding:var(--space-5);">
@@ -1415,6 +1765,16 @@
         <div style="font-size:var(--text-sm);color:var(--color-text-secondary);background:#f8fafc;border:1px solid var(--color-border);border-radius:10px;padding:12px;line-height:1.6;" id="drawerReason">No trigger reason recorded.</div>
       </div>
 
+      <!-- 7. Recommended Action -->
+      <div class="drawer-section" style="padding:var(--space-5);">
+        <div class="drawer-section-title">🎯 Recommended Action</div>
+        <div class="rec-action-card" id="drawerRecommendedAction">
+          <div class="rec-action-label">What now?</div>
+          <div class="rec-action-text" id="recActionText">Loading recommendation…</div>
+          <div class="rec-action-reason" id="recActionReason"></div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ── Footer Actions ── -->
@@ -1468,7 +1828,8 @@
       selected: null,
       lastLoadedAt: null,
       autoRefreshTimer: null,
-      prevSummary: null
+      prevSummary: null,
+      activeActions: new Set()  // 'ruleKey:action' strings
     };
 
     // ── Modal ─────────────────────────────────────────────────────
@@ -1535,6 +1896,32 @@
       drawerConsecFails:    document.getElementById('drawerConsecFails'),
       drawerSuccessSinceOpen:document.getElementById('drawerSuccessSinceOpen'),
       drawerReason:         document.getElementById('drawerReason'),
+      metaRuleKey:          document.getElementById('metaRuleKey'),
+      metaCircuitState:     document.getElementById('metaCircuitState'),
+      metaOverrideState:    document.getElementById('metaOverrideState'),
+      metaProtectionMode:   document.getElementById('metaProtectionMode'),
+      metaLastFailure:      document.getElementById('metaLastFailure'),
+      metaFailureCount:     document.getElementById('metaFailureCount'),
+      metaOverrideReason:   document.getElementById('metaOverrideReason'),
+      // Decision + confidence + ops summary
+      decisionTitle:    document.getElementById('decisionTitle'),
+      decisionSub:      document.getElementById('decisionSub'),
+      dpStatus:         document.getElementById('dpStatus'),
+      dpAction:         document.getElementById('dpAction'),
+      dpRisk:           document.getElementById('dpRisk'),
+      decisionPillStatus: document.getElementById('decisionPillStatus'),
+      decisionPillAction: document.getElementById('decisionPillAction'),
+      decisionPillRisk:   document.getElementById('decisionPillRisk'),
+      confidencePct:    document.getElementById('confidencePct'),
+      confidenceBar:    document.getElementById('confidenceBar'),
+      confidenceSub:    document.getElementById('confidenceSub'),
+      confidenceSignals:document.getElementById('confidenceSignals'),
+      opsTotalRules:    document.getElementById('opsTotalRules'),
+      opsOpenRules:     document.getElementById('opsOpenRules'),
+      opsOverrides:     document.getElementById('opsOverrides'),
+      opsLastEval:      document.getElementById('opsLastEval'),
+      recActionText:    document.getElementById('recActionText'),
+      recActionReason:  document.getElementById('recActionReason'),
       filterSearch:    document.getElementById('filterSearch'),
       filterState:     document.getElementById('filterState'),
       filterOverride:  document.getElementById('filterOverride'),
@@ -1645,8 +2032,15 @@
     function renderSummary() {
       const s = state.opsSummary || {};
       const openCount = Number(s.total_open_rules ?? s.open_rules ?? 0);
-      const degraded = Number(s.half_open_rules || 0) +
-        state.failures.filter(f => Number(f.failures_last_24h || 0) > 0).length;
+      // Degraded = unique rule_keys that are half_open OR have recent failures
+      // (avoid double-counting a half_open breaker that also appears in failures)
+      const degradedKeys = new Set([
+        ...state.breakers.filter(b => b.circuit_state === 'half_open').map(b => b.rule_key),
+        ...state.failures.filter(f => Number(f.failures_last_24h || 0) > 0).map(f => f.rule_key)
+      ]);
+      // Exclude fully-open breakers from degraded (they are already in openCount)
+      state.breakers.filter(b => b.circuit_state === 'open').forEach(b => degradedKeys.delete(b.rule_key));
+      const degraded = degradedKeys.size;
 
       els.kpiTotalRules.textContent = s.total_rules ?? '0';
       els.kpiOpenRules.textContent  = openCount;
@@ -1693,7 +2087,163 @@
       state.prevSummary = { ...s, open_rules: openCount, degraded };
     }
 
-    // ── Failure sources render ────────────────────────────────────
+    // ── Confidence Score Computation ─────────────────────────────
+    // Score = 100 - penalties for each risk signal
+    function computeConfidence() {
+      const s         = state.opsSummary || {};
+      const openCount = Number(s.total_open_rules ?? s.open_rules ?? 0);
+      const overrides = state.breakers.filter(b => b.admin_override_state).length;
+      const fails24h  = state.failures.reduce((a, f) => a + Number(f.failures_last_24h || 0), 0);
+      const blocked   = state.blocked.reduce((a, b) => a + Number(b.total_blocked_actions || 0), 0);
+      const total     = state.breakers.length || 1;
+
+      let score = 100;
+      score -= openCount * 20;           // -20 per open breaker
+      score -= overrides * 10;           // -10 per active override
+      score -= Math.min(fails24h * 2, 30); // -2 per failure, max -30
+      score -= blocked > 50 ? 10 : 0;   // -10 if heavy blocking
+      score = Math.max(0, Math.min(100, score));
+
+      // Signals
+      const signals = [];
+      if (openCount === 0) signals.push({ label: '✓ No open breakers', cls: 'green' });
+      else signals.push({ label: `✗ ${openCount} open`, cls: 'yellow' });
+      if (overrides === 0) signals.push({ label: '✓ Auto-mode active', cls: 'green' });
+      else signals.push({ label: `⚙ ${overrides} override(s)`, cls: 'yellow' });
+      if (fails24h === 0) signals.push({ label: '✓ 0 failures today', cls: 'green' });
+      else signals.push({ label: `✗ ${fails24h} failures today`, cls: 'yellow' });
+      signals.push({ label: `${blocked} actions blocked`, cls: blocked > 0 ? 'yellow' : 'green' });
+
+      return { score, signals };
+    }
+
+    function renderConfidence() {
+      const { score, signals } = computeConfidence();
+      const barColor = score >= 80 ? 'linear-gradient(90deg,#22c55e,#16a34a)'
+                     : score >= 50 ? 'linear-gradient(90deg,#f59e0b,#d97706)'
+                     :               'linear-gradient(90deg,#ef4444,#dc2626)';
+      const label = score >= 80 ? 'System is highly trustworthy'
+                  : score >= 50 ? 'Some risks detected — monitor'
+                  :               'Immediate operator attention needed';
+
+      if (els.confidencePct) els.confidencePct.textContent = `${score}%`;
+      if (els.confidenceBar) {
+        els.confidenceBar.style.width      = `${score}%`;
+        els.confidenceBar.style.background = barColor;
+      }
+      if (els.confidenceSub) els.confidenceSub.textContent = label;
+      if (els.confidenceSignals) {
+        els.confidenceSignals.innerHTML = signals.map(s =>
+          `<span class="conf-signal ${s.cls}">${s.label}</span>`
+        ).join('');
+      }
+    }
+
+    // ── Decision Summary Banner Logic ──────────────────────────────
+    function renderDecisionBanner() {
+      const s         = state.opsSummary || {};
+      const openCount = Number(s.total_open_rules ?? s.open_rules ?? 0);
+      const overrides = state.breakers.filter(b => b.admin_override_state).length;
+      const fails24h  = state.failures.reduce((a, f) => a + Number(f.failures_last_24h || 0), 0);
+      const { score } = computeConfidence();
+
+      let title, sub, action, statusLabel, riskLevel;
+      let statusClass = 'ok', actionClass = 'ok', riskClass = 'ok';
+
+      if (openCount > 0) {
+        title       = `⚠ ${openCount} breaker${openCount > 1 ? 's' : ''} open — investigate now`;
+        sub         = `${openCount} service${openCount > 1 ? 's' : ''} actively blocking traffic · Check failure analysis`;
+        action      = 'Force Close or Reset';
+        statusLabel = 'At Risk';
+        riskLevel   = 'HIGH';
+        statusClass = 'urgent'; actionClass = 'urgent'; riskClass = 'urgent';
+      } else if (fails24h > 5) {
+        title       = `⚡ ${fails24h} failures in 24h — monitor closely`;
+        sub         = 'Failure rate elevated · Breakers auto-protecting · No manual action yet needed';
+        action      = 'Re-evaluate All';
+        statusLabel = 'Degraded';
+        riskLevel   = 'MEDIUM';
+        statusClass = 'warn'; actionClass = 'warn'; riskClass = 'warn';
+      } else if (overrides > 0) {
+        title       = `⚙ ${overrides} manual override${overrides > 1 ? 's' : ''} active`;
+        sub         = 'Some breakers under admin control · Review and reset when stable';
+        action      = 'Reset Overrides';
+        statusLabel = 'Manual Mode';
+        riskLevel   = 'MEDIUM';
+        statusClass = 'warn'; actionClass = 'warn'; riskClass = 'warn';
+      } else {
+        title       = 'System is healthy — no action required';
+        sub         = `All ${state.breakers.length} breakers operational · Auto-protection active · Confidence ${score}%`;
+        action      = 'None Required';
+        statusLabel = 'Fully Protected';
+        riskLevel   = 'LOW';
+      }
+
+      if (els.decisionTitle)       els.decisionTitle.textContent    = title;
+      if (els.decisionSub)         els.decisionSub.textContent      = sub;
+      if (els.dpStatus)            els.dpStatus.textContent         = statusLabel;
+      if (els.dpAction)            els.dpAction.textContent         = action;
+      if (els.dpRisk)              els.dpRisk.textContent           = riskLevel;
+      if (els.decisionPillStatus)  els.decisionPillStatus.className = `priority-pill ${statusClass}`;
+      if (els.decisionPillAction)  els.decisionPillAction.className = `priority-pill ${actionClass}`;
+      if (els.decisionPillRisk)    els.decisionPillRisk.className   = `priority-pill ${riskClass}`;
+    }
+
+    // ── Operational Summary (right panel) ─────────────────────────
+    function renderOpsSummary() {
+      const s         = state.opsSummary || {};
+      const overrides = state.breakers.filter(b => b.admin_override_state).length;
+      const lastEval  = state.breakers.reduce((latest, b) =>
+        (!latest || (b.updated_at && b.updated_at > latest)) ? b.updated_at : latest, null);
+
+      if (els.opsTotalRules) els.opsTotalRules.textContent = s.total_rules ?? state.breakers.length ?? '—';
+      if (els.opsOpenRules)  els.opsOpenRules.textContent  = s.total_open_rules ?? s.open_rules ?? '0';
+      if (els.opsOverrides)  els.opsOverrides.textContent  = overrides || '0';
+      if (els.opsLastEval)   els.opsLastEval.textContent   = lastEval ? timeAgo(new Date(lastEval)) : '—';
+    }
+
+    // ── Recommended Action engine ──────────────────────────────────
+    function recommendedAction(row) {
+      const isOpen     = row.circuit_state === 'open';
+      const isHalfOpen = row.circuit_state === 'half_open';
+      const hasOverride= !!row.admin_override_state;
+      const fails24h   = row.failure_stats?.failures_last_24h ?? 0;
+      const blocked    = row.blocked_stats?.total_blocked_actions ?? 0;
+
+      if (isOpen && hasOverride) return {
+        text: 'This breaker is force-open with an admin override. Once you confirm the upstream service is stable, use Reset Breaker to return to automatic mode.',
+        reason: 'Override active — manual intervention required to restore.'
+      };
+      if (isOpen) return {
+        text: 'Breaker tripped automatically due to failure threshold. Investigate the failure source, confirm service recovery, then use Force Close to resume traffic.',
+        reason: `${fails24h} failures recorded in 24h.`
+      };
+      if (isHalfOpen) return {
+        text: 'Breaker is probing recovery. Monitor the success rate. If recovery confirmed, Re-evaluate to promote to closed. If failures resume, use Force Open.',
+        reason: 'Automatic half-open probe in progress.'
+      };
+      if (hasOverride) return {
+        text: 'A manual override is active. Review the reason and reset when you are confident automatic mode is safe.',
+        reason: `Override: ${row.admin_override_state?.replace(/_/g, ' ') || 'unknown'}.`
+      };
+      if (fails24h > 5) return {
+        text: 'Elevated failure rate detected. Breakers are auto-protecting traffic. Run Re-evaluate to check thresholds and confirm no manual intervention is needed.',
+        reason: `${fails24h} failures in 24h — approaching threshold.`
+      };
+      return {
+        text: 'No action required. System is auto-protecting this service correctly. Re-evaluate periodically to confirm threshold calibration.',
+        reason: 'All metrics within healthy bounds.'
+      };
+    }
+
+    // ── Tooltip initialisation (7B) ────────────────────────────────
+    // data-tip is CSS-only (::after), already handled by existing CSS
+
+    // ── Existing renderSummary extension hook ──────────────────────
+    // Call new renderers after existing renderSummary call
+    const _origRenderSummary = typeof renderSummary !== 'undefined' ? null : null;
+
+    // ── Failure sources render ────────────────────────────────────────
     function renderFailures() {
       if (!state.failures.length) {
         els.failureSummary.innerHTML = '<div class="empty">No failure data available.</div>';
@@ -1707,11 +2257,15 @@
         const cnt = Number(item.failures_last_24h || 0);
         const pct = Math.round((cnt / total) * 100);
         const fillClass = i === 0 ? '' : i === 1 ? 'medium' : 'low';
+        const stability = cnt > 10 ? 'HIGH' : cnt > 2 ? 'MEDIUM' : 'LOW';
+        const stabilityClass = cnt > 10 ? 'stability-high' : cnt > 2 ? 'stability-medium' : 'stability-low';
+        const actionHint = cnt > 10 ? 'Investigate immediately' :
+                           cnt > 2  ? 'Monitor closely' : 'No action needed';
         return `
           <div class="mini-item">
             <div class="mini-top">
               <div class="mini-title">${serviceName(item.rule_key)}</div>
-              ${badge(cnt > 0 ? 'Degraded' : 'Healthy', cnt > 0 ? 'degraded' : 'healthy')}
+              <span class="stability-badge ${stabilityClass}">RISK: ${stability}</span>
             </div>
             <div class="failure-bar-wrap">
               <div class="failure-bar-track">
@@ -1720,8 +2274,11 @@
               <span class="failure-bar-pct">${pct}%</span>
             </div>
             <div class="mini-meta" style="margin-top:6px;">
-              24h failures: <strong>${cnt}</strong> &nbsp;·&nbsp; Total: <strong>${item.total_failures ?? 0}</strong>
+              24h: <strong>${cnt}</strong> &nbsp;·&nbsp; Total: <strong>${item.total_failures ?? 0}</strong>
               &nbsp;·&nbsp; Last: ${fmtDate(item.last_failure_at)}
+            </div>
+            <div style="font-size:11px;margin-top:5px;font-weight:600;color:${cnt > 2 ? 'var(--color-warning)' : 'var(--color-text-secondary)'};">
+              → ${actionHint}
             </div>
           </div>`;
       }).join('');
@@ -1773,33 +2330,62 @@
       els.breakerTableBody.innerHTML = rows.map(row => {
         const isOpen     = row.circuit_state === 'open';
         const isHalfOpen = row.circuit_state === 'half_open';
-        const rowClass   = isOpen ? 'row-open' : isHalfOpen ? 'row-half-open' : '';
+        const rowActing  = state.activeActions.has(row.rule_key);
+        const rowClass   = (isOpen ? 'row-open' : isHalfOpen ? 'row-half-open' : '') +
+                           (rowActing ? ' row-acting' : '');
         const failRate   = row.failure_stats?.failures_last_24h ?? 0;
+        const totalFails = row.failure_stats?.total_failures ?? row.failure_count ?? 0;
         const protected_ = row.blocked_stats?.total_blocked_actions ?? 0;
         const lastTrig   = row.last_failure_at || row.last_success_at || row.opened_at;
-        const incidentId = row.linked_incident_id || row.metadata?.linked_incident_id || null;
+
+        // Failure rate — contextualised display
+        const failClass  = failRate > 10 ? 'fail-rate-high' : failRate > 0 ? 'fail-rate-med' : 'fail-rate-ok';
+        const failHtml   = `<span class="${failClass}">${failRate}</span><span class="dim" style="font-size:11px;"> / 24h</span>` +
+          (totalFails > failRate ? `<div class="dim" style="font-size:11px;">Total: ${totalFails}</div>` : '');
+
+        // Incident display with count badge
+        const incidentId    = row.linked_incident_id    || row.metadata?.linked_incident_id    || null;
         const incidentTitle = row.linked_incident_title || row.metadata?.linked_incident_title || null;
-        const incidentHtml = incidentId
-          ? `<span style="font-size:12px;color:var(--color-info);font-weight:600;">
-               ${incidentTitle || 'Incident'}<br>
-               <a href="#" style="color:var(--color-primary);font-size:11px;" onclick="return false;">View →</a>
-             </span>`
+        const incidentList  = row.metadata?.linked_incidents || (incidentId ? [{ id: incidentId, title: incidentTitle }] : []);
+        const incidentHtml  = incidentList.length
+          ? `<span class="incident-badge">⚡ ${incidentList.length}</span>
+             <div style="font-size:11px;color:var(--color-info);margin-top:3px;">${incidentList[0].title || 'Incident'}</div>`
           : '<span class="dim" style="font-size:12px;">—</span>';
 
+        // Protected events — show 24h if available, else total
+        const protected24h  = row.blocked_stats?.blocked_actions_24h ?? null;
+        const protectedHtml = protected_ > 0
+          ? `<strong>${protected_}</strong>${protected24h !== null ? `<div class="dim" style="font-size:11px;">${protected24h} today</div>` : ''}`
+          : '<span class="dim">0</span>';
+
+        // Action buttons — disabled while row is acting
+        const dis = rowActing ? 'disabled' : '';
+        const spin = rowActing ? '<span class="btn-spinner"></span> ' : '';
+
+        // Risk badge per row
+        const riskLevel = isOpen ? 'critical' : isHalfOpen ? 'high' :
+                          (failRate > 5 ? 'high' : failRate > 0 ? 'normal' : 'normal');
+        const riskLabel = isOpen ? '🔴 CRITICAL — Immediate Action' :
+                          isHalfOpen ? '🟡 HIGH — Monitor Closely' :
+                          (failRate > 0 ? '🟡 ELEVATED — Watch' : '🟢 NORMAL');
+        const riskClass = isOpen ? 'risk-critical' : (isHalfOpen || failRate > 0) ? 'risk-high' : 'risk-normal';
+        const riskBadgeHtml = `<div class="risk-badge ${riskClass}">${riskLabel}</div>`;
+
         return `
-          <tr class="${rowClass}">
+          <tr class="${rowClass}" data-rule-row="${row.rule_key}">
             <td>
               <div style="font-weight:600">${serviceName(row.rule_key)}</div>
-              <div class="mono dim">${row.rule_key}</div>
+              <div class="mono dim" style="font-size:11px;">${row.rule_key}</div>
+              ${riskBadgeHtml}
             </td>
             <td>${badge(
               isOpen ? 'Open' : isHalfOpen ? 'Half Open' : 'Healthy',
               row.circuit_state || 'closed'
             )}</td>
             <td>${severityBadge(row.circuit_state, failRate)}</td>
-            <td>${fmtDate(lastTrig)}</td>
-            <td>${failRate} / 24h</td>
-            <td>${protected_}</td>
+            <td style="font-size:12px;">${fmtDate(lastTrig)}</td>
+            <td style="font-size:12px;">${failHtml}</td>
+            <td style="font-size:12px;">${protectedHtml}</td>
             <td>${incidentHtml}</td>
             <td style="font-size:12px;font-weight:600;color:${row.next_retry_at ? 'var(--color-info)' : 'var(--color-text-secondary)'}">
               ${fmtCountdown(row.next_retry_at)}
@@ -1807,8 +2393,8 @@
             <td>
               <div class="action-row">
                 <button class="action-mini action-mini-primary" data-action="view"        data-rule="${row.rule_key}" title="Open detail drawer">View Details</button>
-                <button class="action-mini"                    data-action="force-close" data-rule="${row.rule_key}" title="Reset to automatic mode">Reset</button>
-                <button class="action-mini action-mini-danger" data-action="force-open"  data-rule="${row.rule_key}" title="Force open — blocks traffic immediately">Force Open ⚠</button>
+                <button class="action-mini"                    data-action="force-close" data-rule="${row.rule_key}" title="Reset to automatic mode" ${dis}>${spin}Reset</button>
+                <button class="action-mini action-mini-danger" data-action="force-open"  data-rule="${row.rule_key}" title="Force open — blocks traffic immediately" ${dis}>${spin}Force Open ⚠</button>
               </div>
             </td>
           </tr>`;
@@ -1905,44 +2491,94 @@
       els.drawer.classList.add('open');
       els.drawer.setAttribute('aria-hidden', 'false');
 
+      // ── Breaker Metadata ────────────────────────────────────────
+      els.metaRuleKey.textContent       = row.rule_key;
+      const stateColor = isOpen ? 'critical' : isHalfOpen ? 'warning' : 'healthy';
+      els.metaCircuitState.textContent  = row.circuit_state || '—';
+      els.metaCircuitState.className    = `meta-cell-value ${stateColor}`;
+      els.metaOverrideState.textContent = row.admin_override_state
+        ? row.admin_override_state.replace(/_/g, ' ')
+        : 'None (auto)';
+      els.metaOverrideState.className   = `meta-cell-value ${row.admin_override_state ? 'warning' : ''}`;
+      els.metaProtectionMode.textContent= row.protection_mode || row.metadata?.protection_mode || 'automatic';
+      els.metaLastFailure.textContent   = fmtDate(row.last_failure_at) || '—';
+      els.metaLastFailure.className     = `meta-cell-value ${row.last_failure_at ? 'critical' : ''}`;
+      const totalFails_meta = row.failure_stats?.total_failures ?? row.failure_count ?? 0;
+      const fails24h_meta   = row.failure_stats?.failures_last_24h ?? 0;
+      els.metaFailureCount.textContent  = fails24h_meta > 0
+        ? `${fails24h_meta} (24h) · ${totalFails_meta} total`
+        : `${totalFails_meta} total`;
+      els.metaFailureCount.className    = `meta-cell-value ${fails24h_meta > 0 ? 'critical' : ''}`;
+      els.metaOverrideReason.textContent= row.admin_override_reason || '—';
+
       // ── Failure Analysis ────────────────────────────────────────
-      const failures = state.failures.filter(f => f.rule_key === row.rule_key);
-      // Build pseudo-breakdown from rule metadata if available, else use total
-      const totalFails = row.failure_stats?.total_failures ?? row.failure_count ?? 0;
-      if (totalFails > 0) {
-        // If we have a breakdown in metadata, use it; else show single bar
+      const failStatRow = state.failures.find(f => f.rule_key === row.rule_key) || null;
+      const totalFails  = failStatRow?.total_failures ?? row.failure_count ?? 0;
+      const fails24h    = failStatRow?.failures_last_24h ?? row.failure_stats?.failures_last_24h ?? 0;
+      if (totalFails > 0 || fails24h > 0) {
         const sources = row.metadata?.failure_sources ||
-          [{ label: serviceName(row.rule_key) + ' errors', pct: 100 }];
-        els.drawerFailureAnalysis.innerHTML = sources.map((s, i) => {
+          [{ label: serviceName(row.rule_key), pct: 100 }];
+        const statsHtml = `
+          <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;">
+            <div style="text-align:center;">
+              <div style="font-size:22px;font-weight:800;color:var(--color-critical)">${fails24h}</div>
+              <div style="font-size:11px;color:var(--color-text-secondary)">Failures (24h)</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:22px;font-weight:800;color:var(--color-text-primary)">${totalFails}</div>
+              <div style="font-size:11px;color:var(--color-text-secondary)">Total Failures</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:22px;font-weight:800;color:var(--color-warning)">${row.consecutive_failure_count ?? 0}</div>
+              <div style="font-size:11px;color:var(--color-text-secondary)">Consecutive</div>
+            </div>
+          </div>`;
+        const barsHtml = sources.map((s, i) => {
           const cls = i === 0 ? '' : i === 1 ? 'b2' : 'b3';
           return `<div class="fa-row">
             <span class="fa-label">${s.label}</span>
             <div class="fa-bar-wrap"><div class="fa-bar-fill ${cls}" style="width:${s.pct}%"></div></div>
             <span class="fa-pct">${s.pct}%</span>
           </div>`;
-        }).join('') +
-        `<div style="font-size:11px;color:var(--color-text-secondary);margin-top:8px;">
-           Total: <strong>${totalFails}</strong> failures recorded &nbsp;·&nbsp;
-           24h: <strong>${row.failure_stats?.failures_last_24h ?? 0}</strong>
-         </div>`;
+        }).join('');
+        els.drawerFailureAnalysis.innerHTML = statsHtml + barsHtml +
+          `<div style="font-size:11px;color:var(--color-text-secondary);margin-top:6px;">
+            Last failure: <strong>${fmtDate(failStatRow?.last_failure_at || row.last_failure_at)}</strong>
+           </div>`;
       } else {
         els.drawerFailureAnalysis.innerHTML =
           '<div class="empty dim" style="font-size:var(--text-sm)">No failures recorded for this rule.</div>';
       }
 
       // ── Protected Events ────────────────────────────────────────
-      const blocked = row.blocked_stats?.total_blocked_actions ?? 0;
-      const lastBlk  = row.blocked_stats?.last_blocked_at || row.last_blocked_at;
-      els.drawerProtectedEvents.innerHTML = blocked > 0
-        ? `<div class="pe-item"><span class="pe-icon">🛡</span>
-             <div><span class="pe-count">${blocked}</span> total blocked actions
-               <div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px;">
-                 Last: ${fmtDate(lastBlk)}
-                 ${row.last_blocked_reason ? ' · ' + row.last_blocked_reason : ''}
-               </div>
-             </div>
-           </div>`
-        : '<div class="empty dim" style="font-size:var(--text-sm)">No blocked events recorded.</div>';
+      const blocked    = row.blocked_stats?.total_blocked_actions ?? 0;
+      const blocked24h = row.blocked_stats?.blocked_actions_24h ?? null;
+      const lastBlk    = row.blocked_stats?.last_blocked_at || row.last_blocked_at;
+      const blockedRsn = row.blocked_stats?.latest_blocked_reason || row.last_blocked_reason || null;
+      if (blocked > 0) {
+        els.drawerProtectedEvents.innerHTML = `
+          <div style="display:flex;gap:16px;margin-bottom:10px;">
+            <div style="text-align:center;">
+              <div style="font-size:22px;font-weight:800;color:var(--color-primary)">${blocked}</div>
+              <div style="font-size:11px;color:var(--color-text-secondary)">Total Blocked</div>
+            </div>
+            ${blocked24h !== null ? `
+            <div style="text-align:center;">
+              <div style="font-size:22px;font-weight:800;color:var(--color-info)">${blocked24h}</div>
+              <div style="font-size:11px;color:var(--color-text-secondary)">Blocked (24h)</div>
+            </div>` : ''}
+          </div>
+          <div class="pe-item" style="margin-bottom:6px;">
+            <span class="pe-icon">🛡</span>
+            <div>
+              <div style="font-size:12px;font-weight:600;">Last blocked: ${fmtDate(lastBlk)}</div>
+              ${blockedRsn ? `<div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px;font-style:italic;">${blockedRsn}</div>` : ''}
+            </div>
+          </div>`;
+      } else {
+        els.drawerProtectedEvents.innerHTML =
+          '<div class="empty dim" style="font-size:var(--text-sm)">No blocked events recorded for this rule.</div>';
+      }
 
       // ── Retry Strategy ──────────────────────────────────────────
       els.drawerNextRetry.textContent          = fmtCountdown(row.next_retry_at) || '—';
@@ -1954,28 +2590,39 @@
         row.last_blocked_reason || row.admin_override_reason ||
         row.trigger_reason || 'No trigger reason recorded.';
 
+      // ── Recommended Action ──────────────────────────────────────
+      const rec = recommendedAction(row);
+      if (els.recActionText)   els.recActionText.textContent   = rec.text;
+      if (els.recActionReason) els.recActionReason.textContent = rec.reason;
+
       // ── Linked Incidents ────────────────────────────────────────
       const incId    = row.linked_incident_id    || row.metadata?.linked_incident_id    || null;
       const incTitle = row.linked_incident_title || row.metadata?.linked_incident_title || null;
       const incKey   = row.linked_incident_key   || row.metadata?.linked_incident_key   || null;
-
-      // Support multiple incidents from metadata array if present
-      const incList  = row.metadata?.linked_incidents || (incId ? [{ id: incId, title: incTitle, key: incKey }] : []);
+      const incList  = row.metadata?.linked_incidents ||
+                       (incId ? [{ id: incId, title: incTitle, key: incKey, status: row.linked_incident_status || null }] : []);
       els.drawerIncidents.innerHTML = incList.length
-        ? incList.map(inc => `
-            <div class="mini-item" style="margin-bottom:8px;">
-              <div class="mini-top">
-                <div class="mini-title">${inc.title || inc.key || 'Linked Incident'}</div>
-                ${badge('Linked', 'acknowledged')}
-              </div>
-              <div class="mini-meta mono" style="margin-top:4px;font-size:11px;">${inc.id}</div>
-              <div style="margin-top:8px;">
-                <a href="/admin.html#incidents" class="btn btn-secondary" style="font-size:12px;padding:6px 10px;">
-                  View Incident →
-                </a>
-              </div>
-            </div>`).join('')
-        : '<div class="empty">No linked incidents.</div>';
+        ? incList.map(inc => {
+            const incStatus = inc.status || 'open';
+            const incStatusBadge = badge(
+              incStatus.charAt(0).toUpperCase() + incStatus.slice(1),
+              incStatus === 'resolved' ? 'healthy' : incStatus === 'acknowledged' ? 'acknowledged' : 'critical'
+            );
+            return `
+              <div class="mini-item" style="margin-bottom:8px;">
+                <div class="mini-top">
+                  <div class="mini-title" style="font-size:14px;">${inc.title || inc.key || 'Linked Incident'}</div>
+                  ${incStatusBadge}
+                </div>
+                ${inc.id ? `<div class="mono dim" style="font-size:10px;margin-top:4px;">${inc.id}</div>` : ''}
+                <div style="margin-top:8px;">
+                  <a href="/admin.html#incidents" class="btn btn-secondary" style="font-size:12px;padding:6px 10px;">
+                    View Incident →
+                  </a>
+                </div>
+              </div>`;
+          }).join('')
+        : '<div class="empty">No linked incidents for this breaker.</div>';
 
       // ── Timeline — fetch action log async ───────────────────────
       els.drawerTimeline.innerHTML = '<div class="dim" style="font-size:var(--text-sm);padding:8px 0;">Loading timeline…</div>';
@@ -2027,6 +2674,9 @@
         renderFailures();
         renderBlocked();
         renderTable();
+        renderConfidence();
+        renderDecisionBanner();
+        renderOpsSummary();
         updateLastUpdatedLabel();
       } catch (err) {
         console.error(err);
@@ -2045,38 +2695,98 @@
     }
 
     // ── Actions ───────────────────────────────────────────────────
+    // ── Per-button loading helpers ───────────────────────────────
+    function setRowBusy(ruleKey, busy) {
+      if (busy) {
+        state.activeActions.add(ruleKey);
+      } else {
+        state.activeActions.delete(ruleKey);
+      }
+      // Optimistic row visual — mark/unmark without full re-render
+      const tr = document.querySelector(`tr[data-rule-row="${ruleKey}"]`);
+      if (tr) {
+        if (busy) tr.classList.add('row-acting');
+        else tr.classList.remove('row-acting');
+        // Disable/re-enable action buttons in that row immediately
+        tr.querySelectorAll('.action-mini:not([data-action="view"])').forEach(btn => {
+          btn.disabled = busy;
+          if (busy) {
+            if (!btn.dataset.origHtml) btn.dataset.origHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="btn-spinner"></span> ' + (btn.dataset.origHtml || '');
+          } else {
+            if (btn.dataset.origHtml) btn.innerHTML = btn.dataset.origHtml;
+            delete btn.dataset.origHtml;
+          }
+        });
+      }
+    }
+
+    function setPageBusy(btnId, busy, origLabel) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.disabled = busy;
+      if (busy) {
+        btn.dataset.origHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="btn-spinner"></span> ' + (origLabel || '');
+      } else {
+        if (btn.dataset.origHtml) btn.innerHTML = btn.dataset.origHtml;
+        delete btn.dataset.origHtml;
+      }
+    }
+
     async function actOnRule(action, ruleKey) {
       const titles = {
         'force-open':  'Force Open Breaker',
-        'force-close': 'Force Close Breaker',
-        'reset':       'Reset Override'
+        'force-close': 'Reset / Force Close Breaker',
+        'reset':       'Reset Override to Auto Mode'
       };
       const descs = {
-        'force-open':  `This will force-open the "${serviceName(ruleKey)}" breaker, blocking all traffic immediately. Enter your reason.`,
-        'force-close': `This will force-close the "${serviceName(ruleKey)}" breaker and resume traffic. Enter your reason.`,
-        'reset':       `This will reset the admin override on "${serviceName(ruleKey)}" and return it to automatic mode. Enter your reason.`
+        'force-open':
+          `This will immediately force-open the "${serviceName(ruleKey)}" breaker, ` +
+          `blocking all traffic through this service. This is an emergency action. ` +
+          `Enter your operator reason below.`,
+        'force-close':
+          `This will force-close the "${serviceName(ruleKey)}" breaker and resume ` +
+          `traffic. Only do this after confirming the upstream service is stable. ` +
+          `Enter your reason.`,
+        'reset':
+          `This will clear the admin override on "${serviceName(ruleKey)}" and return ` +
+          `it to automatic protection mode. The next evaluation cycle will set the ` +
+          `correct state. Enter your reason.`
       };
-      const labels = { 'force-open': 'Force Open', 'force-close': 'Force Close', 'reset': 'Reset' };
+      const labels = {
+        'force-open':  'Force Open Now',
+        'force-close': 'Force Close',
+        'reset':       'Reset to Auto'
+      };
 
-      const reason = await modal.open(titles[action] || 'Confirm', descs[action] || '', labels[action] || 'Confirm', action === 'force-open');
+      const reason = await modal.open(
+        titles[action] || 'Confirm Action',
+        descs[action]  || 'Are you sure?',
+        labels[action] || 'Confirm',
+        action === 'force-open'
+      );
       if (!reason) return;
 
+      setRowBusy(ruleKey, true);
       try {
         if (action === 'force-open') {
           await apiPost('circuit_force_open',     { rule_key: ruleKey, reason });
-          showToast(`Forced open: ${serviceName(ruleKey)}`);
+          showToast(`✓ Forced open: ${serviceName(ruleKey)}`);
         } else if (action === 'force-close') {
           await apiPost('circuit_force_closed',   { rule_key: ruleKey, reason });
-          showToast(`Forced closed: ${serviceName(ruleKey)}`);
+          showToast(`✓ Forced closed: ${serviceName(ruleKey)}`);
         } else if (action === 'reset') {
           await apiPost('circuit_reset_override', { rule_key: ruleKey, reason });
-          showToast(`Override reset: ${serviceName(ruleKey)}`);
+          showToast(`✓ Override reset: ${serviceName(ruleKey)}`);
         }
         await loadAll();
         if (state.selected?.rule_key === ruleKey) openDrawer(ruleKey);
       } catch (err) {
         console.error(err);
-        showToast(err.message || 'Action failed', true);
+        showToast('✗ ' + (err.message || 'Action failed'), true);
+      } finally {
+        setRowBusy(ruleKey, false);
       }
     }
 
@@ -2086,32 +2796,44 @@
 
     // Re-evaluate — wired to real telemetry.js action
     document.getElementById('btnReevaluate').addEventListener('click', async () => {
+      setPageBusy('btnReevaluate', true, 'Re-evaluating…');
       try {
         await apiPost('auto_protection_reevaluate', { trigger_source: 'admin' });
-        showToast('Re-evaluation triggered');
+        showToast('✓ All rules re-evaluated');
         await loadAll();
-      } catch (err) { showToast(err.message || 'Re-evaluate failed', true); }
+      } catch (err) { showToast('✗ ' + (err.message || 'Re-evaluate failed'), true); }
+      finally { setPageBusy('btnReevaluate', false); }
     });
     document.getElementById('btnPanelReevaluate')?.addEventListener('click', async () => {
+      setPageBusy('btnPanelReevaluate', true, 'Re-evaluating…');
       try {
         await apiPost('auto_protection_reevaluate', { trigger_source: 'admin' });
-        showToast('Re-evaluation triggered');
+        showToast('✓ All rules re-evaluated');
         await loadAll();
-      } catch (err) { showToast(err.message || 'Re-evaluate failed', true); }
+      } catch (err) { showToast('✗ ' + (err.message || 'Re-evaluate failed'), true); }
+      finally { setPageBusy('btnPanelReevaluate', false); }
     });
 
     // Trigger escalation — wired to real telemetry.js action
     async function triggerEscalation() {
       const reason = await modal.open(
         '⚡ Trigger Escalation',
-        'This will fire the escalation automation immediately for all open incidents. Confirm only if you have verified the system state.',
+        'This will fire the escalation automation immediately for all open incidents. ' +
+        'Confirm only if you have verified the system state and the incident warrants escalation.',
         'Trigger Now', true
       );
       if (!reason) return;
+      setPageBusy('btnTriggerEscalation', true, 'Triggering…');
+      setPageBusy('btnPanelEscalate', true, 'Triggering…');
       try {
         await apiPost('trigger_escalation', { trigger_source: 'admin', reason });
-        showToast('Escalation triggered');
-      } catch (err) { showToast(err.message || 'Escalation failed', true); }
+        showToast('✓ Escalation triggered successfully');
+      } catch (err) {
+        showToast('✗ ' + (err.message || 'Escalation failed'), true);
+      } finally {
+        setPageBusy('btnTriggerEscalation', false);
+        setPageBusy('btnPanelEscalate', false);
+      }
     }
     document.getElementById('btnTriggerEscalation').addEventListener('click', triggerEscalation);
     document.getElementById('btnPanelEscalate').addEventListener('click', triggerEscalation);
@@ -2147,21 +2869,38 @@
     });
 
     // Drawer actions
-    document.getElementById('btnDrawerForceOpen').addEventListener('click',
-      () => state.selected && actOnRule('force-open',  state.selected.rule_key));
-    document.getElementById('btnDrawerReset').addEventListener('click',
-      () => state.selected && actOnRule('reset', state.selected.rule_key));
+    document.getElementById('btnDrawerForceOpen').addEventListener('click', async () => {
+      if (!state.selected) return;
+      setPageBusy('btnDrawerForceOpen', true, 'Processing…');
+      try {
+        await actOnRule('force-open', state.selected.rule_key);
+      } finally {
+        setPageBusy('btnDrawerForceOpen', false);
+      }
+    });
+    document.getElementById('btnDrawerReset').addEventListener('click', async () => {
+      if (!state.selected) return;
+      setPageBusy('btnDrawerReset', true, 'Resetting…');
+      try {
+        await actOnRule('reset', state.selected.rule_key);
+      } finally {
+        setPageBusy('btnDrawerReset', false);
+      }
+    });
     document.getElementById('btnDrawerReevaluate').addEventListener('click', async () => {
       if (!state.selected) return;
+      const ruleKey = state.selected.rule_key;
+      setPageBusy('btnDrawerReevaluate', true, 'Re-evaluating…');
       try {
-        await apiPost('breaker_re_evaluate', {
-          rule_key: state.selected.rule_key,
-          trigger_source: 'admin'
-        });
-        showToast(`Re-evaluated: ${serviceName(state.selected.rule_key)}`);
+        await apiPost('breaker_re_evaluate', { rule_key: ruleKey, trigger_source: 'admin' });
+        showToast(`✓ Re-evaluated: ${serviceName(ruleKey)}`);
         await loadAll();
-        openDrawer(state.selected.rule_key);
-      } catch (err) { showToast(err.message || 'Re-evaluate failed', true); }
+        openDrawer(ruleKey);
+      } catch (err) {
+        showToast('✗ ' + (err.message || 'Re-evaluate failed'), true);
+      } finally {
+        setPageBusy('btnDrawerReevaluate', false);
+      }
     });
 
     // Table filter
