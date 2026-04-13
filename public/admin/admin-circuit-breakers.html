@@ -215,9 +215,9 @@
     }
 
     .content {
-      padding: var(--space-6);
+      padding: var(--space-5) var(--space-6);
       display: grid;
-      gap: var(--space-6);
+      gap: var(--space-5);
     }
 
     .page-header {
@@ -261,7 +261,7 @@
       border: 1px solid var(--color-border);
       border-radius: var(--radius-card);
       box-shadow: var(--shadow-soft);
-      padding: var(--space-5);
+      padding: var(--space-4) var(--space-5);
     }
 
     .kpi-label {
@@ -287,9 +287,10 @@
 
     .layout-main {
       display: grid;
-      grid-template-columns: minmax(0, 1.6fr) minmax(340px, 1.1fr);
-      gap: var(--space-6);
+      grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
+      gap: var(--space-5);
       align-items: start;
+      isolation: isolate;  /* prevent stacking context bleed */
     }
 
     .card-header {
@@ -297,7 +298,7 @@
       align-items: center;
       justify-content: space-between;
       gap: var(--space-3);
-      margin-bottom: var(--space-4);
+      margin-bottom: var(--space-3);
     }
 
     .card-title {
@@ -388,64 +389,39 @@
     }
 
     .table-wrap {
-      overflow: auto;
+      overflow-x: auto;
       border: 1px solid var(--color-border);
       border-radius: 12px;
-      /* Scroll shadow hint — shows users there is more content to the right */
-      background:
-        linear-gradient(to right, white 30%, rgba(255,255,255,0)) center left,
-        linear-gradient(to left,  white 30%, rgba(255,255,255,0)) center right,
-        radial-gradient(farthest-side at 0   50%, rgba(0,0,0,.08), transparent) center left,
-        radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.08), transparent) center right;
-      background-repeat: no-repeat;
-      background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
-      background-attachment: local, local, scroll, scroll;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 820px;
+      table-layout: auto;
       background: var(--color-surface);
     }
 
-    /* Sticky Actions column — always visible even when table scrolls */
-    thead th.th-actions {
-      position: sticky;
-      right: 0;
-      background: #f8fafc;
-      box-shadow: -2px 0 6px rgba(15,23,42,.06);
-      z-index: 2;
-    }
-    tbody td.td-actions {
-      position: sticky;
-      right: 0;
-      background: var(--color-surface);
-      box-shadow: -2px 0 6px rgba(15,23,42,.05);
-    }
-    tbody tr:hover td.td-actions { background: #fafbff; }
-    tbody tr.row-open td.td-actions   { background: #fff8f8; }
-    tbody tr.row-half-open td.td-actions { background: #fffdf0; }
-    tbody tr.row-selected td.td-actions { background: #eef2ff; }
+    /* Actions column — no sticky (causes z-index bleed in overflow containers) */
+    thead th.th-actions { min-width: 100px; }
+    tbody td.td-actions { vertical-align: middle; }
 
     thead th {
       text-align: left;
-      padding: 14px 16px;
-      font-size: var(--text-xs);
+      padding: 10px 14px;
+      font-size: 10px;
       color: var(--color-text-secondary);
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.06em;
+      font-weight: 700;
       background: #f8fafc;
       border-bottom: 1px solid var(--color-border);
-      position: sticky;
-      top: 0;
-      z-index: 1;
+      white-space: nowrap;
     }
 
     tbody td {
-      padding: 14px 16px;
+      padding: 12px 14px;
       border-bottom: 1px solid var(--color-border);
-      vertical-align: top;
+      vertical-align: middle;
     }
 
     tbody tr:hover { background: #fafbff; }
@@ -498,24 +474,34 @@
     .action-row {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 4px;
+      min-width: 90px;
     }
 
     .action-mini {
       border: 1px solid var(--color-border);
       background: var(--color-surface);
       color: var(--color-text-primary);
-      border-radius: 8px;
-      padding: 5px 9px;
-      font-size: 12px;
+      border-radius: 7px;
+      padding: 5px 8px;
+      font-size: 11px;
+      font-weight: 600;
       white-space: nowrap;
       text-align: center;
       width: 100%;
+      transition: .15s ease;
+    }
+    .action-mini:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(15,23,42,.1);
     }
 
     .stack {
       display: grid;
       gap: var(--space-4);
+      position: relative;
+      isolation: isolate;
+      min-width: 0;
     }
 
     .mini-list {
@@ -525,8 +511,8 @@
 
     .mini-item {
       border: 1px solid var(--color-border);
-      border-radius: 12px;
-      padding: var(--space-4);
+      border-radius: 10px;
+      padding: var(--space-3) var(--space-4);
       background: #fcfcff;
     }
 
@@ -539,7 +525,7 @@
     }
 
     .mini-title { font-weight: var(--font-semibold); }
-    .mini-meta { color: var(--color-text-secondary); font-size: var(--text-sm); }
+    .mini-meta { color: var(--color-text-secondary); font-size: 12px; }
 
     .drawer {
       position: fixed;
@@ -845,11 +831,11 @@
       display: flex;
       align-items: center;
       gap: var(--space-2);
-      margin-top: var(--space-2);
+      margin-top: 6px;
     }
     .failure-bar-track {
       flex: 1;
-      height: 6px;
+      height: 5px;
       border-radius: 999px;
       background: #f1f5f9;
       overflow: hidden;
@@ -1390,7 +1376,7 @@
       overflow: hidden;
     }
     .intel-card-top {
-      padding: var(--space-4) var(--space-5);
+      padding: var(--space-3) var(--space-4);
       border-bottom: 1px solid var(--color-border);
       display: flex;
       align-items: center;
@@ -1399,15 +1385,15 @@
     }
     .intel-score-block { flex-shrink: 0; text-align: right; }
     .intel-score-pct {
-      font-size: 28px;
+      font-size: 24px;
       font-weight: 800;
       line-height: 1;
       color: var(--color-primary);
     }
-    .intel-score-label { font-size: 10px; color: var(--color-text-secondary); margin-top: 2px; }
-    .intel-card-bar { padding: 0 var(--space-5) var(--space-3); }
+    .intel-score-label { font-size: 10px; color: var(--color-text-secondary); margin-top: 1px; }
+    .intel-card-bar { padding: 0 var(--space-4) var(--space-2); }
     .intel-card-rows {
-      padding: 0 var(--space-5) var(--space-4);
+      padding: 0 var(--space-4) var(--space-3);
       display: grid;
       gap: 0;
     }
@@ -1415,19 +1401,19 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 7px 0;
-      border-bottom: 1px solid #f1f5f9;
-      font-size: var(--text-sm);
+      padding: 5px 0;
+      border-bottom: 1px solid #f8fafc;
+      font-size: 13px;
     }
     .intel-row:last-child { border-bottom: none; }
     .intel-row-label { color: var(--color-text-secondary); }
-    .intel-row-value { font-weight: 700; }
+    .intel-row-value { font-weight: 700; font-size: 13px; }
     .intel-signals {
-      padding: var(--space-3) var(--space-5) var(--space-4);
+      padding: var(--space-2) var(--space-4) var(--space-3);
       display: flex;
-      gap: 5px;
+      gap: 4px;
       flex-wrap: wrap;
-      border-top: 1px solid #f1f5f9;
+      border-top: 1px solid #f8fafc;
     }
 
     /* ── EMPTY STATES ────────────────────────────────────────────── */
@@ -1721,19 +1707,17 @@
                 <table>
                   <thead>
                     <tr>
-                      <th>Service</th>
+                      <th style="min-width:180px">Service</th>
                       <th>Status</th>
                       <th>Severity</th>
                       <th>Last Triggered</th>
                       <th>Failure Rate</th>
-                      <th data-tip="Total actions blocked by this breaker to protect system stability">Protected Events</th>
-                      <th data-tip="Active incidents linked to this breaker">Incident</th>
                       <th>Next Retry</th>
-                      <th class="th-actions">Actions</th>
+                      <th class="th-actions" style="min-width:96px">Actions</th>
                     </tr>
                   </thead>
                   <tbody id="breakerTableBody">
-                    <tr><td colspan="9" class="empty">Loading circuit breakers…</td></tr>
+                    <tr><td colspan="7" class="empty">Loading circuit breakers…</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -2512,7 +2496,7 @@
 
       if (!rows.length) {
         els.breakerTableBody.innerHTML =
-          '<tr><td colspan="9" class="empty">No breakers match current filters.</td></tr>';
+          '<tr><td colspan="7" class="empty">No breakers match current filters.</td></tr>';
         return;
       }
 
@@ -2524,7 +2508,6 @@
                            (rowActing ? ' row-acting' : '');
         const failRate   = row.failure_stats?.failures_last_24h ?? 0;
         const totalFails = row.failure_stats?.total_failures ?? row.failure_count ?? 0;
-        const protected_ = row.blocked_stats?.total_blocked_actions ?? 0;
         const lastTrig   = row.last_failure_at || row.last_success_at || row.opened_at;
 
         // Failure rate — contextualised display
@@ -2532,20 +2515,7 @@
         const failHtml   = `<span class="${failClass}">${failRate}</span><span class="dim" style="font-size:11px;"> / 24h</span>` +
           (totalFails > failRate ? `<div class="dim" style="font-size:11px;">Total: ${totalFails}</div>` : '');
 
-        // Incident display with count badge
-        const incidentId    = row.linked_incident_id    || row.metadata?.linked_incident_id    || null;
-        const incidentTitle = row.linked_incident_title || row.metadata?.linked_incident_title || null;
-        const incidentList  = row.metadata?.linked_incidents || (incidentId ? [{ id: incidentId, title: incidentTitle }] : []);
-        const incidentHtml  = incidentList.length
-          ? `<span class="incident-badge">⚡ ${incidentList.length}</span>
-             <div style="font-size:11px;color:var(--color-info);margin-top:3px;">${incidentList[0].title || 'Incident'}</div>`
-          : '<span class="dim" style="font-size:12px;">—</span>';
-
-        // Protected events — show 24h if available, else total
-        const protected24h  = row.blocked_stats?.blocked_actions_24h ?? null;
-        const protectedHtml = protected_ > 0
-          ? `<strong>${protected_}</strong>${protected24h !== null ? `<div class="dim" style="font-size:11px;">${protected24h} today</div>` : ''}`
-          : '<span class="dim">0</span>';
+        // (Protected Events + Incident shown in drawer only — not in table)
 
         // Action buttons — conditional per state (Image 1 spec)
         const dis  = rowActing ? 'disabled' : '';
@@ -2570,21 +2540,13 @@
           actionBtns += `<button class="action-mini action-mini-danger" data-action="force-open" data-rule="${row.rule_key}" title="Force open — blocks all traffic immediately" ${dis}>${spin}Force Open ⚠</button>`;
         }
 
-        // Risk badge per row
-        const riskLevel = isOpen ? 'critical' : isHalfOpen ? 'high' :
-                          (failRate > 5 ? 'high' : failRate > 0 ? 'normal' : 'normal');
-        const riskLabel = isOpen ? '🔴 CRITICAL — Immediate Action' :
-                          isHalfOpen ? '🟡 HIGH — Monitor Closely' :
-                          (failRate > 0 ? '🟡 ELEVATED — Watch' : '🟢 NORMAL');
-        const riskClass = isOpen ? 'risk-critical' : (isHalfOpen || failRate > 0) ? 'risk-high' : 'risk-normal';
-        const riskBadgeHtml = `<div class="risk-badge ${riskClass}">${riskLabel}</div>`;
+
 
         return `
           <tr class="${rowClass}" data-rule-row="${row.rule_key}">
             <td>
-              <div style="font-weight:600">${serviceName(row.rule_key)}</div>
-              <div class="mono dim" style="font-size:11px;">${row.rule_key}</div>
-              ${riskBadgeHtml}
+              <div style="font-weight:600;font-size:13px;">${serviceName(row.rule_key)}</div>
+              <div class="mono dim" style="font-size:10px;margin-top:2px;">${row.rule_key}</div>
             </td>
             <td>${badge(
               isOpen ? 'Open' : isHalfOpen ? 'Half Open' : 'Healthy',
@@ -2593,8 +2555,6 @@
             <td>${severityBadge(row.circuit_state, failRate)}</td>
             <td style="font-size:12px;">${fmtDate(lastTrig)}</td>
             <td style="font-size:12px;">${failHtml}</td>
-            <td style="font-size:12px;">${protectedHtml}</td>
-            <td>${incidentHtml}</td>
             <td style="font-size:12px;font-weight:600;color:${row.next_retry_at ? 'var(--color-info)' : 'var(--color-text-secondary)'}">
               ${fmtCountdown(row.next_retry_at)}
             </td>
@@ -2968,7 +2928,7 @@
         if (el) el.textContent = '—';
       });
       if (els.breakerTableBody)
-        els.breakerTableBody.innerHTML = '<tr><td colspan="9" class="empty" style="color:#b91c1c;">⚠ Authentication required — data not loaded.</td></tr>';
+        els.breakerTableBody.innerHTML = '<tr><td colspan="7" class="empty" style="color:#b91c1c;">⚠ Authentication required — data not loaded.</td></tr>';
       if (els.failureSummary)
         els.failureSummary.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔒</div><div class="empty-state-title">Authentication required</div><div class="empty-state-sub">Sign in to the admin console to load data.</div></div>';
       if (els.blockedSummary)
