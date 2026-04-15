@@ -41,6 +41,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="manifest" href="manifest.json">
+    <!-- Meta Pixel -->
+    <script src="/assets/js/pixel.js" defer></script>
     <meta name="theme-color" content="#2563EB">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -713,6 +715,12 @@
 	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
 <body>
+  <!-- Meta Pixel (noscript fallback) -->
+  <noscript>
+  <img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=1961788037810759&ev=PageView&noscript=1"/>
+  </noscript>
+
   <!-- Google Tag Manager (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSTQB75G"
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
