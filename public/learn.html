@@ -2131,6 +2131,16 @@
       sessionId=await createDbSession(currentUserId, currentChildId);
       console.log('[Learn] Session ID:',sessionId);
 
+	// Meta standard event — learning session started
+      if (window.lpTrack) {
+        window.lpTrack('ViewContent', {
+         content_name: 'Learn Session',
+          content_category: TRACK === 'olympiad' ? 'Olympiad' : 'Regular',
+           track: TRACK,
+            session_id: sessionId
+         });
+      }
+
       // A18: Mastery chip (fetch latest mastery from mastery_history for Olympiad)
       if(TRACK === 'olympiad' && sb && currentChildId){
         try{

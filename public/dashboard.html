@@ -355,6 +355,15 @@
     if(!user){setStatus('bad','Signed out');showAuth();return;}
 
     setStatus('good','Signed in');$('btnSignOut').disabled=false;
+
+	// Meta standard event — authenticated dashboard view
+		if (window.lpTrack) {
+ 		 window.lpTrack('ViewContent', {
+   		 content_name: 'Dashboard',
+   		 content_category: 'Student App'
+  	     });
+	  }
+	
     const uname=user.user_metadata?.full_name||user.user_metadata?.name||(user.email?user.email.split('@')[0]:'there');
     safe($('helloText'),'Hi '+uname+' \uD83D\uDC4B');safe($('updatedText'),'just now');
 

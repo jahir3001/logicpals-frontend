@@ -1966,6 +1966,17 @@
         // and trg_detect_session_sharing automatically.
         const sessionId = await createDbSession(user.id, selectedChildId, currentLevel, currentMode);
 
+	// Meta standard event — Olympiad training start
+        if (window.lpTrack) {
+        window.lpTrack('StartTrial', {
+        content_name: 'Olympiad Training Start',
+        track: APP_TRACK,
+        level: currentLevel,
+        mode: currentMode,
+        session_id: sessionId
+         });
+      }
+
         // Embed the real DB session UUID into the plan payload so the
         // Olympiad learn engine can stamp it on every attempt row.
         const plan = JSON.parse(planRaw);
@@ -2000,6 +2011,18 @@
 
       // P1.6: Create DB session for mock exam — same fingerprint pipeline
       const sessionId = await createDbSession(user.id, selectedChildId, currentLevel, 'exam');
+
+		// Meta standard event — Olympiad mock exam start
+	if (window.lpTrack) {
+        window.lpTrack('ViewContent', {
+        content_name: 'Olympiad Mock Exam',
+        track: APP_TRACK,
+        level: currentLevel,
+        exam_type: type,
+        mode: 'exam',
+        session_id: sessionId
+        });
+     }
 
       // Stage mock exam plan in sessionStorage for the learn engine
       const mockPayload = {
