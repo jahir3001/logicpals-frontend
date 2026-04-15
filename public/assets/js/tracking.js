@@ -1,14 +1,14 @@
-// LogicPals Event Tracking Layer (Enterprise-safe)
+// LogicPals Event Tracking Layer
 
-window.lpTrack = function (event, data = {}) {
+window.lpTrack = function (eventName, params = {}) {
   try {
-    if (typeof fbq === "function") {
-      fbq("track", event, data);
-      console.log("[LP Track]", event, data);
+    if (typeof fbq === 'function') {
+      fbq('track', eventName, params);
+      console.log('[LP Track]', eventName, params);
     } else {
-      console.warn("fbq not loaded");
+      console.warn('fbq not loaded');
     }
   } catch (err) {
-    console.error("Tracking error:", err);
+    console.error('Tracking error:', err);
   }
 };
