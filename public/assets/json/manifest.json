@@ -1,7 +1,7 @@
 {
   "name": "LogicPals AI Tutor",
   "short_name": "LogicPals",
-  "start_url": "/dashboard.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#EFF6FF",
   "theme_color": "#2563EB",
