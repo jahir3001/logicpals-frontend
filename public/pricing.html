@@ -24,8 +24,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="/manifest.json">
     <script src="/assets/js/pixel.js" defer></script>
+    <script src="/assets/js/tracking.js" defer></script>
     <meta name="theme-color" content="#2563EB">
     <meta name="apple-mobile-web-app-capable" content="yes">
 
@@ -120,23 +121,32 @@
             event: 'pricing_page_viewed',
             referrer_source: document.referrer || 'direct',
         });
-        // Facebook: ViewContent
-        if (typeof fbq === 'function') {
-            fbq('track', 'ViewContent', {
-                content_name: 'Pricing Page',
-                content_category: 'Subscription',
-                currency: 'BDT',
-                value: 2499,
-            });
-        }
+        // Meta standard event via centralized tracking layer
+           if (window.lpTrack) {
+             window.lpTrack('ViewContent', {
+             content_name: 'Pricing Page',
+             content_category: 'Subscription',
+             currency: 'BDT',
+             value: 2499
+        });
+       }
         // Track CTA click = plan_selected
         document.getElementById('pricingCtaBtn')?.addEventListener('click', function() {
-            window.dataLayer.push({
-                event: 'plan_selected',
-                tier: 'annual',
-                price_bdt: 2499,
-            });
+    		window.dataLayer.push({
+        		event: 'plan_selected',
+       			 tier: 'annual',
+     			   price_bdt: 2499,
+  		  });
+
+    if (window.lpTrack) {
+        window.lpTrack('InitiateCheckout', {
+            plan: 'annual',
+            currency: 'BDT',
+            value: 2499,
+            channel: 'whatsapp_manual_activation'
         });
+    }
+});
     </script>
 
 </body>

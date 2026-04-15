@@ -18,6 +18,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Join LogicPals — Start Free Trial</title>
   <link rel="manifest" href="manifest.json" />
+  <script src="/assets/js/pixel.js" defer></script>
+  <script src="/assets/js/tracking.js" defer></script>
   <meta name="theme-color" content="#2563EB" />
   <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/brain--v1.png" />
 
@@ -296,6 +298,12 @@
   <script src="/assets/js/lp-tracking.js"></script>
 </head>
 <body>
+  <!-- Meta Pixel (noscript fallback) -->
+  <noscript>
+  <img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=1961788037810759&ev=PageView&noscript=1"/>
+  </noscript>
+  
   <!-- Google Tag Manager (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSTQB75G"
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -589,6 +597,21 @@
           window.LP_track('sign_up', { method: 'email', tier: 'free_trial' });
           // Facebook: Lead event (free trial = lead)
           window.LP_pixel('Lead', { content_name: 'Free Trial Signup', currency: 'BDT', value: 0 });
+
+		// Meta standard events via centralized tracking layer
+		if (window.lpTrack) {
+ 		 window.lpTrack('CompleteRegistration', {
+   		 content_name: 'Free Trial Signup',
+   		 status: 'success',
+   		 method: 'email'
+ 		 });
+
+  		window.lpTrack('StartTrial', {
+  		  plan: 'free_trial',
+   		 currency: 'BDT',
+   		 value: 0
+ 		 });
+		}
 
           setTimeout(() => { window.location.href = 'dashboard.html'; }, 2000);
 
