@@ -529,10 +529,49 @@
             options: { data: { full_name: childName, role: 'parent' } },
           });
 
-          if (authError) throw authError;
-          if (!authData.user) throw new Error('Account creation failed. Please try again.');
+         if (authError) throw authError;
+if (!authData.user) throw new Error('Account creation failed. Please try again.');
 
-          const userId = authData.user.id;
+// Ensure the browser client has an authenticated session before any RLS-protected inserts.
+// children.parent_id inserts typically require auth.uid() = parent_id under RLS.
+let userId = authData.user.id;
+
+// If signUp returned a session, hydrate it explicitly.
+if (authData.session?.access_token) {
+  const { error: setSessionError } = await sb.auth.setSession({
+    access_token: authData.session.access_token,
+    refresh_token: authData.session.refresh_token
+  });
+  if (setSessionError) {
+    console.warn('Signup setSession warning:', setSessionError.message);
+  }
+} else {
+  // If no session came back, sign in immediately so auth.uid() is available for RLS policies.
+  const { data: signInData, error: signInError } = await sb.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (signInError) {
+    throw new Error(
+      'Account created, but sign-in session was not established. ' +
+      'Please verify email settings or disable email confirmation for instant free-trial signup.'
+    );
+  }
+
+  if (signInData?.user?.id) {
+    userId = signInData.user.id;
+  }
+}
+
+// Final sanity check: confirm session exists before RLS-protected writes
+const { data: sessionData } = await sb.auth.getSession();
+if (!sessionData?.session?.user?.id) {
+  throw new Error(
+    'Could not establish authenticated session for profile creation. ' +
+    'Please check Supabase email confirmation settings.'
+  );
+}
 
           // STEP 2: Create profile
           const { error: profileError } = await sb.from('profiles').insert([{
