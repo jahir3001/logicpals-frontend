@@ -1027,16 +1027,20 @@
     function updateWhatsAppLinks() {
       const basePhone = '8801617000378';
       const confirmMsg =
-        `Hi LogicPals, I want to activate my subscription.%0A` +
-        `Selected Plan: ${selectedPlan.label}%0A` +
-        `Price: ৳${selectedPlan.price}%0A` +
-        `Please guide me for payment confirmation.`;
+     `*PAYMENT CONFIRMATION*%0A` +
+     `Hi LogicPals,%0A` +
+     `I want to activate my subscription.%0A` +
+     `Selected Plan: ${selectedPlan.label}%0A` +
+     `Price: ৳${selectedPlan.price}%0A` +
+     `I have sent payment / I am ready to send payment.%0A` +
+     `Please guide me for activation.`;
 
-      const helpMsg =
-        `Hi LogicPals, I need help choosing the right plan.%0A` +
-        `Current interest: ${selectedPlan.label}%0A` +
-        `Please advise me.`;
-
+     const helpMsg =
+    `*PLAN HELP REQUEST*%0A` +
+    `Hi LogicPals,%0A` +
+    `I need help choosing the right plan.%0A` +
+    `Current interest: ${selectedPlan.label}%0A` +
+    `Please recommend the best option for my child.`;
       const confirmBtn = document.getElementById('confirmPaymentBtn');
       const helpBtn = document.getElementById('helpChoosePlanBtn');
 
