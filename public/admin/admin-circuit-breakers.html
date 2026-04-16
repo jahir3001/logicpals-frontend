@@ -950,6 +950,15 @@
     }
 
     /* ── KPI DELTA ───────────────────────────────────────────────── */
+    .kpi-delta {
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+    .kpi-delta.up   { color: var(--color-critical); }
+    .kpi-delta.down { color: var(--color-healthy);  }
+    .kpi-delta.flat { color: var(--color-text-secondary); }
+
     /* ── DRAWER REBUILD ──────────────────────────────────────────── */
     .drawer-section {
       padding-bottom: var(--space-5);
@@ -1478,186 +1487,6 @@
       line-height: 1.5;
     }
     .control-help strong { color: var(--color-text-primary); }
-
-    /* ── SPEC §9 TYPOGRAPHY (LOCKED) ───────────────────────────── */
-    .page-title    { font-size: 20px !important; font-weight: 700 !important; }
-    .card-title    { font-size: 16px !important; font-weight: 600 !important; }
-    .page-subtitle { font-size: 14px !important; color: var(--color-text-secondary); }
-    .card-subtitle { font-size: 14px !important; color: var(--color-text-secondary); }
-    .meta-text     { font-size: 12px; color: var(--color-text-secondary); }
-    body, td, th, .action-mini, .btn { font-size: 14px; }
-    /* Spec §9 spacing */
-    .content { gap: 24px !important; }
-    .card    { padding: 16px !important; }
-    .grid-summary { gap: 16px !important; }
-    .layout-main  { gap: 16px !important; }
-    .stack        { gap: 16px !important; }
-
-    /* ── UNIFIED STATUS BAR (replaces dual banners) ──────────────── */
-    .system-status-bar {
-      border-radius: var(--radius-card);
-      padding: 16px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-4);
-      flex-wrap: wrap;
-    }
-    .system-status-bar.healthy {
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
-    }
-    .system-status-bar.warning {
-      background: #fffbeb;
-      border: 1px solid #fde68a;
-    }
-    .system-status-bar.critical {
-      background: #fef2f2;
-      border: 1.5px solid #fecaca;
-      animation: status-pulse 3s ease-in-out infinite;
-    }
-    @keyframes status-pulse {
-      0%,100% { box-shadow: none; }
-      50% { box-shadow: 0 0 0 3px rgba(239,68,68,.12); }
-    }
-    .ssb-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .ssb-dot.healthy  { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.2); }
-    .ssb-dot.warning  { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,.2); }
-    .ssb-dot.critical { background: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,.2); animation: dot-blink 1.5s ease-in-out infinite; }
-    @keyframes dot-blink { 0%,100%{opacity:1} 50%{opacity:.4} }
-    .ssb-left    { display: flex; align-items: center; gap: 12px; flex: 1; }
-    .ssb-title   { font-size: 15px; font-weight: 700; }
-    .ssb-title.healthy  { color: #15803d; }
-    .ssb-title.warning  { color: #92400e; }
-    .ssb-title.critical { color: #b91c1c; }
-    .ssb-sub     { font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; }
-    .ssb-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .ssb-btn {
-      border-radius: 8px;
-      padding: 7px 14px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      border: 1px solid;
-      transition: .15s ease;
-    }
-    .ssb-btn.primary { background: #fff; border-color: #d1d5db; color: #374151; }
-    .ssb-btn.danger  { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
-    .ssb-btn:hover   { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,.1); }
-
-    /* ── KPI CARDS — clean numbers only ─────────────────────────── */
-    .kpi-number {
-      font-size: 36px;
-      font-weight: 800;
-      line-height: 1;
-      margin: 6px 0 4px;
-    }
-    .kpi-number.open     { color: var(--color-critical); }
-    .kpi-number.degraded { color: var(--color-warning);  }
-    .kpi-number.default  { color: var(--color-text-primary); }
-
-    /* ── DETERMINISTIC INTEL PANEL ───────────────────────────────── */
-    .intel-engine {
-      background: white;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-card);
-      box-shadow: var(--shadow-soft);
-      overflow: hidden;
-    }
-    .intel-engine-header {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--color-border);
-      background: #f8fafc;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .intel-engine-label {
-      font-size: 10px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--color-text-secondary);
-    }
-    .intel-conf-badge {
-      font-size: 18px;
-      font-weight: 800;
-      color: var(--color-primary);
-    }
-    .intel-bar-wrap { padding: 0 16px 0; }
-    .intel-bullets {
-      padding: 12px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .intel-bullet {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      font-size: 13px;
-    }
-    .intel-bullet-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      margin-top: 5px;
-      flex-shrink: 0;
-    }
-    .intel-rec {
-      padding: 10px 16px 14px;
-      border-top: 1px solid var(--color-border);
-    }
-    .intel-rec-label {
-      font-size: 10px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      color: var(--color-text-secondary);
-      margin-bottom: 6px;
-    }
-    .intel-rec-action {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--color-text-primary);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .intel-rec-btn {
-      margin-top: 8px;
-      background: var(--color-primary);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 7px 14px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .intel-rec-btn:hover { background: var(--color-primary-strong); }
-    .intel-ops-rows { padding: 0 16px 12px; border-top: 1px solid #f1f5f9; }
-
-    /* ── TABLE — remove override active indicator inline ─────────── */
-    .override-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: #fef3c7;
-      border: 1px solid #fde68a;
-      color: #92400e;
-      border-radius: 5px;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 6px;
-      margin-top: 3px;
-    }
-
-    /* ── DRAWER — spec width 440px ───────────────────────────────── */
-    .drawer { --drawer-w: 460px !important; }
   </style>
   <script src="/assets/js/env-loader.js"></script>
   <script src="/assets/js/admin-auth.js"></script>
@@ -1778,40 +1607,73 @@
           </div>
         </div>
 
-        <!-- ── Unified System Status Bar (single source of truth) ── -->
-        <div class="system-status-bar healthy" id="systemStatusBar">
-          <div class="ssb-left">
-            <div class="ssb-dot healthy" id="ssbDot"></div>
-            <div>
-              <div class="ssb-title healthy" id="ssbTitle">System is healthy — no action required</div>
-              <div class="ssb-sub" id="ssbSub">All breakers operational · Auto-protection active · Confidence: —</div>
+        <!-- ── Decision Summary Banner ── -->
+        <div class="decision-banner" id="decisionBanner">
+          <div class="decision-banner-left">
+            <div class="decision-banner-label">🧠 Decision Summary</div>
+            <h2 class="decision-banner-title" id="decisionTitle">System is healthy — no action required</h2>
+            <div class="decision-banner-sub" id="decisionSub">All breakers operational · Auto-protection active · Last evaluated just now</div>
+          </div>
+          <div class="decision-priority-row">
+            <div class="priority-pill ok" id="decisionPillStatus">
+              <span class="priority-pill-icon">🛡</span>
+              <div>
+                <div class="priority-pill-label">Protection Status</div>
+                <div class="priority-pill-value" id="dpStatus">Fully Protected</div>
+              </div>
+            </div>
+            <div class="priority-pill ok" id="decisionPillAction">
+              <span class="priority-pill-icon">⚡</span>
+              <div>
+                <div class="priority-pill-label">Priority Action</div>
+                <div class="priority-pill-value" id="dpAction">None Required</div>
+              </div>
+            </div>
+            <div class="priority-pill ok" id="decisionPillRisk">
+              <span class="priority-pill-icon">📊</span>
+              <div>
+                <div class="priority-pill-label">System Risk</div>
+                <div class="priority-pill-value" id="dpRisk">LOW</div>
+              </div>
             </div>
           </div>
-          <div class="ssb-actions" id="ssbActions"></div>
         </div>
 
-                <section class="grid-summary" id="summaryCards">
+        <div id="modeBanner" class="mode-banner auto">
+          <span class="mode-banner-dot"></span>
+          <span id="modeBannerText">🟢 System Mode: Automatic Protection Active</span>
+        </div>
+
+        <section class="grid-summary" id="summaryCards">
           <article class="card">
-            <div class="kpi-label" style="font-size:12px;color:var(--color-text-secondary);">Total Breakers</div>
-            <div class="kpi-number default" id="kpiTotalRules">—</div>
+            <div class="kpi-label-row"><span class="kpi-label" style="margin:0">Total Breakers</span></div>
+            <div class="kpi-value" id="kpiTotalRules">—</div>
+            <div class="kpi-delta flat" id="kpiTotalDelta">— vs last hour</div>
           </article>
           <article class="card" id="kpiCardOpen">
-            <div class="kpi-label" style="font-size:12px;color:var(--color-text-secondary);">🚨 Open Breakers</div>
-            <div class="kpi-number open" id="kpiOpenRules">—</div>
-            <span class="kpi-alert-badge" id="kpiOpenBadge" style="display:none">ALERT</span>
+            <div class="kpi-label-row">
+              <span class="kpi-label" style="margin:0">🚨 Open Breakers</span>
+              <span class="kpi-alert-badge" id="kpiOpenBadge" style="display:none">ALERT</span>
+            </div>
+            <div class="kpi-value" id="kpiOpenRules" style="color:var(--color-critical)">—</div>
+            <div class="kpi-delta flat" id="kpiOpenDelta">— vs last hour</div>
           </article>
           <article class="card" id="kpiCardDegraded">
-            <div class="kpi-label" style="font-size:12px;color:var(--color-text-secondary);">⚠ Degraded Systems</div>
-            <div class="kpi-number degraded" id="kpiDegraded">—</div>
-            <span class="kpi-alert-badge" id="kpiDegradedBadge" style="display:none;background:#fffbeb;border-color:#fde68a;color:#92400e;">WARN</span>
+            <div class="kpi-label-row">
+              <span class="kpi-label" style="margin:0">⚠ Degraded Systems</span>
+              <span class="kpi-alert-badge" id="kpiDegradedBadge" style="display:none;background:#fffbeb;border-color:#fde68a;color:#92400e;">WARN</span>
+            </div>
+            <div class="kpi-value" id="kpiDegraded" style="color:var(--color-warning)">—</div>
+            <div class="kpi-delta flat" id="kpiDegradedDelta">— vs last hour</div>
           </article>
           <article class="card">
-            <div class="kpi-label" style="font-size:12px;color:var(--color-text-secondary);">Protected Events (24h)</div>
-            <div class="kpi-number default" id="kpiBlocked">—</div>
+            <div class="kpi-label-row"><span class="kpi-label" style="margin:0">Protected Events</span></div>
+            <div class="kpi-value" id="kpiBlocked">—</div>
+            <div class="kpi-delta flat" id="kpiBlockedDelta">— vs last hour</div>
           </article>
         </section>
 
-                <section class="layout-main">
+        <section class="layout-main">
           <div class="stack">
             <article class="card">
               <div class="card-header">
@@ -1895,14 +1757,12 @@
                       <th>Severity</th>
                       <th>Last Triggered</th>
                       <th>Failure Rate</th>
-                      <th>Protected</th>
-                      <th>Incident</th>
                       <th>Next Retry</th>
-                      <th class="th-actions" style="min-width:80px">Actions</th>
+                      <th class="th-actions" style="min-width:96px">Actions</th>
                     </tr>
                   </thead>
                   <tbody id="breakerTableBody">
-                    <tr><td colspan="9" class="empty">Loading circuit breakers…</td></tr>
+                    <tr><td colspan="7" class="empty">Loading circuit breakers…</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1910,36 +1770,45 @@
           </div>
 
           <div class="stack">
-            <!-- System Decision Engine (spec §5) -->
-            <div class="intel-engine" id="intelEngine">
-              <div class="intel-engine-header">
-                <div class="intel-engine-label">System Decision Engine</div>
-                <div class="intel-conf-badge" id="confidencePct">—</div>
+            <!-- Confidence Signal -->
+            <!-- Merged Intel Card: Confidence + Ops Summary -->
+            <div class="intel-card">
+              <div class="intel-card-top">
+                <div>
+                  <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--color-text-secondary);" data-tip="Composite score: breaker health + failure rate + blocked events + override status">System Intelligence</div>
+                  <div style="font-size:13px;font-weight:600;margin-top:3px;" id="confidenceSub">Calculating…</div>
+                </div>
+                <div class="intel-score-block">
+                  <div class="intel-score-pct" id="confidencePct">—</div>
+                  <div class="intel-score-label">Confidence</div>
+                </div>
               </div>
-              <div class="intel-bar-wrap" style="padding-top:10px;">
+              <div class="intel-card-bar">
                 <div class="confidence-bar-track" style="margin:0;">
                   <div class="confidence-bar-fill" id="confidenceBar" style="width:0%"></div>
                 </div>
-                <div style="font-size:11px;color:var(--color-text-secondary);margin-top:4px;" id="confidenceSub">Calculating…</div>
               </div>
-              <div class="intel-bullets" id="intelBullets">
-                <div class="intel-bullet"><div class="intel-bullet-dot" style="background:#94a3b8"></div><span>Loading system state…</span></div>
+              <div class="intel-card-rows">
+                <div class="intel-row">
+                  <span class="intel-row-label">Total Rules</span>
+                  <span class="intel-row-value" id="opsTotalRules">—</span>
+                </div>
+                <div class="intel-row">
+                  <span class="intel-row-label">Open Breakers</span>
+                  <span class="intel-row-value" id="opsOpenRules" style="color:var(--color-critical)">—</span>
+                </div>
+                <div class="intel-row">
+                  <span class="intel-row-label">Admin Overrides</span>
+                  <span class="intel-row-value" id="opsOverrides">—</span>
+                </div>
+                <div class="intel-row">
+                  <span class="intel-row-label">Last Evaluation</span>
+                  <span class="intel-row-value" id="opsLastEval">—</span>
+                </div>
               </div>
-              <div class="intel-rec">
-                <div class="intel-rec-label">Recommended Action</div>
-                <div class="intel-rec-action">→ <span id="intelRecText">Calculating…</span></div>
-                <button class="intel-rec-btn" id="intelRecBtn" style="display:none">Review Now</button>
-              </div>
-              <div class="intel-ops-rows" style="padding-top:10px;">
-                <div class="intel-row"><span class="intel-row-label">Total Rules</span><span class="intel-row-value" id="opsTotalRules">—</span></div>
-                <div class="intel-row"><span class="intel-row-label">Open Breakers</span><span class="intel-row-value" id="opsOpenRules" style="color:var(--color-critical)">—</span></div>
-                <div class="intel-row"><span class="intel-row-label">Admin Overrides</span><span class="intel-row-value" id="opsOverrides">—</span></div>
-                <div class="intel-row" style="border:none;"><span class="intel-row-label">Last Evaluation</span><span class="intel-row-value" id="opsLastEval">—</span></div>
-              </div>
-              <div class="intel-signals" id="confidenceSignals" style="padding-top:0;"></div>
+              <div class="intel-signals" id="confidenceSignals"></div>
             </div>
 
-            
             <article class="card">
               <div class="card-header">
                 <div>
@@ -1981,9 +1850,8 @@
       </div>
       <div class="drawer-header-meta">
         <div id="drawerBadge"></div>
-        <div id="drawerSeverityBadge"></div>
-        <div class="drawer-meta-pill" id="drawerOverridePill" style="display:none">⚠ Override Active</div>
-        <div class="drawer-meta-pill dim" style="font-size:12px;">🕐 <span id="drawerLastTrigger">—</span></div>
+        <div class="drawer-meta-pill">🕐 <span id="drawerLastTrigger">—</span></div>
+        <div class="drawer-meta-pill" id="drawerOverridePill" style="display:none">⚙ Override Active</div>
       </div>
     </div>
 
@@ -2080,9 +1948,9 @@
     <!-- ── Footer Actions ── -->
     <div class="drawer-footer">
       <div class="drawer-action-grid">
-        <button class="btn" style="background:#7c3aed;color:white;border-color:#7c3aed;" id="btnDrawerReevaluate" data-tip="Safe — re-evaluates rules against current metrics">⟳ Re-evaluate</button>
-        <button class="btn btn-secondary" id="btnDrawerReset" data-tip="Recovery — returns breaker to automatic mode">↺ Reset Breaker</button>
-        <button class="btn btn-danger-strong" id="btnDrawerForceOpen" data-tip="Destructive — immediately blocks all traffic">Force Open ⚠</button>
+        <button class="btn btn-primary" id="btnDrawerReevaluate" data-tip="Re-evaluates all protection rules">⟳ Re-evaluate</button>
+        <button class="btn btn-secondary" id="btnDrawerReset" data-tip="Returns breaker to automatic mode">↺ Reset Breaker</button>
+        <button class="btn btn-danger-strong" id="btnDrawerForceOpen" data-tip="Immediately blocks all traffic through this service">Force Open ⚠</button>
       </div>
     </div>
   </aside>
@@ -2459,6 +2327,32 @@
 
       // Mode banner
       const hasOverride = state.breakers.some(b => b.admin_override_state);
+      const banner = document.getElementById('modeBanner');
+      const bannerText = document.getElementById('modeBannerText');
+      if (hasOverride) {
+        banner.className = 'mode-banner manual';
+        bannerText.textContent = '🔴 Manual Override Mode Enabled — Some breakers are under admin control';
+      } else {
+        banner.className = 'mode-banner auto';
+        bannerText.textContent = '🟢 System Mode: Automatic Protection Active';
+      }
+
+      // KPI deltas — static until a history endpoint is available
+      // Pattern: show count change vs previous load if state.prevSummary exists
+      const prev = state.prevSummary || {};
+      function deltaHtml(curr, prevVal, elId) {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        if (prevVal === undefined) { el.textContent = '— vs last load'; el.className = 'kpi-delta flat'; return; }
+        const diff = Number(curr) - Number(prevVal);
+        if (diff === 0) { el.textContent = 'No change'; el.className = 'kpi-delta flat'; }
+        else if (diff > 0) { el.textContent = `↑ +${diff} vs last load`; el.className = 'kpi-delta up'; }
+        else { el.textContent = `↓ ${diff} vs last load`; el.className = 'kpi-delta down'; }
+      }
+      deltaHtml(s.total_rules    ?? 0, prev.total_rules,    'kpiTotalDelta');
+      deltaHtml(openCount,             prev.open_rules,     'kpiOpenDelta');
+      deltaHtml(degraded,              prev.degraded,       'kpiDegradedDelta');
+      deltaHtml(s.total_blocked_count ?? 0, prev.total_blocked_count, 'kpiBlockedDelta');
       state.prevSummary = { ...s, open_rules: openCount, degraded };
     }
 
@@ -2492,6 +2386,77 @@
       return { score, signals };
     }
 
+    function renderConfidence() {
+      const { score, signals } = computeConfidence();
+      const barColor = score >= 80 ? 'linear-gradient(90deg,#22c55e,#16a34a)'
+                     : score >= 50 ? 'linear-gradient(90deg,#f59e0b,#d97706)'
+                     :               'linear-gradient(90deg,#ef4444,#dc2626)';
+      const label = score >= 80 ? 'System is highly trustworthy'
+                  : score >= 50 ? 'Some risks detected — monitor'
+                  :               'Immediate operator attention needed';
+
+      if (els.confidencePct) els.confidencePct.textContent = `${score}%`;
+      if (els.confidenceBar) {
+        els.confidenceBar.style.width      = `${score}%`;
+        els.confidenceBar.style.background = barColor;
+      }
+      if (els.confidenceSub) els.confidenceSub.textContent = label;
+      if (els.confidenceSignals) {
+        els.confidenceSignals.innerHTML = signals.map(s =>
+          `<span class="conf-signal ${s.cls}">${s.label}</span>`
+        ).join('');
+      }
+    }
+
+    // ── Decision Summary Banner Logic ──────────────────────────────
+    function renderDecisionBanner() {
+      const s         = state.opsSummary || {};
+      const openCount = Number(s.total_open_rules ?? s.open_rules ?? 0);
+      const overrides = state.breakers.filter(b => b.admin_override_state).length;
+      const fails24h  = state.failures.reduce((a, f) => a + Number(f.failures_last_24h || 0), 0);
+      const { score } = computeConfidence();
+
+      let title, sub, action, statusLabel, riskLevel;
+      let statusClass = 'ok', actionClass = 'ok', riskClass = 'ok';
+
+      if (openCount > 0) {
+        title       = `⚠ ${openCount} breaker${openCount > 1 ? 's' : ''} open — investigate now`;
+        sub         = `${openCount} service${openCount > 1 ? 's' : ''} actively blocking traffic · Check failure analysis`;
+        action      = 'Force Close or Reset';
+        statusLabel = 'At Risk';
+        riskLevel   = 'HIGH';
+        statusClass = 'urgent'; actionClass = 'urgent'; riskClass = 'urgent';
+      } else if (fails24h > 5) {
+        title       = `⚡ ${fails24h} failures in 24h — monitor closely`;
+        sub         = 'Failure rate elevated · Breakers auto-protecting · No manual action yet needed';
+        action      = 'Re-evaluate All';
+        statusLabel = 'Degraded';
+        riskLevel   = 'MEDIUM';
+        statusClass = 'warn'; actionClass = 'warn'; riskClass = 'warn';
+      } else if (overrides > 0) {
+        title       = `⚙ ${overrides} manual override${overrides > 1 ? 's' : ''} active`;
+        sub         = 'Some breakers under admin control · Review and reset when stable';
+        action      = 'Reset Overrides';
+        statusLabel = 'Manual Mode';
+        riskLevel   = 'MEDIUM';
+        statusClass = 'warn'; actionClass = 'warn'; riskClass = 'warn';
+      } else {
+        title       = 'System is healthy — no action required';
+        sub         = `All ${state.breakers.length} breakers operational · Auto-protection active · Confidence ${score}%`;
+        action      = 'None Required';
+        statusLabel = 'Fully Protected';
+        riskLevel   = 'LOW';
+      }
+
+      if (els.decisionTitle)       els.decisionTitle.textContent    = title;
+      if (els.decisionSub)         els.decisionSub.textContent      = sub;
+      if (els.dpStatus)            els.dpStatus.textContent         = statusLabel;
+      if (els.dpAction)            els.dpAction.textContent         = action;
+      if (els.dpRisk)              els.dpRisk.textContent           = riskLevel;
+      if (els.decisionPillStatus)  els.decisionPillStatus.className = `priority-pill ${statusClass}`;
+      if (els.decisionPillAction)  els.decisionPillAction.className = `priority-pill ${actionClass}`;
+      if (els.decisionPillRisk)    els.decisionPillRisk.className   = `priority-pill ${riskClass}`;
+    }
 
     // ── Operational Summary (right panel) ─────────────────────────
     function renderOpsSummary() {
@@ -2542,76 +2507,6 @@
 
     // ── Tooltip initialisation (7B) ────────────────────────────────
     // data-tip is CSS-only (::after), already handled by existing CSS
-
-    // ── Unified System Status Bar (spec §2.2) ──────────────────────
-    function renderUnifiedStatusBar() {
-      const s         = state.opsSummary || {};
-      const openCount = Number(s.total_open_rules ?? s.open_rules ?? 0);
-      const overrides = state.breakers.filter(b => b.admin_override_state).length;
-      const fails24h  = state.failures.reduce((a,f) => a + Number(f.failures_last_24h||0), 0);
-      const {score}   = computeConfidence();
-      const bar=document.getElementById('systemStatusBar'),dot=document.getElementById('ssbDot'),
-            title=document.getElementById('ssbTitle'),sub=document.getElementById('ssbSub'),
-            actions=document.getElementById('ssbActions');
-      if(!bar) return;
-      actions.innerHTML='';
-      if(openCount>0){
-        bar.className='system-status-bar critical';dot.className='ssb-dot critical';title.className='ssb-title critical';
-        title.textContent=openCount+' breaker'+(openCount>1?'s':'')+' open — immediate action required';
-        sub.textContent=openCount+' service'+(openCount>1?'s':'')+' blocking traffic · Check breaker table below';
-        addSsbBtn(actions,'Review Overrides','primary',()=>{document.getElementById('filterState').value='open';renderTable();});
-        addSsbBtn(actions,'Reset All','danger',()=>document.getElementById('btnPanelResetAll')?.click());
-      } else if(overrides>0){
-        bar.className='system-status-bar critical';dot.className='ssb-dot critical';title.className='ssb-title critical';
-        title.textContent='SYSTEM UNDER MANUAL CONTROL — '+overrides+' breaker'+(overrides>1?'s':'')+' overridden by admin';
-        sub.textContent='Auto-protection partially disabled · Review and reset when services confirmed stable';
-        addSsbBtn(actions,'Review Overrides','primary',()=>{document.getElementById('filterOverride').value='override';renderTable();});
-        addSsbBtn(actions,'Reset All','danger',()=>document.getElementById('btnPanelResetAll')?.click());
-        addSsbBtn(actions,'Go to Incidents','primary',()=>window.open('/admin.html#incidents','_blank'));
-      } else if(fails24h>5){
-        bar.className='system-status-bar warning';dot.className='ssb-dot warning';title.className='ssb-title warning';
-        title.textContent='System partially degraded';
-        sub.textContent=state.failures.filter(f=>f.failures_last_24h>0).length+' degraded services · 0 open breakers · Recommended: Monitor closely';
-      } else {
-        bar.className='system-status-bar healthy';dot.className='ssb-dot healthy';title.className='ssb-title healthy';
-        title.textContent='System is healthy — no action required';
-        sub.textContent='All breakers operational · Auto-protection active · Confidence: '+score+'%';
-      }
-    }
-    function addSsbBtn(container,label,cls,onClick){
-      const b=document.createElement('button');b.className='ssb-btn '+cls;b.textContent=label;
-      b.addEventListener('click',onClick);container.appendChild(b);
-    }
-
-    // ── Deterministic Intel Engine renderer (spec §5) ────────────
-    function renderIntelEngine() {
-      const {score,signals}=computeConfidence();
-      const s=state.opsSummary||{};
-      const openCount=Number(s.total_open_rules??s.open_rules??0);
-      const overrides=state.breakers.filter(b=>b.admin_override_state).length;
-      const fails24h=state.failures.reduce((a,f)=>a+Number(f.failures_last_24h||0),0);
-      const barColor=score>=80?'linear-gradient(90deg,#22c55e,#16a34a)':score>=50?'linear-gradient(90deg,#f59e0b,#d97706)':'linear-gradient(90deg,#ef4444,#dc2626)';
-      if(els.confidencePct) els.confidencePct.textContent=score+'%';
-      if(els.confidenceBar){els.confidenceBar.style.width=score+'%';els.confidenceBar.style.background=barColor;}
-      if(els.confidenceSub) els.confidenceSub.textContent=score>=80?'System state is highly trustworthy':score>=50?'Elevated risk — review failure sources':'Critical risk — immediate action required';
-      const bulletsEl=document.getElementById('intelBullets');
-      if(bulletsEl){
-        const bullets=[];
-        bullets.push({text:openCount===0?'No breakers require intervention':openCount+' breaker'+(openCount>1?'s':'')+' currently open',color:openCount===0?'#22c55e':'#ef4444'});
-        bullets.push({text:overrides>0?overrides+' breaker'+(overrides>1?'s':'')+' under manual override':'Auto-mode active on all rules',color:overrides>0?'#f59e0b':'#22c55e'});
-        bullets.push({text:'Risk level: '+(score>=80?'LOW':score>=50?'MEDIUM':'HIGH'),color:score>=80?'#22c55e':score>=50?'#f59e0b':'#ef4444'});
-        bullets.push({text:'Confidence: '+score+'%',color:'#6366f1'});
-        bulletsEl.innerHTML=bullets.map(b=>'<div class="intel-bullet"><div class="intel-bullet-dot" style="background:'+b.color+'"></div><span style="font-size:13px">'+b.text+'</span></div>').join('');
-      }
-      const recText=document.getElementById('intelRecText'),recBtn=document.getElementById('intelRecBtn');
-      if(recText){
-        if(openCount>0){recText.textContent='Force Close or Reset open breakers';if(recBtn){recBtn.style.display='block';recBtn.textContent='Review Open Breakers';recBtn.onclick=()=>{document.getElementById('filterState').value='open';renderTable();};}}
-        else if(overrides>0){recText.textContent='Review overrides and reset when stable';if(recBtn){recBtn.style.display='block';recBtn.textContent='Review Overrides';recBtn.onclick=()=>{document.getElementById('filterOverride').value='override';renderTable();};}}
-        else if(fails24h>5){recText.textContent='Monitor closely — elevated failure rate';if(recBtn){recBtn.style.display='block';recBtn.textContent='Re-evaluate System';recBtn.onclick=()=>document.getElementById('btnReevaluate')?.click();}}
-        else{recText.textContent='No action required';if(recBtn)recBtn.style.display='none';}
-      }
-      if(els.confidenceSignals) els.confidenceSignals.innerHTML=signals.map(s=>'<span class="conf-signal '+s.cls+'">'+s.label+'</span>').join('');
-    }
 
     // ── Existing renderSummary extension hook ──────────────────────
     // Call new renderers after existing renderSummary call
@@ -2707,7 +2602,7 @@
 
       if (!rows.length) {
         els.breakerTableBody.innerHTML =
-          '<tr><td colspan="9" class="empty">No breakers match current filters.</td></tr>';
+          '<tr><td colspan="7" class="empty">No breakers match current filters.</td></tr>';
         return;
       }
 
@@ -2726,35 +2621,29 @@
         const failHtml   = `<span class="${failClass}">${failRate}</span><span class="dim" style="font-size:11px;"> / 24h</span>` +
           (totalFails > failRate ? `<div class="dim" style="font-size:11px;">Total: ${totalFails}</div>` : '');
 
-        // Protected events compact
-        const protected_ = row.blocked_stats?.total_blocked_actions ?? 0;
-        const protectedHtml = protected_ > 0
-          ? `<strong style="color:var(--color-primary)">${protected_}</strong>`
-          : '<span class="dim">0</span>';
-
-        // Incident — compact badge
-        const incId = row.linked_incident_id || row.metadata?.linked_incident_id || null;
-        const incList = row.metadata?.linked_incidents || (incId ? [{ id: incId }] : []);
-        const incidentHtml = incList.length
-          ? `<span class="incident-badge">⚡ ${incList.length}</span>`
-          : '<span class="dim" style="font-size:12px;">—</span>';
+        // (Protected Events + Incident shown in drawer only — not in table)
 
         // Action buttons — conditional per state (Image 1 spec)
         const dis  = rowActing ? 'disabled' : '';
         const spin = rowActing ? '<span class="btn-spinner"></span> ' : '';
         const hasOverride = !!row.admin_override_state;
 
-        // Actions: spec §4 — no View Details (row click = drawer)
-        // Show only the contextually relevant action
-        let actionBtns = '';
+        // View Details always shown
+        let actionBtns = `<button class="action-mini action-mini-primary" data-action="view" data-rule="${row.rule_key}" title="Open detail drawer">View Details</button>`;
+
         if (hasOverride) {
-          actionBtns = `<button class="action-mini action-mini-warning" data-action="reset" data-rule="${row.rule_key}" title="Clear admin override" ${dis}>${spin}Reset Override</button>`;
+          // Admin override active — only meaningful action is to reset it
+          actionBtns += `<button class="action-mini action-mini-warning" data-action="reset" data-rule="${row.rule_key}" title="Clear admin override and return to auto mode" ${dis}>${spin}Reset Override</button>`;
         } else if (isOpen) {
-          actionBtns = `<button class="action-mini action-mini-primary" data-action="force-close" data-rule="${row.rule_key}" title="Force close — resume traffic" ${dis}>${spin}Force Close</button>`;
+          // Open → only action that makes sense is to close it
+          actionBtns += `<button class="action-mini action-mini-primary" data-action="force-close" data-rule="${row.rule_key}" title="Force close — resumes traffic" ${dis}>${spin}Force Close</button>`;
         } else if (isHalfOpen) {
-          actionBtns = `<button class="action-mini" data-action="reset" data-rule="${row.rule_key}" title="Reset to automatic mode" ${dis}>${spin}Reset</button>`;
+          // Half-open → can reset to auto OR force close
+          actionBtns += `<button class="action-mini" data-action="reset" data-rule="${row.rule_key}" title="Reset to automatic mode" ${dis}>${spin}Reset</button>`;
+          actionBtns += `<button class="action-mini action-mini-primary" data-action="force-close" data-rule="${row.rule_key}" title="Force close immediately" ${dis}>${spin}Force Close</button>`;
         } else {
-          actionBtns = `<button class="action-mini action-mini-danger" data-action="force-open" data-rule="${row.rule_key}" title="Force open — blocks all traffic" ${dis}>${spin}Force Open ⚠</button>`;
+          // Closed → only force open makes sense
+          actionBtns += `<button class="action-mini action-mini-danger" data-action="force-open" data-rule="${row.rule_key}" title="Force open — blocks all traffic immediately" ${dis}>${spin}Force Open ⚠</button>`;
         }
 
 
@@ -2762,10 +2651,8 @@
         return `
           <tr class="${rowClass}" data-rule-row="${row.rule_key}">
             <td>
-              <div style="font-weight:600;font-size:14px;line-height:1.3;">${serviceName(row.rule_key)}</div>
-              <div class="mono" style="font-size:11px;color:var(--color-text-secondary);margin-top:2px;">${row.rule_key}</div>
-              ${hasOverride ? '<span class="override-tag">⚠ Override Active</span>' : ''}
-              ${protected_ > 0 && !isOpen ? '<span style="font-size:10px;color:#6366f1;font-weight:700;display:block;margin-top:2px;">🔒 Protected</span>' : ''}
+              <div style="font-weight:600;font-size:13px;">${serviceName(row.rule_key)}</div>
+              <div class="mono dim" style="font-size:10px;margin-top:2px;">${row.rule_key}</div>
             </td>
             <td>${badge(
               isOpen ? 'Open' : isHalfOpen ? 'Half Open' : 'Healthy',
@@ -2774,8 +2661,6 @@
             <td>${severityBadge(row.circuit_state, failRate)}</td>
             <td style="font-size:12px;">${fmtDate(lastTrig)}</td>
             <td style="font-size:12px;">${failHtml}</td>
-            <td style="font-size:12px;">${protectedHtml}</td>
-            <td style="font-size:12px;">${incidentHtml}</td>
             <td style="font-size:12px;font-weight:600;color:${row.next_retry_at ? 'var(--color-info)' : 'var(--color-text-secondary)'}">
               ${fmtCountdown(row.next_retry_at)}
             </td>
@@ -2868,9 +2753,6 @@
       els.drawerBadge.innerHTML   = badge(
         isOpen ? 'Open' : isHalfOpen ? 'Half Open' : 'Healthy', row.circuit_state
       );
-      // Severity badge (spec §7)
-      const drawerSevBadge = document.getElementById('drawerSeverityBadge');
-      if (drawerSevBadge) drawerSevBadge.innerHTML = severityBadge(row.circuit_state, row.failure_stats?.failures_last_24h ?? 0);
       const lastTrig = row.last_failure_at || row.opened_at || row.last_success_at;
       els.drawerLastTrigger.textContent = fmtTime(lastTrig);
       els.drawerOverridePill.style.display = row.admin_override_state ? 'inline-flex' : 'none';
@@ -3123,8 +3005,8 @@
         renderFailures();
         renderBlocked();
         renderTable();
-        renderIntelEngine();
-        renderUnifiedStatusBar();
+        renderConfidence();
+        renderDecisionBanner();
         renderOpsSummary();
         updateLastUpdatedLabel();
       } catch (err) {
@@ -3152,7 +3034,7 @@
         if (el) el.textContent = '—';
       });
       if (els.breakerTableBody)
-        els.breakerTableBody.innerHTML = '<tr><td colspan="9" class="empty" style="color:#b91c1c;">⚠ Authentication required — data not loaded.</td></tr>';
+        els.breakerTableBody.innerHTML = '<tr><td colspan="7" class="empty" style="color:#b91c1c;">⚠ Authentication required — data not loaded.</td></tr>';
       if (els.failureSummary)
         els.failureSummary.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔒</div><div class="empty-state-title">Authentication required</div><div class="empty-state-sub">Sign in to the admin console to load data.</div></div>';
       if (els.blockedSummary)
@@ -3469,6 +3351,7 @@
         return;
       }
       const { action, rule } = btn.dataset;
+      if (action === 'view') return openDrawer(rule);
       actOnRule(action, rule);
     });
 
