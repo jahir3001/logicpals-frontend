@@ -208,7 +208,7 @@
           <div style="font-size:14px;font-weight:800;color:var(--accent);margin-bottom:4px;">Olympiad Training — Scholar &amp; Champion only</div>
           <div style="font-size:13px;color:var(--muted);line-height:1.6;">Olympiad Training covers BdMO competition tracks, advanced skill graphs, and mock Olympiad exams. Upgrade to Scholar or Champion to unlock it for your child.</div>
           <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-            <a href="/upgrade.html" class="btn btn-accent btn-wide" style="font-size:13px;height:38px;">View Plans</a>
+            <a href="/pricing.html?source=blocked_olympiad_banner" class="btn btn-accent btn-wide" style="font-size:13px;height:38px;">View Plans</a>
             <button id="dismissOlympiadBanner" class="btn btn-ghost" style="font-size:12px;height:38px;">Maybe later</button>
           </div>
         </div>
@@ -486,15 +486,52 @@
     const olympiadIcon = $('olympiadLockIcon');
 
     if (hasOlympiadAccess) {
-      if (olympiadIcon) olympiadIcon.textContent = '🏆';
-      olympiadBtn.title = 'Go to Olympiad Training';
-      olympiadBtn.style.background = 'linear-gradient(135deg,rgba(254,202,87,.2),rgba(254,202,87,.1))';
-      olympiadBtn.addEventListener('click', () => location.assign('/olympiad.html'));
-    } else {
-      if (olympiadIcon) olympiadIcon.textContent = '🔒';
-      olympiadBtn.title = 'Upgrade to Scholar or Champion to unlock';
-      olympiadBtn.addEventListener('click', () => $('olymModal').style.display = 'flex');
+  if (olympiadIcon) olympiadIcon.textContent = '🏆';
+  olympiadBtn.title = 'Go to Olympiad Training';
+  olympiadBtn.style.background = 'linear-gradient(135deg,rgba(254,202,87,.2),rgba(254,202,87,.1))';
+  olympiadBtn.addEventListener('click', () => {
+    if (window.dataLayer) {
+      window.dataLayer.push({
+        event: 'olympiad_open_clicked',
+        source: 'dashboard',
+        destination: 'olympiad'
+      });
     }
+
+    if (window.lpTrack) {
+      window.lpTrack('ViewContent', {
+        content_name: 'Olympiad Hub Open',
+        content_category: 'Dashboard CTA',
+        source: 'dashboard_olympiad_button'
+      });
+    }
+
+    location.assign('/olympiad.html');
+  });
+} else {
+  if (olympiadIcon) olympiadIcon.textContent = '🔒';
+  olympiadBtn.title = 'Upgrade to Scholar or Champion to unlock';
+
+  olympiadBtn.addEventListener('click', () => {
+    if (window.dataLayer) {
+      window.dataLayer.push({
+        event: 'olympiad_locked_clicked',
+        source: 'dashboard',
+        destination: 'pricing'
+      });
+    }
+
+    if (window.lpTrack) {
+      window.lpTrack('InitiateCheckout', {
+        plan: 'olympiad_unlock',
+        source: 'dashboard_olympiad_locked',
+        currency: 'BDT'
+      });
+    }
+
+    location.assign('/pricing.html?source=dashboard_olympiad_locked');
+  });
+}
 
     // ── ?blocked=olympiad upsell banner ─────────────────────────
     const urlParams = new URLSearchParams(window.location.search);

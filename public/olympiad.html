@@ -2143,10 +2143,26 @@
         // Redirect to dashboard with ?blocked=olympiad so the
         // dashboard can show a friendly upsell message.
         const hasAccess = await checkOlympiadAccess();
-        if (!hasAccess) {
-          window.location.replace('/dashboard.html?blocked=olympiad');
-          return;
-        }
+if (!hasAccess) {
+  if (window.dataLayer) {
+    window.dataLayer.push({
+      event: 'olympiad_access_denied',
+      source: 'olympiad_gate',
+      destination: 'pricing'
+    });
+  }
+
+  if (window.lpTrack) {
+    window.lpTrack('InitiateCheckout', {
+      plan: 'olympiad_unlock',
+      source: 'olympiad_access_gate',
+      currency: 'BDT'
+    });
+  }
+
+  window.location.replace('/pricing.html?source=olympiad_access_gate');
+  return;
+}
         // ───────────────────────────────────────────────────────
 
         await ensureChildSelected();
