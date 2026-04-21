@@ -41,9 +41,103 @@ function normalizeRpc(data) {
   return data;
 }
 
+function firstIp(req) {
+  const xf = req.headers["x-forwarded-for"];
+  if (typeof xf === "string" && xf.trim()) {
+    return xf.split(",")[0].trim();
+  }
+  return req.socket?.remoteAddress || "";
+}
+
+function buildMetaPayload(req, body) {
+  return {
+    data: [
+      {
+        event_name: body.event_name,
+        event_time: Math.floor(Date.now() / 1000),
+        event_id: body.event_id || `lp_${Date.now()}`,
+        action_source: "website",
+        event_source_url: req.headers.referer || body.event_source_url || "",
+        user_data: {
+          client_ip_address: firstIp(req),
+          client_user_agent: req.headers["user-agent"] || "",
+          ...(body.user_data || {}),
+        },
+        custom_data: body.custom_data || {},
+      },
+    ],
+  };
+}
+
 module.exports = async (req, res) => {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "method_not_allowed" });
+  }
+
+  // PUBLIC META CAPI FAST-PATH
+  // Must stay BEFORE Bearer/admin checks because pricing/signup/dashboard pages are public app surfaces.
+  const body = safeJson(req.body);
+  if (body === null) return res.status(400).json({ error: "invalid_json" });
+
+  if (body.op === "meta_track") {
+    const allowedEvents = new Set([
+      "InitiateCheckout",
+      "AddPaymentInfo",
+      "StartTrial",
+      "CompleteRegistration",
+      "Lead",
+      "Login",
+      "ViewContent",
+    ]);
+
+    const { event_name } = body;
+    if (!allowedEvents.has(event_name)) {
+      return res.status(400).json({ ok: false, error: "unsupported_event" });
+    }
+
+    const META_PIXEL_ID = process.env.META_PIXEL_ID;
+    const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
+
+    if (!META_PIXEL_ID) {
+      return res.status(500).json({ ok: false, error: "missing_META_PIXEL_ID" });
+    }
+    if (!META_ACCESS_TOKEN) {
+      return res.status(500).json({ ok: false, error: "missing_META_ACCESS_TOKEN" });
+    }
+
+    const payload = buildMetaPayload(req, body);
+
+    try {
+      const fbRes = await fetch(
+        `https://graph.facebook.com/v20.0/${META_PIXEL_ID}/events?access_token=${META_ACCESS_TOKEN}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const fbJson = await fbRes.json();
+
+      if (!fbRes.ok) {
+        return res.status(502).json({
+          ok: false,
+          error: "meta_capi_failed",
+          details: fbJson,
+        });
+      }
+
+      return res.status(200).json({
+        ok: true,
+        result: fbJson,
+      });
+    } catch (err) {
+      return res.status(500).json({
+        ok: false,
+        error: "meta_capi_exception",
+        details: err.message,
+      });
+    }
   }
 
   const jwt = getBearer(req);
@@ -75,9 +169,7 @@ module.exports = async (req, res) => {
   }
 
   // 2) Parse body
-  const body = safeJson(req.body);
-  if (body === null) return res.status(400).json({ error: "invalid_json" });
-
+  
   const experiment_key = body.experiment_key;
   const days = Number.isFinite(Number(body.days)) ? Number(body.days) : 7;
   const track = body.track || null; // "regular" | "olympiad" | null
