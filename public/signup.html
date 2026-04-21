@@ -460,6 +460,34 @@
 
     getOrCreateDeviceId(); // seed immediately on page load
 
+    function makeEventId(prefix) {
+      return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    async function sendMetaServerEvent({ event_name, event_id, custom_data = {}, user_data = {} }) {
+      try {
+        const res = await fetch('/api/ab/admin-bundle.js', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            op: 'meta_track',
+            event_name,
+            event_id,
+            custom_data,
+            user_data,
+            event_source_url: window.location.href
+          })
+        });
+
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          console.warn('Meta server event failed:', event_name, json);
+        }
+      } catch (err) {
+        console.warn('Meta server event exception:', event_name, err);
+      }
+    }
+
     window.lpGetClientMeta = function () {
       return {
         device_id:  getOrCreateDeviceId(),
@@ -516,6 +544,30 @@
           showError('Password must be at least 6 characters.');
           return;
         }
+
+       const startTrialEventId = makeEventId('starttrial_submit');
+
+        if (typeof fbq === 'function') {
+          fbq('track', 'StartTrial', {
+            plan: 'free_trial',
+            currency: 'BDT',
+            value: 0,
+            method: 'email'
+          }, {
+            eventID: startTrialEventId
+          });
+        }
+
+        sendMetaServerEvent({
+          event_name: 'StartTrial',
+          event_id: startTrialEventId,
+          custom_data: {
+            plan: 'free_trial',
+            currency: 'BDT',
+            value: 0,
+            method: 'email'
+          }
+        });
 
         hideMessages();
         btn.classList.add('loading');
@@ -633,24 +685,106 @@ if (!sessionData?.session?.user?.id) {
           getOrCreateDeviceId();
 
           // GA4: sign_up event
+                    // GA4: sign_up event
           window.LP_track('sign_up', { method: 'email', tier: 'free_trial' });
-          // Facebook: Lead event (free trial = lead)
-          window.LP_pixel('Lead', { content_name: 'Free Trial Signup', currency: 'BDT', value: 0 });
 
-		// Meta standard events via centralized tracking layer
-		if (window.lpTrack) {
- 		 window.lpTrack('CompleteRegistration', {
-   		 content_name: 'Free Trial Signup',
-   		 status: 'success',
-   		 method: 'email'
- 		 });
+          const leadEventId = makeEventId('lead');
+          const completeRegistrationEventId = makeEventId('complete_registration');
+          const startTrialSuccessEventId = makeEventId('starttrial_success');
 
-  		window.lpTrack('StartTrial', {
-  		  plan: 'free_trial',
-   		 currency: 'BDT',
-   		 value: 0
- 		 });
-		}
+          // Browser-side Meta events with dedup IDs
+          if (typeof fbq === 'function') {
+            fbq('track', 'Lead', {
+              content_name: 'Free Trial Signup',
+              currency: 'BDT',
+              value: 0
+            }, {
+              eventID: leadEventId
+            });
+
+            fbq('track', 'CompleteRegistration', {
+              content_name: 'Free Trial Signup',
+              status: 'success',
+              method: 'email'
+            }, {
+              eventID: completeRegistrationEventId
+            });
+
+            fbq('track', 'StartTrial', {
+              plan: 'free_trial',
+              currency: 'BDT',
+              value: 0,
+              method: 'email',
+              status: 'success'
+            }, {
+              eventID: startTrialSuccessEventId
+            });
+          } else {
+            // Fallback to your centralized browser tracker
+            window.LP_pixel('Lead', {
+              content_name: 'Free Trial Signup',
+              currency: 'BDT',
+              value: 0
+            });
+
+            if (window.lpTrack) {
+              window.lpTrack('CompleteRegistration', {
+                content_name: 'Free Trial Signup',
+                status: 'success',
+                method: 'email'
+              });
+
+              window.lpTrack('StartTrial', {
+                plan: 'free_trial',
+                currency: 'BDT',
+                value: 0,
+                method: 'email',
+                status: 'success'
+              });
+            }
+          }
+
+          // Server-side Meta CAPI events with matching dedup IDs
+          sendMetaServerEvent({
+            event_name: 'Lead',
+            event_id: leadEventId,
+            custom_data: {
+              content_name: 'Free Trial Signup',
+              currency: 'BDT',
+              value: 0
+            },
+            user_data: {
+              em: email.toLowerCase()
+            }
+          });
+
+          sendMetaServerEvent({
+            event_name: 'CompleteRegistration',
+            event_id: completeRegistrationEventId,
+            custom_data: {
+              content_name: 'Free Trial Signup',
+              status: 'success',
+              method: 'email'
+            },
+            user_data: {
+              em: email.toLowerCase()
+            }
+          });
+
+          sendMetaServerEvent({
+            event_name: 'StartTrial',
+            event_id: startTrialSuccessEventId,
+            custom_data: {
+              plan: 'free_trial',
+              currency: 'BDT',
+              value: 0,
+              method: 'email',
+              status: 'success'
+            },
+            user_data: {
+              em: email.toLowerCase()
+            }
+          });
 
           setTimeout(() => { window.location.href = 'dashboard.html'; }, 2000);
 
