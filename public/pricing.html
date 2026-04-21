@@ -946,6 +946,34 @@
   <script>
     window.dataLayer = window.dataLayer || [];
 
+        function makeEventId(prefix) {
+      return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    async function sendMetaServerEvent({ event_name, event_id, custom_data = {}, user_data = {} }) {
+      try {
+        const res = await fetch('/api/ab/admin-bundle.js', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            op: 'meta_track',
+            event_name,
+            event_id,
+            custom_data,
+            user_data,
+            event_source_url: window.location.href
+          })
+        });
+
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          console.warn('Meta server event failed:', event_name, json);
+        }
+      } catch (err) {
+        console.warn('Meta server event exception:', event_name, err);
+      }
+    }
+
     // Future-ready switch
     // manual_whatsapp | stripe | sslcommerz | bkash_api
     const PAYMENT_MODE = 'manual_whatsapp';
@@ -956,14 +984,26 @@
       price: 999
     };
 
-    function trackPricingView() {
+            function trackPricingView() {
+      const eventId = makeEventId('pricing_view');
+
       window.dataLayer.push({
         event: 'pricing_page_viewed',
         payment_mode: PAYMENT_MODE,
         referrer_source: document.referrer || 'direct'
       });
 
-      if (window.lpTrack) {
+      if (typeof fbq === 'function') {
+        fbq('track', 'ViewContent', {
+          content_name: 'Pricing Page V2',
+          content_category: 'Subscription',
+          currency: 'BDT',
+          value: selectedPlan.price,
+          payment_mode: PAYMENT_MODE
+        }, {
+          eventID: eventId
+        });
+      } else if (window.lpTrack) {
         window.lpTrack('ViewContent', {
           content_name: 'Pricing Page V2',
           content_category: 'Subscription',
@@ -972,6 +1012,19 @@
           payment_mode: PAYMENT_MODE
         });
       }
+
+      sendMetaServerEvent({
+        event_name: 'ViewContent',
+        event_id: eventId,
+        custom_data: {
+          content_name: 'Pricing Page V2',
+          content_category: 'Subscription',
+          currency: 'BDT',
+          value: selectedPlan.price,
+          payment_mode: PAYMENT_MODE,
+          source: new URLSearchParams(window.location.search).get('source') || 'direct'
+        }
+      });
     }
 
     function trackPlanSelection(planKey, price, label) {
@@ -996,7 +1049,11 @@
       }
     }
 
-    function trackCheckoutIntent(source) {
+        function trackCheckoutIntent(source) {
+      const checkoutEventId = makeEventId('checkout');
+      const addPaymentEventId = makeEventId('paymentinfo');
+      const sourceParam = new URLSearchParams(window.location.search).get('source') || 'direct';
+
       window.dataLayer.push({
         event: 'plan_checkout_intent',
         tier: selectedPlan.key,
@@ -1005,13 +1062,36 @@
         payment_mode: PAYMENT_MODE
       });
 
-      if (window.lpTrack) {
+      if (typeof fbq === 'function') {
+        fbq('track', 'InitiateCheckout', {
+          plan: selectedPlan.key,
+          currency: 'BDT',
+          value: selectedPlan.price,
+          channel: source,
+          payment_mode: PAYMENT_MODE,
+          source_param: sourceParam
+        }, {
+          eventID: checkoutEventId
+        });
+
+        fbq('track', 'AddPaymentInfo', {
+          plan: selectedPlan.key,
+          currency: 'BDT',
+          value: selectedPlan.price,
+          payment_method: 'bkash_nagad_manual',
+          payment_mode: PAYMENT_MODE,
+          source_param: sourceParam
+        }, {
+          eventID: addPaymentEventId
+        });
+      } else if (window.lpTrack) {
         window.lpTrack('InitiateCheckout', {
           plan: selectedPlan.key,
           currency: 'BDT',
           value: selectedPlan.price,
           channel: source,
-          payment_mode: PAYMENT_MODE
+          payment_mode: PAYMENT_MODE,
+          source_param: sourceParam
         });
 
         window.lpTrack('AddPaymentInfo', {
@@ -1019,9 +1099,38 @@
           currency: 'BDT',
           value: selectedPlan.price,
           payment_method: 'bkash_nagad_manual',
-          payment_mode: PAYMENT_MODE
+          payment_mode: PAYMENT_MODE,
+          source_param: sourceParam
         });
       }
+
+      sendMetaServerEvent({
+        event_name: 'InitiateCheckout',
+        event_id: checkoutEventId,
+        custom_data: {
+          plan: selectedPlan.key,
+          content_name: selectedPlan.label,
+          currency: 'BDT',
+          value: selectedPlan.price,
+          channel: source,
+          payment_mode: PAYMENT_MODE,
+          source_param: sourceParam
+        }
+      });
+
+      sendMetaServerEvent({
+        event_name: 'AddPaymentInfo',
+        event_id: addPaymentEventId,
+        custom_data: {
+          plan: selectedPlan.key,
+          content_name: selectedPlan.label,
+          currency: 'BDT',
+          value: selectedPlan.price,
+          payment_method: 'bkash_nagad_manual',
+          payment_mode: PAYMENT_MODE,
+          source_param: sourceParam
+        }
+      });
     }
 
     function updateWhatsAppLinks() {
@@ -1070,7 +1179,9 @@
       trackCheckoutIntent('whatsapp_confirm_payment');
     });
 
-    document.getElementById('helpChoosePlanBtn')?.addEventListener('click', function () {
+        document.getElementById('helpChoosePlanBtn')?.addEventListener('click', function () {
+      const sourceParam = new URLSearchParams(window.location.search).get('source') || 'direct';
+
       window.dataLayer.push({
         event: 'pricing_help_clicked',
         tier: selectedPlan.key,
@@ -1081,7 +1192,8 @@
         window.lpTrack('Contact', {
           plan: selectedPlan.key,
           contact_channel: 'whatsapp',
-          intent: 'plan_help'
+          intent: 'plan_help',
+          source_param: sourceParam
         });
       }
     });
