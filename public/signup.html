@@ -465,28 +465,32 @@
     }
 
     async function sendMetaServerEvent({ event_name, event_id, custom_data = {}, user_data = {} }) {
-      try {
-        const res = await fetch('/api/ab/admin-bundle.js', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            op: 'meta_track',
-            event_name,
-            event_id,
-            custom_data,
-            user_data,
-            event_source_url: window.location.href
-          })
-        });
+  try {
+    const metaTestCode = sessionStorage.getItem('lp_meta_test_code') || '';
 
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          console.warn('Meta server event failed:', event_name, json);
-        }
-      } catch (err) {
-        console.warn('Meta server event exception:', event_name, err);
-      }
+    const res = await fetch('/api/ab/admin-bundle.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      body: JSON.stringify({
+        op: 'meta_track',
+        event_name,
+        event_id,
+        custom_data,
+        user_data,
+        event_source_url: window.location.href,
+        ...(metaTestCode ? { test_event_code: metaTestCode } : {})
+      })
+    });
+
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      console.warn('Meta server event failed:', event_name, json);
     }
+  } catch (err) {
+    console.warn('Meta server event exception:', event_name, err);
+  }
+}
 
     window.lpGetClientMeta = function () {
       return {
