@@ -51,22 +51,23 @@ function firstIp(req) {
 
 function buildMetaPayload(req, body) {
   return {
-    data: [
-      {
-        event_name: body.event_name,
-        event_time: Math.floor(Date.now() / 1000),
-        event_id: body.event_id || `lp_${Date.now()}`,
-        action_source: "website",
-        event_source_url: req.headers.referer || body.event_source_url || "",
-        user_data: {
-          client_ip_address: firstIp(req),
-          client_user_agent: req.headers["user-agent"] || "",
-          ...(body.user_data || {}),
-        },
-        custom_data: body.custom_data || {},
+  data: [
+    {
+      event_name: body.event_name,
+      event_time: Math.floor(Date.now() / 1000),
+      event_id: body.event_id || `lp_${Date.now()}`,
+      action_source: "website",
+      event_source_url: req.headers.referer || body.event_source_url || "",
+      user_data: {
+        client_ip_address: firstIp(req),
+        client_user_agent: req.headers["user-agent"] || "",
+        ...(body.user_data || {}),
       },
-    ],
-  };
+      custom_data: body.custom_data || {},
+    },
+  ],
+  test_event_code: body.test_event_code || undefined,
+};
 }
 
 module.exports = async (req, res) => {

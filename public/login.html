@@ -399,13 +399,14 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            op: 'meta_track',
-            event_name,
-            event_id,
-            custom_data,
-            user_data,
-            event_source_url: window.location.href
-          })
+  op: 'meta_track',
+  event_name,
+  event_id,
+  custom_data,
+  user_data,
+  event_source_url: window.location.href,
+  test_event_code: 'TEST10611'
+})
         });
 
         const json = await res.json().catch(() => ({}));
