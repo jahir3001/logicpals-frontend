@@ -354,8 +354,8 @@
       </form>
 
       <div class="footer-links">
-        <span>Don't have an account? <a href="signup.html">Sign Up Free</a></span>
-        <a href="index.html">← Back to Home</a>
+        <span>Don't have an account? <a href="signup.html" id="signupLink">Sign Up Free</a></span>
+	<a href="index.html" id="backHomeLink">← Back to Home</a>
       </div>
     </div>
 
@@ -388,6 +388,34 @@
     }
 
     getOrCreateDeviceId();
+
+        function makeEventId(prefix) {
+      return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    async function sendMetaServerEvent({ event_name, event_id, custom_data = {}, user_data = {} }) {
+      try {
+        const res = await fetch('/api/ab/admin-bundle.js', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            op: 'meta_track',
+            event_name,
+            event_id,
+            custom_data,
+            user_data,
+            event_source_url: window.location.href
+          })
+        });
+
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          console.warn('Meta server event failed:', event_name, json);
+        }
+      } catch (err) {
+        console.warn('Meta server event exception:', event_name, err);
+      }
+    }
 
     window.lpGetClientMeta = function () {
       return {
@@ -467,18 +495,45 @@
           if (error) throw error;
 
           // GA4: login event
-          window.LP_track('login', { method: 'email' });
+          // GA4: login event
+window.LP_track('login', { method: 'email' });
 
-          // Meta standard event
-	  if (window.lpTrack) {
-          window.lpTrack('Login', {
-          method: 'email'
-          });
-         }
+const loginEventId = makeEventId('login');
 
-          getOrCreateDeviceId(); // re-seed on login
-          showMsg('ok', 'Signed in! Redirecting…');
-          setTimeout(() => window.location.href = 'dashboard.html', 500);
+// Browser-side Meta Login event with dedup ID
+if (typeof fbq === 'function') {
+  fbq('trackCustom', 'Login', {
+    method: 'email'
+  }, {
+    eventID: loginEventId
+  });
+} else if (window.lpTrack) {
+  window.lpTrack('Login', {
+    method: 'email'
+  });
+}
+
+// Server-side Meta CAPI Login event
+sendMetaServerEvent({
+  event_name: 'Login',
+  event_id: loginEventId,
+  custom_data: {
+    method: 'email'
+  },
+  user_data: {
+    em: email.toLowerCase()
+  }
+});
+
+getOrCreateDeviceId(); // re-seed on login
+showMsg('ok', 'Signed in! Redirecting…');
+
+const nextParam = new URLSearchParams(window.location.search).get('next');
+const nextHref = nextParam && nextParam.trim() ? nextParam : 'dashboard.html';
+
+setTimeout(() => {
+  window.location.href = nextHref;
+}, 500);
         } catch (err) {
           showMsg('err', err?.message || 'Login failed. Please check your credentials.');
           emailEl.classList.add('error');
@@ -500,6 +555,18 @@
       // Enter on email → move to password
       emailEl.addEventListener('keydown', e => {
         if (e.key === 'Enter') { e.preventDefault(); passEl.focus(); }
+      });
+
+            document.getElementById('signupLink')?.addEventListener('click', () => {
+        if (window.dataLayer) {
+          window.dataLayer.push({ event: 'login_signup_clicked' });
+        }
+      });
+
+      document.getElementById('backHomeLink')?.addEventListener('click', () => {
+        if (window.dataLayer) {
+          window.dataLayer.push({ event: 'login_back_home_clicked' });
+        }
       });
 
     })();
