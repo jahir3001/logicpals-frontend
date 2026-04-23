@@ -11,6 +11,7 @@
 //   public.ab_dash_admin_bundle(p_experiment_key text, p_track lp_track, p_days int) returns json/jsonb
 
 const { createClient } = require("@supabase/supabase-js");
+const crypto = require("crypto");
 
 function getBearer(req) {
   const h = req.headers.authorization || "";
@@ -49,6 +50,44 @@ function firstIp(req) {
   return req.socket?.remoteAddress || "";
 }
 
+function sha256(value) {
+  return crypto.createHash("sha256").update(value).digest("hex");
+}
+
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
+}
+
+function normalizePhone(phone) {
+  return String(phone || "").replace(/[^\d]/g, "");
+}
+
+function buildMetaUserData(req, body) {
+  const incoming = body.user_data || {};
+  const out = {
+    client_ip_address: firstIp(req),
+    client_user_agent: req.headers["user-agent"] || "",
+  };
+
+  if (incoming.em) {
+    const em = normalizeEmail(incoming.em);
+    if (em) out.em = sha256(em);
+  }
+
+  if (incoming.ph) {
+    const ph = normalizePhone(incoming.ph);
+    if (ph) out.ph = sha256(ph);
+  }
+
+  // pass through already-safe keys if you add them later
+  const passthroughKeys = ["external_id", "fbp", "fbc"];
+  for (const key of passthroughKeys) {
+    if (incoming[key]) out[key] = incoming[key];
+  }
+
+  return out;
+}
+
 function buildMetaPayload(req, body) {
   return {
   data: [
@@ -58,11 +97,7 @@ function buildMetaPayload(req, body) {
       event_id: body.event_id || `lp_${Date.now()}`,
       action_source: "website",
       event_source_url: req.headers.referer || body.event_source_url || "",
-      user_data: {
-        client_ip_address: firstIp(req),
-        client_user_agent: req.headers["user-agent"] || "",
-        ...(body.user_data || {}),
-      },
+      user_data: buildMetaUserData(req, body),
       custom_data: body.custom_data || {},
     },
   ],
@@ -121,12 +156,18 @@ module.exports = async (req, res) => {
       const fbJson = await fbRes.json();
 
       if (!fbRes.ok) {
-        return res.status(502).json({
-          ok: false,
-          error: "meta_capi_failed",
-          details: fbJson,
-        });
-      }
+  console.error("Meta CAPI rejected payload:", JSON.stringify(fbJson));
+  return res.status(502).json({
+    ok: false,
+    error: "meta_capi_failed",
+    details: fbJson,
+    payload_preview: {
+      event_name: body.event_name,
+      event_id: body.event_id,
+      has_test_event_code: !!body.test_event_code
+    }
+  });
+}
 
       return res.status(200).json({
         ok: true,
