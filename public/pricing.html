@@ -1032,26 +1032,52 @@
     }
 
     function trackPlanSelection(planKey, price, label) {
-      selectedPlan = { key: planKey, price: Number(price), label: label || planKey };
+  selectedPlan = { key: planKey, price: Number(price), label: label || planKey };
 
-      window.dataLayer.push({
-        event: 'plan_selected',
-        tier: planKey,
-        price_bdt: Number(price),
-        payment_mode: PAYMENT_MODE
-      });
+  const planSelectEventId = makeEventId('planselect');
 
-      if (window.lpTrack) {
-        window.lpTrack('ViewContent', {
-          content_name: 'Plan Selected',
-          content_category: 'Subscription',
-          plan: planKey,
-          currency: 'BDT',
-          value: Number(price),
-          payment_mode: PAYMENT_MODE
-        });
-      }
+  window.dataLayer.push({
+    event: 'plan_selected',
+    tier: planKey,
+    price_bdt: Number(price),
+    payment_mode: PAYMENT_MODE
+  });
+
+  if (typeof fbq === 'function') {
+    fbq('track', 'ViewContent', {
+      content_name: 'Plan Selected',
+      content_category: 'Subscription',
+      plan: planKey,
+      currency: 'BDT',
+      value: Number(price),
+      payment_mode: PAYMENT_MODE
+    }, {
+      eventID: planSelectEventId
+    });
+  } else if (window.lpTrack) {
+    window.lpTrack('ViewContent', {
+      content_name: 'Plan Selected',
+      content_category: 'Subscription',
+      plan: planKey,
+      currency: 'BDT',
+      value: Number(price),
+      payment_mode: PAYMENT_MODE
+    });
+  }
+
+  sendMetaServerEvent({
+    event_name: 'ViewContent',
+    event_id: planSelectEventId,
+    custom_data: {
+      content_name: 'Plan Selected',
+      content_category: 'Subscription',
+      plan: planKey,
+      currency: 'BDT',
+      value: Number(price),
+      payment_mode: PAYMENT_MODE
     }
+  });
+}
 
         function trackCheckoutIntent(source) {
       const checkoutEventId = makeEventId('checkout');
