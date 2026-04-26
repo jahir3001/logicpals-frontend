@@ -172,19 +172,9 @@ async function handleIngestEvent(userSb, body, adminUserId) {
   };
 
   // ingest_event is granted to service_role only. The admin gate has already
-  // been passed (requireAdmin at the top), so escalating is safe.
+  // been passed (requireAdmin in main handler), so escalating is safe.
   const svcSb = sbForService();
-  const { data, error } = await svcSb.rpc("ingest_event", params, {
-    // schema() targets the RPC's schema when it's not `public`
-  });
-
-  // supabase-js v2 needs .schema() scoping for non-public schemas
-  // If the call above fails with "function not found", fall back with schema-scoped call:
-  if (error && /function .* does not exist/i.test(error.message || "")) {
-    const scoped = await svcSb.schema("ops_core").rpc("ingest_event", params);
-    if (scoped.error) throw new Error(scoped.error.message);
-    return { event_id: scoped.data };
-  }
+  const { data, error } = await svcSb.schema("ops_core").rpc("ingest_event", params);
 
   if (error) throw new Error(error.message);
   return { event_id: data };
