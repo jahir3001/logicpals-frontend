@@ -590,7 +590,7 @@
       LPAdmin.setStatus('warn', 'Assigning…');
 
       try {
-        const resp = await fetch('/api/admin/assign-role', {
+        const resp = await fetch('/api/admin/telemetry?action=assign_role', {
           method: 'POST',
           headers: {
             'Content-Type':  'application/json',
