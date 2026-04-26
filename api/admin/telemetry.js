@@ -341,7 +341,7 @@ async function handleAutomationWatchdog(userSb) {
   return data || {};
 }
 
-/ ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 //  ADDITION 2 — The assign_role handler
 //
 //  WHERE: Anywhere between existing handler functions. A good spot is right
