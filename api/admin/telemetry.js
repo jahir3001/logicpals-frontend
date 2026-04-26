@@ -33,6 +33,16 @@ function sbForJwt(jwt) {
   });
 }
 
+function sbForService() {
+  const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = getSupabaseEnv();
+  if (!SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("missing_service_role_key");
+  }
+  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
 async function requireAdmin(supabase) {
   const gate = await supabase.rpc("ab_require_admin", {});
   if (gate.error) throw new Error(gate.error.message || "admin_required");
@@ -329,6 +339,186 @@ async function handleAutomationWatchdog(userSb) {
 
   if (error) throw error;
   return data || {};
+}
+
+/ ─────────────────────────────────────────────────────────────────────────────
+//  ADDITION 2 — The assign_role handler
+//
+//  WHERE: Anywhere between existing handler functions. A good spot is right
+//  before `async function handleMonitoringAction(...)` around line 334.
+//
+//  This replicates api/admin/assign-role.js exactly — same role gate, same
+//  lookup, same upsert, same audit, same Slack alert, same response shape.
+// ─────────────────────────────────────────────────────────────────────────────
+ 
+const ASSIGN_ROLE_VALID_ROLES = [
+  "super_admin",
+  "admin_regular",
+  "admin_olympiad",
+  "support_readonly",
+  "reviewer",
+  "no_role",
+];
+ 
+async function handleAssignRole(callerSb, body) {
+  // Caller identity (from the JWT that already passed requireAdmin above)
+  const { data: userData, error: authErr } = await callerSb.auth.getUser();
+  if (authErr || !userData?.user) {
+    throw new Error("invalid_token");
+  }
+  const caller = userData.user;
+ 
+  // Super-admin gate (stricter than the global admin gate)
+  // Try primary RPC first, then fallbacks (preserves legacy behavior)
+  let callerRole = "no_role";
+  try {
+    const { data } = await callerSb.rpc("rpc_lp_my_role");
+    if (data) callerRole = typeof data === "string" ? data : String(data);
+  } catch (_) {
+    const candidates = ["get_my_role", "rp_get_my_role"];
+    for (const fn of candidates) {
+      try {
+        const { data, error } = await callerSb.rpc(fn);
+        if (!error && data) {
+          callerRole = typeof data === "string" ? data : "no_role";
+          break;
+        }
+      } catch (_e) {
+        // try next candidate
+      }
+    }
+  }
+ 
+  if (callerRole !== "super_admin") {
+    const err = new Error("super_admin_required");
+    err.your_role = callerRole;
+    throw err;
+  }
+ 
+  // Body validation
+  const target_email = body.target_email;
+  const new_role = body.new_role;
+  const reason = body.reason || null;
+ 
+  if (!target_email || !new_role) {
+    throw new Error("missing_fields");
+  }
+  if (!ASSIGN_ROLE_VALID_ROLES.includes(new_role)) {
+    const err = new Error("invalid_role");
+    err.valid_roles = ASSIGN_ROLE_VALID_ROLES;
+    throw err;
+  }
+ 
+  // Service client for role mutation (bypasses RLS)
+  const serviceSb = sbForService();
+ 
+  // Look up target user
+  const { data: targetUsers, error: lookupErr } = await serviceSb
+    .from("profiles")
+    .select("id, email, full_name")
+    .eq("email", String(target_email).trim().toLowerCase())
+    .limit(1);
+ 
+  if (lookupErr) {
+    const err = new Error("user_lookup_failed");
+    err.details = lookupErr.message;
+    throw err;
+  }
+  if (!targetUsers || targetUsers.length === 0) {
+    const err = new Error("user_not_found");
+    err.email = target_email;
+    throw err;
+  }
+  const targetUser = targetUsers[0];
+ 
+  // Current role
+  let oldRole = "no_role";
+  const { data: existingRole } = await serviceSb
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", targetUser.id)
+    .limit(1)
+    .single();
+  if (existingRole) oldRole = existingRole.role;
+ 
+  // Same role? No-op success
+  if (oldRole === new_role) {
+    return {
+      ok: true,
+      changed: false,
+      message: `User already has role: ${new_role}`,
+      target_email,
+      old_role: oldRole,
+      new_role,
+    };
+  }
+ 
+  // Upsert
+  const { error: upsertErr } = await serviceSb
+    .from("user_roles")
+    .upsert(
+      {
+        user_id: targetUser.id,
+        role: new_role,
+        updated_at: new Date().toISOString(),
+        updated_by: caller.id,
+      },
+      { onConflict: "user_id" }
+    );
+ 
+  if (upsertErr) {
+    const err = new Error("role_update_failed");
+    err.details = upsertErr.message;
+    throw err;
+  }
+ 
+  // Audit log (non-fatal)
+  try {
+    await serviceSb.from("audit_log").insert({
+      user_id: caller.id,
+      action: "admin_role_change",
+      metadata: {
+        changed_by: caller.email,
+        target_user: target_email,
+        target_user_id: targetUser.id,
+        old_role: oldRole,
+        new_role: new_role,
+        reason,
+      },
+    });
+  } catch (_) {
+    console.warn("[assign-role] Audit log write failed");
+  }
+ 
+  // Slack alert (non-fatal)
+  // NOTE: The import path '../../backend/alerts/monitoring.js' is relative to
+  // THIS file. Since we're moving into api/admin/telemetry.js — SAME directory
+  // as assign-role.js was — the relative path is unchanged.
+  try {
+    const { recordAdminRoleChange } = await import(
+      "../../backend/alerts/monitoring.js"
+    );
+    await recordAdminRoleChange({
+      changed_by: caller.email || caller.id,
+      target_user: target_email,
+      old_role: oldRole,
+      new_role: new_role,
+      reason,
+    });
+  } catch (err) {
+    console.warn("[assign-role] Slack alert failed:", err.message);
+  }
+ 
+  return {
+    ok: true,
+    changed: true,
+    target_email,
+    target_name: targetUser.full_name || null,
+    old_role: oldRole,
+    new_role: new_role,
+    changed_by: caller.email,
+    reason,
+  };
 }
 
 async function handleMonitoringAction(userSb, body, action) {
@@ -1169,6 +1359,56 @@ module.exports = async (req, res) => {
     await requireAdmin(userSb);
 
         if (req.method === "POST") {
+   
+      if (action === "assign_role") {
+        try {
+          const payload = await handleAssignRole(userSb, body);
+          return jsonOk(res, payload);
+        } catch (err) {
+          const msg = err?.message || String(err);
+          if (msg === "invalid_token") {
+            return jsonErr(res, 401, "invalid_token", err.details || null);
+          }
+          if (msg === "super_admin_required") {
+            return res.status(403).json({
+              ok: false,
+              error: "super_admin_required",
+              your_role: err.your_role || "unknown",
+            });
+          }
+          if (msg === "missing_fields") {
+            return res.status(400).json({
+              ok: false,
+              error: "missing_fields",
+              required: ["target_email", "new_role"],
+            });
+          }
+          if (msg === "invalid_role") {
+            return res.status(400).json({
+              ok: false,
+              error: "invalid_role",
+              valid_roles: err.valid_roles,
+            });
+          }
+          if (msg === "user_not_found") {
+            return res.status(404).json({
+              ok: false,
+              error: "user_not_found",
+              email: err.email,
+            });
+          }
+          if (msg === "user_lookup_failed") {
+            return jsonErr(res, 500, "user_lookup_failed", err.details);
+          }
+          if (msg === "role_update_failed") {
+            return jsonErr(res, 500, "role_update_failed", err.details);
+          }
+          if (msg === "missing_service_role_key") {
+            return jsonErr(res, 500, "server_misconfigured", null);
+          }
+          throw err;
+        }
+      }
       if (
         action === "incident_acknowledge" ||
         action === "incident_resolve" ||
