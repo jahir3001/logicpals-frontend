@@ -1610,6 +1610,8 @@
   </style>
   <script src="/assets/js/env-loader.js"></script>
   <script src="/assets/js/admin-auth.js"></script>
+  <script src="/admin/_shared/bootstrap.js"></script>
+ <script src="/admin/_shared/lp-admin-client.js"></script>
 </head>
 <body>
   <div class="global-busy-bar" id="globalBusyBar"></div>
@@ -3232,15 +3234,15 @@
       setRowBusy(ruleKey, true);
       try {
         if (action === 'force-open') {
-          await apiPost('circuit_force_open',     { rule_key: ruleKey, reason });
-          showToast(`✓ Forced open: ${serviceName(ruleKey)}`);
-        } else if (action === 'force-close') {
-          await apiPost('circuit_force_closed',   { rule_key: ruleKey, reason });
-          showToast(`✓ Forced closed: ${serviceName(ruleKey)}`);
-        } else if (action === 'reset') {
-          await apiPost('circuit_reset_override', { rule_key: ruleKey, reason });
-          showToast(`✓ Override reset: ${serviceName(ruleKey)}`);
-        }
+  await LPAdmin.breaker.forceOpen(ruleKey, reason);
+  showToast(`✓ Forced open: ${serviceName(ruleKey)}`);
+} else if (action === 'force-close') {
+  await LPAdmin.breaker.forceClose(ruleKey, reason);
+  showToast(`✓ Forced closed: ${serviceName(ruleKey)}`);
+} else if (action === 'reset') {
+  await LPAdmin.breaker.resetOverride(ruleKey, reason);
+  showToast(`✓ Override reset: ${serviceName(ruleKey)}`);
+}
         await loadAll();
         if (state.selected?.rule_key === ruleKey) openDrawer(ruleKey);
       } catch (err) {
@@ -3327,20 +3329,28 @@
       if (!reason) return;
 
       const actionMap = {
-        'force-open':  { action: 'circuit_force_open',     msg: `✓ Forced open: ${serviceName(ruleKey)}`   },
-        'force-close': { action: 'circuit_force_closed',   msg: `✓ Forced closed: ${serviceName(ruleKey)}` },
-        'reset':       { action: 'circuit_reset_override', msg: `✓ Override reset: ${serviceName(ruleKey)}`}
-      };
-      const cfg = actionMap[action];
-      if (!cfg) return;
+  'force-open':  { fn: () => LPAdmin.breaker.forceOpen(ruleKey, reason),     msg: `✓ Forced open: ${serviceName(ruleKey)}`   },
+  'force-close': { fn: () => LPAdmin.breaker.forceClose(ruleKey, reason),    msg: `✓ Forced closed: ${serviceName(ruleKey)}` },
+  'reset':       { fn: () => LPAdmin.breaker.resetOverride(ruleKey, reason), msg: `✓ Override reset: ${serviceName(ruleKey)}`}
+};
+const cfg = actionMap[action];
+if (!cfg) return;
 
-      // Optimistic row highlight
-      setRowBusy(ruleKey, true);
-      try {
-        await runAction({ action: cfg.action, body: { rule_key: ruleKey, reason }, successMessage: cfg.msg });
-      } finally {
-        setRowBusy(ruleKey, false);
-      }
+if (globalBusy) return;
+setGlobalBusy(true);
+setRowBusy(ruleKey, true);
+try {
+  await cfg.fn();
+  showToast(cfg.msg);
+  await loadAll();
+  if (state.selected?.rule_key) openDrawer(state.selected.rule_key);
+} catch (err) {
+  console.error('[breaker action]', err);
+  showToast('✗ ' + (err.message || 'Action failed'), true);
+} finally {
+  setRowBusy(ruleKey, false);
+  setGlobalBusy(false);
+}
     }
 
     // ── Event wiring ──────────────────────────────────────────────
@@ -3400,7 +3410,9 @@
       if (!ruleKeys.length) { showToast('No overrides active'); return; }
       setGlobalBusy(true);
       try {
-        await Promise.all(ruleKeys.map(k => apiPost('circuit_reset_override', { rule_key: k, reason })));
+        await Promise.all(ruleKeys.map(k =>
+        LPAdmin.breaker.resetOverride(k, reason)
+       ));
         showToast(`✓ Reset ${ruleKeys.length} override(s)`);
         await loadAll();
         if (state.selected?.rule_key) openDrawer(state.selected.rule_key);
