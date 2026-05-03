@@ -8,1456 +8,1836 @@
   'https://www.googletagmanager.com/gtm.js?id='+i+dl;
   f.parentNode.insertBefore(j,f);
   })(window,document,'script','dataLayer','GTM-PSTQB75G');</script>
-  <!-- End Google Tag Manager -->
-    <meta charset="UTF-8">
 
-  <!-- Primary SEO -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LogicPals — AI Math Olympiad Prep for Bangladeshi Students</title>
-  <meta name="description" content="AI-powered BdMO and IMO preparation for ages 8-16. Socratic tutoring, vision guidance, arena competition, mock Olympiads. Start free. From ৳399/month.">
-  <meta name="keywords" content="BdMO, math olympiad, Bangladesh, AI tutor, critical thinking, IMO preparation, গণিত অলিম্পিয়াড, LogicPals">
-  <meta name="author" content="LogicPals">
+  <meta name="description" content="AI-powered BdMO and IMO preparation for ages 8-16. Socratic tutoring, critical thinking, Olympiad preparation. Start free. From ৳399/month.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://logicpals.com/">
-  <!-- Open Graph -->
   <meta property="og:title" content="LogicPals — AI Math Olympiad Preparation">
   <meta property="og:description" content="Practice thinking. Practice Olympiad. AI-powered BdMO prep for Bangladeshi students ages 8-16. Start free.">
   <meta property="og:image" content="https://logicpals.com/og-image.png">
   <meta property="og:url" content="https://logicpals.com/">
   <meta property="og:type" content="website">
-  <meta property="og:locale" content="bn_BD">
-  <meta property="og:site_name" content="LogicPals">
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="LogicPals — AI Math Olympiad Prep">
-  <meta name="twitter:description" content="AI-powered BdMO and IMO preparation. Start free.">
-  <meta name="twitter:image" content="https://logicpals.com/og-image.png">
-  <!-- Schema.org JSON-LD -->
-  <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"EducationalOrganization","name":"LogicPals","url":"https://logicpals.com","logo":"https://logicpals.com/logo.png","description":"AI-powered critical thinking and Olympiad preparation platform for Bangladeshi students ages 8-16","sameAs":["https://facebook.com/logicpals","https://youtube.com/@logicpals"],"address":{"@type":"PostalAddress","addressCountry":"BD"},"areaServed":{"@type":"Country","name":"Bangladesh"}}
-  </script>
-  <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"Course","name":"BdMO Olympiad Preparation","description":"AI-guided preparation for Bangladesh Mathematical Olympiad. 7 skill tracks, adaptive difficulty, mock exams.","provider":{"@type":"Organization","name":"LogicPals"},"educationalLevel":"Primary to Advanced","inLanguage":["en","bn"],"offers":{"@type":"Offer","price":"399","priceCurrency":"BDT","availability":"https://schema.org/InStock","url":"https://logicpals.com/#pricing"}}
-  </script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <link rel="manifest" href="/manifest.json">
-    <!-- Meta Pixel -->
-    <script src="/assets/js/pixel.js" defer></script>
-    <script src="/assets/js/tracking.js" defer></script>
-    <meta name="theme-color" content="#2563EB">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/brain--v1.png">
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js').catch(err => {
-                    console.log('Service worker registration failed:', err);
-                });
-            });
-        }
-    </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"EducationalOrganization","name":"LogicPals","url":"https://logicpals.com","description":"AI-powered critical thinking and Olympiad preparation platform for Bangladeshi students ages 8-16","address":{"@type":"PostalAddress","addressCountry":"BD"}}</script>
 
-    <script src="/assets/js/env-loader.js"></script>
-    <script src="/assets/js/lp-tracking.js"></script>
-    <style>
-        /* --- VARIABLES & RESET --- */
-        :root {
-            --primary-blue: #2563EB;
-            --primary-dark: #1E40AF;
-            --secondary-orange: #F59E0B;
-            --success-green: #10B981;
-            --bg-white: #FFFFFF;
-            --bg-light: #F9FAFB;
-            --bg-blue-light: #EFF6FF;
-            --text-dark: #111827;
-            --text-gray: #6B7280;
-            --text-light-gray: #9CA3AF;
-            --bg-dark: #111827;
-            --shadow-card: 0 4px 6px rgba(0,0,0,0.1);
-            --shadow-hover: 0 10px 25px rgba(0,0,0,0.15);
-            --container-width: 1200px;
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            color: var(--text-dark);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-        h1, h2, h3, h4 {
-            font-weight: 700;
-            line-height: 1.2;
-            margin-bottom: 16px;
-        }
-        p {
-            margin-bottom: 16px;
-            color: var(--text-gray);
-        }
-        a {
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-        ul {
-            list-style: none;
-        }
-        img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-        }
-        /* --- UTILITIES --- */
-        .container {
-            max-width: var(--container-width);
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        .text-center { text-align: center; }
-        .text-blue { color: var(--primary-blue); }
-        .text-green { color: var(--success-green); }
-        .font-bold { font-weight: 700; }
-        .mb-1 { margin-bottom: 8px; }
-        .mb-2 { margin-bottom: 16px; }
-        .mb-4 { margin-bottom: 32px; }
-        .section-padding {
-            padding: 80px 0;
-        }
-        /* --- BUTTONS --- */
-        .btn {
-            display: inline-block;
-            padding: 14px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            border: none;
-            font-family: 'Inter', sans-serif;
-            font-size: 16px;
-        }
-        .btn-primary {
-            background-color: var(--primary-blue);
-            color: white;
-            border: 2px solid var(--primary-blue);
-        }
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-            border-color: var(--primary-dark);
-            transform: translateY(-2px);
-        }
-        .btn-outline {
-            background-color: transparent;
-            color: var(--primary-blue);
-            border: 2px solid var(--primary-blue);
-        }
-        .btn-outline:hover {
-            background-color: var(--primary-blue);
-            color: white;
-        }
-        .btn-large {
-            padding: 18px 32px;
-            font-size: 18px;
-        }
-        .btn-full {
-            width: 100%;
-        }
-        .btn-small {
-            padding: 8px 16px;
-            font-size: 14px;
-            width: 100%;
-            margin-top: 8px;
-        }
-        /* --- SECTION 1: HEADER & HERO --- */
-        header {
-            background: white;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            padding: 16px 0;
-        }
-        .nav-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--primary-blue);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .nav-links {
-            display: flex;
-            gap: 32px;
-        }
-        .nav-links a {
-            color: var(--text-dark);
-            font-weight: 600;
-        }
-        .nav-links a:hover { color: var(--primary-blue); }
-        .nav-buttons {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        .nav-buttons a {
-            color: var(--text-dark);
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .nav-buttons a:hover {
-            color: var(--primary-blue);
-        }
-        /* Mobile nav: Login moves below CTA, both fit cleanly */
-        @media(max-width:480px){
-            .nav-buttons { gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-            .nav-login-link {
-                order: 2;
-                width: 100%;
-                text-align: center;
-                font-size: 13px;
-                padding: 4px 0;
-                color: var(--primary-blue);
-            }
-            .btn.btn-primary { padding: 10px 14px; font-size: 14px; order: 1; }
-            .logo { font-size: 18px; }
-            .logo img { width: 28px; height: 28px; }
-        }
-        /* HERO UPDATES */
-        .hero {
-            background: linear-gradient(to bottom, var(--bg-blue-light), #ffffff);
-            padding: 80px 0 100px;
-        }
-        .hero-grid {
-            display: grid;
-            grid-template-columns: 6fr 4fr;
-            gap: 60px;
-            align-items: center;
-        }
-        .hero-headline {
-            font-size: 48px;
-            font-weight: 700;
-            color: var(--text-dark);
-            margin-bottom: 24px;
-            line-height: 1.1;
-        }
-        .hero-subhead {
-            font-size: 20px;
-            color: var(--text-gray);
-            margin-bottom: 40px;
-        }
-        .hero-cta-group {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 32px;
-            flex-wrap: wrap;
-        }
-        .trust-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            font-size: 14px;
-            color: var(--text-gray);
-        }
-        .trust-item span {
-            color: var(--success-green);
-            font-weight: bold;
-            margin-right: 4px;
-        }
-        /* --- SECTION 2: PROBLEM --- */
-        .problem-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 40px;
-            margin-top: 60px;
-        }
-        .problem-card {
-            text-align: left;
-        }
-        .emoji-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            display: inline-block;
-            background: var(--bg-light);
-            width: 80px;
-            height: 80px;
-            line-height: 80px;
-            text-align: center;
-            border-radius: 50%;
-        }
-        /* --- SECTION 3: SOLUTION --- */
-        .solution-section {
-            background-color: var(--bg-light);
-        }
-        .process-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 32px;
-            margin: 60px 0;
-        }
-        .process-card {
-            background: white;
-            padding: 32px;
-            border-radius: 12px;
-            box-shadow: var(--shadow-card);
-            position: relative;
-        }
-        .step-badge {
-            width: 50px;
-            height: 50px;
-            background: var(--primary-blue);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 24px;
-        }
-        .video-placeholder {
-            background: #111;
-            height: 450px;
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            cursor: pointer;
-            position: relative;
-        }
-        .play-btn {
-            font-size: 60px;
-            margin-bottom: 16px;
-            opacity: 0.8;
-            transition: 0.3s;
-        }
-        .video-placeholder:hover .play-btn { opacity: 1; transform: scale(1.1); }
-        /* --- SECTION 4: BENEFITS --- */
-        .benefits-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 80px;
-            margin-top: 60px;
-        }
-        .benefit-header {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--primary-blue);
-            margin-bottom: 32px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .benefit-list-item {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        .check-icon {
-            color: var(--success-green);
-            font-size: 20px;
-            flex-shrink: 0;
-            margin-top: 4px;
-        }
-        /* --- SECTION 5: TESTIMONIALS --- */
-        .testimonials-section {
-            background-color: var(--bg-blue-light);
-        }
-        .testimonial-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 32px;
-            margin-top: 60px;
-        }
-        .testimonial-card {
-            background: white;
-            padding: 32px;
-            border-radius: 12px;
-            box-shadow: var(--shadow-card);
-        }
-        .stars { color: var(--secondary-orange); letter-spacing: 2px; margin-bottom: 16px; }
-        .quote { font-style: italic; margin-bottom: 24px; font-size: 16px; }
-        .author-name { font-weight: 700; color: var(--text-dark); }
-        .author-detail { font-size: 13px; color: var(--text-gray); }
-        /* --- SECTION 6: PRICING (2-COLUMN LAYOUT) --- */
-        .pricing-2-col-grid {
-            display: grid;
-            grid-template-columns: 1fr 1.1fr;
-            gap: 32px;
-            max-width: 1000px;
-            margin: 60px auto 0;
-            align-items: start;
-        }
-        .pricing-card {
-            background: white;
-            border: 1px solid #E5E7EB;
-            border-radius: 12px;
-            padding: 32px;
-            position: relative;
-            transition: transform 0.3s;
-        }
-        .pricing-card.popular {
-            border: 3px solid var(--primary-blue);
-            box-shadow: var(--shadow-hover);
-            transform: scale(1.02);
-            z-index: 2;
-        }
-        .badge {
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--secondary-orange);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-        .badge-blue { background: var(--primary-blue); }
-        .price-tag {
-            font-size: 40px;
-            font-weight: 700;
-            color: var(--text-dark);
-            margin: 16px 0 8px;
-        }
-        .price-features {
-            margin: 24px 0;
-            text-align: left;
-        }
-        .price-features li {
-            margin-bottom: 12px;
-            display: flex;
-            align-items: start;
-            gap: 10px;
-            font-size: 15px;
-        }
-        /* New Specific Pricing Elements */
-        .pricing-option-row {
-            display: flex;
-            gap: 12px;
-            margin: 20px 0;
-        }
-        .pricing-sub-option {
-            flex: 1;
-            border: 1px solid #E5E7EB;
-            border-radius: 8px;
-            padding: 16px;
-            text-align: center;
-            transition: all 0.3s;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .pricing-sub-option.highlight {
-            border: 2px solid var(--success-green);
-            background-color: #F0FDF4;
-            position: relative;
-        }
-        .save-badge-small {
-            background: var(--success-green);
-            color: white;
-            font-size: 10px;
-            font-weight: bold;
-            padding: 2px 8px;
-            border-radius: 12px;
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            white-space: nowrap;
-        }
-        .sub-price {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text-dark);
-            margin: 8px 0;
-        }
-        .daily-breakdown {
-            font-size: 13px;
-            color: var(--text-gray);
-            text-align: center;
-            margin-top: 12px;
-            font-style: italic;
-        }
-        .comparison-text {
-            font-size: 14px;
-            text-align: center;
-            color: var(--text-gray);
-            margin-bottom: 16px;
-        }
-        .trust-badges-row {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 24px;
-            margin-top: 48px;
-            font-size: 14px;
-            color: var(--text-gray);
-        }
-        /* --- SECTION 7: FAQ --- */
-        .faq-section {
-            background-color: var(--bg-light);
-        }
-        .faq-container {
-            max-width: 800px;
-            margin: 60px auto 0;
-        }
-        .faq-item {
-            background: white;
-            border: 1px solid #E5E7EB;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            overflow: hidden;
-        }
-        .faq-question {
-            padding: 24px;
-            font-weight: 700;
-            color: var(--text-dark);
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            user-select: none;
-        }
-        .faq-question:hover { background-color: #fdfdfd; }
-        .faq-answer {
-            padding: 0 24px;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease, padding 0.3s ease;
-            color: var(--text-gray);
-        }
-        .faq-item.active .faq-answer {
-            padding: 0 24px 24px;
-            max-height: 500px;
-        }
-        .faq-icon {
-            font-size: 20px;
-            transition: transform 0.3s;
-        }
-        .faq-item.active .faq-icon { transform: rotate(45deg); }
-        /* --- SECTION 8: RISK REVERSAL --- */
-        .risk-box {
-            background: var(--bg-blue-light);
-            border: 1px solid #bfdbfe;
-            border-radius: 16px;
-            padding: 48px;
-            max-width: 900px;
-            margin: 40px auto 0;
-            text-align: center;
-        }
-        /* --- SECTION 9: FINAL CTA --- */
-        .cta-section {
-            background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark));
-            color: white;
-            padding: 100px 0;
-        }
-        .cta-subhead {
-            color: rgba(255,255,255,0.9);
-            font-size: 20px;
-            max-width: 800px;
-            margin: 0 auto 40px;
-        }
-        .cta-btn-large {
-            background: white;
-            color: var(--primary-blue);
-            font-size: 20px;
-            padding: 20px 40px;
-            border-radius: 50px;
-            border: none;
-            font-weight: 700;
-            margin-bottom: 32px;
-            cursor: pointer;
-        }
-        .cta-btn-large:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-        .cta-trust {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 24px;
-            font-size: 14px;
-            opacity: 0.9;
-            margin-bottom: 40px;
-        }
-        /* --- SECTION 10: FOOTER --- */
-        footer {
-            background: var(--bg-dark);
-            color: var(--text-light-gray);
-            padding: 60px 0 20px;
-        }
-        .footer-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
-            gap: 40px;
-            padding-bottom: 40px;
-            border-bottom: 1px solid #374151;
-        }
-        .footer-col h4 { color: white; margin-bottom: 20px; font-size: 16px; }
-        .footer-col ul li { margin-bottom: 12px; }
-        .footer-col a { color: var(--text-light-gray); font-size: 14px; }
-        .footer-col a:hover { color: white; }
-        .footer-bottom {
-            padding-top: 40px;
-            text-align: center;
-            font-size: 14px;
-        }
-        .social-icons {
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-        .social-icons span { margin: 0 10px; cursor: pointer; }
-        .social-icons span:hover { color: white; }
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#080C14">
+  <script src="/assets/js/pixel.js" defer></script>
+  <script src="/assets/js/tracking.js" defer></script>
+  <script src="/assets/js/env-loader.js"></script>
+  <script src="/assets/js/lp-tracking.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-        /* Leaderboard Banner Styles */
-        .leaderboard-banner {
-            background: #F0F9FF;
-            border-bottom: 1px solid #E0F2FE;
-            padding: 20px 0;
-        }
-        .leaderboard-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        .leaderboard-title {
-            font-weight: 700;
-            color: #0369A1;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .leaderboard-schools {
-            display: flex;
-            gap: 15px;
-            overflow-x: auto;
-            padding-bottom: 5px;
-        }
-        .school-pill {
-            background: white;
-            border: 1px solid #BAE6FD;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #0C4A6E;
-            white-space: nowrap;
-        }
-        .school-points {
-            color: #0EA5E9;
-            margin-left: 4px;
-        }
-        .join-link {
-            font-size: 14px;
-            font-weight: 600;
-            color: #2563EB;
-            text-decoration: underline;
-        }
-        
-        /* --- RESPONSIVENESS --- */
-        @media (max-width: 1024px) {
-            .pricing-card.popular { transform: scale(1); }
-        }
-        @media (max-width: 768px) {
-            .section-padding { padding: 50px 0; }
-            h1.hero-headline { font-size: 32px; }
-            h2 { font-size: 28px; }
-            .nav-links { display: none; }
-            .hero-grid, .problem-grid, .process-grid, .benefits-grid, .testimonial-grid, .footer-grid {
-                grid-template-columns: 1fr;
-                gap: 40px;
-            }
-            .pricing-2-col-grid {
-                grid-template-columns: 1fr;
-                max-width: 500px;
-            }
-            .pricing-option-row {
-                flex-direction: column;
-            }
-            .pricing-card.popular {
-                transform: none;
-                order: -1;
-            }
-            .hero-grid { display: flex; flex-direction: column; }
-            .hero-illustration { order: -1; width: 100%; }
-            .risk-box { padding: 24px; }
-            .cta-btn-large { width: 100%; padding: 16px 20px; font-size: 18px; border-radius: 12px; }
-            .hero-cta-group { flex-direction: column; width: 100%; }
-            .hero-cta-group .btn { width: 100%; }
-            .process-grid { gap: 40px; }
-            .leaderboard-content {
-                flex-direction: column;
-                gap: 12px;
-            }
-        }
-    </style>
-	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-<body>
-  <!-- Meta Pixel (noscript fallback) -->
-  <noscript>
-  <img height="1" width="1" style="display:none"
-  src="https://www.facebook.com/tr?id=1961788037810759&ev=PageView&noscript=1"/>
-  </noscript>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Syne:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 
-  <!-- Google Tag Manager (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSTQB75G"
-  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-  <!-- End Google Tag Manager (noscript) -->
-    <header>
-        <div class="container nav-container">
-            <div class="logo">
-                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MDAgNDEwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPiA8Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjIwMCIgZmlsbD0iIzEzMjI0MCIvPiA8cmVjdCB4PSIxMDgiIHk9IjEyMCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjEwMCIgcng9IjQiIGZpbGw9IiMyRThCQzAiLz4gPHJlY3QgeD0iMTA4IiB5PSIxOTgiIHdpZHRoPSI2MiIgaGVpZ2h0PSIyMiIgcng9IjQiIGZpbGw9IiMyRThCQzAiLz4gPHJlY3QgeD0iMjE0IiB5PSIxMjAiIHdpZHRoPSIyMiIgaGVpZ2h0PSIxMDAiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjIxNCIgeT0iMTIwIiB3aWR0aD0iNjIiIGhlaWdodD0iMjIiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjI1NCIgeT0iMTIwIiB3aWR0aD0iMjIiIGhlaWdodD0iNTgiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjIxNCIgeT0iMTU2IiB3aWR0aD0iNjIiIGhlaWdodD0iMjIiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDwvc3ZnPg==" alt="LogicPals logo" style="width:36px;height:36px;border-radius:8px;display:block;" />
-                LogicPals
-            </div>
-            <nav class="nav-links">
-                <a href="#how-it-works">How It Works</a>
-                <a href="#pricing">Pricing</a>
-                <a href="#faq">FAQ</a>
-            </nav>
-            <div class="nav-buttons">
-                <!-- Admin Console link: hidden by default, revealed only when lp_admin_auth session is valid -->
-                <a
-                  id="lp-admin-nav-link"
-                  href="/admin.html"
-                  style="display:none; padding:8px 14px; border-radius:999px; border:1px solid rgba(79,70,229,0.28); color:#4338ca; font-weight:600; font-size:14px; background:rgba(79,70,229,0.06); transition:background 0.15s ease;"
-                  onmouseover="this.style.background='rgba(79,70,229,0.12)'"
-                  onmouseout="this.style.background='rgba(79,70,229,0.06)'"
-                >
-                  ⚙ Admin
-                </a>
-                <a href="login.html" class="nav-login-link">Login</a>
-                <a href="signup.html" class="btn btn-primary">Try Free for 7 Days</a>
-            </div>
-        </div>
-    </header>
+  <style>
+    /* ═══════════════════════════════════════
+       TOKENS
+    ═══════════════════════════════════════ */
+    :root {
+      --bg:       #080C14;
+      --bg-2:     #0D1526;
+      --bg-3:     #111B30;
+      --surface:  rgba(255,255,255,.04);
+      --border:   rgba(255,255,255,.08);
+      --border-2: rgba(255,255,255,.12);
 
-    <section class="hero">
-        <div class="container hero-grid">
-            <div class="hero-content">
-                <h1 class="hero-headline">Your Child Can Solve Problems They've Never Seen Before</h1>
-                <p class="hero-subhead">While other kids panic on unfamiliar questions, yours will confidently figure them out. Our AI teaches the thinking skills schools don't—in just 15 minutes a day.</p>
-                
-                <div style="background: white; padding: 24px; border-radius: 12px; border-left: 5px solid #F59E0B; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 32px; text-align: left;">
-                    <div style="font-size: 12px; font-weight: 800; color: #D97706; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">🔍 Try This Mystery</div>
-                    <p style="font-size: 18px; font-weight: 700; color: #1F2937; margin-bottom: 0; line-height: 1.4;">"I am an odd number. Take away a letter and I become even. What number am I?"</p>
-                </div>
+      --blue:     #3B82F6;
+      --teal:     #0EA5A0;
+      --blue-lt:  #60A5FA;
+      --teal-lt:  #2DD4BF;
 
-                <div class="hero-cta-group">
-                    <a href="signup.html" class="btn btn-primary btn-large">Try Free for 7 Days</a>
-                    <button class="btn btn-outline btn-large" onclick="document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})">Watch 2-Min Demo ↓</button>
-                </div>
+      --grad:     linear-gradient(135deg, #3B82F6, #0EA5A0);
+      --grad-text: linear-gradient(120deg, #60A5FA 0%, #2DD4BF 100%);
 
-                <div class="trust-row">
-                    <div class="trust-item"><span>✓</span> Unlimited Practice Problems</div>
-                    <div class="trust-item"><span>✓</span> Used by 500+ Bangladesh Families</div>
-                    <div class="trust-item"><span>✓</span> No Credit Card • Cancel Anytime</div>
-                </div>
-            </div>
-            <div class="hero-illustration">
-                <!-- World-class EdTech hero card — outcome-focused, not inventory-focused -->
-                <!-- Design principle: Show TRANSFORMATION, not features. Parents want results. -->
-                <div style="
-                  position:relative;
-                  background:white;
-                  border-radius:24px;
-                  padding:28px;
-                  box-shadow:0 20px 60px rgba(37,99,235,.12), 0 1px 0 rgba(255,255,255,.8);
-                  border:1px solid rgba(229,231,235,.8);
-                ">
-                  <!-- Header row -->
-                  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MDAgNDEwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPiA8Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjIwMCIgZmlsbD0iIzEzMjI0MCIvPiA8cmVjdCB4PSIxMDgiIHk9IjEyMCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjEwMCIgcng9IjQiIGZpbGw9IiMyRThCQzAiLz4gPHJlY3QgeD0iMTA4IiB5PSIxOTgiIHdpZHRoPSI2MiIgaGVpZ2h0PSIyMiIgcng9IjQiIGZpbGw9IiMyRThCQzAiLz4gPHJlY3QgeD0iMjE0IiB5PSIxMjAiIHdpZHRoPSIyMiIgaGVpZ2h0PSIxMDAiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjIxNCIgeT0iMTIwIiB3aWR0aD0iNjIiIGhlaWdodD0iMjIiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjI1NCIgeT0iMTIwIiB3aWR0aD0iMjIiIGhlaWdodD0iNTgiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjIxNCIgeT0iMTU2IiB3aWR0aD0iNjIiIGhlaWdodD0iMjIiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDwvc3ZnPg==" alt="LogicPals" style="width:40px;height:40px;border-radius:10px;" />
-                    <div>
-                      <div style="font-size:15px;font-weight:800;color:#111827;">LogicPals</div>
-                      <div style="font-size:11px;color:#6b7280;letter-spacing:.5px;">Student Progress Report</div>
-                    </div>
-                    <div style="margin-left:auto;background:#ecfdf5;color:#059669;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid #a7f3d0;">● Live</div>
-                  </div>
+      --ink:      #F0F4FF;
+      --ink-2:    #A8B4CC;
+      --ink-3:    #6B7A96;
 
-                  <!-- Sample problem card -->
-                  <div style="background:#f0f4ff;border-radius:14px;padding:14px 16px;margin-bottom:16px;border-left:4px solid #2563eb;">
-                    <div style="font-size:10px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">🔍 Today's Challenge</div>
-                    <div style="font-size:13px;font-weight:600;color:#1f2937;line-height:1.4;">"If 5 cats catch 5 mice in 5 minutes, how many cats to catch 100 mice in 100 minutes?"</div>
-                    <div style="margin-top:10px;display:flex;align-items:center;gap:6px;">
-                      <div style="width:28px;height:28px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;font-size:14px;">🤖</div>
-                      <div style="background:white;border-radius:10px;padding:7px 10px;font-size:12px;color:#374151;border:1px solid #e5e7eb;">Hmm — what if you think about the rate per cat?</div>
-                    </div>
-                    <div style="margin-top:8px;display:flex;align-items:center;gap:6px;justify-content:flex-end;">
-                      <div style="background:#2563eb;border-radius:10px;padding:7px 12px;font-size:12px;color:white;font-weight:600;">5 cats! 🎉</div>
-                    </div>
-                  </div>
+      --warn:     #F59E0B;
+      --success:  #10B981;
 
-                  <!-- 3 outcome stats — transformation not inventory -->
-                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">
-                    <div style="text-align:center;padding:12px 8px;background:#fafafa;border-radius:12px;border:1px solid #f3f4f6;">
-                      <div style="font-size:22px;font-weight:800;color:#2563eb;">93%</div>
-                      <div style="font-size:10px;color:#6b7280;font-weight:600;margin-top:2px;">Accuracy rate</div>
-                    </div>
-                    <div style="text-align:center;padding:12px 8px;background:#fafafa;border-radius:12px;border:1px solid #f3f4f6;">
-                      <div style="font-size:22px;font-weight:800;color:#059669;">15m</div>
-                      <div style="font-size:10px;color:#6b7280;font-weight:600;margin-top:2px;">Daily practice</div>
-                    </div>
-                    <div style="text-align:center;padding:12px 8px;background:#fafafa;border-radius:12px;border:1px solid #f3f4f6;">
-                      <div style="font-size:22px;font-weight:800;color:#f59e0b;">BdMO</div>
-                      <div style="font-size:10px;color:#6b7280;font-weight:600;margin-top:2px;">Olympiad ready</div>
-                    </div>
-                  </div>
+      --shadow-glow: 0 0 60px rgba(59,130,246,.18);
+      --shadow-card: 0 4px 24px rgba(0,0,0,.4), 0 1px 4px rgba(0,0,0,.3);
 
-                  <!-- Parent testimonial -->
-                  <div style="background:#fffbeb;border-radius:12px;padding:12px 14px;border:1px solid #fef3c7;display:flex;gap:10px;align-items:flex-start;">
-                    <div style="font-size:20px;flex-shrink:0;">👩</div>
-                    <div>
-                      <div style="font-size:12px;color:#92400e;font-weight:600;line-height:1.4;">"My son solved a BdMO problem on his own for the first time. LogicPals changed how he thinks."</div>
-                      <div style="font-size:11px;color:#b45309;margin-top:4px;font-weight:700;">— Parent, Dhaka · ⭐⭐⭐⭐⭐</div>
-                    </div>
-                  </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- FIXED: Live School Leaderboard Banner -->
-    <section class="leaderboard-banner">
-        <div class="container leaderboard-content">
-            <div class="leaderboard-title">
-                <span style="font-size: 20px;">🏆</span> TOP SCHOOLS LIVE:
-            </div>
-            
-            <div id="publicLeaderboard" class="leaderboard-schools">
-                <span style="color: #64748B;">Loading rankings...</span>
-            </div>
-            
-            <a href="signup.html" class="join-link">
-                Get your school on the list →
-            </a>
-        </div>
-    </section>
-
-    <section class="section-padding">
-        <div class="container">
-            <div class="text-center">
-                <h2>Your Child Gets A's on Practice Tests... <br>Then Fails When Questions Change</h2>
-                <p>Sound familiar? Here's why it happens:</p>
-            </div>
-            <div class="problem-grid">
-                <div class="problem-card text-center">
-                    <span class="emoji-icon">📚</span>
-                    <h3>Schools Teach Formulas, Not Thinking</h3>
-                    <p>Your child memorizes 'a² + b² = c²' but can't figure out if a ladder is safe. They know the formula but not when or why to use it.</p>
-                </div>
-                <div class="problem-card text-center">
-                    <span class="emoji-icon">😰</span>
-                    <h3>One Small Change = Complete Confusion</h3>
-                    <p>Exam question changes from apples to mangoes? Suddenly your child doesn't know what to do. They memorized the example, not the thinking process.</p>
-                </div>
-                <div class="problem-card text-center">
-                    <span class="emoji-icon">💸</span>
-                    <h3>৳10,000/Mo on Tutors Who Just Give Answers</h3>
-                    <p>Three tutors later and your child still asks 'Will this exact type be on the exam?' Because tutors solve FOR them instead of teaching them to solve THEMSELVES.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="how-it-works" class="section-padding solution-section">
-        <div class="container">
-            <div class="text-center mb-4">
-                <h2>What If Your Child Could Think Through ANY Problem?</h2>
-                <p style="max-width: 800px; margin: 0 auto;">LogicPals uses the 2,400-year-old Socratic method—asking smart questions that guide your child to discover solutions themselves.</p>
-            </div>
-            <div class="process-grid">
-                <div class="process-card">
-                    <div class="step-badge">1</div>
-                    <h3>Pick a Mystery to Solve</h3>
-                    <p>Adaptive curriculum that grows with your child. Fresh problems added weekly!</p>
-                </div>
-                <div class="process-card">
-                    <div class="step-badge">2</div>
-                    <h3>Think With an AI That Never Gets Impatient</h3>
-                    <p>Stuck? Our AI asks guiding questions like "What do you already know?" No pressure. No judgment. Just thinking.</p>
-                </div>
-                <div class="process-card">
-                    <div class="step-badge">3</div>
-                    <h3>Watch Confidence Build</h3>
-                    <p>Track exact thinking patterns. Watch them go from "I don't know" to "Let me figure it out." Parents say grades improve within 2-3 weeks.</p>
-                </div>
-            </div>
-            <div class="video-placeholder">
-                <div class="play-btn">▶</div>
-                <p>Watch How It Works (2 minutes)</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="section-padding">
-        <div class="container">
-            <div class="text-center">
-                <h2>Your Child Will Actually ASK to Practice Math</h2>
-                <p>Sounds impossible? Here's what makes LogicPals different:</p>
-            </div>
-            <div class="benefits-grid">
-                <div>
-                    <div class="benefit-header">
-                        <span>🎮</span> FOR KIDS
-                    </div>
-                    <div class="benefit-list-item">
-                        <div class="check-icon">✓</div>
-                        <div>
-                            <h4 class="mb-1">Feels Like Solving Mysteries, Not Doing Homework</h4>
-                            <p class="mb-0" style="font-size: 14px;">Finally, math that doesn't feel boring.</p>
-                        </div>
-                    </div>
-                    <div class="benefit-list-item">
-                        <div class="check-icon">✓</div>
-                        <div>
-                            <h4 class="mb-1">The AI Never Gets Frustrated With Them</h4>
-                            <p class="mb-0" style="font-size: 14px;">Ask questions 100 times—it stays patient and kind.</p>
-                        </div>
-                    </div>
-                    <div class="benefit-list-item">
-                        <div class="check-icon">✓</div>
-                        <div>
-                            <h4 class="mb-1">They Get to Figure Things Out Themselves</h4>
-                            <p class="mb-0" style="font-size: 14px;">That "Aha!" moment when they crack it? Pure confidence.</p>
-                        </div>
-                    </div>
-                    <div class="benefit-list-item">
-                        <div class="check-icon">✓</div>
-                        <div>
-                            <h4 class="mb-1">Practice at Midnight If They Want</h4>
-                            <p class="mb-0" style="font-size: 14px;">Learning that fits their schedule, not the tutor's.</p>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <div class="benefit-header">
-                        <span>📊</span> FOR PARENTS
-                    </div>
-                    <div class="benefit-list-item">
-                        <div class="check-icon">✓</div>
-                        <div>
-                            <h4 class="mb-1">See the Exact Moment They Make a Logical Leap</h4>
-                            <p class="mb-0" style="font-size: 14px;">Dashboard shows their thinking process, not just right/wrong.</p>
-                        </div>
-                    </div>
-                    <div class="benefit-list-item">
-                        <div class="check-icon">✓</div>
-                        <div>
-                            <h4 class="mb-1">Stop Spending ৳10,000/Month on Tutors</h4>
-                            <p class="mb-0" style="font-size: 14px;">Get better results for ৳299/mo. Save ৳100,000+ yearly.</p>
-                        </div>
-                    </div>
-                    <div class="benefit-list-item">
-                        <div class="check-icon">✓</div>
-                        <div>
-                            <h4 class="mb-1">Works With Whatever Your School Teaches</h4>
-                            <p class="mb-0" style="font-size: 14px;">NCTB, Cambridge, American—the thinking skills transfer.</p>
-                        </div>
-                    </div>
-                    <div class="benefit-list-item">
-                        <div class="check-icon">✓</div>
-                        <div>
-                            <h4 class="mb-1">Your Child Learns Even When You're Working</h4>
-                            <p class="mb-0" style="font-size: 14px;">No scheduling. No driving. Just open and learn.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <section class="section-padding testimonials-section">
-        <div class="container">
-            <div class="text-center">
-                <h2>What Parents Are Saying ❤️</h2>
-                <p>Real families. Real transformations. Real results.</p>
-            </div>
-            <div class="testimonial-grid">
-                <div class="testimonial-card">
-                    <div class="stars">★★★★★</div>
-                    <p class="quote">"My son asked to do 'one more mystery' before bed. That's NEVER happened with math homework!"</p>
-                    <div class="author-name">Ayesha</div>
-                    <div class="author-detail">Mother of 9-year-old • Dhanmondi</div>
-                </div>
-                <div class="testimonial-card">
-                    <div class="stars">★★★★★</div>
-                    <p class="quote">"The AI is more patient than me! 😅 It guides him without giving the answer. Amazing."</p>
-                    <div class="author-name">Karim</div>
-                    <div class="author-detail">Father of 11-year-old • Gulshan</div>
-                </div>
-                <div class="testimonial-card">
-                    <div class="stars">★★★★★</div>
-                    <p class="quote">"My daughter said 'Let me try three different ways.' WHAT?! LogicPals taught her to be a problem-solver."</p>
-                    <div class="author-name">Nusrat Ahmed</div>
-                    <div class="author-detail">Mother of 10-year-old • Uttara</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="pricing" class="section-padding">
-        <div class="container">
-            <div class="text-center">
-                <h2>Get Started for Free. Pay Only If Your Child Loves It.</h2>
-                <p>7-day free trial. No credit card. No pressure.</p>
-            </div>
-            <div class="pricing-2-col-grid">
-                <div class="pricing-card" style="border-top: 4px solid #E5E7EB;">
-                    <h3 style="font-size: 24px; margin-bottom: 8px;">Free 7-Day Trial</h3>
-                    <div class="price-tag">৳0</div>
-                    <p style="font-size: 14px; color: var(--text-gray); margin-top: -8px;">No credit card required</p>
-                    <div style="margin: 32px 0;">
-                        <a href="signup.html" class="btn btn-primary btn-full">Try Free for 7 Days</a>
-                    </div>
-                    <ul class="price-features">
-                        <li><span class="text-green">✓</span> Full unlimited access for 7 days</li>
-                        <li><span class="text-green">✓</span> Try 30+ problems across all levels</li>
-                        <li><span class="text-green">✓</span> Complete AI Socratic tutor</li>
-                        <li><span class="text-green">✓</span> Parent dashboard with insights</li>
-                        <li><span class="text-green">✓</span> See results in 2-3 sessions</li>
-                        <li><span class="text-green">✓</span> Zero commitment. Cancel anytime.</li>
-                    </ul>
-                </div>
-                <div class="pricing-card popular" style="border-top: none;">
-                    <div class="badge badge-blue">Most Popular - Save ৳1,089 with Yearly!</div>
-                    <h3 style="text-align: center; font-size: 28px; color: var(--primary-blue);">Premium</h3>
-                    <div class="comparison-text">
-                        vs <span style="text-decoration: line-through;">৳10,000/mo</span> for tutors<br>
-                        <span class="text-green font-bold">Save ৳116,000/year!</span>
-                    </div>
-                    <div class="pricing-option-row">
-                        <div class="pricing-sub-option">
-                            <span style="font-size: 14px; font-weight: 600;">Monthly</span>
-                            <div class="sub-price">৳299<span style="font-size: 12px; font-weight: 400;">/mo</span></div>
-                            <div style="font-size: 12px; color: #9CA3AF; margin-bottom: 8px;">Billed monthly</div>
-                            <a href="signup.html" class="btn btn-outline btn-small">Start Monthly</a>
-                        </div>
-                        <div class="pricing-sub-option highlight">
-                            <div class="save-badge-small">SAVE 30%</div>
-                            <span style="font-size: 14px; font-weight: 600; color: var(--success-green);">Yearly</span>
-                            <div class="sub-price">৳2,499<span style="font-size: 12px; font-weight: 400;">/yr</span></div>
-                            <div style="font-size: 12px; color: var(--success-green); font-weight: 700; margin-bottom: 8px;">Just ৳208/mo</div>
-                            <a href="signup.html" class="btn btn-primary btn-small">Pay Yearly</a>
-                        </div>
-                    </div>
-                    <div class="daily-breakdown">That's only ৳10/day - less than a coffee!</div>
-                    <hr style="border: 0; border-top: 1px solid #E5E7EB; margin: 24px 0;">
-                    <ul class="price-features">
-                        <li><span class="text-green">✓</span> <strong>Never runs out of new challenges</strong></li>
-                        <li><span class="text-green">✓</span> Unlimited AI Socratic tutoring</li>
-                        <li><span class="text-green">✓</span> New problems added weekly</li>
-                        <li><span class="text-green">✓</span> Advanced thinking-pattern analytics</li>
-                        <li><span class="text-green">✓</span> Complete parent dashboard</li>
-                        <li><span class="text-green">✓</span> Progress tracking across all topics</li>
-                        <li><span class="text-green">✓</span> Priority email support (24-hr)</li>
-                        <li><span class="text-green">✓</span> Cancel anytime with one click</li>
-                        <li><span class="text-green">✓</span> 1 child account included</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="trust-badges-row">
-                <div>💳 Bank-Level Secure Payment (SSL)</div>
-                <div>✅ Cancel With One Click</div>
-                <div>🔒 30-Day Money-Back Guarantee</div>
-            </div>
-        </div>
-    </section>
-
-    <section id="faq" class="section-padding faq-section">
-        <div class="container">
-            <div class="text-center">
-                <h2>Questions Parents Ask Before Starting</h2>
-                <p>We've answered everything. Still have questions? Email us!</p>
-            </div>
-            <div class="faq-container">
-                <div class="faq-item">
-                    <div class="faq-question">
-                        Will this really work for MY child? They're struggling.
-                        <span class="faq-icon">+</span>
-                    </div>
-                    <div class="faq-answer">
-                        <p>Yes. Especially if they're struggling. LogicPals is designed for children who find traditional methods difficult. The AI adapts to their pace, never judges mistakes, and breaks problems into smaller steps. Parents of struggling students report the MOST dramatic improvements.</p>
-                    </div>
-                </div>
-                <div class="faq-item">
-                    <div class="faq-question">
-                        My child is already good at math. Will they be bored?
-                        <span class="faq-icon">+</span>
-                    </div>
-                    <div class="faq-answer">
-                        <p>Quite the opposite! Being good at memorizing ≠ being good at thinking. LogicPals challenges even high-performing students with problems that require creative thinking, not just formula application.</p>
-                    </div>
-                </div>
-                <div class="faq-item">
-                    <div class="faq-question">
-                        We already have a tutor. Why would we need this too?
-                        <span class="faq-icon">+</span>
-                    </div>
-                    <div class="faq-answer">
-                        <p>LogicPals doesn't replace tutors—it makes them more effective. LogicPals is available 24/7, costs 90% less, and NEVER gives direct answers—forcing real thinking.</p>
-                    </div>
-                </div>
-                <div class="faq-item">
-                    <div class="faq-question">
-                        How much time does my child need per day?
-                        <span class="faq-icon">+</span>
-                    </div>
-                    <div class="faq-answer">
-                        <p>Just 15-20 minutes daily! Consistent short practice is more effective than long, infrequent sessions. Think of it like exercise—20 minutes every day beats 2 hours once a week.</p>
-                    </div>
-                </div>
-                <div class="faq-item">
-                    <div class="faq-question">
-                        Do you support Bengali language?
-                        <span class="faq-icon">+</span>
-                    </div>
-                    <div class="faq-answer">
-                        <p>Yes! LogicPals works in both English and Bengali. Children can switch between languages as they prefer.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="section-padding">
-        <div class="container">
-            <div class="text-center">
-                <h2>Still Not Sure? Here's Our Promise.</h2>
-            </div>
-            <div class="risk-box">
-                <p style="font-size: 18px; line-height: 1.8; color: var(--text-dark);">
-                    Try LogicPals free for 7 days. No credit card needed.<br>
-                    If your child isn't excited after 3 sessions, don't continue.<br><br>
-                    If you subscribe and aren't 100% satisfied within 30 days, email us. We'll refund every taka, no questions asked.
-                    Why are we this confident? Because <span class="text-blue font-bold">91% of parents</span> who try the free trial become paying customers.
-                    And <span class="text-blue font-bold">94% stay for 6+ months</span>.<br><br>
-                    The worst that can happen? You get 7 days of free learning.<br>
-                    The best that can happen? Your child discovers they're capable of so much more.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <section class="section-padding" style="background-color: #111827; color: white;">
-        <div class="container">
-            <div style="max-width: 800px; margin: 0 auto; text-align: center;">
-                <h2 style="color: #F59E0B; margin-bottom: 30px;">Why I Built LogicPals 🧠</h2>
-                <div style="text-align: left; font-size: 18px; line-height: 1.8; color: #D1D5DB;">
-                    <p>"As a parent, I watched my child memorize formulas perfectly but panic when exam questions changed slightly.</p>
-                    <p>I realized: Schools teach <strong>WHAT</strong> to think, not <strong>HOW</strong> to think.</p>
-                    <p>So I built LogicPals - an AI tutor that never gives answers, only asks questions that guide children to discover solutions themselves.</p>
-                    <p>That's the Socratic Method. And it works."</p>
-                </div>
-                <div style="margin-top: 30px; font-weight: 700; font-size: 20px; text-align: right; color: white;">
-                    - Jahir, Founder
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="cta-section">
-        <div class="container text-center">
-            <h2 style="font-size: 40px; margin-bottom: 24px;">Your Child Deserves to Feel Smart</h2>
-            <p class="cta-subhead">500+ Bangladesh families have already seen the transformation. Try LogicPals free for 7 days.</p>
-            <a href="signup.html" class="btn btn-primary cta-btn-large">Try Free for 7 Days</a>
-            <div class="cta-trust">
-                <span>✓ Full access for 7 days</span>
-                <span>✓ No credit card needed</span>
-                <span>✓ Cancel in one click</span>
-            </div>
-            <div style="font-size: 14px; opacity: 0.8;">
-                Have questions? Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="90f8f5fcfcffd0fcfff7f9f3e0f1fce3bef3fffd">[email&#160;protected]</a>
-            </div>
-        </div>
-    </section>
-
-    <footer>
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-col">
-                    <div class="logo" style="color: white; margin-bottom: 16px;">
-                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MDAgNDEwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPiA8Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjIwMCIgZmlsbD0iIzEzMjI0MCIvPiA8cmVjdCB4PSIxMDgiIHk9IjEyMCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjEwMCIgcng9IjQiIGZpbGw9IiMyRThCQzAiLz4gPHJlY3QgeD0iMTA4IiB5PSIxOTgiIHdpZHRoPSI2MiIgaGVpZ2h0PSIyMiIgcng9IjQiIGZpbGw9IiMyRThCQzAiLz4gPHJlY3QgeD0iMjE0IiB5PSIxMjAiIHdpZHRoPSIyMiIgaGVpZ2h0PSIxMDAiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjIxNCIgeT0iMTIwIiB3aWR0aD0iNjIiIGhlaWdodD0iMjIiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjI1NCIgeT0iMTIwIiB3aWR0aD0iMjIiIGhlaWdodD0iNTgiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjIxNCIgeT0iMTU2IiB3aWR0aD0iNjIiIGhlaWdodD0iMjIiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDwvc3ZnPg==" alt="LogicPals" style="width:32px;height:32px;border-radius:8px;vertical-align:middle;margin-right:8px;" />LogicPals
-                    </div>
-                    <p style="font-size: 14px;">Building critical thinkers, one problem at a time. Empowering children in Bangladesh to solve the unsolvable.</p>
-                </div>
-                <div class="footer-col">
-                    <h4>About</h4>
-                    <ul>
-                        <li><a href="#">Our Story</a></li>
-                        <li><a href="#">Our Mission</a></li>
-                        <li><a href="#">Team</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Product</h4>
-                    <ul>
-                        <li><a href="#how-it-works">How It Works</a></li>
-                        <li><a href="#pricing">Pricing</a></li>
-                        <li><a href="#faq">FAQs</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Support</h4>
-                    <ul>
-                        <li><a href="#">Help Center</a></li>
-                        <li><a href="#">Contact Us</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Terms of Service</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>© 2024 LogicPals. All rights reserved.</p>
-                <p>Made with 💙 in Bangladesh for children worldwide.</p>
-            </div>
-        </div>
-    </footer>
-
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-        // FAQ Accordion
-        const faqItems = document.querySelectorAll('.faq-item');
-        faqItems.forEach(item => {
-            const question = item.querySelector('.faq-question');
-            question.addEventListener('click', () => {
-                faqItems.forEach(otherItem => {
-                    if (otherItem !== item && otherItem.classList.contains('active')) {
-                        otherItem.classList.remove('active');
-                    }
-                });
-                item.classList.toggle('active');
-            });
-        });
-
-        // Smooth Scroll
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const targetId = this.getAttribute('href');
-                if(targetId === '#') return;
-                const targetElement = document.querySelector(targetId);
-                if (targetElement) {
-                    const headerOffset = 80;
-                    const elementPosition = targetElement.getBoundingClientRect().top;
-                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                    window.scrollTo({
-                        top: offsetPosition,
-                        behavior: "smooth"
-                    });
-                }
-            });
-        });
-
-	// Track homepage free-trial CTA clicks
-	document.querySelectorAll('a[href="signup.html"]').forEach((el) => {
- 	 el.addEventListener('click', function () {
-   	  if (window.lpTrack) {
-    	    window.lpTrack('StartTrial', {
-     	     content_name: 'Homepage CTA',
-    	       source_page: 'index'
-    	       });
-   	     }
- 	   });
-	});
-
-        // Live School Leaderboard — async IIFE with env-loader polling (4s timeout)
-        (async () => {
-            const board = document.getElementById('publicLeaderboard');
-
-            // Poll window.__LP_ENV until env-loader.js populates it (max 4s)
-            const env = await new Promise((resolve) => {
-                let attempts = 0;
-                const check = () => {
-                    const e = window.__LP_ENV;
-                    if (e && e.SUPABASE_URL && e.SUPABASE_ANON_KEY) return resolve(e);
-                    if (++attempts > 40) return resolve(null); // 40 × 100ms = 4s
-                    setTimeout(check, 100);
-                };
-                check();
-            });
-
-            if (!env) {
-                console.warn('Leaderboard: env-loader timeout — __LP_ENV not available');
-                board.innerHTML = '<span style="color:#64748B;">Rankings update daily. <a href="signup.html" style="color:#2563eb;font-weight:600;">Join your school →</a></span>';
-                return;
-            }
-
-            try {
-                const { createClient } = supabase;
-                const sb = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
-
-                const { data: schools, error } = await sb
-                    .from('public_school_leaderboard')
-                    .select('school_name, regular_pts, olympiad_wins, total_pts, student_count')
-                    .limit(3);
-
-                if (error || !schools || schools.length === 0) {
-                    board.innerHTML = '<span style="color:#64748B;">Be the first school on the board! <a href="signup.html" style="color:#2563eb;font-weight:600;">Join now →</a></span>';
-                    return;
-                }
-
-                const medals = ['🥇', '🥈', '🥉'];
-                let html = '';
-                schools.forEach((row, i) => {
-                    const trophy = row.olympiad_wins > 0 ? ` 🏆×${row.olympiad_wins}` : '';
-                    html += `<div class="school-pill">${medals[i]} ${row.school_name}${trophy} <span class="school-points">(${row.total_pts} pts)</span></div>`;
-                });
-                board.innerHTML = html;
-
-            } catch (err) {
-                console.warn('Leaderboard fetch failed:', err?.message);
-                board.innerHTML = '<span style="color:#64748B;">Rankings update daily. <a href="signup.html" style="color:#2563eb;font-weight:600;">Join your school →</a></span>';
-            }
-        })();
-    </script>
-
-<script>
-/* LP_BACK_TO_ADMIN v2
-   - Admin Console nav link: ONLY shown when lp_admin_auth holds a
-     valid, non-expired Supabase session. Invisible to all regular users.
-   - "Back to Admin" floating bar: shown only when ?from=admin|console
-     is present in the URL (set by admin.html "Visit Site" button).
-*/
-(function () {
-  'use strict';
-
-  const ADMIN_HREF  = '/admin.html';
-  const STORAGE_KEY = 'lp_admin_auth';
-
-  /* ── 1. Check for a valid admin session in localStorage ─────── */
-  function hasValidAdminSession() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return false;
-      const data = JSON.parse(raw);
-      // Supabase v2 stores session directly at the key
-      // expires_at is a Unix timestamp in seconds
-      const expiresAt = data?.expires_at;
-      if (!expiresAt) return false;
-      // Give 60s of grace to account for clock skew
-      return (Date.now() / 1000) < (expiresAt - 60);
-    } catch (_) {
-      return false;
+      --radius:   18px;
+      --max:      1160px;
+      --font:     'DM Sans', system-ui, sans-serif;
+      --font-disp:'Syne', system-ui, sans-serif;
+      --font-ser: 'DM Serif Display', Georgia, serif;
     }
-  }
 
-  /* ── 2. Reveal the pre-declared hidden admin nav link ───────── */
-  if (hasValidAdminSession()) {
-    const link = document.getElementById('lp-admin-nav-link');
-    if (link) link.style.display = 'inline-flex';
-  }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
 
-  /* ── 3. "Back to Admin" floating bar (only when ?from=admin) ── */
-  const params   = new URLSearchParams(location.search);
-  const fromAdmin = params.get('from') === 'admin' || params.get('from') === 'console';
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
 
-  if (fromAdmin) {
-    const bar = document.createElement('div');
-    bar.setAttribute('role', 'region');
-    bar.setAttribute('aria-label', 'Return to admin console');
-    bar.style.cssText = [
-      'position:fixed', 'top:14px', 'right:14px', 'z-index:9999',
-      'background:rgba(255,255,255,0.97)',
-      'border:1px solid rgba(79,70,229,0.22)',
-      'border-radius:999px',
-      'padding:9px 14px',
-      'box-shadow:0 8px 28px rgba(10,14,28,0.12)',
-      'display:flex', 'gap:10px', 'align-items:center',
-      'backdrop-filter:blur(8px)',
-      '-webkit-backdrop-filter:blur(8px)',
-      'font-family:Inter,system-ui,sans-serif',
-    ].join(';');
+    /* Grain overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: .025;
+      pointer-events: none;
+      z-index: 9999;
+    }
 
-    const badge = document.createElement('span');
-    badge.textContent = '⚙ Admin';
-    badge.style.cssText = 'font-size:11px;font-weight:700;color:#6366f1;opacity:0.85;';
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+    img { max-width: 100%; display: block; }
 
-    const back = document.createElement('a');
-    back.href = ADMIN_HREF;
-    back.textContent = 'Back to Console';
-    back.style.cssText = [
-      'padding:7px 13px',
-      'border-radius:999px',
-      'background:linear-gradient(135deg,#4f46e5,#0891b2)',
-      'color:#fff',
-      'font-size:13px',
-      'font-weight:700',
-      'text-decoration:none',
-      'white-space:nowrap',
-      'transition:opacity 0.15s',
-    ].join(';');
-    back.onmouseover = () => { back.style.opacity = '0.85'; };
-    back.onmouseout  = () => { back.style.opacity = '1';    };
+    .container { max-width: var(--max); margin: 0 auto; padding: 0 28px; }
 
-    const dismiss = document.createElement('button');
-    dismiss.textContent = '✕';
-    dismiss.setAttribute('aria-label', 'Dismiss');
-    dismiss.style.cssText = [
-      'background:none', 'border:none', 'cursor:pointer',
-      'color:#94a3b8', 'font-size:13px', 'padding:2px 4px',
-      'border-radius:4px', 'line-height:1',
-    ].join(';');
-    dismiss.onclick = () => bar.remove();
+    /* ── GRADIENT TEXT ── */
+    .grad-text {
+      background: var(--grad-text);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
-    bar.appendChild(badge);
-    bar.appendChild(back);
-    bar.appendChild(dismiss);
-    document.body.appendChild(bar);
+    /* ═══════════════════════════════════════
+       HEADER
+    ═══════════════════════════════════════ */
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 500;
+      padding: 0 28px;
+      background: rgba(8,12,20,.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
 
-    // Auto-dismiss after 12 seconds
-    setTimeout(() => {
-      bar.style.transition = 'opacity 0.4s ease';
-      bar.style.opacity    = '0';
-      setTimeout(() => bar.remove(), 450);
-    }, 12000);
-  }
+    .nav-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
 
-})();
-</script>
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
 
-<!-- ── Floating WhatsApp Button ──────────────────────────────── -->
-<a href="https://wa.me/8801617000378?text=Hi%2C%20I%20am%20interested%20in%20LogicPals%20for%20my%20child"
-   target="_blank"
-   rel="noopener noreferrer"
-   id="waFloatBtn"
-   aria-label="Chat on WhatsApp"
-   style="
-     position:fixed;bottom:24px;right:24px;
-     width:60px;height:60px;
-     background:#25D366;border-radius:50%;
-     display:flex;align-items:center;justify-content:center;
-     box-shadow:0 4px 16px rgba(37,211,102,.45);
-     z-index:9999;transition:transform .2s,box-shadow .2s;
-     text-decoration:none;
-   "
-   onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 6px 24px rgba(37,211,102,.6)'"
-   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 16px rgba(37,211,102,.45)'"
-   onclick="window.dataLayer=window.dataLayer||[];window.dataLayer.push({event:'whatsapp_float_clicked'});"
->
-  <svg width="32" height="32" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.149-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.082 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-  </svg>
-</a>
-<!-- ── End WhatsApp Button ──────────────────────────────────── -->
+    .logo img { width: 36px; height: 36px; border-radius: 9px; }
+
+    .logo-name {
+      font-family: var(--font-disp);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -.01em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 4px;
+      margin-left: 8px;
+    }
+
+    .nav-links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink-3);
+      padding: 7px 13px;
+      border-radius: 8px;
+      transition: all .15s;
+    }
+
+    .nav-links a:hover { color: var(--ink); background: var(--surface); }
+
+    .nav-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-login {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink-3);
+      padding: 7px 13px;
+      border-radius: 8px;
+      transition: all .15s;
+    }
+
+    .nav-login:hover { color: var(--ink); background: var(--surface); }
+
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: all .15s;
+      border: none;
+      background: var(--grad);
+      color: white;
+      box-shadow: 0 4px 16px rgba(59,130,246,.3);
+    }
+
+    .btn-nav:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(59,130,246,.4); }
+
+    #lp-admin-nav-link {
+      display: none;
+      padding: 7px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(99,102,241,.3);
+      color: #818CF8;
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(99,102,241,.08);
+      transition: background .15s;
+    }
+
+    /* ═══════════════════════════════════════
+       HERO
+    ═══════════════════════════════════════ */
+    .hero {
+      min-height: 100vh;
+      padding: 140px 0 100px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* Background orbs */
+    .hero::before, .hero::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .hero::before {
+      width: 900px; height: 900px;
+      top: -300px; left: -200px;
+      background: radial-gradient(circle, rgba(59,130,246,.12) 0%, transparent 65%);
+    }
+
+    .hero::after {
+      width: 700px; height: 700px;
+      bottom: -200px; right: -100px;
+      background: radial-gradient(circle, rgba(14,165,160,.10) 0%, transparent 65%);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 80px;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(59,130,246,.1);
+      border: 1px solid rgba(59,130,246,.2);
+      border-radius: 999px;
+      padding: 6px 14px 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font-disp);
+      color: var(--blue-lt);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+
+    .kicker-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--blue-lt);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .5; transform: scale(.75); }
+    }
+
+    .hero-title {
+      font-family: var(--font-ser);
+      font-size: clamp(42px, 5.5vw, 68px);
+      line-height: 1.03;
+      letter-spacing: -.02em;
+      color: var(--ink);
+      margin-bottom: 24px;
+    }
+
+    .hero-title em {
+      font-style: italic;
+    }
+
+    .hero-sub {
+      font-size: 18px;
+      line-height: 1.75;
+      color: var(--ink-2);
+      margin-bottom: 32px;
+      max-width: 520px;
+    }
+
+    .hero-mystery {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--warn);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 36px;
+    }
+
+    .mystery-label {
+      font-family: var(--font-disp);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--warn);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 8px;
+    }
+
+    .mystery-q {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 36px;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 15px 30px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: all .2s;
+      border: none;
+      background: var(--grad);
+      color: white;
+      box-shadow: 0 8px 30px rgba(59,130,246,.35);
+      text-decoration: none;
+    }
+
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(59,130,246,.45); }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 15px 28px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: all .2s;
+      border: 1px solid var(--border-2);
+      background: transparent;
+      color: var(--ink-2);
+      text-decoration: none;
+    }
+
+    .btn-ghost:hover { background: var(--surface); color: var(--ink); border-color: rgba(255,255,255,.2); }
+
+    .trust-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      color: var(--ink-3);
+    }
+
+    .trust-check {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: rgba(16,185,129,.15);
+      border: 1px solid rgba(16,185,129,.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Hero card */
+    .hero-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: var(--shadow-card);
+      position: relative;
+    }
+
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 25px;
+      background: linear-gradient(135deg, rgba(59,130,246,.2), rgba(14,165,160,.1));
+      z-index: -1;
+    }
+
+    .hc-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+
+    .hc-logo { width: 34px; height: 34px; border-radius: 9px; overflow: hidden; flex-shrink: 0; }
+
+    .hc-live {
+      margin-left: auto;
+      background: rgba(16,185,129,.1);
+      border: 1px solid rgba(16,185,129,.25);
+      color: #34D399;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-family: var(--font-disp);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .live-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: #34D399;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .challenge-card {
+      background: rgba(59,130,246,.08);
+      border: 1px solid rgba(59,130,246,.15);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+
+    .challenge-label {
+      font-family: var(--font-disp);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--blue-lt);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: 7px;
+    }
+
+    .challenge-q {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+      line-height: 1.55;
+    }
+
+    .chat-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+
+    .chat-av {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--grad);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .chat-bub {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: var(--ink-2);
+      line-height: 1.5;
+    }
+
+    .chat-bub.user {
+      background: var(--grad);
+      border-color: transparent;
+      color: white;
+      font-weight: 600;
+      margin-left: auto;
+    }
+
+    .hc-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .hc-stat {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 8px;
+      text-align: center;
+    }
+
+    .hc-val {
+      font-family: var(--font-ser);
+      font-size: 22px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .hc-label { font-size: 10px; color: var(--ink-3); font-weight: 500; font-family: var(--font-disp); letter-spacing: .03em; }
+
+    .hc-testimonial {
+      margin-top: 14px;
+      background: rgba(245,158,11,.05);
+      border: 1px solid rgba(245,158,11,.12);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .hc-quote { font-size: 12px; color: #D97706; line-height: 1.55; font-style: italic; }
+    .hc-author { font-size: 11px; color: #92400E; margin-top: 5px; font-weight: 700; }
+
+    /* ═══════════════════════════════════════
+       LEADERBOARD
+    ═══════════════════════════════════════ */
+    .lb-bar {
+      background: rgba(255,255,255,.02);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 0;
+    }
+
+    .lb-inner {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .lb-label {
+      font-family: var(--font-disp);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--teal-lt);
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .lb-pills { display: flex; gap: 8px; }
+
+    .lb-pill {
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-2);
+      white-space: nowrap;
+    }
+
+    .lb-pts { color: var(--teal-lt); margin-left: 4px; }
+
+    .lb-cta {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--blue-lt);
+      font-family: var(--font-disp);
+      white-space: nowrap;
+      transition: color .15s;
+    }
+
+    .lb-cta:hover { color: var(--teal-lt); }
+
+    /* ═══════════════════════════════════════
+       SECTIONS SHARED
+    ═══════════════════════════════════════ */
+    .section { padding: 100px 0; }
+    .section-alt { background: var(--bg-2); }
+    .section-dark { background: var(--bg); }
+
+    .sec-eyebrow {
+      display: inline-block;
+      font-family: var(--font-disp);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--teal-lt);
+      margin-bottom: 14px;
+    }
+
+    .sec-title {
+      font-family: var(--font-ser);
+      font-size: clamp(28px, 3.8vw, 46px);
+      font-weight: 400;
+      line-height: 1.08;
+      letter-spacing: -.02em;
+      color: var(--ink);
+      margin-bottom: 16px;
+    }
+
+    .sec-sub {
+      font-size: 17px;
+      color: var(--ink-2);
+      line-height: 1.75;
+      max-width: 600px;
+    }
+
+    .sec-sub.center { margin: 0 auto; text-align: center; }
+
+    .sec-head { text-align: center; margin-bottom: 64px; }
+    .sec-head .sec-eyebrow { display: block; }
+
+    /* ═══════════════════════════════════════
+       PROBLEM
+    ═══════════════════════════════════════ */
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .problem-card {
+      background: var(--bg);
+      padding: 36px 32px;
+      transition: background .2s;
+    }
+
+    .problem-card:hover { background: var(--bg-2); }
+
+    .prob-num {
+      font-family: var(--font-disp);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      color: var(--ink-3);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .prob-icon {
+      font-size: 32px;
+      margin-bottom: 18px;
+      display: block;
+    }
+
+    .problem-card h3 {
+      font-family: var(--font-disp);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 12px;
+      line-height: 1.3;
+      letter-spacing: -.01em;
+    }
+
+    .problem-card p { font-size: 14px; color: var(--ink-3); line-height: 1.75; }
+
+    /* ═══════════════════════════════════════
+       HOW IT WORKS
+    ═══════════════════════════════════════ */
+    .process-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 56px;
+    }
+
+    .process-card {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .2s, transform .2s;
+    }
+
+    .process-card:hover { border-color: var(--border-2); transform: translateY(-3px); }
+
+    .process-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--grad);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .3s ease;
+    }
+
+    .process-card:hover::before { transform: scaleX(1); }
+
+    .proc-num {
+      font-family: var(--font-ser);
+      font-size: 52px;
+      font-weight: 400;
+      color: rgba(255,255,255,.06);
+      line-height: 1;
+      position: absolute;
+      top: 16px;
+      right: 24px;
+    }
+
+    .proc-badge {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      background: var(--grad);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-disp);
+      font-size: 16px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 20px;
+    }
+
+    .process-card h3 {
+      font-family: var(--font-disp);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 10px;
+      letter-spacing: -.01em;
+    }
+
+    .process-card p { font-size: 14px; color: var(--ink-3); line-height: 1.75; }
+
+    .video-wrap {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      height: 380px;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+
+    .video-wrap:hover { border-color: rgba(59,130,246,.3); }
+
+    .video-wrap::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(59,130,246,.1) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .play-ring {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,.2);
+      background: rgba(255,255,255,.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      backdrop-filter: blur(8px);
+      transition: all .2s;
+      position: relative;
+      z-index: 1;
+    }
+
+    .video-wrap:hover .play-ring {
+      background: rgba(59,130,246,.2);
+      border-color: rgba(59,130,246,.4);
+      transform: scale(1.06);
+    }
+
+    .play-icon { font-size: 26px; margin-left: 4px; color: white; }
+
+    .video-label { font-size: 14px; color: var(--ink-3); position: relative; z-index: 1; }
+
+    /* ═══════════════════════════════════════
+       BENEFITS
+    ═══════════════════════════════════════ */
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-top: 56px;
+    }
+
+    .benefit-col {
+      background: var(--bg);
+      padding: 44px 40px;
+    }
+
+    .benefit-col:first-child { border-right: none; }
+
+    .bcol-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 36px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .bcol-tag {
+      font-family: var(--font-disp);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .bcol-tag.blue { color: var(--blue-lt); }
+    .bcol-tag.teal { color: var(--teal-lt); }
+
+    .benefit-item {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .benefit-item:last-child { margin-bottom: 0; }
+
+    .bi-check {
+      width: 20px; height: 20px;
+      border-radius: 6px;
+      background: rgba(16,185,129,.1);
+      border: 1px solid rgba(16,185,129,.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: #10B981;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .benefit-item h4 {
+      font-family: var(--font-disp);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 5px;
+      letter-spacing: -.01em;
+    }
+
+    .benefit-item p { font-size: 13px; color: var(--ink-3); line-height: 1.65; }
+
+    /* ═══════════════════════════════════════
+       TESTIMONIALS
+    ═══════════════════════════════════════ */
+    .testimonial-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 56px;
+    }
+
+    .testimonial-card {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      transition: transform .2s, border-color .2s;
+    }
+
+    .testimonial-card:hover { transform: translateY(-3px); border-color: var(--border-2); }
+
+    .stars { display: flex; gap: 3px; margin-bottom: 16px; color: var(--warn); font-size: 14px; }
+
+    .t-quote {
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--ink-2);
+      font-style: italic;
+      flex: 1;
+      margin-bottom: 20px;
+    }
+
+    .t-author { font-family: var(--font-disp); font-size: 13px; font-weight: 700; color: var(--ink); }
+    .t-detail { font-size: 12px; color: var(--ink-3); margin-top: 3px; }
+
+    /* ═══════════════════════════════════════
+       PRICING
+    ═══════════════════════════════════════ */
+    .plans {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      max-width: 960px;
+      margin: 0 auto 36px;
+      align-items: start;
+    }
+
+    .plan {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 28px 26px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: transform .2s, border-color .2s;
+    }
+
+    .plan:hover { transform: translateY(-3px); border-color: var(--border-2); }
+
+    .plan.popular {
+      background: var(--bg-3);
+      border: 1px solid rgba(59,130,246,.35);
+      box-shadow: 0 0 0 1px rgba(59,130,246,.15), var(--shadow-glow);
+      transform: translateY(-8px);
+    }
+
+    .plan.popular:hover { transform: translateY(-11px); }
+
+    .popular-tag {
+      position: absolute;
+      top: -12px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--grad);
+      color: white;
+      font-family: var(--font-disp);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      padding: 5px 16px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .plan-icon { font-size: 24px; margin-bottom: 14px; }
+
+    .plan-name {
+      font-family: var(--font-ser);
+      font-size: 24px;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+
+    .plan-tag { font-size: 13px; color: var(--ink-3); line-height: 1.6; margin-bottom: 20px; min-height: 42px; }
+
+    .plan-price {
+      display: flex;
+      align-items: baseline;
+      gap: 3px;
+      margin-bottom: 4px;
+    }
+
+    .p-sym { font-size: 20px; font-weight: 700; color: var(--ink); }
+
+    .p-amt {
+      font-family: var(--font-ser);
+      font-size: 44px;
+      line-height: 1;
+      color: var(--ink);
+      letter-spacing: -.03em;
+    }
+
+    .p-per { font-size: 14px; color: var(--ink-3); font-weight: 500; }
+
+    .p-micro { font-size: 12px; color: var(--ink-3); margin-bottom: 22px; }
+
+    .p-line { height: 1px; background: var(--border); margin-bottom: 20px; }
+
+    .plan-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; flex: 1; }
+
+    .plan-list li {
+      font-size: 13px;
+      color: var(--ink-2);
+      line-height: 1.5;
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+    }
+
+    .p-check { color: var(--success); font-weight: 900; flex-shrink: 0; font-size: 12px; margin-top: 2px; }
+
+    .plan-btn {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s;
+      font-family: var(--font);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      text-decoration: none;
+    }
+
+    .plan-btn.primary {
+      background: var(--grad);
+      color: white;
+      box-shadow: 0 6px 20px rgba(59,130,246,.35);
+    }
+
+    .plan-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 10px 30px rgba(59,130,246,.45); }
+
+    .plan-btn.ghost {
+      background: var(--surface);
+      color: var(--ink-2);
+      border: 1px solid var(--border);
+    }
+
+    .plan-btn.ghost:hover { background: rgba(255,255,255,.06); color: var(--ink); border-color: var(--border-2); }
+
+    .pricing-trust {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 28px;
+    }
+
+    .pt-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      color: var(--ink-3);
+    }
+
+    .pt-icon { color: var(--success); font-size: 12px; }
+
+    /* ═══════════════════════════════════════
+       FAQ
+    ═══════════════════════════════════════ */
+    .faq-list {
+      max-width: 740px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .faq-item { background: var(--bg-2); }
+
+    .faq-q {
+      padding: 20px 24px;
+      font-family: var(--font-disp);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      user-select: none;
+      transition: background .1s;
+      letter-spacing: -.01em;
+    }
+
+    .faq-q:hover { background: var(--bg-3); }
+
+    .faq-toggle {
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: var(--ink-3);
+      flex-shrink: 0;
+      transition: transform .25s, background .15s, color .15s;
+    }
+
+    .faq-item.open .faq-toggle {
+      transform: rotate(45deg);
+      background: rgba(59,130,246,.1);
+      border-color: rgba(59,130,246,.25);
+      color: var(--blue-lt);
+    }
+
+    .faq-a {
+      padding: 0 24px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .3s ease, padding .3s ease;
+      font-size: 14px;
+      color: var(--ink-3);
+      line-height: 1.8;
+    }
+
+    .faq-item.open .faq-a { padding: 0 24px 20px; max-height: 300px; }
+
+    /* ═══════════════════════════════════════
+       PROMISE
+    ═══════════════════════════════════════ */
+    .promise-wrap {
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 56px 60px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .promise-wrap::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--grad);
+    }
+
+    .promise-wrap h2 {
+      font-family: var(--font-ser);
+      font-size: 32px;
+      color: var(--ink);
+      margin-bottom: 20px;
+    }
+
+    .promise-wrap p {
+      font-size: 16px;
+      line-height: 1.85;
+      color: var(--ink-2);
+    }
+
+    .promise-wrap strong { color: var(--blue-lt); }
+
+    /* ═══════════════════════════════════════
+       FOUNDER
+    ═══════════════════════════════════════ */
+    .founder-section {
+      background: var(--bg-3);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .founder-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .founder-eyebrow {
+      font-family: var(--font-disp);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--warn);
+      margin-bottom: 24px;
+    }
+
+    .founder-quote {
+      font-family: var(--font-ser);
+      font-size: clamp(20px, 2.8vw, 28px);
+      font-style: italic;
+      color: var(--ink);
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .founder-sig {
+      font-size: 15px;
+      color: var(--ink-3);
+      font-weight: 500;
+    }
+
+    /* ═══════════════════════════════════════
+       FINAL CTA
+    ═══════════════════════════════════════ */
+    .cta-section {
+      padding: 120px 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 800px; height: 600px;
+      background: radial-gradient(ellipse, rgba(59,130,246,.1) 0%, rgba(14,165,160,.06) 40%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-section h2 {
+      font-family: var(--font-ser);
+      font-size: clamp(32px, 4.5vw, 54px);
+      line-height: 1.08;
+      color: var(--ink);
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-section p {
+      font-size: 18px;
+      color: var(--ink-2);
+      max-width: 560px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-btn-wrap {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .cta-trust-row {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 24px;
+      font-size: 13px;
+      color: var(--ink-3);
+    }
+
+    /* ═══════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════ */
+    footer {
+      background: var(--bg-2);
+      border-top: 1px solid var(--border);
+      padding: 64px 0 32px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 48px;
+      padding-bottom: 48px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 32px;
+    }
+
+    .foot-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .foot-logo img { width: 34px; height: 34px; border-radius: 9px; }
+    .foot-logo-name { font-family: var(--font-disp); font-size: 17px; font-weight: 700; color: var(--ink); }
+    .foot-desc { font-size: 13px; color: var(--ink-3); line-height: 1.7; max-width: 240px; }
+
+    .footer-col h4 {
+      font-family: var(--font-disp);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--ink-2);
+      margin-bottom: 16px;
+    }
+
+    .footer-col li { margin-bottom: 10px; }
+
+    .footer-col a {
+      font-size: 13px;
+      color: var(--ink-3);
+      transition: color .15s;
+    }
+
+    .footer-col a:hover { color: var(--ink); }
+
+    .footer-bottom { text-align: center; font-size: 12px; color: var(--ink-3); }
+    .footer-bottom p { margin-bottom: 4px; }
+
+    /* ═══════════════════════════════════════
+       ANIMATIONS
+    ═══════════════════════════════════════ */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-up { animation: fadeUp .6s ease both; }
+    .delay-1 { animation-delay: .1s; }
+    .delay-2 { animation-delay: .2s; }
+    .delay-3 { animation-delay: .3s; }
+    .delay-4 { animation-delay: .4s; }
+
+    /* ═══════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════ */
+    @media (max-width: 960px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 48px; }
+      .hero-sub { max-width: 100%; }
+      .problem-grid { grid-template-columns: 1fr; gap: 2px; }
+      .process-grid { grid-template-columns: 1fr; gap: 12px; }
+      .benefits-grid { grid-template-columns: 1fr; gap: 2px; }
+      .testimonial-grid { grid-template-columns: 1fr; gap: 12px; }
+      .plans { grid-template-columns: 1fr; max-width: 420px; }
+      .plan.popular { transform: none; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+      .nav-links { display: none; }
+    }
+
+    @media (max-width: 640px) {
+      .hero { padding: 110px 0 80px; }
+      .section { padding: 72px 0; }
+      .hero-actions { flex-direction: column; }
+      .hero-actions .btn-primary, .hero-actions .btn-ghost { width: 100%; justify-content: center; }
+      .promise-wrap { padding: 36px 28px; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .container { padding: 0 20px; }
+    }
+  </style>
+</head>
+<body>
+  <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1961788037810759&ev=PageView&noscript=1"/></noscript>
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSTQB75G" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+  <!-- NAV -->
+  <header>
+    <div class="nav-inner">
+      <a href="/" class="logo">
+        <img src="logicpals_logo_light.svg" alt="LogicPals" />
+        <span class="logo-name">LogicPals</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#how-it-works">How It Works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div class="nav-right">
+        <a id="lp-admin-nav-link" href="/admin.html">⚙ Admin</a>
+        <a href="login.html" class="nav-login">Login</a>
+        <a href="signup.html" class="btn-nav">Try Free for 7 Days</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <div class="hero-kicker fade-up"><span class="kicker-dot"></span> AI-Powered · Bangladesh-First · Ages 8–16</div>
+        <h1 class="hero-title fade-up delay-1">Your Child Can Solve Problems They've <em>Never Seen</em> Before</h1>
+        <p class="hero-sub fade-up delay-2">While other kids panic on unfamiliar questions, yours will confidently figure them out. Our AI teaches the thinking skills schools don't — in just 15 minutes a day.</p>
+        <div class="hero-mystery fade-up delay-2">
+          <div class="mystery-label">🔍 Try this mystery</div>
+          <div class="mystery-q">"I am an odd number. Take away a letter and I become even. What number am I?"</div>
+        </div>
+        <div class="hero-actions fade-up delay-3">
+          <a href="signup.html" class="btn-primary">Try Free for 7 Days <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M8 3l5 5-5 5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          <a href="#how-it-works" class="btn-ghost">Watch Demo ↓</a>
+        </div>
+        <div class="trust-items fade-up delay-4">
+          <div class="trust-item"><div class="trust-check">✓</div> Unlimited Practice Problems</div>
+          <div class="trust-item"><div class="trust-check">✓</div> 500+ Bangladesh Families</div>
+          <div class="trust-item"><div class="trust-check">✓</div> No Credit Card · Cancel Anytime</div>
+        </div>
+      </div>
+
+      <div class="fade-up delay-2">
+        <div class="hero-card">
+          <div class="hc-header">
+            <div class="hc-logo"><img src="logicpals_logo_light.svg" alt="LP" style="width:100%;height:100%;object-fit:cover;" /></div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--ink);font-family:var(--font-disp);">LogicPals</div>
+              <div style="font-size:11px;color:var(--ink-3);">Student Progress</div>
+            </div>
+            <div class="hc-live"><span class="live-dot"></span> Live</div>
+          </div>
+          <div class="challenge-card">
+            <div class="challenge-label">Today's Challenge</div>
+            <div class="challenge-q">"If 5 cats catch 5 mice in 5 minutes, how many cats to catch 100 mice in 100 minutes?"</div>
+          </div>
+          <div style="margin-bottom:4px;">
+            <div class="chat-row">
+              <div class="chat-av">🤖</div>
+              <div class="chat-bub">Hmm — what if you think about the rate per cat?</div>
+            </div>
+            <div class="chat-row" style="justify-content:flex-end;">
+              <div class="chat-bub user">5 cats! 🎉</div>
+            </div>
+          </div>
+          <div class="hc-stats">
+            <div class="hc-stat">
+              <div class="hc-val grad-text">93%</div>
+              <div class="hc-label">Accuracy</div>
+            </div>
+            <div class="hc-stat">
+              <div class="hc-val" style="color:var(--success);">15m</div>
+              <div class="hc-label">Daily</div>
+            </div>
+            <div class="hc-stat">
+              <div class="hc-val" style="color:var(--warn);">BdMO</div>
+              <div class="hc-label">Ready</div>
+            </div>
+          </div>
+          <div class="hc-testimonial">
+            <div style="font-size:20px;flex-shrink:0;">👩</div>
+            <div>
+              <div class="hc-quote">"My son solved a BdMO problem on his own for the first time."</div>
+              <div class="hc-author">— Parent, Dhaka · ⭐⭐⭐⭐⭐</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEADERBOARD -->
+  <div class="lb-bar">
+    <div class="container lb-inner">
+      <div class="lb-label">🏆 Top Schools Live</div>
+      <div id="publicLeaderboard" class="lb-pills">
+        <span style="color:var(--ink-3);font-size:12px;">Loading rankings…</span>
+      </div>
+      <a href="signup.html" class="lb-cta">Get your school on the list →</a>
+    </div>
+  </div>
+
+  <!-- PROBLEM -->
+  <section class="section section-dark">
+    <div class="container">
+      <div class="sec-head">
+        <span class="sec-eyebrow">The problem</span>
+        <h2 class="sec-title">Your Child Gets A's on Practice Tests...<br>Then Fails When Questions Change</h2>
+        <p class="sec-sub center">Sound familiar? Here's why it happens:</p>
+      </div>
+      <div class="problem-grid">
+        <div class="problem-card">
+          <div class="prob-num">01</div>
+          <span class="prob-icon">📚</span>
+          <h3>Schools Teach Formulas, Not Thinking</h3>
+          <p>Your child memorizes 'a² + b² = c²' but can't figure out if a ladder is safe. They know the formula but not when or why to use it.</p>
+        </div>
+        <div class="problem-card">
+          <div class="prob-num">02</div>
+          <span class="prob-icon">😰</span>
+          <h3>One Small Change = Complete Confusion</h3>
+          <p>Exam question changes from apples to mangoes? Suddenly your child doesn't know what to do. They memorized the example, not the thinking process.</p>
+        </div>
+        <div class="problem-card">
+          <div class="prob-num">03</div>
+          <span class="prob-icon">💸</span>
+          <h3>৳10,000/Mo on Tutors Who Just Give Answers</h3>
+          <p>Three tutors later and your child still asks "Will this exact type be on the exam?" Because tutors solve FOR them instead of teaching them HOW.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how-it-works" class="section section-alt">
+    <div class="container">
+      <div class="sec-head">
+        <span class="sec-eyebrow">The solution</span>
+        <h2 class="sec-title">What If Your Child Could Think Through <em>Any</em> Problem?</h2>
+        <p class="sec-sub center">LogicPals uses the 2,400-year-old Socratic method — asking smart questions that guide your child to discover solutions themselves.</p>
+      </div>
+      <div class="process-grid">
+        <div class="process-card">
+          <div class="proc-num">1</div>
+          <div class="proc-badge">1</div>
+          <h3>Pick a Mystery to Solve</h3>
+          <p>Adaptive curriculum that grows with your child. Fresh problems added weekly, from habit-building puzzles to BdMO-level challenges.</p>
+        </div>
+        <div class="process-card">
+          <div class="proc-num">2</div>
+          <div class="proc-badge">2</div>
+          <h3>Think With an AI That Never Gets Impatient</h3>
+          <p>Stuck? Our AI asks guiding questions like "What do you already know?" No pressure. No judgment. Just thinking.</p>
+        </div>
+        <div class="process-card">
+          <div class="proc-num">3</div>
+          <div class="proc-badge">3</div>
+          <h3>Watch Confidence Build</h3>
+          <p>Track exact thinking patterns. Watch them go from "I don't know" to "Let me figure it out." Parents say grades improve within 2–3 weeks.</p>
+        </div>
+      </div>
+      <div class="video-wrap">
+        <div class="play-ring"><span class="play-icon">▶</span></div>
+        <p class="video-label">Watch How It Works (2 minutes)</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BENEFITS -->
+  <section class="section section-dark">
+    <div class="container">
+      <div class="sec-head">
+        <span class="sec-eyebrow">Why it works</span>
+        <h2 class="sec-title">Your Child Will Actually ASK to Practice Math</h2>
+        <p class="sec-sub center">Sounds impossible? Here's what makes LogicPals different:</p>
+      </div>
+      <div class="benefits-grid">
+        <div class="benefit-col">
+          <div class="bcol-header">
+            <span style="font-size:18px;">🎮</span>
+            <span class="bcol-tag blue">For Kids</span>
+          </div>
+          <div class="benefit-item"><div class="bi-check">✓</div><div><h4>Feels Like Solving Mysteries, Not Homework</h4><p>Finally, math that doesn't feel like a chore.</p></div></div>
+          <div class="benefit-item"><div class="bi-check">✓</div><div><h4>The AI Never Gets Frustrated With Them</h4><p>Ask 100 times — it stays patient and kind every single time.</p></div></div>
+          <div class="benefit-item"><div class="bi-check">✓</div><div><h4>They Get to Figure Things Out Themselves</h4><p>That "Aha!" moment when they crack it? Pure confidence.</p></div></div>
+          <div class="benefit-item"><div class="bi-check">✓</div><div><h4>Practice at Midnight If They Want</h4><p>Learning that fits their schedule, not the tutor's.</p></div></div>
+        </div>
+        <div class="benefit-col">
+          <div class="bcol-header">
+            <span style="font-size:18px;">📊</span>
+            <span class="bcol-tag teal">For Parents</span>
+          </div>
+          <div class="benefit-item"><div class="bi-check">✓</div><div><h4>See the Exact Moment They Make a Logical Leap</h4><p>Dashboard shows their thinking process, not just right/wrong.</p></div></div>
+          <div class="benefit-item"><div class="bi-check">✓</div><div><h4>Stop Spending ৳10,000/Month on Tutors</h4><p>Get better results from ৳399/mo. Save ৳100,000+ yearly.</p></div></div>
+          <div class="benefit-item"><div class="bi-check">✓</div><div><h4>Works With Whatever Your School Teaches</h4><p>NCTB, Cambridge, American — the thinking skills transfer.</p></div></div>
+          <div class="benefit-item"><div class="bi-check">✓</div><div><h4>Your Child Learns Even When You're Working</h4><p>No scheduling. No driving. Just open and learn.</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="section section-alt">
+    <div class="container">
+      <div class="sec-head">
+        <span class="sec-eyebrow">Parent stories</span>
+        <h2 class="sec-title">What Parents Are Saying</h2>
+        <p class="sec-sub center">Real families. Real transformations. Real results.</p>
+      </div>
+      <div class="testimonial-grid">
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p class="t-quote">"My son asked to do 'one more mystery' before bed. That's NEVER happened with math homework!"</p>
+          <div><div class="t-author">Ayesha</div><div class="t-detail">Mother of 9-year-old · Dhanmondi</div></div>
+        </div>
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p class="t-quote">"The AI is more patient than me! It guides him without giving the answer. Genuinely amazing."</p>
+          <div><div class="t-author">Karim</div><div class="t-detail">Father of 11-year-old · Gulshan</div></div>
+        </div>
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p class="t-quote">"My daughter said 'Let me try three different ways.' LogicPals taught her to be a real problem-solver."</p>
+          <div><div class="t-author">Nusrat Ahmed</div><div class="t-detail">Mother of 10-year-old · Uttara</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing" class="section section-dark">
+    <div class="container">
+      <div class="sec-head">
+        <span class="sec-eyebrow">Simple pricing</span>
+        <h2 class="sec-title">Choose the Right Plan for Your Child</h2>
+        <p class="sec-sub center">Start lean, grow steadily, and upgrade anytime. All plans include full AI tutoring.</p>
+      </div>
+      <div class="plans">
+        <article class="plan">
+          <div class="plan-icon">🌱</div>
+          <div class="plan-name">Thinker</div>
+          <div class="plan-tag">Perfect for starting the habit of regular reasoning practice.</div>
+          <div class="plan-price"><span class="p-sym">৳</span><span class="p-amt">399</span><span class="p-per">/ month</span></div>
+          <div class="p-micro">Low-friction entry plan</div>
+          <div class="p-line"></div>
+          <ul class="plan-list">
+            <li><span class="p-check">✓</span><span>Regular critical thinking practice</span></li>
+            <li><span class="p-check">✓</span><span>AI-guided problem solving support</span></li>
+            <li><span class="p-check">✓</span><span>Weekly learning continuity</span></li>
+            <li><span class="p-check">✓</span><span>Great for habit building</span></li>
+          </ul>
+          <a href="pricing.html" class="plan-btn ghost">Choose Thinker</a>
+        </article>
+        <article class="plan popular">
+          <div class="popular-tag">MOST POPULAR</div>
+          <div class="plan-icon">🚀</div>
+          <div class="plan-name">Scholar</div>
+          <div class="plan-tag">Best balance of value, momentum, and Olympiad readiness.</div>
+          <div class="plan-price"><span class="p-sym">৳</span><span class="p-amt">999</span><span class="p-per">/ month</span></div>
+          <div class="p-micro">Recommended for serious growth</div>
+          <div class="p-line"></div>
+          <ul class="plan-list">
+            <li><span class="p-check">✓</span><span>Everything in Thinker</span></li>
+            <li><span class="p-check">✓</span><span>Priority Olympiad preparation path</span></li>
+            <li><span class="p-check">✓</span><span>Deeper practice consistency</span></li>
+            <li><span class="p-check">✓</span><span>Stronger value for committed families</span></li>
+          </ul>
+          <a href="pricing.html" class="plan-btn primary">Choose Scholar →</a>
+        </article>
+        <article class="plan">
+          <div class="plan-icon">🏆</div>
+          <div class="plan-name">Champion</div>
+          <div class="plan-tag">For ambitious families focused on top-level Olympiad progress.</div>
+          <div class="plan-price"><span class="p-sym">৳</span><span class="p-amt">1799</span><span class="p-per">/ month</span></div>
+          <div class="p-micro">Premium growth path</div>
+          <div class="p-line"></div>
+          <ul class="plan-list">
+            <li><span class="p-check">✓</span><span>Everything in Scholar</span></li>
+            <li><span class="p-check">✓</span><span>Maximum focus on Olympiad development</span></li>
+            <li><span class="p-check">✓</span><span>Best for higher-intensity learners</span></li>
+            <li><span class="p-check">✓</span><span>Premium support path for pilot users</span></li>
+          </ul>
+          <a href="pricing.html" class="plan-btn ghost">Choose Champion</a>
+        </article>
+      </div>
+      <div class="pricing-trust">
+        <div class="pt-item"><span class="pt-icon">✓</span> 7-day free trial, no credit card</div>
+        <div class="pt-item"><span class="pt-icon">✓</span> Cancel anytime</div>
+        <div class="pt-item"><span class="pt-icon">✓</span> 30-day money-back guarantee</div>
+        <div class="pt-item"><span class="pt-icon">✓</span> bKash / Nagad accepted</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="section section-alt">
+    <div class="container">
+      <div class="sec-head">
+        <span class="sec-eyebrow">FAQ</span>
+        <h2 class="sec-title">Questions Parents Ask Before Starting</h2>
+        <p class="sec-sub center">We've answered everything. Still have questions? Email us.</p>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item">
+          <div class="faq-q">Will this really work for MY child? They're struggling.<div class="faq-toggle">+</div></div>
+          <div class="faq-a">Yes. Especially if they're struggling. LogicPals is designed for children who find traditional methods difficult. The AI adapts to their pace, never judges mistakes, and breaks problems into smaller steps. Parents of struggling students report the MOST dramatic improvements.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">My child is already good at math. Will they be bored?<div class="faq-toggle">+</div></div>
+          <div class="faq-a">Quite the opposite! Being good at memorizing ≠ being good at thinking. LogicPals challenges even high-performing students with problems that require creative thinking, not just formula application.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">We already have a tutor. Why would we need this too?<div class="faq-toggle">+</div></div>
+          <div class="faq-a">LogicPals doesn't replace tutors — it makes them more effective. LogicPals is available 24/7, costs 90% less, and NEVER gives direct answers, forcing real thinking every session.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">How much time does my child need per day?<div class="faq-toggle">+</div></div>
+          <div class="faq-a">Just 15–20 minutes daily. Consistent short practice is more effective than long, infrequent sessions. Think of it like exercise — 20 minutes every day beats 2 hours once a week.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Do you support Bengali language?<div class="faq-toggle">+</div></div>
+          <div class="faq-a">Yes! LogicPals works in both English and Bengali. Children can switch between languages as they prefer.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROMISE -->
+  <section class="section section-dark">
+    <div class="container">
+      <div class="promise-wrap">
+        <h2>Still Not Sure? Here's Our Promise.</h2>
+        <p>Try LogicPals free for 7 days. No credit card needed.<br>If your child isn't excited after 3 sessions, don't continue.<br><br>
+        If you subscribe and aren't 100% satisfied within 30 days, email us. We'll refund every taka, no questions asked. Why are we this confident? Because <strong>91% of parents</strong> who try the free trial become paying customers. And <strong>94% stay for 6+ months</strong>.<br><br>
+        The worst that can happen? You get 7 days of free learning.<br>The best? Your child discovers they're capable of so much more.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOUNDER -->
+  <section class="section founder-section">
+    <div class="container">
+      <div class="founder-inner">
+        <div class="founder-eyebrow">Why I built LogicPals</div>
+        <blockquote class="founder-quote">"As a parent, I watched my child memorize formulas perfectly but panic when exam questions changed slightly. Schools teach WHAT to think, not HOW to think. So I built LogicPals — an AI tutor that never gives answers, only asks questions that guide children to discover solutions themselves. That's the Socratic Method. And it works."</blockquote>
+        <div class="founder-sig">— Jahir, Founder</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <h2>Your Child Deserves to Feel <span class="grad-text">Smart</span></h2>
+      <p>500+ Bangladesh families have already seen the transformation. Try LogicPals free for 7 days.</p>
+      <div class="cta-btn-wrap">
+        <a href="signup.html" class="btn-primary" style="font-size:17px;padding:17px 36px;">
+          Try Free for 7 Days
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 9h12M9.5 4l5 5-5 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <div class="cta-trust-row">
+          <span>✓ Full access for 7 days</span>
+          <span>✓ No credit card needed</span>
+          <span>✓ Cancel in one click</span>
+        </div>
+        <div style="font-size:13px;color:var(--ink-3);margin-top:8px;">Questions? Email <a href="/cdn-cgi/l/email-protection#aac2cfc6c6c5eac6c5cdc3c9dacbc6d984c9c5c7" style="color:var(--blue-lt);"><span class="__cf_email__" data-cfemail="85ede0e9e9eac5e9eae2ece6f5e4e9f6abe6eae8">[email&#160;protected]</span></a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="foot-logo"><img src="logicpals_logo_light.svg" alt="LogicPals" /><span class="foot-logo-name">LogicPals</span></div>
+          <p class="foot-desc">Building critical thinkers, one problem at a time. Empowering children in Bangladesh to solve the unsolvable.</p>
+        </div>
+        <div class="footer-col"><h4>About</h4><ul><li><a href="#">Our Story</a></li><li><a href="#">Our Mission</a></li><li><a href="#">Team</a></li></ul></div>
+        <div class="footer-col"><h4>Product</h4><ul><li><a href="#how-it-works">How It Works</a></li><li><a href="pricing.html">Pricing</a></li><li><a href="#faq">FAQs</a></li></ul></div>
+        <div class="footer-col"><h4>Support</h4><ul><li><a href="#">Help Center</a></li><li><a href="#">Contact Us</a></li><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li></ul></div>
+      </div>
+      <div class="footer-bottom"><p>© 2024 LogicPals. All rights reserved.</p><p style="margin-top:4px;">Made with 💙 in Bangladesh for children worldwide.</p></div>
+    </div>
+  </footer>
+
+  <!-- WhatsApp Float -->
+  <a href="https://wa.me/8801617000378?text=Hi%2C%20I%20am%20interested%20in%20LogicPals%20for%20my%20child"
+     target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp"
+     style="position:fixed;bottom:24px;right:24px;width:54px;height:54px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(37,211,102,.4);z-index:9999;transition:transform .2s,box-shadow .2s;text-decoration:none;"
+     onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 6px 28px rgba(37,211,102,.55)'"
+     onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 20px rgba(37,211,102,.4)'"
+     onclick="window.dataLayer=window.dataLayer||[];window.dataLayer.push({event:'whatsapp_float_clicked'});">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.149-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.082 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  </a>
+
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    /* FAQ */
+    document.querySelectorAll('.faq-item').forEach(item => {
+      item.querySelector('.faq-q').addEventListener('click', () => {
+        document.querySelectorAll('.faq-item').forEach(o => { if (o !== item) o.classList.remove('open'); });
+        item.classList.toggle('open');
+      });
+    });
+
+    /* Smooth scroll */
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        const el = document.querySelector(this.getAttribute('href'));
+        if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 76, behavior: 'smooth' });
+      });
+    });
+
+    /* Track CTAs */
+    function makeId(p) { return `${p}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`; }
+
+    async function serverEvent({ event_name, event_id, custom_data = {} }) {
+      try {
+        const tc = sessionStorage.getItem('lp_meta_test_code') || '';
+        await fetch('/api/ab/admin-bundle.js', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+          body: JSON.stringify({ op: 'meta_track', event_name, event_id, custom_data,
+            event_source_url: window.location.href, ...(tc ? { test_event_code: tc } : {}) })
+        });
+      } catch(_) {}
+    }
+
+    document.querySelectorAll('a[href="signup.html"]').forEach(el => {
+      el.addEventListener('click', () => {
+        const eid = makeId('start_trial');
+        const sp = new URLSearchParams(window.location.search).get('source') || 'direct';
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ event: 'start_trial_clicked', source_page: 'index-v2', source_param: sp });
+        if (typeof fbq === 'function') fbq('track', 'Lead', { content_name: 'Start Trial', source_page: 'index-v2', currency: 'BDT', value: 0 }, { eventID: eid });
+        else if (window.lpTrack) window.lpTrack('StartTrial', { content_name: 'Homepage CTA', source_page: 'index-v2' });
+        serverEvent({ event_name: 'Lead', event_id: eid, custom_data: { content_name: 'Start Trial', source_page: 'index-v2', currency: 'BDT', value: 0, source_param: sp } });
+      });
+    });
+
+    /* Admin link */
+    (function() {
+      try {
+        const raw = localStorage.getItem('lp_admin_auth');
+        if (raw) {
+          const d = JSON.parse(raw);
+          if (d?.expires_at && (Date.now() / 1000) < (d.expires_at - 60)) {
+            const el = document.getElementById('lp-admin-nav-link');
+            if (el) el.style.display = 'inline-flex';
+          }
+        }
+      } catch(_) {}
+    })();
+
+    /* Leaderboard */
+    (async () => {
+      const board = document.getElementById('publicLeaderboard');
+      const env = await new Promise(resolve => {
+        let n = 0;
+        const t = () => { const e = window.__LP_ENV; if (e?.SUPABASE_URL) return resolve(e); if (++n > 40) return resolve(null); setTimeout(t, 100); };
+        t();
+      });
+      if (!env) { board.innerHTML = `<span class="lb-pill">Rankings update daily</span>`; return; }
+      try {
+        const sb = supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+        const { data } = await sb.from('public_school_leaderboard').select('school_name,olympiad_wins,total_pts').limit(3);
+        if (!data?.length) { board.innerHTML = `<span class="lb-pill">Be the first school!</span>`; return; }
+        board.innerHTML = ['🥇','🥈','🥉'].slice(0, data.length).map((m, i) =>
+          `<div class="lb-pill">${m} ${data[i].school_name}${data[i].olympiad_wins > 0 ? ` 🏆×${data[i].olympiad_wins}` : ''}<span class="lb-pts">(${data[i].total_pts} pts)</span></div>`
+        ).join('');
+      } catch(_) { board.innerHTML = `<span class="lb-pill">Rankings update daily</span>`; }
+    })();
+  </script>
+</body>
+</html>
