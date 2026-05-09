@@ -551,10 +551,10 @@ async function handleIncidentCommandExecuteApproved(body, adminUserId) {
 
   const svcSb = sbForService();
 
-  const data = await callRpc(
-    svcSb,
-    "ops_adapter",
-    "ops_execute_approved_incident_command",
+ const data = await callRpc(
+  svcSb,
+  "public",
+  "ops_adapter_execute_approved_incident_command",
     {
       p_command_id: commandId,
       p_actor_id: adminUserId,
@@ -667,9 +667,9 @@ async function handleIncidentCommandExecutionSummary(req) {
   const svcSb = sbForService();
 
   const data = await callRpc(
-    svcSb,
-    "ops_adapter",
-    "ops_get_incident_command_execution_summary",
+  svcSb,
+  "public",
+  "ops_adapter_get_incident_command_execution_summary",
     {
       p_command_id: commandId,
     }
@@ -690,9 +690,9 @@ async function handleIncidentCommandExecutionAuditGet(req) {
   const svcSb = sbForService();
 
   const data = await callRpc(
-    svcSb,
-    "ops_adapter",
-    "ops_get_incident_command_execution_audit",
+  svcSb,
+  "public",
+  "ops_adapter_get_incident_command_execution_audit",
     {
       p_audit_id: auditId,
     }
@@ -717,9 +717,9 @@ async function handleIncidentCommandExecutionAuditList(req) {
   const svcSb = sbForService();
 
   const data = await callRpc(
-    svcSb,
-    "ops_adapter",
-    "ops_list_incident_command_execution_audit",
+  svcSb,
+  "public",
+  "ops_adapter_list_incident_command_execution_audit",
     {
       p_command_id: commandId,
       p_candidate_id: candidateId,
@@ -745,9 +745,9 @@ async function handleIncidentCommandExecutionLatest(req) {
   const svcSb = sbForService();
 
   const data = await callRpc(
-    svcSb,
-    "ops_adapter",
-    "ops_list_latest_incident_command_executions",
+  svcSb,
+  "public",
+  "ops_adapter_list_latest_incident_command_executions",
     {
       p_execution_status: executionStatus,
       p_limit: limit,
