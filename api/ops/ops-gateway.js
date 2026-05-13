@@ -649,8 +649,8 @@ async function handleSlaEvaluateBreaches(body, adminUserId) {
 
   const data = await callRpc(
     svcSb,
-    "ops_adapter",
-    "ops_evaluate_sla_breaches",
+    "public",
+    "ops_adapter_evaluate_sla_breaches",
     {
       p_tenant_uuid: tenantUuid,
       p_trigger_source: "admin_manual",
@@ -686,8 +686,8 @@ async function handleSlaGenerateCandidateCommands(body, adminUserId) {
 
   const data = await callRpc(
     svcSb,
-    "ops_adapter",
-    "ops_generate_sla_candidate_commands",
+    "public",
+    "ops_adapter_generate_sla_candidate_commands",
     {
       p_tenant_uuid: tenantUuid,
       p_limit: limit,
