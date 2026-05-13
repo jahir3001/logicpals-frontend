@@ -131,6 +131,9 @@ const POST_ACTIONS = Object.freeze({
 
   SLA_GENERATE_CANDIDATE_COMMANDS:
     "sla_generate_candidate_commands",
+
+  SLA_RUN_GOVERNANCE_CYCLE:
+    "sla_run_governance_cycle",
 });
 
 const GET_ACTIONS = Object.freeze({
@@ -701,6 +704,80 @@ async function handleSlaGenerateCandidateCommands(body, adminUserId) {
   };
 }
 
+
+/* ---------------------------------------------------------
+   11C. POST Handler: sla_run_governance_cycle
+   8M.11.7G.5 Combined SLA Governance Cycle
+--------------------------------------------------------- */
+
+async function handleSlaRunGovernanceCycle(body, adminUserId) {
+  rejectBrowserSuppliedActorId(body);
+
+  const tenantUuid = resolveTenantUuid(body);
+  const limit = optionalLimit(body.limit, 50);
+  const runKey =
+    optionalString(body.run_key) ||
+    `8M.11.7G5-gateway-cycle-${Date.now()}`;
+
+  const baseMetadata = buildSlaGovernanceMetadata(
+    body,
+    adminUserId,
+    POST_ACTIONS.SLA_RUN_GOVERNANCE_CYCLE
+  );
+
+  const svcSb = sbForService();
+
+  const evaluateResult = await callRpc(
+    svcSb,
+    "public",
+    "ops_adapter_evaluate_sla_breaches",
+    {
+      p_tenant_uuid: tenantUuid,
+      p_trigger_source: "admin_manual",
+      p_run_key: runKey,
+      p_now: new Date().toISOString(),
+      p_metadata: {
+        ...baseMetadata,
+        cycle_phase: "evaluate_sla_breaches",
+        cycle_action: POST_ACTIONS.SLA_RUN_GOVERNANCE_CYCLE,
+      },
+    }
+  );
+
+  const generateResult = await callRpc(
+    svcSb,
+    "public",
+    "ops_adapter_generate_sla_candidate_commands",
+    {
+      p_tenant_uuid: tenantUuid,
+      p_limit: limit,
+      p_worker_id: "api-ops-gateway-sla-governance-cycle",
+      p_metadata: {
+        ...baseMetadata,
+        cycle_phase: "generate_candidate_commands",
+        cycle_action: POST_ACTIONS.SLA_RUN_GOVERNANCE_CYCLE,
+        evaluation_run_key: runKey,
+      },
+    }
+  );
+
+  return {
+    result: {
+      ok: true,
+      step: "8M.11.7G.5",
+      action: POST_ACTIONS.SLA_RUN_GOVERNANCE_CYCLE,
+      tenant_uuid: tenantUuid,
+      run_key: runKey,
+      boundary: "combined_gateway_cycle_no_execution",
+      no_direct_incident_mutation: true,
+      no_incident_event_write: true,
+      no_raw_event_write: true,
+      evaluate_result: evaluateResult,
+      generate_result: generateResult,
+    },
+  };
+}
+
 async function handleHealth(adminUserId) {
   return {
     gateway: GATEWAY_NAME,
@@ -912,6 +989,10 @@ async function routePostAction(action, userSb, body, adminUserId) {
 
     case POST_ACTIONS.SLA_GENERATE_CANDIDATE_COMMANDS:
       return handleSlaGenerateCandidateCommands(body, adminUserId);
+
+
+    case POST_ACTIONS.SLA_RUN_GOVERNANCE_CYCLE:
+      return handleSlaRunGovernanceCycle(body, adminUserId);
 
 default:
       throw new Error(`unknown_post_action:${action}`);
