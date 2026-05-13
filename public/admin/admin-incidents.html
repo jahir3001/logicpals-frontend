@@ -1483,7 +1483,7 @@
         ok: true,
         contract: "8M.11.6.7F/G",
         gateway: "/api/ops/ops-gateway",
-        ui_never_sends_actor_id: true,
+        client_identity_policy: "server_derived_only",
         summary: state.summary,
         latest_count: state.latest.length,
         audit_count: state.audits.length
@@ -1532,7 +1532,7 @@
           metadata: {
             ...metadata,
             gateway_boundary: "protected_incident_command_execution",
-            ui_never_sends_actor_id: true,
+            client_identity_policy: "server_derived_only",
             admin_ui_version: "8M.11.6.7H"
           }
         });
