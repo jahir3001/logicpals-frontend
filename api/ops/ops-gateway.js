@@ -155,6 +155,9 @@ const GET_ACTIONS = Object.freeze({
 
   INCIDENT_COMMAND_EXECUTION_LATEST:
     "incident_command_execution_latest",
+
+  CRON_SLA_GOVERNANCE_CYCLE:
+    "cron_sla_governance_cycle",
 });
 
 /* ---------------------------------------------------------
@@ -424,6 +427,127 @@ function rejectActorIdInMetadata(metadata) {
   if (serialized.includes("actor_id")) {
     throw new Error("metadata_must_not_contain_actor_id");
   }
+}
+
+
+function requireCronSecret(req) {
+  const expected = process.env.CRON_SECRET;
+
+  if (!expected || String(expected).trim().length < 16) {
+    throw new Error("missing_or_weak_cron_secret");
+  }
+
+  const auth = req.headers.authorization || "";
+  const expectedBearer = "Bearer " + expected;
+
+  if (auth !== expectedBearer) {
+    throw new Error("invalid_cron_secret");
+  }
+
+  return true;
+}
+
+function resolveCronTenantUuid() {
+  const tenantUuid = process.env.OPS_CRON_TENANT_UUID;
+
+  if (!tenantUuid) {
+    throw new Error("missing_ops_cron_tenant_uuid");
+  }
+
+  return requireUuid(tenantUuid, "ops_cron_tenant_uuid");
+}
+
+function buildCronGovernanceMetadata(req) {
+  return {
+    gateway: GATEWAY_NAME,
+    gateway_version: GATEWAY_VERSION,
+    gateway_step: "8M.11.7H",
+    gateway_boundary: "cron_time_based_operational_governance",
+
+    action: GET_ACTIONS.CRON_SLA_GOVERNANCE_CYCLE,
+
+    trigger_source: "vercel_cron",
+    user_agent: req.headers["user-agent"] || null,
+
+    identity_policy: "cron_secret_only_no_user_actor",
+    client_identity_accepted: false,
+
+    executor_type: "vercel_cron_gateway",
+    executor_identity: "vercel_cron_ops_gateway",
+
+    service_role_scope: "server_side_only",
+
+    no_direct_incident_mutation: true,
+    no_incident_event_write: true,
+    no_raw_event_write: true,
+    no_protected_execution: true,
+
+    generated_at: new Date().toISOString(),
+  };
+}
+
+async function runSlaGovernanceCycleFromCron(req) {
+  requireCronSecret(req);
+
+  const tenantUuid = resolveCronTenantUuid();
+  const limit = optionalLimit(process.env.OPS_CRON_SLA_LIMIT || 50, 50);
+
+  const runKey =
+    "8M.11.7H-cron-cycle-" +
+    new Date().toISOString().slice(0, 10);
+
+  const metadata = buildCronGovernanceMetadata(req);
+
+  const svcSb = sbForService();
+
+  const evaluateResult = await callRpc(
+    svcSb,
+    "public",
+    "ops_adapter_evaluate_sla_breaches",
+    {
+      p_tenant_uuid: tenantUuid,
+      p_trigger_source: "vercel_cron",
+      p_run_key: runKey,
+      p_now: new Date().toISOString(),
+      p_metadata: {
+        ...metadata,
+        cycle_phase: "evaluate_sla_breaches",
+        cycle_action: GET_ACTIONS.CRON_SLA_GOVERNANCE_CYCLE,
+      },
+    }
+  );
+
+  const generateResult = await callRpc(
+    svcSb,
+    "public",
+    "ops_adapter_generate_sla_candidate_commands",
+    {
+      p_tenant_uuid: tenantUuid,
+      p_limit: limit,
+      p_worker_id: "api-ops-gateway-vercel-cron-sla-governance",
+      p_metadata: {
+        ...metadata,
+        cycle_phase: "generate_candidate_commands",
+        cycle_action: GET_ACTIONS.CRON_SLA_GOVERNANCE_CYCLE,
+        evaluation_run_key: runKey,
+      },
+    }
+  );
+
+  return {
+    ok: true,
+    step: "8M.11.7H",
+    action: GET_ACTIONS.CRON_SLA_GOVERNANCE_CYCLE,
+    tenant_uuid: tenantUuid,
+    run_key: runKey,
+    boundary: "cron_gateway_cycle_no_execution",
+    no_direct_incident_mutation: true,
+    no_incident_event_write: true,
+    no_raw_event_write: true,
+    no_protected_execution: true,
+    evaluate_result: evaluateResult,
+    generate_result: generateResult,
+  };
 }
 
 function buildSlaGovernanceMetadata(body, adminUserId, action) {
@@ -1050,6 +1174,7 @@ function statusFromErrorMessage(message) {
   }
 
   if (
+    message === "invalid_cron_secret" ||
     message === "admin_required" ||
     /admin access required/i.test(message) ||
     /unauthorized/i.test(message) ||
@@ -1119,7 +1244,30 @@ module.exports = async (req, res) => {
     );
   }
 
-  const jwt = getBearer(req);
+  // 8M.11.7H cron fast path.
+  // Vercel Cron uses CRON_SECRET Authorization, not a Supabase user JWT.
+  // This path must remain cron-only and must not support user actor execution.
+  if (
+    req.method === "GET" &&
+    action === GET_ACTIONS.CRON_SLA_GOVERNANCE_CYCLE
+  ) {
+    try {
+      const result = await runSlaGovernanceCycleFromCron(req);
+      return jsonOk(res, { result });
+    } catch (err) {
+      const message = err?.message || String(err);
+      const status = statusFromErrorMessage(message);
+
+      return jsonErr(res, status, "ops_cron_gateway_failed", {
+        message,
+        gateway: GATEWAY_NAME,
+        version: GATEWAY_VERSION,
+        step: "8M.11.7H",
+      });
+    }
+  }
+
+const jwt = getBearer(req);
 
   if (!jwt) {
     return jsonErr(res, 401, "missing_bearer_token", null);

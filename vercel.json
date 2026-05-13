@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/ops/cron-sla-governance",
+      "destination": "/api/ops/ops-gateway?action=cron_sla_governance_cycle"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/ops/cron-sla-governance",
+      "schedule": "0 2 * * *"
+    }
+  ]
+}
