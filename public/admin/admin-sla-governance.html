@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LogicPals — SLA Governance</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <style>
+    :root{
+      --bg:#f8fafc;
+      --panel:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --line:#e2e8f0;
+      --soft:#f1f5f9;
+      --brand:#6366f1;
+      --green:#059669;
+      --amber:#d97706;
+      --red:#dc2626;
+      --blue:#2563eb;
+      --dark:#111827;
+      --radius:14px;
+      --shadow:0 10px 25px rgba(15,23,42,.06);
+      --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      --sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font-family:var(--sans);
+      font-size:14px;
+    }
+
+    a{color:inherit;text-decoration:none}
+    .topbar{
+      height:56px;
+      background:#0f172a;
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 24px;
+      position:sticky;
+      top:0;
+      z-index:20;
+      box-shadow:0 1px 0 rgba(255,255,255,.08);
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+
+    .brand-dot{
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      background:var(--brand);
+      box-shadow:0 0 0 5px rgba(99,102,241,.2);
+    }
+
+    .top-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:#cbd5e1;
+      font-size:13px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:7px 10px;
+      background:#fff;
+      color:var(--ink);
+      font-weight:700;
+      font-size:12px;
+      white-space:nowrap;
+    }
+
+    .pill.dark{
+      border-color:rgba(255,255,255,.18);
+      background:rgba(255,255,255,.08);
+      color:#e2e8f0;
+    }
+
+    .pill.green{color:#047857;background:#ecfdf5;border-color:#bbf7d0}
+    .pill.red{color:#b91c1c;background:#fef2f2;border-color:#fecaca}
+    .pill.amber{color:#b45309;background:#fffbeb;border-color:#fed7aa}
+    .pill.blue{color:#1d4ed8;background:#eff6ff;border-color:#bfdbfe}
+    .pill.gray{color:#334155;background:#f8fafc;border-color:#e2e8f0}
+
+    .layout{
+      display:grid;
+      grid-template-columns:260px 1fr;
+      min-height:calc(100vh - 56px);
+    }
+
+    .sidebar{
+      background:#fff;
+      border-right:1px solid var(--line);
+      padding:20px 16px;
+    }
+
+    .nav-title{
+      font-size:12px;
+      text-transform:uppercase;
+      color:var(--muted);
+      font-weight:800;
+      letter-spacing:.08em;
+      margin:16px 8px 8px;
+    }
+
+    .nav a{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 12px;
+      border-radius:10px;
+      color:#334155;
+      font-weight:700;
+      margin-bottom:4px;
+    }
+
+    .nav a.active{
+      background:#eef2ff;
+      color:#4338ca;
+    }
+
+    .nav a:hover{background:#f8fafc}
+
+    main{
+      padding:28px;
+      max-width:1600px;
+      width:100%;
+    }
+
+    .hero{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:18px;
+      margin-bottom:22px;
+    }
+
+    h1{
+      margin:0 0 8px;
+      font-size:30px;
+      letter-spacing:-.04em;
+    }
+
+    .sub{
+      margin:0;
+      color:var(--muted);
+      line-height:1.55;
+      max-width:760px;
+    }
+
+    .hero-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:flex-end;
+    }
+
+    button,.button{
+      appearance:none;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--ink);
+      border-radius:11px;
+      padding:10px 14px;
+      font-weight:800;
+      cursor:pointer;
+      box-shadow:0 1px 2px rgba(15,23,42,.04);
+    }
+
+    button.primary{
+      background:var(--brand);
+      color:#fff;
+      border-color:var(--brand);
+    }
+
+    button:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    .notice{
+      border:1px solid #bfdbfe;
+      background:#eff6ff;
+      color:#1e3a8a;
+      padding:14px 16px;
+      border-radius:var(--radius);
+      margin-bottom:18px;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      line-height:1.45;
+    }
+
+    .notice strong{display:block;margin-bottom:3px}
+
+    .grid{
+      display:grid;
+      gap:16px;
+    }
+
+    .kpis{
+      grid-template-columns:repeat(6,minmax(150px,1fr));
+      margin-bottom:18px;
+    }
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .kpi{
+      padding:18px;
+    }
+
+    .kpi-label{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+
+    .kpi-value{
+      font-size:30px;
+      font-weight:900;
+      letter-spacing:-.04em;
+      margin-top:8px;
+    }
+
+    .kpi-help{
+      color:var(--muted);
+      margin-top:4px;
+      font-size:12px;
+    }
+
+    .section{
+      margin-top:18px;
+    }
+
+    .section-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:16px 18px;
+      border-bottom:1px solid var(--line);
+    }
+
+    .section-title{
+      margin:0;
+      font-size:17px;
+      letter-spacing:-.02em;
+    }
+
+    .section-sub{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .table-wrap{
+      overflow:auto;
+      max-height:460px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      min-width:920px;
+    }
+
+    th,td{
+      padding:12px 14px;
+      border-bottom:1px solid var(--line);
+      text-align:left;
+      vertical-align:top;
+    }
+
+    th{
+      position:sticky;
+      top:0;
+      z-index:1;
+      background:#f8fafc;
+      color:#475569;
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.07em;
+      font-weight:900;
+    }
+
+    td{
+      color:#1e293b;
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .mono{
+      font-family:var(--mono);
+      font-size:12px;
+      word-break:break-all;
+    }
+
+    .muted{color:var(--muted)}
+    .small{font-size:12px}
+    .right{text-align:right}
+    .empty{
+      padding:26px;
+      color:var(--muted);
+      text-align:center;
+    }
+
+    .split{
+      display:grid;
+      grid-template-columns:1.2fr .8fr;
+      gap:18px;
+    }
+
+    .json-panel{
+      padding:16px;
+      background:#0b1220;
+      color:#dbeafe;
+      font-family:var(--mono);
+      font-size:12px;
+      white-space:pre-wrap;
+      overflow:auto;
+      max-height:360px;
+    }
+
+    .footer{
+      color:var(--muted);
+      margin:24px 0 8px;
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    @media(max-width:1100px){
+      .layout{grid-template-columns:1fr}
+      .sidebar{display:none}
+      .kpis{grid-template-columns:repeat(2,1fr)}
+      .split{grid-template-columns:1fr}
+      .hero{flex-direction:column}
+      .hero-actions{justify-content:flex-start}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span>LogicPals Operations OS</span>
+    </div>
+    <div class="top-actions">
+      <span class="pill dark">Read-only</span>
+      <span class="pill dark" id="topStatus">Loading</span>
+      <span class="pill dark">8M.11.7I</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="nav-title">Operations</div>
+      <nav class="nav">
+        <a href="/admin/admin-incidents.html">Incident Management <span>↗</span></a>
+        <a href="/admin/admin-sla-governance.html" class="active">SLA Governance <span>●</span></a>
+        <a href="/admin/admin-circuit-breakers.html">Circuit Breakers <span>↗</span></a>
+      </nav>
+
+      <div class="nav-title">Safety</div>
+      <nav class="nav">
+        <a href="#runs">Evaluation Runs</a>
+        <a href="#states">SLA States</a>
+        <a href="#candidates">Breach Candidates</a>
+        <a href="#commands">Generated Commands</a>
+      </nav>
+    </aside>
+
+    <main>
+      <section class="hero">
+        <div>
+          <h1>SLA Governance</h1>
+          <p class="sub">
+            Read-only operational view for SLA evaluation runs, breached states, breach candidates,
+            and generated command candidates. This panel does not execute commands or mutate operational data.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <button id="btnRefresh" class="primary">Refresh Snapshot</button>
+          <button id="btnCopy">Copy JSON</button>
+          <a class="button" href="/admin/admin-incidents.html">Open Incidents</a>
+        </div>
+      </section>
+
+      <div class="notice">
+        <div>
+          <strong>Read-only boundary active</strong>
+          Browser → ops-gateway → public snapshot RPC. No direct Supabase table reads, no writes, no cron trigger, and no protected execution from this page.
+        </div>
+        <span class="pill green" id="gatewayBadge">gateway pending</span>
+      </div>
+
+      <section class="grid kpis">
+        <div class="card kpi">
+          <div class="kpi-label">SLA States</div>
+          <div class="kpi-value" id="kpiStates">—</div>
+          <div class="kpi-help">tracked incidents</div>
+        </div>
+        <div class="card kpi">
+          <div class="kpi-label">Breached Incidents</div>
+          <div class="kpi-value" id="kpiBreached">—</div>
+          <div class="kpi-help">current breached state</div>
+        </div>
+        <div class="card kpi">
+          <div class="kpi-label">Runs</div>
+          <div class="kpi-value" id="kpiRuns">—</div>
+          <div class="kpi-help">evaluation history</div>
+        </div>
+        <div class="card kpi">
+          <div class="kpi-label">Candidates</div>
+          <div class="kpi-value" id="kpiCandidates">—</div>
+          <div class="kpi-help">breach candidates</div>
+        </div>
+        <div class="card kpi">
+          <div class="kpi-label">Command Generated</div>
+          <div class="kpi-value" id="kpiCommandGenerated">—</div>
+          <div class="kpi-help">candidate status</div>
+        </div>
+        <div class="card kpi">
+          <div class="kpi-label">SLA Commands</div>
+          <div class="kpi-value" id="kpiCommands">—</div>
+          <div class="kpi-help">add-note candidates</div>
+        </div>
+      </section>
+
+      <section id="runs" class="card section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Latest SLA Evaluation Runs</h2>
+            <p class="section-sub">Cron/manual gateway evaluations. No command execution is performed here.</p>
+          </div>
+          <span class="pill blue" id="runCount">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Run Key</th>
+                <th>Trigger</th>
+                <th>Status</th>
+                <th>Incidents</th>
+                <th>Evaluations</th>
+                <th>Candidates</th>
+                <th>Commands</th>
+                <th>Started</th>
+                <th>Finished</th>
+              </tr>
+            </thead>
+            <tbody id="runsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="states" class="card section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Current Incident SLA States</h2>
+            <p class="section-sub">Derived SLA timing state per incident.</p>
+          </div>
+          <span class="pill blue" id="stateCount">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Incident</th>
+                <th>Policy</th>
+                <th>State</th>
+                <th>Breaches</th>
+                <th>Ack Deadline</th>
+                <th>Resolve Deadline</th>
+                <th>Escalate After</th>
+                <th>Last Evaluated</th>
+              </tr>
+            </thead>
+            <tbody id="statesBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="candidates" class="card section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">SLA Breach Candidates</h2>
+            <p class="section-sub">Candidate-first governance output from the SLA evaluator.</p>
+          </div>
+          <span class="pill blue" id="candidateCount">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Candidate</th>
+                <th>Incident</th>
+                <th>Type</th>
+                <th>Severity</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Recommended</th>
+                <th>Overdue</th>
+                <th>Command</th>
+              </tr>
+            </thead>
+            <tbody id="candidatesBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="commands" class="card section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Generated Command Candidates</h2>
+            <p class="section-sub">Approved command candidates only. Execution remains protected elsewhere.</p>
+          </div>
+          <span class="pill blue" id="commandCount">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Command Key</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Policy</th>
+                <th>Severity</th>
+                <th>Priority</th>
+                <th>Executed</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="commandsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="split section">
+        <div class="card">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Snapshot Metadata</h2>
+              <p class="section-sub">Gateway snapshot details.</p>
+            </div>
+            <span class="pill gray" id="generatedAt">—</span>
+          </div>
+          <div style="padding:18px">
+            <div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+              <div><div class="kpi-label">Tenant</div><div class="mono" id="tenantOut">—</div></div>
+              <div><div class="kpi-label">Mode</div><div class="mono" id="modeOut">—</div></div>
+              <div><div class="kpi-label">Step</div><div class="mono" id="stepOut">—</div></div>
+              <div><div class="kpi-label">Limit</div><div class="mono" id="limitOut">20</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Raw Snapshot Preview</h2>
+              <p class="section-sub">Useful for QC only.</p>
+            </div>
+          </div>
+          <pre class="json-panel" id="jsonPreview">Loading...</pre>
+        </div>
+      </section>
+
+      <p class="footer">
+        8M.11.7I.3 temporary admin panel. Final Figma design can replace this later. Functional contract must remain read-only.
+      </p>
+    </main>
+  </div>
+
+  <script>
+    const DEFAULT_TENANT_UUID = "67c0ebf5-7f52-4d69-ba89-1a1b7baf14be";
+    const params = new URLSearchParams(location.search);
+    const TENANT_UUID = params.get("tenant_uuid") || DEFAULT_TENANT_UUID;
+    const LIMIT = Number(params.get("limit") || 20);
+
+    let latestSnapshot = null;
+
+    const $ = (id) => document.getElementById(id);
+
+    function setText(id, value) {
+      const el = $(id);
+      if (el) el.textContent = value == null || value === "" ? "—" : String(value);
+    }
+
+    function shortId(value) {
+      if (!value) return "—";
+      const s = String(value);
+      if (s.length <= 14) return s;
+      return s.slice(0, 8) + "…" + s.slice(-6);
+    }
+
+    function fmtDate(value) {
+      if (!value) return "—";
+      try {
+        return new Date(value).toLocaleString();
+      } catch {
+        return String(value);
+      }
+    }
+
+    function badge(value) {
+      const v = String(value || "unknown");
+      let cls = "gray";
+      if (["succeeded","within_sla","command_generated","policy_approved","ok"].includes(v)) cls = "green";
+      if (["running","at_risk","detected","pending_command_generation"].includes(v)) cls = "amber";
+      if (["failed","breached","execution_failed","error"].includes(v)) cls = "red";
+      const span = document.createElement("span");
+      span.className = "pill " + cls;
+      span.textContent = v;
+      return span;
+    }
+
+    function cell(value, className) {
+      const td = document.createElement("td");
+      if (className) td.className = className;
+      td.textContent = value == null || value === "" ? "—" : String(value);
+      return td;
+    }
+
+    function badgeCell(value) {
+      const td = document.createElement("td");
+      td.appendChild(badge(value));
+      return td;
+    }
+
+    function clearTable(bodyId, countId, rows) {
+      const body = $(bodyId);
+      body.innerHTML = "";
+      if (countId) setText(countId, `${rows.length} rows`);
+      if (!rows.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 12;
+        td.className = "empty";
+        td.textContent = "No rows available.";
+        tr.appendChild(td);
+        body.appendChild(tr);
+      }
+      return body;
+    }
+
+    function findTokenInObject(obj, depth = 0) {
+      if (!obj || depth > 5) return null;
+      if (typeof obj === "string") return null;
+      if (obj.access_token && typeof obj.access_token === "string") return obj.access_token;
+      if (obj.currentSession?.access_token) return obj.currentSession.access_token;
+      if (obj.session?.access_token) return obj.session.access_token;
+      for (const key of Object.keys(obj)) {
+        const found = findTokenInObject(obj[key], depth + 1);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    function getAccessToken() {
+      const stores = [localStorage, sessionStorage];
+      for (const store of stores) {
+        for (const key of Object.keys(store)) {
+          const raw = store.getItem(key);
+          if (!raw || !raw.includes("access_token")) continue;
+          try {
+            const parsed = JSON.parse(raw);
+            const token = findTokenInObject(parsed);
+            if (token) return token;
+          } catch {
+            const match = raw.match(/"access_token"\s*:\s*"([^"]+)"/);
+            if (match?.[1]) return match[1];
+          }
+        }
+      }
+      return null;
+    }
+
+    async function fetchSnapshot() {
+      const token = getAccessToken();
+      if (!token) {
+        throw new Error("No admin access token found. Please log in again, then refresh this page.");
+      }
+
+      const url =
+        `/api/ops/ops-gateway?action=sla_governance_snapshot` +
+        `&tenant_uuid=${encodeURIComponent(TENANT_UUID)}` +
+        `&limit=${encodeURIComponent(LIMIT)}`;
+
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json"
+        },
+        cache: "no-store"
+      });
+
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok || !json || json.ok === false) {
+        const msg =
+          json?.details?.message ||
+          json?.error ||
+          `Gateway request failed with HTTP ${res.status}`;
+        throw new Error(msg);
+      }
+
+      return json.result || json;
+    }
+
+    function renderRuns(rows) {
+      const body = clearTable("runsBody", "runCount", rows);
+      rows.forEach((r) => {
+        const tr = document.createElement("tr");
+        tr.appendChild(cell(r.run_key, "mono"));
+        tr.appendChild(cell(r.trigger_source));
+        tr.appendChild(badgeCell(r.status));
+        tr.appendChild(cell(r.incidents_checked, "right"));
+        tr.appendChild(cell(r.policy_evaluations_created, "right"));
+        tr.appendChild(cell(r.candidates_generated, "right"));
+        tr.appendChild(cell(r.commands_generated, "right"));
+        tr.appendChild(cell(fmtDate(r.started_at)));
+        tr.appendChild(cell(fmtDate(r.finished_at)));
+        body.appendChild(tr);
+      });
+    }
+
+    function renderStates(rows) {
+      const body = clearTable("statesBody", "stateCount", rows);
+      rows.forEach((s) => {
+        const tr = document.createElement("tr");
+        tr.appendChild(cell(shortId(s.incident_id), "mono"));
+        tr.appendChild(cell(`${s.policy_key || "—"} v${s.policy_version || "—"}`));
+        tr.appendChild(badgeCell(s.current_sla_state));
+        tr.appendChild(cell(s.breach_count, "right"));
+        tr.appendChild(cell(fmtDate(s.ack_deadline_at)));
+        tr.appendChild(cell(fmtDate(s.resolve_deadline_at)));
+        tr.appendChild(cell(fmtDate(s.escalate_after_at)));
+        tr.appendChild(cell(fmtDate(s.last_evaluated_at)));
+        body.appendChild(tr);
+      });
+    }
+
+    function renderCandidates(rows) {
+      const body = clearTable("candidatesBody", "candidateCount", rows);
+      rows.forEach((c) => {
+        const tr = document.createElement("tr");
+        tr.appendChild(cell(shortId(c.id), "mono"));
+        tr.appendChild(cell(shortId(c.incident_id), "mono"));
+        tr.appendChild(cell(c.breach_type));
+        tr.appendChild(cell(c.severity));
+        tr.appendChild(cell(c.priority));
+        tr.appendChild(badgeCell(c.status));
+        tr.appendChild(cell(c.recommended_action));
+        tr.appendChild(cell(`${c.minutes_overdue || 0}m`, "right"));
+        tr.appendChild(cell(c.command_id ? shortId(c.command_id) : "—", "mono"));
+        body.appendChild(tr);
+      });
+    }
+
+    function renderCommands(rows) {
+      const body = clearTable("commandsBody", "commandCount", rows);
+      rows.forEach((c) => {
+        const tr = document.createElement("tr");
+        tr.appendChild(cell(c.command_key, "mono"));
+        tr.appendChild(cell(c.command_type));
+        tr.appendChild(badgeCell(c.command_status));
+        tr.appendChild(cell(c.policy_decision));
+        tr.appendChild(cell(c.severity_hint));
+        tr.appendChild(cell(c.priority_hint));
+        tr.appendChild(cell(c.executed_at ? fmtDate(c.executed_at) : "Not executed"));
+        tr.appendChild(cell(fmtDate(c.created_at)));
+        body.appendChild(tr);
+      });
+    }
+
+    function renderSnapshot(snapshot) {
+      latestSnapshot = snapshot;
+
+      const summary = snapshot.summary || {};
+      setText("kpiStates", summary.sla_state_count ?? 0);
+      setText("kpiBreached", summary.breached_incident_count ?? 0);
+      setText("kpiRuns", summary.evaluation_run_count ?? 0);
+      setText("kpiCandidates", summary.breach_candidate_count ?? 0);
+      setText("kpiCommandGenerated", summary.command_generated_candidate_count ?? 0);
+      setText("kpiCommands", summary.sla_add_note_command_count ?? 0);
+
+      setText("tenantOut", snapshot.tenant_uuid || TENANT_UUID);
+      setText("modeOut", snapshot.mode);
+      setText("stepOut", snapshot.step);
+      setText("limitOut", LIMIT);
+      setText("generatedAt", fmtDate(snapshot.generated_at));
+
+      renderRuns(snapshot.latest_runs || []);
+      renderStates(snapshot.sla_states || []);
+      renderCandidates(snapshot.breach_candidates || []);
+      renderCommands(snapshot.generated_commands || []);
+
+      $("jsonPreview").textContent = JSON.stringify({
+        ok: snapshot.ok,
+        step: snapshot.step,
+        mode: snapshot.mode,
+        generated_at: snapshot.generated_at,
+        summary: snapshot.summary
+      }, null, 2);
+
+      $("gatewayBadge").textContent = "gateway ok";
+      $("gatewayBadge").className = "pill green";
+      $("topStatus").textContent = "Operational";
+    }
+
+    async function refresh() {
+      const btn = $("btnRefresh");
+      btn.disabled = true;
+      btn.textContent = "Refreshing...";
+      $("topStatus").textContent = "Loading";
+      $("gatewayBadge").textContent = "gateway loading";
+      $("gatewayBadge").className = "pill amber";
+
+      try {
+        const snapshot = await fetchSnapshot();
+        renderSnapshot(snapshot);
+      } catch (err) {
+        $("topStatus").textContent = "Error";
+        $("gatewayBadge").textContent = "gateway error";
+        $("gatewayBadge").className = "pill red";
+        $("jsonPreview").textContent = err.message || String(err);
+        alert(err.message || String(err));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Refresh Snapshot";
+      }
+    }
+
+    $("btnRefresh").addEventListener("click", refresh);
+
+    $("btnCopy").addEventListener("click", async () => {
+      if (!latestSnapshot) return;
+      await navigator.clipboard.writeText(JSON.stringify(latestSnapshot, null, 2));
+      $("btnCopy").textContent = "Copied";
+      setTimeout(() => $("btnCopy").textContent = "Copy JSON", 1200);
+    });
+
+    refresh();
+  </script>
+</body>
+</html>
