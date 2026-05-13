@@ -125,6 +125,12 @@ const POST_ACTIONS = Object.freeze({
 
   INCIDENT_COMMAND_EXECUTE_APPROVED:
     "incident_command_execute_approved",
+
+  SLA_EVALUATE_BREACHES:
+    "sla_evaluate_breaches",
+
+  SLA_GENERATE_CANDIDATE_COMMANDS:
+    "sla_generate_candidate_commands",
 });
 
 const GET_ACTIONS = Object.freeze({
@@ -405,6 +411,54 @@ function buildIncidentCommandExecutionMetadata(body, adminUserId, commandId) {
    8. POST Handler: ingest_event
 --------------------------------------------------------- */
 
+
+function rejectActorIdInMetadata(metadata) {
+  if (!metadata) return;
+
+  const safe = safeObject(metadata);
+  const serialized = JSON.stringify(safe).toLowerCase();
+
+  if (serialized.includes("actor_id")) {
+    throw new Error("metadata_must_not_contain_actor_id");
+  }
+}
+
+function buildSlaGovernanceMetadata(body, adminUserId, action) {
+  const clientMetadata = safeObject(body.metadata);
+  rejectActorIdInMetadata(clientMetadata);
+
+  return {
+    ...clientMetadata,
+
+    gateway: GATEWAY_NAME,
+    gateway_version: GATEWAY_VERSION,
+    gateway_step: "8M.11.7G",
+    gateway_boundary: "time_based_operational_governance_gateway",
+
+    action,
+
+    trigger_source: "ops_gateway_admin_manual",
+    admin_user_uuid: adminUserId,
+
+    identity_policy: "server_derived_admin_context_only",
+    client_identity_accepted: false,
+
+    executor_type: "api_gateway",
+    executor_identity: "vercel_ops_gateway",
+    service_role_scope: "server_side_only",
+
+    no_direct_incident_mutation: true,
+    no_incident_event_write: true,
+    no_raw_event_write: true,
+
+    generated_at: new Date().toISOString(),
+  };
+}
+
+/* ---------------------------------------------------------
+   8A. POST Handler: SLA governance metadata helpers inserted
+--------------------------------------------------------- */
+
 async function handleIngestEvent(userSb, body, adminUserId) {
   const event_name = requireString(body.event_name, "event_name");
   const source_key = requireString(body.source_key, "source_key");
@@ -571,6 +625,81 @@ async function handleIncidentCommandExecuteApproved(body, adminUserId) {
 /* ---------------------------------------------------------
    12. GET Handler: health
 --------------------------------------------------------- */
+
+
+/* ---------------------------------------------------------
+   11A. POST Handler: sla_evaluate_breaches
+   8M.11.7G Time-Based Operational Governance Gateway
+--------------------------------------------------------- */
+
+async function handleSlaEvaluateBreaches(body, adminUserId) {
+  rejectBrowserSuppliedActorId(body);
+
+  const tenantUuid = resolveTenantUuid(body);
+  const runKey = optionalString(body.run_key);
+  const nowValue = optionalString(body.now) || new Date().toISOString();
+
+  const metadata = buildSlaGovernanceMetadata(
+    body,
+    adminUserId,
+    POST_ACTIONS.SLA_EVALUATE_BREACHES
+  );
+
+  const svcSb = sbForService();
+
+  const data = await callRpc(
+    svcSb,
+    "ops_adapter",
+    "ops_evaluate_sla_breaches",
+    {
+      p_tenant_uuid: tenantUuid,
+      p_trigger_source: "admin_manual",
+      p_run_key: runKey,
+      p_now: nowValue,
+      p_metadata: metadata,
+    }
+  );
+
+  return {
+    result: data,
+  };
+}
+
+/* ---------------------------------------------------------
+   11B. POST Handler: sla_generate_candidate_commands
+   8M.11.7G Time-Based Operational Governance Gateway
+--------------------------------------------------------- */
+
+async function handleSlaGenerateCandidateCommands(body, adminUserId) {
+  rejectBrowserSuppliedActorId(body);
+
+  const tenantUuid = resolveTenantUuid(body);
+  const limit = optionalLimit(body.limit, 50);
+
+  const metadata = buildSlaGovernanceMetadata(
+    body,
+    adminUserId,
+    POST_ACTIONS.SLA_GENERATE_CANDIDATE_COMMANDS
+  );
+
+  const svcSb = sbForService();
+
+  const data = await callRpc(
+    svcSb,
+    "ops_adapter",
+    "ops_generate_sla_candidate_commands",
+    {
+      p_tenant_uuid: tenantUuid,
+      p_limit: limit,
+      p_worker_id: "api-ops-gateway-sla-candidate-command-generator",
+      p_metadata: metadata,
+    }
+  );
+
+  return {
+    result: data,
+  };
+}
 
 async function handleHealth(adminUserId) {
   return {
@@ -777,7 +906,14 @@ async function routePostAction(action, userSb, body, adminUserId) {
     case POST_ACTIONS.INCIDENT_COMMAND_EXECUTE_APPROVED:
       return handleIncidentCommandExecuteApproved(body, adminUserId);
 
-    default:
+    
+    case POST_ACTIONS.SLA_EVALUATE_BREACHES:
+      return handleSlaEvaluateBreaches(body, adminUserId);
+
+    case POST_ACTIONS.SLA_GENERATE_CANDIDATE_COMMANDS:
+      return handleSlaGenerateCandidateCommands(body, adminUserId);
+
+default:
       throw new Error(`unknown_post_action:${action}`);
   }
 }
@@ -848,6 +984,7 @@ function statusFromErrorMessage(message) {
     message.startsWith("unknown_post_action:") ||
     message.startsWith("unknown_get_action:") ||
     message === "actor_id_must_not_be_supplied_by_client" ||
+    message === "metadata_must_not_contain_actor_id" ||
     /unknown_event_name:/i.test(message) ||
     /unknown_source_key:/i.test(message) ||
     /unknown_command_type:/i.test(message) ||
