@@ -158,6 +158,9 @@ const GET_ACTIONS = Object.freeze({
 
   CRON_SLA_GOVERNANCE_CYCLE:
     "cron_sla_governance_cycle",
+
+  SLA_GOVERNANCE_SNAPSHOT:
+    "sla_governance_snapshot",
 });
 
 /* ---------------------------------------------------------
@@ -991,6 +994,33 @@ async function handleGetTimeline(userSb, req) {
    17. GET Handler: incident_command_execution_summary
 --------------------------------------------------------- */
 
+
+/* ---------------------------------------------------------
+   16A. GET Handler: sla_governance_snapshot
+   8M.11.7I Read-Only SLA Governance Admin Panel
+--------------------------------------------------------- */
+
+async function handleSlaGovernanceSnapshot(req) {
+  const tenantUuid = resolveTenantUuid(null, req.query);
+  const limit = optionalLimit(req.query.limit, 20);
+
+  const svcSb = sbForService();
+
+  const data = await callRpc(
+    svcSb,
+    "public",
+    "ops_sla_governance_admin_snapshot",
+    {
+      p_tenant_uuid: tenantUuid,
+      p_limit: limit,
+    }
+  );
+
+  return {
+    result: data,
+  };
+}
+
 async function handleIncidentCommandExecutionSummary(req) {
   const commandId = requireUuid(req.query.command_id, "command_id");
 
@@ -1143,6 +1173,9 @@ async function routeGetAction(action, userSb, req, adminUserId) {
 
     case GET_ACTIONS.GET_TIMELINE:
       return handleGetTimeline(userSb, req);
+
+        case GET_ACTIONS.SLA_GOVERNANCE_SNAPSHOT:
+      return handleSlaGovernanceSnapshot(req);
 
     case GET_ACTIONS.INCIDENT_COMMAND_EXECUTION_SUMMARY:
       return handleIncidentCommandExecutionSummary(req);
