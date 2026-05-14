@@ -49,7 +49,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      font-weight: 800;
+      font-weight: 700;
       letter-spacing: .2px;
     }
 
@@ -73,7 +73,7 @@
       padding: 5px 10px;
       border-radius: 999px;
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 700;
       border: 1px solid var(--line);
       background: white;
       color: var(--ink);
@@ -100,7 +100,7 @@
     .nav-title {
       color: var(--muted);
       text-transform: uppercase;
-      font-weight: 900;
+      font-weight: 700;
       letter-spacing: .12em;
       font-size: 11px;
       margin: 0 0 12px;
@@ -114,7 +114,7 @@
       text-decoration: none;
       padding: 10px 12px;
       border-radius: 10px;
-      font-weight: 750;
+      font-weight: 600;
       margin-bottom: 4px;
     }
 
@@ -158,7 +158,7 @@
       border: 1px solid var(--line);
       background: white;
       color: var(--ink);
-      font-weight: 850;
+      font-weight: 700;
       padding: 11px 16px;
       border-radius: 12px;
       cursor: pointer;
@@ -206,7 +206,7 @@
 
     .metric .label {
       color: var(--muted);
-      font-weight: 900;
+      font-weight: 700;
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: .09em;
@@ -216,7 +216,7 @@
     .metric .value {
       font-size: 30px;
       line-height: 1;
-      font-weight: 900;
+      font-weight: 700;
       letter-spacing: -.04em;
     }
 
@@ -259,7 +259,7 @@
       border-radius: 999px;
       padding: 5px 9px;
       font-size: 12px;
-      font-weight: 900;
+      font-weight: 700;
       white-space: nowrap;
     }
 
@@ -296,7 +296,7 @@
       padding: 5px 10px;
       border-radius: 999px;
       font-size: 12px;
-      font-weight: 900;
+      font-weight: 700;
       border: 1px solid var(--line);
       background: #f8fafc;
       color: #334155;
@@ -370,6 +370,43 @@
       .hero { flex-direction: column; }
     }
   </style>
+
+  <style id="lp-hard-font-reset">
+    html,
+    body,
+    body *,
+    button,
+    input,
+    select,
+    textarea,
+    table,
+    thead,
+    tbody,
+    tr,
+    th,
+    td,
+    div,
+    span,
+    p,
+    a,
+    h1,
+    h2,
+    h3,
+    pre,
+    code {
+      font-family: "Segoe UI", Arial, Helvetica, sans-serif !important;
+      font-variant-ligatures: none !important;
+      font-feature-settings: normal !important;
+      text-transform: none;
+    }
+
+    .mono,
+    pre,
+    code {
+      font-family: Consolas, "Courier New", monospace !important;
+    }
+  </style>
+
 </head>
 
 <body>
