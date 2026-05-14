@@ -1463,9 +1463,19 @@ async function handleExecutionGovernanceSnapshot(req) {
   };
 }
 
+function getQueryValue(query, key) {
+  if (!query) return undefined;
+
+  if (typeof query.get === "function") {
+    return query.get(key);
+  }
+
+  return query[key];
+}
+
 async function handleNotificationDispatcherSnapshot(userSb, query) {
-  const tenantUuid = requireUuid(query && query.tenant_uuid, "tenant_uuid");
-  const limit = optionalLimit(query && query.limit, 20);
+  const tenantUuid = requireUuid(getQueryValue(query, "tenant_uuid"), "tenant_uuid");
+  const limit = optionalLimit(getQueryValue(query, "limit"), 20);
 
   return callRpc(
     userSb,
