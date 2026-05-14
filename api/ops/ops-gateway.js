@@ -160,6 +160,7 @@ const GET_ACTIONS = Object.freeze({
 
   EXECUTION_GOVERNANCE_SNAPSHOT:
     "execution_governance_snapshot",
+  NOTIFICATION_DISPATCHER_SNAPSHOT: "notification_dispatcher_snapshot",
 });
 
 /* ---------------------------------------------------------
@@ -1462,6 +1463,21 @@ async function handleExecutionGovernanceSnapshot(req) {
   };
 }
 
+async function handleNotificationDispatcherSnapshot(userSb, query) {
+  const tenantUuid = requireUuid(query && query.tenant_uuid, "tenant_uuid");
+  const limit = optionalLimit(query && query.limit, 20);
+
+  return callRpc(
+    userSb,
+    "public",
+    "ops_notification_dispatcher_admin_snapshot",
+    {
+      p_tenant_uuid: tenantUuid,
+      p_limit: limit
+    }
+  );
+}
+
 async function routeGetAction(action, userSb, req, adminUserId) {
   switch (action) {
     case GET_ACTIONS.HEALTH:
@@ -1483,6 +1499,8 @@ async function routeGetAction(action, userSb, req, adminUserId) {
       return handleSlaGovernanceSnapshot(req);
 
     
+    case GET_ACTIONS.NOTIFICATION_DISPATCHER_SNAPSHOT:
+      return handleNotificationDispatcherSnapshot(userSb, query);
     case GET_ACTIONS.EXECUTION_GOVERNANCE_SNAPSHOT:
       return handleExecutionGovernanceSnapshot(req);
 
