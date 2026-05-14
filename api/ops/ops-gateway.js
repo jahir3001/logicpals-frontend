@@ -122,25 +122,14 @@ const POST_ACTIONS = Object.freeze({
   INGEST_EVENT: "ingest_event",
   CREATE_COMMAND: "create_command",
   INCIDENT_ACTION: "incident_action",
-
-  INCIDENT_COMMAND_EXECUTE_APPROVED:
-    "incident_command_execute_approved",
-
-  SLA_EVALUATE_BREACHES:
-    "sla_evaluate_breaches",
-
-  SLA_GENERATE_CANDIDATE_COMMANDS:
-    "sla_generate_candidate_commands",
-
-  SLA_RUN_GOVERNANCE_CYCLE:
-    "sla_run_governance_cycle",
-
-  EVALUATE_COMMAND_EXECUTION_POLICY:
-    "evaluate_command_execution_policy",
-  GENERATE_NOTIFICATION_CONTRACT_REQUESTS:
-    "generate_notification_contract_requests",
-  RUN_EXECUTION_GOVERNANCE_CYCLE:
-    "run_execution_governance_cycle",
+  INCIDENT_COMMAND_EXECUTE_APPROVED: "incident_command_execute_approved",
+  SLA_EVALUATE_BREACHES: "sla_evaluate_breaches",
+  SLA_GENERATE_CANDIDATE_COMMANDS: "sla_generate_candidate_commands",
+  SLA_RUN_GOVERNANCE_CYCLE: "sla_run_governance_cycle",
+  EVALUATE_COMMAND_EXECUTION_POLICY: "evaluate_command_execution_policy",
+  GENERATE_NOTIFICATION_CONTRACT_REQUESTS: "generate_notification_contract_requests",
+  RUN_EXECUTION_GOVERNANCE_CYCLE: "run_execution_governance_cycle",
+  PREPARE_NOTIFICATION_DISPATCH_JOBS: "prepare_notification_dispatch_jobs",
 });
 
 const GET_ACTIONS = Object.freeze({
@@ -1345,6 +1334,37 @@ async function handleRunExecutionGovernanceCycle(body) {
   };
 }
 
+async function handlePrepareNotificationDispatchJobs(userSb, body, adminUserId) {
+  const tenantUuid = requireUuid(body && body.tenant_uuid, "tenant_uuid");
+  const requestId = optionalUuid(body && body.request_id, "request_id");
+  const limit = optionalLimit(body && body.limit, 50);
+  const metadata = safeObject(body && body.metadata);
+
+  if (metadata && Object.prototype.hasOwnProperty.call(metadata, "actor_id")) {
+    throw new Error("metadata_must_not_contain_actor_id");
+  }
+
+  const workerId = `ops_gateway:${adminUserId || "admin"}`;
+
+  return callRpc(
+    userSb,
+    "public",
+    "ops_notify_prepare_notification_dispatch_jobs",
+    {
+      p_tenant_uuid: tenantUuid,
+      p_request_id: requestId,
+      p_limit: limit,
+      p_worker_id: workerId,
+      p_metadata: {
+        ...metadata,
+        gateway_step: "8M.11.9E",
+        gateway_action: "prepare_notification_dispatch_jobs",
+        gateway_boundary: "queue_preparation_only_no_provider_delivery"
+      }
+    }
+  );
+}
+
 async function routePostAction(action, userSb, body, adminUserId) {
   switch (action) {
     case POST_ACTIONS.INGEST_EVENT:
@@ -1377,6 +1397,8 @@ async function routePostAction(action, userSb, body, adminUserId) {
     case POST_ACTIONS.GENERATE_NOTIFICATION_CONTRACT_REQUESTS:
       return handleGenerateNotificationContractRequests(body);
 
+    case "prepare_notification_dispatch_jobs":
+      return handlePrepareNotificationDispatchJobs(userSb, body, adminUserId);
     case POST_ACTIONS.RUN_EXECUTION_GOVERNANCE_CYCLE:
       return handleRunExecutionGovernanceCycle(body);
 
