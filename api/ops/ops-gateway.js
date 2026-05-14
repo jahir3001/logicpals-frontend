@@ -1151,7 +1151,7 @@ function rejectTopLevelActorIdForExecutionGovernance(body) {
 --------------------------------------------------------- */
 
 async function handleEvaluateCommandExecutionPolicy(body) {
-  rejectTopLevelActorIdForExecutionGovernance(body);
+  rejectTopLevelActorIdForExecutionGovernanceV2(body);
 
   const tenantUuid = requireUuid(body.tenant_uuid, "tenant_uuid");
   const commandId = body.command_id ? requireUuid(body.command_id, "command_id") : null;
@@ -1194,6 +1194,19 @@ async function handleEvaluateCommandExecutionPolicy(body) {
 }
 
 
+
+function rejectTopLevelActorIdForExecutionGovernanceV2(body) {
+  if (!body || typeof body !== "object") return;
+
+  if (
+    Object.prototype.hasOwnProperty.call(body, "actor_id") ||
+    Object.prototype.hasOwnProperty.call(body, "actorId") ||
+    Object.prototype.hasOwnProperty.call(body, "p_actor_id")
+  ) {
+    throw new Error("actor_id_must_not_be_supplied_by_client");
+  }
+}
+
 /* ---------------------------------------------------------
    8M.11.8D Handler: generate_notification_contract_requests
    Creates pending notification/action contracts only.
@@ -1201,7 +1214,7 @@ async function handleEvaluateCommandExecutionPolicy(body) {
 --------------------------------------------------------- */
 
 async function handleGenerateNotificationContractRequests(body) {
-  rejectTopLevelActorIdForExecutionGovernance(body);
+  rejectTopLevelActorIdForExecutionGovernanceV2(body);
 
   const tenantUuid = requireUuid(body.tenant_uuid, "tenant_uuid");
   const policyEvaluationId = body.policy_evaluation_id
@@ -1255,7 +1268,7 @@ async function handleGenerateNotificationContractRequests(body) {
 --------------------------------------------------------- */
 
 async function handleRunExecutionGovernanceCycle(body) {
-  rejectTopLevelActorIdForExecutionGovernance(body);
+  rejectTopLevelActorIdForExecutionGovernanceV2(body);
 
   const tenantUuid = requireUuid(body.tenant_uuid, "tenant_uuid");
   const commandId = body.command_id ? requireUuid(body.command_id, "command_id") : null;
