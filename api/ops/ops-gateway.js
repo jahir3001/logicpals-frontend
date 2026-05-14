@@ -168,6 +168,9 @@ const GET_ACTIONS = Object.freeze({
 
   SLA_GOVERNANCE_SNAPSHOT:
     "sla_governance_snapshot",
+
+  EXECUTION_GOVERNANCE_SNAPSHOT:
+    "execution_governance_snapshot",
 });
 
 /* ---------------------------------------------------------
@@ -1386,6 +1389,53 @@ default:
    22. GET Router
 --------------------------------------------------------- */
 
+
+
+/* ---------------------------------------------------------
+   8M.11.8F Handler: execution_governance_snapshot
+   Read-only execution governance / notification contract snapshot.
+   No command execution. No notification dispatch. No incident mutation.
+--------------------------------------------------------- */
+
+async function handleExecutionGovernanceSnapshot(req) {
+  const query = req.query || {};
+
+  const tenantUuid = requireUuid(
+    query.tenant_uuid || query.tenantUuid || query.tenant,
+    "tenant_uuid"
+  );
+
+  const limit = optionalLimit(query.limit, 20);
+
+  const svcSb = sbForService();
+
+  const result = await callRpc(
+    svcSb,
+    "public",
+    "ops_execution_governance_admin_snapshot",
+    {
+      p_tenant_uuid: tenantUuid,
+      p_limit: limit,
+    }
+  );
+
+  return {
+    result: {
+      ok: true,
+      step: "8M.11.8F",
+      action: "execution_governance_snapshot",
+      boundary: "read_only_gateway_snapshot_no_execution_no_dispatch",
+      tenant_uuid: tenantUuid,
+      no_direct_incident_mutation: true,
+      no_incident_event_write: true,
+      no_raw_event_write: true,
+      no_command_execution: true,
+      no_notification_dispatch: true,
+      snapshot: result,
+    },
+  };
+}
+
 async function routeGetAction(action, userSb, req, adminUserId) {
   switch (action) {
     case GET_ACTIONS.HEALTH:
@@ -1406,7 +1456,11 @@ async function routeGetAction(action, userSb, req, adminUserId) {
         case GET_ACTIONS.SLA_GOVERNANCE_SNAPSHOT:
       return handleSlaGovernanceSnapshot(req);
 
-    case GET_ACTIONS.INCIDENT_COMMAND_EXECUTION_SUMMARY:
+    
+    case GET_ACTIONS.EXECUTION_GOVERNANCE_SNAPSHOT:
+      return handleExecutionGovernanceSnapshot(req);
+
+case GET_ACTIONS.INCIDENT_COMMAND_EXECUTION_SUMMARY:
       return handleIncidentCommandExecutionSummary(req);
 
     case GET_ACTIONS.INCIDENT_COMMAND_EXECUTION_AUDIT_GET:
