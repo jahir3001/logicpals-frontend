@@ -383,6 +383,20 @@
       .split { grid-template-columns: 1fr; }
       .hero { flex-direction: column; }
     }
+  
+    /* 8M.11.9H hard font rendering guard */
+    html, body, button, a, div, span, p, h1, h2, h3, table, thead, tbody, tr, th, td, label, input, select, textarea {
+      font-family: Arial, Helvetica, sans-serif !important;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .mono, pre, code {
+      font-family: Consolas, Menlo, Monaco, "Courier New", monospace !important;
+    }
+
   </style>
 </head>
 
