@@ -1335,6 +1335,10 @@ async function handleRunExecutionGovernanceCycle(body) {
 }
 
 async function handlePrepareNotificationDispatchJobs(userSb, body, adminUserId) {
+  if (body && Object.prototype.hasOwnProperty.call(body, "actor_id")) {
+    throw new Error("actor_id_must_not_be_supplied_by_client");
+  }
+
   const tenantUuid = requireUuid(body && body.tenant_uuid, "tenant_uuid");
   const requestId = optionalUuid(body && body.request_id, "request_id");
   const limit = optionalLimit(body && body.limit, 50);
