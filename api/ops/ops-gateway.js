@@ -1133,11 +1133,26 @@ async function handleIncidentCommandExecutionLatest(req) {
 
 
 /* ---------------------------------------------------------
-   8M.11.8D Handler: evaluate_command_execution_policy
+   
+function rejectTopLevelActorIdForExecutionGovernance(body) {
+  if (!body || typeof body !== "object") return;
+
+  if (
+    Object.prototype.hasOwnProperty.call(body, "actor_id") ||
+    Object.prototype.hasOwnProperty.call(body, "actorId") ||
+    Object.prototype.hasOwnProperty.call(body, "p_actor_id")
+  ) {
+    throw new Error("actor_id_must_not_be_supplied_by_client");
+  }
+}
+
+8M.11.8D Handler: evaluate_command_execution_policy
    Policy evaluation only. No execution. No notification dispatch.
 --------------------------------------------------------- */
 
 async function handleEvaluateCommandExecutionPolicy(body) {
+  rejectTopLevelActorIdForExecutionGovernance(body);
+
   const tenantUuid = requireUuid(body.tenant_uuid, "tenant_uuid");
   const commandId = body.command_id ? requireUuid(body.command_id, "command_id") : null;
   const limit = optionalLimit(body.limit, 50);
@@ -1186,6 +1201,8 @@ async function handleEvaluateCommandExecutionPolicy(body) {
 --------------------------------------------------------- */
 
 async function handleGenerateNotificationContractRequests(body) {
+  rejectTopLevelActorIdForExecutionGovernance(body);
+
   const tenantUuid = requireUuid(body.tenant_uuid, "tenant_uuid");
   const policyEvaluationId = body.policy_evaluation_id
     ? requireUuid(body.policy_evaluation_id, "policy_evaluation_id")
@@ -1238,6 +1255,8 @@ async function handleGenerateNotificationContractRequests(body) {
 --------------------------------------------------------- */
 
 async function handleRunExecutionGovernanceCycle(body) {
+  rejectTopLevelActorIdForExecutionGovernance(body);
+
   const tenantUuid = requireUuid(body.tenant_uuid, "tenant_uuid");
   const commandId = body.command_id ? requireUuid(body.command_id, "command_id") : null;
   const limit = optionalLimit(body.limit, 50);
