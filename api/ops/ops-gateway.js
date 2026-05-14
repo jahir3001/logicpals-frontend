@@ -1466,11 +1466,32 @@ async function handleExecutionGovernanceSnapshot(req) {
 function getQueryValue(query, key) {
   if (!query) return undefined;
 
+  // URLSearchParams
   if (typeof query.get === "function") {
     return query.get(key);
   }
 
-  return query[key];
+  // Plain object: { tenant_uuid, limit }
+  if (Object.prototype.hasOwnProperty.call(query, key)) {
+    return query[key];
+  }
+
+  // Request-style object: req.query.tenant_uuid
+  if (query.query && Object.prototype.hasOwnProperty.call(query.query, key)) {
+    return query.query[key];
+  }
+
+  // URL/request object fallback
+  if (query.url) {
+    try {
+      const u = new URL(query.url, "https://logicpals.local");
+      return u.searchParams.get(key);
+    } catch (_) {
+      return undefined;
+    }
+  }
+
+  return undefined;
 }
 
 async function handleNotificationDispatcherSnapshot(userSb, query) {
