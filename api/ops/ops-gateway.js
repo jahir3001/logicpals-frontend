@@ -1500,7 +1500,7 @@ async function routeGetAction(action, userSb, req, adminUserId) {
 
     
     case GET_ACTIONS.NOTIFICATION_DISPATCHER_SNAPSHOT:
-      return handleNotificationDispatcherSnapshot(userSb, query);
+      return handleNotificationDispatcherSnapshot(userSb, req);
     case GET_ACTIONS.EXECUTION_GOVERNANCE_SNAPSHOT:
       return handleExecutionGovernanceSnapshot(req);
 
