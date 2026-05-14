@@ -134,6 +134,13 @@ const POST_ACTIONS = Object.freeze({
 
   SLA_RUN_GOVERNANCE_CYCLE:
     "sla_run_governance_cycle",
+
+  EVALUATE_COMMAND_EXECUTION_POLICY:
+    "evaluate_command_execution_policy",
+  GENERATE_NOTIFICATION_CONTRACT_REQUESTS:
+    "generate_notification_contract_requests",
+  RUN_EXECUTION_GOVERNANCE_CYCLE:
+    "run_execution_governance_cycle",
 });
 
 const GET_ACTIONS = Object.freeze({
@@ -1123,6 +1130,186 @@ async function handleIncidentCommandExecutionLatest(req) {
    21. POST Router
 --------------------------------------------------------- */
 
+
+
+/* ---------------------------------------------------------
+   8M.11.8D Handler: evaluate_command_execution_policy
+   Policy evaluation only. No execution. No notification dispatch.
+--------------------------------------------------------- */
+
+async function handleEvaluateCommandExecutionPolicy(body) {
+  const tenantUuid = requireUuid(body.tenant_uuid, "tenant_uuid");
+  const commandId = body.command_id ? requireUuid(body.command_id, "command_id") : null;
+  const limit = optionalLimit(body.limit, 50);
+  const environment = optionalString(body.environment, "production");
+  const evaluatorKey = optionalString(
+    body.evaluator_key,
+    "ops_gateway.8M.11.8D.execution_policy_evaluator"
+  );
+
+  const metadata = rejectBrowserSuppliedActorId({
+    ...(body.metadata || {}),
+    gateway: "api/ops/ops-gateway.js",
+    gateway_step: "8M.11.8D",
+    gateway_boundary: "execution_policy_evaluation_only_no_execution",
+    no_direct_incident_mutation: true,
+    no_incident_event_write: true,
+    no_raw_event_write: true,
+    no_notification_dispatch: true,
+    no_command_execution: true,
+  });
+
+  const svcSb = sbForService();
+
+  const result = await callRpc(
+    svcSb,
+    "public",
+    "ops_adapter_evaluate_command_execution_policy",
+    {
+      p_tenant_uuid: tenantUuid,
+      p_command_id: commandId,
+      p_limit: limit,
+      p_environment: environment,
+      p_evaluator_key: evaluatorKey,
+      p_metadata: metadata,
+    }
+  );
+
+  return { result };
+}
+
+
+/* ---------------------------------------------------------
+   8M.11.8D Handler: generate_notification_contract_requests
+   Creates pending notification/action contracts only.
+   No dispatch. No command execution.
+--------------------------------------------------------- */
+
+async function handleGenerateNotificationContractRequests(body) {
+  const tenantUuid = requireUuid(body.tenant_uuid, "tenant_uuid");
+  const policyEvaluationId = body.policy_evaluation_id
+    ? requireUuid(body.policy_evaluation_id, "policy_evaluation_id")
+    : null;
+  const commandId = body.command_id ? requireUuid(body.command_id, "command_id") : null;
+  const limit = optionalLimit(body.limit, 50);
+  const workerId = optionalString(
+    body.worker_id,
+    "ops_gateway.8M.11.8D.notification_contract_generator"
+  );
+
+  const metadata = rejectBrowserSuppliedActorId({
+    ...(body.metadata || {}),
+    gateway: "api/ops/ops-gateway.js",
+    gateway_step: "8M.11.8D",
+    gateway_boundary: "notification_contract_request_only_no_dispatch",
+    no_direct_incident_mutation: true,
+    no_incident_event_write: true,
+    no_raw_event_write: true,
+    no_notification_dispatch: true,
+    no_command_execution: true,
+  });
+
+  const svcSb = sbForService();
+
+  const result = await callRpc(
+    svcSb,
+    "public",
+    "ops_notify_generate_notification_dispatch_requests",
+    {
+      p_tenant_uuid: tenantUuid,
+      p_policy_evaluation_id: policyEvaluationId,
+      p_command_id: commandId,
+      p_limit: limit,
+      p_worker_id: workerId,
+      p_metadata: metadata,
+    }
+  );
+
+  return { result };
+}
+
+
+/* ---------------------------------------------------------
+   8M.11.8D Handler: run_execution_governance_cycle
+   Combined gateway action:
+   1. evaluate execution policy
+   2. create pending notification/action request contracts
+   Still no dispatch and no command execution.
+--------------------------------------------------------- */
+
+async function handleRunExecutionGovernanceCycle(body) {
+  const tenantUuid = requireUuid(body.tenant_uuid, "tenant_uuid");
+  const commandId = body.command_id ? requireUuid(body.command_id, "command_id") : null;
+  const limit = optionalLimit(body.limit, 50);
+  const environment = optionalString(body.environment, "production");
+
+  const baseMetadata = rejectBrowserSuppliedActorId({
+    ...(body.metadata || {}),
+    gateway: "api/ops/ops-gateway.js",
+    gateway_step: "8M.11.8D",
+    gateway_boundary: "combined_execution_governance_cycle_no_execution_no_dispatch",
+    no_direct_incident_mutation: true,
+    no_incident_event_write: true,
+    no_raw_event_write: true,
+    no_notification_dispatch: true,
+    no_command_execution: true,
+  });
+
+  const svcSb = sbForService();
+
+  const evaluateResult = await callRpc(
+    svcSb,
+    "public",
+    "ops_adapter_evaluate_command_execution_policy",
+    {
+      p_tenant_uuid: tenantUuid,
+      p_command_id: commandId,
+      p_limit: limit,
+      p_environment: environment,
+      p_evaluator_key: "ops_gateway.8M.11.8D.combined_cycle.evaluate",
+      p_metadata: {
+        ...baseMetadata,
+        cycle_phase: "evaluate_command_execution_policy",
+      },
+    }
+  );
+
+  const notifyResult = await callRpc(
+    svcSb,
+    "public",
+    "ops_notify_generate_notification_dispatch_requests",
+    {
+      p_tenant_uuid: tenantUuid,
+      p_policy_evaluation_id: null,
+      p_command_id: commandId,
+      p_limit: limit,
+      p_worker_id: "ops_gateway.8M.11.8D.combined_cycle.notification_contract",
+      p_metadata: {
+        ...baseMetadata,
+        cycle_phase: "generate_notification_contract_requests",
+      },
+    }
+  );
+
+  return {
+    result: {
+      ok: true,
+      step: "8M.11.8D",
+      action: "run_execution_governance_cycle",
+      boundary: "combined_execution_governance_cycle_no_execution_no_dispatch",
+      tenant_uuid: tenantUuid,
+      environment,
+      no_direct_incident_mutation: true,
+      no_incident_event_write: true,
+      no_raw_event_write: true,
+      no_notification_dispatch: true,
+      no_command_execution: true,
+      evaluate_result: evaluateResult,
+      notification_contract_result: notifyResult,
+    },
+  };
+}
+
 async function routePostAction(action, userSb, body, adminUserId) {
   switch (action) {
     case POST_ACTIONS.INGEST_EVENT:
@@ -1147,6 +1334,16 @@ async function routePostAction(action, userSb, body, adminUserId) {
 
     case POST_ACTIONS.SLA_RUN_GOVERNANCE_CYCLE:
       return handleSlaRunGovernanceCycle(body, adminUserId);
+
+
+    case POST_ACTIONS.EVALUATE_COMMAND_EXECUTION_POLICY:
+      return handleEvaluateCommandExecutionPolicy(body);
+
+    case POST_ACTIONS.GENERATE_NOTIFICATION_CONTRACT_REQUESTS:
+      return handleGenerateNotificationContractRequests(body);
+
+    case POST_ACTIONS.RUN_EXECUTION_GOVERNANCE_CYCLE:
+      return handleRunExecutionGovernanceCycle(body);
 
 default:
       throw new Error(`unknown_post_action:${action}`);
