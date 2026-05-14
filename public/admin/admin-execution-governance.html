@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>LogicPals Operations OS — Execution Governance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <script src="/api/env.js" defer></script>
+  <script src="/assets/admin-auth.js" defer></script>
+  <script src="/assets/lp-admin-client.js" defer></script>
+
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --soft: #eef2ff;
+      --primary: #6366f1;
+      --green: #16a34a;
+      --red: #dc2626;
+      --amber: #d97706;
+      --dark: #020617;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+    }
+
+    header {
+      height: 56px;
+      background: #0f172a;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 22px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--primary);
+      box-shadow: 0 0 0 4px rgba(99,102,241,.22);
+    }
+
+    .top-badges {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink);
+    }
+
+    header .badge {
+      background: #1e293b;
+      border-color: #334155;
+      color: white;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      min-height: calc(100vh - 56px);
+    }
+
+    aside {
+      background: white;
+      border-right: 1px solid var(--line);
+      padding: 22px 16px;
+    }
+
+    .nav-title {
+      color: var(--muted);
+      text-transform: uppercase;
+      font-weight: 900;
+      letter-spacing: .12em;
+      font-size: 11px;
+      margin: 0 0 12px;
+    }
+
+    .nav a {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #334155;
+      text-decoration: none;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-weight: 750;
+      margin-bottom: 4px;
+    }
+
+    .nav a.active {
+      background: var(--soft);
+      color: #4338ca;
+    }
+
+    main {
+      padding: 28px;
+      max-width: 1560px;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-start;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      letter-spacing: -.04em;
+    }
+
+    .sub {
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 860px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink);
+      font-weight: 850;
+      padding: 11px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+    }
+
+    button.primary {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: white;
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .notice {
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1e3a8a;
+      padding: 14px 16px;
+      border-radius: 14px;
+      margin-bottom: 18px;
+      font-weight: 650;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, .05);
+    }
+
+    .metric {
+      padding: 18px;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      margin-bottom: 10px;
+    }
+
+    .metric .value {
+      font-size: 30px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -.04em;
+    }
+
+    .metric .hint {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    section.card {
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+
+    .section-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: -.02em;
+    }
+
+    .section-head p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .count-pill {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      padding: 12px 14px;
+      color: #475569;
+      background: #f8fafc;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+      color: #1e293b;
+      vertical-align: top;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      color: #334155;
+      white-space: nowrap;
+    }
+
+    .status.green {
+      background: #dcfce7;
+      border-color: #bbf7d0;
+      color: #166534;
+    }
+
+    .status.red {
+      background: #fee2e2;
+      border-color: #fecaca;
+      color: #991b1b;
+    }
+
+    .status.amber {
+      background: #fef3c7;
+      border-color: #fde68a;
+      color: #92400e;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      word-break: break-word;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    pre {
+      margin: 0;
+      background: var(--dark);
+      color: #e5e7eb;
+      padding: 16px;
+      border-radius: 0 0 16px 16px;
+      overflow: auto;
+      max-height: 420px;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .footer {
+      margin-top: 26px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      padding: 14px 16px;
+      border-radius: 14px;
+      margin-bottom: 18px;
+      display: none;
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 1100px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { display: none; }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .two-col { grid-template-columns: 1fr; }
+      .hero { flex-direction: column; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="brand"><span class="dot"></span> LogicPals Operations OS</div>
+    <div class="top-badges">
+      <span class="badge">Read-only</span>
+      <span class="badge">Execution Governance</span>
+      <span class="badge">8M.11.8G</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <p class="nav-title">Operations</p>
+      <nav class="nav">
+        <a href="/admin/admin-incidents.html">Incident Management <span>›</span></a>
+        <a href="/admin/admin-sla-governance.html">SLA Governance <span>›</span></a>
+        <a class="active" href="/admin/admin-execution-governance.html">Execution Governance <span>•</span></a>
+        <a href="/admin/admin-circuit-breakers.html">Circuit Breakers <span>›</span></a>
+      </nav>
+
+      <p class="nav-title" style="margin-top:24px;">Safety</p>
+      <nav class="nav">
+        <a href="#policies">Execution Policies</a>
+        <a href="#evaluations">Policy Evaluations</a>
+        <a href="#notifications">Notification Contracts</a>
+        <a href="#commands">Command Safety</a>
+      </nav>
+    </aside>
+
+    <main>
+      <div class="hero">
+        <div>
+          <h1>Execution Governance</h1>
+          <div class="sub">
+            Read-only operational view for command execution policy decisions and pending notification/action contracts.
+            This temporary panel does not execute commands, dispatch notifications, or mutate operational data.
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="btnRefresh">Refresh Snapshot</button>
+          <button id="btnCopy">Copy JSON</button>
+          <button id="btnOpenSla">Open SLA Governance</button>
+        </div>
+      </div>
+
+      <div class="notice">
+        <strong>Read-only boundary active.</strong>
+        Browser → ops-gateway → public snapshot RPC. No direct Supabase table reads, no writes, no cron trigger, no notification dispatch, no protected command execution.
+      </div>
+
+      <div class="error" id="errorBox"></div>
+
+      <div class="grid">
+        <div class="card metric">
+          <div class="label">Policies</div>
+          <div class="value" id="metricPolicies">—</div>
+          <div class="hint">execution policies</div>
+        </div>
+
+        <div class="card metric">
+          <div class="label">Active Policies</div>
+          <div class="value" id="metricActivePolicies">—</div>
+          <div class="hint">currently active</div>
+        </div>
+
+        <div class="card metric">
+          <div class="label">Evaluations</div>
+          <div class="value" id="metricEvaluations">—</div>
+          <div class="hint">policy decision rows</div>
+        </div>
+
+        <div class="card metric">
+          <div class="label">Notifications</div>
+          <div class="value" id="metricNotifications">—</div>
+          <div class="hint">contract requests</div>
+        </div>
+
+        <div class="card metric">
+          <div class="label">Pending</div>
+          <div class="value" id="metricPending">—</div>
+          <div class="hint">not dispatched</div>
+        </div>
+
+        <div class="card metric">
+          <div class="label">Dispatched</div>
+          <div class="value" id="metricDispatched">—</div>
+          <div class="hint">should be 0 now</div>
+        </div>
+      </div>
+
+      <section class="card" id="policies">
+        <div class="section-head">
+          <div>
+            <h2>Execution Policies</h2>
+            <p>Current policy contract for command type, mode, notification requirement, and approval behavior.</p>
+          </div>
+          <span class="count-pill" id="policiesCount">0 rows</span>
+        </div>
+        <div style="overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Policy</th>
+                <th>Command</th>
+                <th>Mode</th>
+                <th>Approval</th>
+                <th>Notify</th>
+                <th>Auto</th>
+                <th>Blocked</th>
+                <th>Priority</th>
+              </tr>
+            </thead>
+            <tbody id="policiesBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card" id="evaluations">
+        <div class="section-head">
+          <div>
+            <h2>Latest Policy Evaluations</h2>
+            <p>Decision rows created by the deterministic command execution policy evaluator.</p>
+          </div>
+          <span class="count-pill" id="evaluationsCount">0 rows</span>
+        </div>
+        <div style="overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Command</th>
+                <th>Type</th>
+                <th>Policy</th>
+                <th>Mode</th>
+                <th>Decision</th>
+                <th>Notify</th>
+                <th>Blocked</th>
+                <th>Evaluated</th>
+              </tr>
+            </thead>
+            <tbody id="evaluationsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card" id="notifications">
+        <div class="section-head">
+          <div>
+            <h2>Notification / Action Contract Requests</h2>
+            <p>Pending notification request contracts only. No dispatch happens from this panel.</p>
+          </div>
+          <span class="count-pill" id="notificationsCount">0 rows</span>
+        </div>
+        <div style="overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Target</th>
+                <th>Status</th>
+                <th>Policy</th>
+                <th>Queued</th>
+                <th>Dispatched</th>
+                <th>Failed</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="notificationsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card" id="commands">
+        <div class="section-head">
+          <div>
+            <h2>Command Safety Snapshot</h2>
+            <p>Shows command candidates and whether they have any execution evidence.</p>
+          </div>
+          <span class="count-pill" id="commandsCount">0 rows</span>
+        </div>
+        <div style="overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Command Key</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Policy</th>
+                <th>Severity</th>
+                <th>Priority</th>
+                <th>Executed?</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="commandsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="two-col">
+        <section class="card">
+          <div class="section-head">
+            <div>
+              <h2>Snapshot Metadata</h2>
+              <p>Gateway and snapshot contract metadata.</p>
+            </div>
+            <span class="count-pill" id="generatedAt">—</span>
+          </div>
+          <div style="padding:16px 18px;">
+            <div class="mono" id="metaBox">Loading…</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <div>
+              <h2>Raw Snapshot Preview</h2>
+              <p>Useful for QC only.</p>
+            </div>
+          </div>
+          <pre id="rawJson">{}</pre>
+        </section>
+      </div>
+
+      <div class="footer">
+        8M.11.8G temporary admin panel. Final Figma design can replace this later. Functional contract must remain read-only.
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const TENANT_UUID = "67c0ebf5-7f52-4d69-ba89-1a1b7baf14be";
+    const GATEWAY = "/api/ops/ops-gateway";
+
+    let lastPayload = null;
+
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+    function esc(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function short(value, len = 18) {
+      const s = String(value ?? "");
+      if (!s) return "—";
+      return s.length > len ? s.slice(0, len) + "…" : s;
+    }
+
+    function fmtDate(value) {
+      if (!value) return "—";
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return String(value);
+      return d.toLocaleString();
+    }
+
+    function boolBadge(value) {
+      return value
+        ? '<span class="status green">true</span>'
+        : '<span class="status">false</span>';
+    }
+
+    function statusBadge(value) {
+      const v = String(value ?? "—");
+      let cls = "";
+      if (["pending", "evaluated", "succeeded", "notification_only", "policy_approved"].includes(v)) cls = "green";
+      if (["blocked", "failed", "cancelled"].includes(v)) cls = "red";
+      if (["manual_required", "dry_run_only"].includes(v)) cls = "amber";
+      return `<span class="status ${cls}">${esc(v)}</span>`;
+    }
+
+    async function getToken() {
+      if (window.LPAdmin && window.LPAdmin.auth && typeof window.LPAdmin.auth.getAccessToken === "function") {
+        return await window.LPAdmin.auth.getAccessToken();
+      }
+
+      if (window.AdminAuth && typeof window.AdminAuth.getAccessToken === "function") {
+        return await window.AdminAuth.getAccessToken();
+      }
+
+      const raw =
+        localStorage.getItem("sb-access-token") ||
+        localStorage.getItem("access_token") ||
+        sessionStorage.getItem("access_token");
+
+      return raw || "";
+    }
+
+    async function fetchSnapshot() {
+      $("errorBox").style.display = "none";
+      $("btnRefresh").disabled = true;
+      $("btnRefresh").textContent = "Refreshing…";
+
+      try {
+        const token = await getToken();
+
+        if (!token) {
+          throw new Error("Missing admin access token. Please sign in as admin first.");
+        }
+
+        const url =
+          `${GATEWAY}?action=execution_governance_snapshot` +
+          `&tenant_uuid=${encodeURIComponent(TENANT_UUID)}` +
+          `&limit=20`;
+
+        const res = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Accept": "application/json"
+          }
+        });
+
+        const json = await res.json().catch(() => null);
+
+        if (!res.ok || !json || json.ok === false) {
+          throw new Error(JSON.stringify(json || { status: res.status }, null, 2));
+        }
+
+        lastPayload = json;
+        render(json);
+      } catch (err) {
+        $("errorBox").style.display = "block";
+        $("errorBox").textContent = err.message || String(err);
+      } finally {
+        $("btnRefresh").disabled = false;
+        $("btnRefresh").textContent = "Refresh Snapshot";
+      }
+    }
+
+    function render(payload) {
+      const result = payload.result || {};
+      const snapshot = result.snapshot || {};
+      const summary = snapshot.summary || {};
+
+      $("metricPolicies").textContent = summary.policy_count ?? "0";
+      $("metricActivePolicies").textContent = summary.active_policy_count ?? "0";
+      $("metricEvaluations").textContent = summary.policy_evaluation_count ?? "0";
+      $("metricNotifications").textContent = summary.notification_request_count ?? "0";
+      $("metricPending").textContent = summary.pending_notification_count ?? "0";
+      $("metricDispatched").textContent = summary.dispatched_notification_count ?? "0";
+
+      renderPolicies(snapshot.policies || []);
+      renderEvaluations(snapshot.latest_evaluations || []);
+      renderNotifications(snapshot.notification_requests || []);
+      renderCommands(snapshot.command_safety || []);
+
+      $("generatedAt").textContent = fmtDate(snapshot.generated_at || result.generated_at);
+
+      $("metaBox").innerHTML = `
+        <div><strong>Gateway step:</strong> ${esc(result.step)}</div>
+        <div><strong>Gateway action:</strong> ${esc(result.action)}</div>
+        <div><strong>Gateway boundary:</strong> ${esc(result.boundary)}</div>
+        <div><strong>Snapshot mode:</strong> ${esc(snapshot.mode)}</div>
+        <div><strong>Snapshot step:</strong> ${esc(snapshot.step)}</div>
+        <div><strong>Tenant:</strong> ${esc(result.tenant_uuid || snapshot.tenant_uuid)}</div>
+        <div><strong>No command execution:</strong> ${esc(result.no_command_execution)}</div>
+        <div><strong>No notification dispatch:</strong> ${esc(result.no_notification_dispatch)}</div>
+      `;
+
+      $("rawJson").textContent = JSON.stringify(payload, null, 2);
+    }
+
+    function renderPolicies(rows) {
+      $("policiesCount").textContent = `${rows.length} rows`;
+      $("policiesBody").innerHTML = rows.map(r => `
+        <tr>
+          <td class="mono">${esc(r.policy_key)}<br><span style="color:#64748b;">v${esc(r.policy_version)}</span></td>
+          <td class="mono">${esc(r.command_type)}</td>
+          <td>${statusBadge(r.execution_mode)}</td>
+          <td>${boolBadge(r.approval_required)}</td>
+          <td>${boolBadge(r.notification_required)}</td>
+          <td>${boolBadge(r.auto_execute_allowed)}</td>
+          <td>${boolBadge(r.blocked)}</td>
+          <td>${esc(r.priority)}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="8">No policies found.</td></tr>`;
+    }
+
+    function renderEvaluations(rows) {
+      $("evaluationsCount").textContent = `${rows.length} rows`;
+      $("evaluationsBody").innerHTML = rows.map(r => `
+        <tr>
+          <td class="mono">${esc(short(r.command_key, 34))}</td>
+          <td class="mono">${esc(r.command_type)}</td>
+          <td class="mono">${esc(r.policy_key || "—")}</td>
+          <td>${statusBadge(r.execution_mode)}</td>
+          <td>${statusBadge(r.execution_decision)}</td>
+          <td>${boolBadge(r.notification_required)}</td>
+          <td>${boolBadge(r.blocked)}</td>
+          <td>${esc(fmtDate(r.evaluated_at))}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="8">No evaluations found.</td></tr>`;
+    }
+
+    function renderNotifications(rows) {
+      $("notificationsCount").textContent = `${rows.length} rows`;
+      $("notificationsBody").innerHTML = rows.map(r => `
+        <tr>
+          <td class="mono">${esc(r.notification_type)}</td>
+          <td>${esc(r.target_type)} / <span class="mono">${esc(r.target_identifier)}</span></td>
+          <td>${statusBadge(r.dispatch_status)}</td>
+          <td class="mono">${esc(r.policy_key || "—")}</td>
+          <td>${esc(fmtDate(r.queued_at))}</td>
+          <td>${esc(fmtDate(r.dispatched_at))}</td>
+          <td>${esc(fmtDate(r.failed_at))}</td>
+          <td>${esc(fmtDate(r.created_at))}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="8">No notification contracts found.</td></tr>`;
+    }
+
+    function renderCommands(rows) {
+      $("commandsCount").textContent = `${rows.length} rows`;
+      $("commandsBody").innerHTML = rows.map(r => `
+        <tr>
+          <td class="mono">${esc(short(r.command_key, 42))}</td>
+          <td class="mono">${esc(r.command_type)}</td>
+          <td>${statusBadge(r.command_status)}</td>
+          <td>${statusBadge(r.policy_decision)}</td>
+          <td>${esc(r.severity_hint || "—")}</td>
+          <td>${esc(r.priority_hint || "—")}</td>
+          <td>${r.has_execution_evidence ? '<span class="status red">yes</span>' : '<span class="status green">no</span>'}</td>
+          <td>${esc(fmtDate(r.created_at))}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="8">No command candidates found.</td></tr>`;
+    }
+
+    async function copyJson() {
+      if (!lastPayload) return;
+      await navigator.clipboard.writeText(JSON.stringify(lastPayload, null, 2));
+      $("btnCopy").textContent = "Copied";
+      setTimeout(() => $("btnCopy").textContent = "Copy JSON", 1200);
+    }
+
+    $("btnRefresh").addEventListener("click", fetchSnapshot);
+    $("btnCopy").addEventListener("click", copyJson);
+    $("btnOpenSla").addEventListener("click", () => {
+      window.location.href = "/admin/admin-sla-governance.html";
+    });
+
+    window.addEventListener("load", () => {
+      setTimeout(fetchSnapshot, 400);
+    });
+  </script>
+</body>
+</html>
