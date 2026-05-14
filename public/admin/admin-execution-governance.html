@@ -704,35 +704,92 @@
       return raw || "";
     }
 
+    async function callSnapshotThroughLPAdmin(url) {
+      const params = {
+        tenant_uuid: TENANT_UUID,
+        limit: 20
+      };
+
+      const api = window.LPAdmin && window.LPAdmin.api;
+
+      if (!api) return null;
+
+      const attempts = [
+        async () => api.getAction && api.getAction(GATEWAY, "execution_governance_snapshot", params),
+        async () => api.getAction && api.getAction("execution_governance_snapshot", params),
+        async () => api.get && api.get(url),
+        async () => api.request && api.request(url, { method: "GET" }),
+      ];
+
+      for (const fn of attempts) {
+        try {
+          const result = await fn();
+
+          if (!result) continue;
+
+          if (result.ok === false) {
+            throw new Error(JSON.stringify(result, null, 2));
+          }
+
+          return result;
+        } catch (err) {
+          const message = err && err.message ? err.message : String(err);
+
+          // Try next signature only for signature/type errors.
+          if (
+            message.includes("is not a function") ||
+            message.includes("Cannot read") ||
+            message.includes("undefined") ||
+            message.includes("Failed to parse")
+          ) {
+            continue;
+          }
+
+          throw err;
+        }
+      }
+
+      return null;
+    }
+
     async function fetchSnapshot() {
       $("errorBox").style.display = "none";
       $("btnRefresh").disabled = true;
       $("btnRefresh").textContent = "Refreshing…";
 
       try {
-        const token = await getToken();
-
-        if (!token) {
-          throw new Error("Missing admin access token. Please sign in as admin first.");
-        }
-
         const url =
           `${GATEWAY}?action=execution_governance_snapshot` +
           `&tenant_uuid=${encodeURIComponent(TENANT_UUID)}` +
           `&limit=20`;
 
-        const res = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Accept": "application/json"
+        // Preferred: use the same authenticated LPAdmin gateway helper
+        // used by existing admin pages.
+        let json = await callSnapshotThroughLPAdmin(url);
+
+        // Fallback: direct fetch with browser session token.
+        if (!json) {
+          const token = await getToken();
+
+          if (!token) {
+            throw new Error(
+              "Missing admin access token. Please open /admin/admin-incidents.html first, confirm admin login, then reopen this page."
+            );
           }
-        });
 
-        const json = await res.json().catch(() => null);
+          const res = await fetch(url, {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Accept": "application/json"
+            }
+          });
 
-        if (!res.ok || !json || json.ok === false) {
-          throw new Error(JSON.stringify(json || { status: res.status }, null, 2));
+          json = await res.json().catch(() => null);
+
+          if (!res.ok || !json || json.ok === false) {
+            throw new Error(JSON.stringify(json || { status: res.status }, null, 2));
+          }
         }
 
         lastPayload = json;
