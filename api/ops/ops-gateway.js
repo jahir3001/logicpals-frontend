@@ -165,6 +165,7 @@ const GET_ACTIONS = Object.freeze({
   NOTIFICATION_DISPATCHER_SNAPSHOT: "notification_dispatcher_snapshot",
 
   PROVIDER_EXECUTION_GOVERNANCE_SNAPSHOT: "provider_execution_governance_snapshot",
+  EXECUTE_PROVIDER_DELIVERY_DRY_RUN: "execute_provider_delivery_dry_run",
 });
 
 /* ---------------------------------------------------------
@@ -1466,7 +1467,11 @@ async function routePostAction(action, userSb, body, adminUserId) {
       return handleGenerateProviderExecutionCandidates(userSb, body, adminUserId);
 
 
-    case POST_ACTIONS.RUN_EXECUTION_GOVERNANCE_CYCLE:
+    
+    case POST_ACTIONS.EXECUTE_PROVIDER_DELIVERY_DRY_RUN:
+    case "execute_provider_delivery_dry_run":
+      return handleExecuteProviderDeliveryDryRun(userSb, body, adminUserId);
+case POST_ACTIONS.RUN_EXECUTION_GOVERNANCE_CYCLE:
       return handleRunExecutionGovernanceCycle(body);
 
 default:
@@ -1569,6 +1574,82 @@ async function handleNotificationDispatcherSnapshot(userSb, query) {
       p_limit: limit
     }
   );
+}
+
+
+async function handleExecuteProviderDeliveryDryRun(userSb, body, adminUserId) {
+  const input = body || {};
+
+  if (Object.prototype.hasOwnProperty.call(input, "actor_id")) {
+    throw new Error("actor_id_must_not_be_supplied_by_client");
+  }
+
+  if (
+    input.metadata &&
+    typeof input.metadata === "object" &&
+    Object.prototype.hasOwnProperty.call(input.metadata, "actor_id")
+  ) {
+    throw new Error("metadata_must_not_contain_actor_id");
+  }
+
+  const tenantUuid = requireUuid(
+    input.tenant_uuid || input.tenantUuid || input.tenant,
+    "tenant_uuid"
+  );
+
+  const candidateRaw = input.candidate_id || input.candidateId || null;
+  const candidateId = candidateRaw ? optionalUuid(candidateRaw, "candidate_id") : null;
+
+  const limit = optionalLimit(input.limit, 50);
+
+  const environment = String(input.environment || "production");
+  if (environment !== "production") {
+    throw new Error("invalid_environment");
+  }
+
+  const metadata =
+    input.metadata && typeof input.metadata === "object" && !Array.isArray(input.metadata)
+      ? input.metadata
+      : {};
+
+  const params = {
+    p_tenant_uuid: tenantUuid,
+    p_candidate_id: candidateId,
+    p_limit: limit,
+    p_environment: environment,
+    p_worker_id: `ops_gateway:${adminUserId}`,
+    p_metadata: {
+      ...metadata,
+      gateway_action: "execute_provider_delivery_dry_run",
+      gateway_step: "8M.11.11C",
+      triggered_from: metadata.triggered_from || "ops_gateway"
+    }
+  };
+
+  const result = await callRpc(
+    userSb,
+    "public",
+    "ops_notify_execute_provider_delivery_dry_run",
+    params
+  );
+
+  return {
+    ok: true,
+    step: "8M.11.11C",
+    action: "execute_provider_delivery_dry_run",
+    boundary: "gateway_dry_run_provider_delivery_execution_no_provider_call",
+    authenticated_user_id: adminUserId,
+    result,
+    safety: {
+      dry_run_only: true,
+      no_provider_call: true,
+      no_external_delivery: true,
+      no_dispatch_queue_mutation: true,
+      no_incident_mutation: true,
+      no_incident_event_write: true,
+      no_raw_event_write: true
+    }
+  };
 }
 
 async function handleProviderExecutionGovernanceSnapshot(userSb, reqOrQuery, adminUserId) {
