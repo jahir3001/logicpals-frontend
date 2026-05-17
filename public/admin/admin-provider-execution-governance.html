@@ -7,7 +7,8 @@
 
   <script src="/api/env.js" defer></script>
   <script src="/assets/js/admin-auth.js" defer></script>
-  <script src="/assets/lp-admin-client.js" defer></script>
+  <script src="/admin/_shared/bootstrap.js" defer></script>
+  <script src="/admin/_shared/lp-admin-client.js" defer></script>
 
   <style>
     :root {
@@ -823,10 +824,144 @@
       );
     }
 
+    
+    async function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async function resolveAdminAccessToken() {
+      const tryRead = async () => {
+        // Existing page resolver first
+        try {
+          if (typeof getAccessToken === "function") {
+            const t = await Promise.resolve(getAccessToken());
+            if (t && String(t).length > 40) return t;
+          }
+        } catch (_) {}
+
+        // Common admin auth/client object names used across the app
+        const objects = [
+          window.LPAdminAuth,
+          window.AdminAuth,
+          window.lpAdminClient,
+          window.LPAdminClient,
+          window.adminClient,
+          window.lpAdmin,
+          window.LogicPalsAdmin
+        ];
+
+        const methodNames = [
+          "getAccessToken",
+          "accessToken",
+          "getToken",
+          "token",
+          "getSessionToken",
+          "getJwt",
+          "getJWT"
+        ];
+
+        for (const obj of objects) {
+          if (!obj) continue;
+
+          for (const method of methodNames) {
+            try {
+              if (typeof obj[method] === "function") {
+                const t = await Promise.resolve(obj[method]());
+                if (t && String(t).length > 40) return t;
+              }
+            } catch (_) {}
+          }
+
+          const directValues = [
+            obj.accessToken,
+            obj.token,
+            obj.jwt,
+            obj.session?.access_token,
+            obj.currentSession?.access_token
+          ];
+
+          for (const t of directValues) {
+            if (t && String(t).length > 40) return t;
+          }
+        }
+
+        // Supabase clients exposed by env/bootstrap
+        const clients = [
+          window.supabase,
+          window.supabaseClient,
+          window.lpSupabase,
+          window.LPSupabase,
+          window.__supabase,
+          window.__lpSupabase
+        ];
+
+        for (const client of clients) {
+          try {
+            if (client?.auth?.getSession) {
+              const out = await client.auth.getSession();
+              const t = out?.data?.session?.access_token;
+              if (t && String(t).length > 40) return t;
+            }
+          } catch (_) {}
+        }
+
+        // Storage scan, including sb-xxxxx-auth-token
+        const stores = [localStorage, sessionStorage];
+
+        for (const store of stores) {
+          try {
+            for (let i = 0; i < store.length; i++) {
+              const key = store.key(i);
+              const raw = store.getItem(key);
+              if (!raw) continue;
+
+              if (raw.startsWith("eyJ") && raw.length > 80) return raw;
+
+              if (
+                key.includes("auth-token") ||
+                key.startsWith("sb-") ||
+                key.toLowerCase().includes("token") ||
+                raw.includes("access_token")
+              ) {
+                try {
+                  const parsed = JSON.parse(raw);
+
+                  const candidates = [
+                    parsed?.access_token,
+                    parsed?.currentSession?.access_token,
+                    parsed?.session?.access_token,
+                    parsed?.data?.session?.access_token,
+                    parsed?.state?.session?.access_token,
+                    parsed?.user?.access_token
+                  ];
+
+                  for (const t of candidates) {
+                    if (t && String(t).length > 40) return t;
+                  }
+                } catch (_) {}
+              }
+            }
+          } catch (_) {}
+        }
+
+        return "";
+      };
+
+      // Give deferred shared admin scripts time to initialize.
+      for (let i = 0; i < 20; i++) {
+        const token = await tryRead();
+        if (token) return token;
+        await sleep(150);
+      }
+
+      return "";
+    }
+
+
     async function fetchSnapshot() {
       clearStatus();
 
-      const token = await Promise.resolve(getAccessToken());
+      const token = await resolveAdminAccessToken();
 
       if (!token) {
         setStatus("Missing admin access token. Please sign in as admin first.", "bad");
