@@ -130,6 +130,8 @@ const POST_ACTIONS = Object.freeze({
   GENERATE_NOTIFICATION_CONTRACT_REQUESTS: "generate_notification_contract_requests",
   RUN_EXECUTION_GOVERNANCE_CYCLE: "run_execution_governance_cycle",
   PREPARE_NOTIFICATION_DISPATCH_JOBS: "prepare_notification_dispatch_jobs",
+
+  GENERATE_PROVIDER_EXECUTION_CANDIDATES: "generate_provider_execution_candidates",
 });
 
 const GET_ACTIONS = Object.freeze({
@@ -1370,6 +1372,59 @@ async function handlePrepareNotificationDispatchJobs(userSb, body, adminUserId) 
   );
 }
 
+async function handleGenerateProviderExecutionCandidates(userSb, body, adminUserId) {
+  if (body?.actor_id) {
+    throw new Error("actor_id_must_not_be_supplied_by_client");
+  }
+
+  if (body?.metadata && Object.prototype.hasOwnProperty.call(body.metadata, "actor_id")) {
+    throw new Error("metadata_must_not_contain_actor_id");
+  }
+
+  const tenantUuid = body?.tenant_uuid;
+  if (!tenantUuid || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(tenantUuid))) {
+    throw new Error("invalid_tenant_uuid");
+  }
+
+  const limit = Number.isFinite(Number(body?.limit)) ? Number(body.limit) : 50;
+  const environment = body?.environment || "production";
+  const workerId = `ops_gateway:${adminUserId}`;
+
+  const params = {
+    p_tenant_uuid: tenantUuid,
+    p_dispatch_id: body?.dispatch_id || null,
+    p_limit: Math.min(Math.max(limit, 1), 100),
+    p_environment: environment,
+    p_worker_id: workerId,
+    p_metadata: {
+      ...(body?.metadata || {}),
+      gateway_action: "generate_provider_execution_candidates",
+      qc_step: body?.metadata?.qc_step || "8M.11.10E",
+      boundary: "candidate_generation_only_no_provider_execution"
+    }
+  };
+
+  const data = await callRpc(
+    userSb,
+    "public",
+    "ops_notify_generate_provider_execution_candidates",
+    params
+  );
+
+  return {
+    ok: true,
+    step: "8M.11.10E",
+    action: "generate_provider_execution_candidates",
+    boundary: "gateway_candidate_generation_only_no_provider_execution",
+    result: data,
+    no_provider_call: true,
+    no_external_delivery: true,
+    no_queue_write: true,
+    no_incident_mutation: true,
+    no_raw_event_write: true
+  };
+}
+
 async function routePostAction(action, userSb, body, adminUserId) {
   switch (action) {
     case POST_ACTIONS.INGEST_EVENT:
@@ -1404,6 +1459,11 @@ async function routePostAction(action, userSb, body, adminUserId) {
 
     case "prepare_notification_dispatch_jobs":
       return handlePrepareNotificationDispatchJobs(userSb, body, adminUserId);
+    case POST_ACTIONS.GENERATE_PROVIDER_EXECUTION_CANDIDATES:
+    case "generate_provider_execution_candidates":
+      return handleGenerateProviderExecutionCandidates(userSb, body, adminUserId);
+
+
     case POST_ACTIONS.RUN_EXECUTION_GOVERNANCE_CYCLE:
       return handleRunExecutionGovernanceCycle(body);
 
