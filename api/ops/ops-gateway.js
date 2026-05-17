@@ -163,6 +163,8 @@ const GET_ACTIONS = Object.freeze({
   EXECUTION_GOVERNANCE_SNAPSHOT:
     "execution_governance_snapshot",
   NOTIFICATION_DISPATCHER_SNAPSHOT: "notification_dispatcher_snapshot",
+
+  PROVIDER_EXECUTION_GOVERNANCE_SNAPSHOT: "provider_execution_governance_snapshot",
 });
 
 /* ---------------------------------------------------------
@@ -1569,6 +1571,42 @@ async function handleNotificationDispatcherSnapshot(userSb, query) {
   );
 }
 
+async function handleProviderExecutionGovernanceSnapshot(userSb, query, adminUserId) {
+  const tenantUuid = query?.tenant_uuid;
+
+  if (!tenantUuid || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(tenantUuid))) {
+    throw new Error("invalid_tenant_uuid");
+  }
+
+  const limit = Number.isFinite(Number(query?.limit)) ? Number(query.limit) : 20;
+
+  const data = await callRpc(
+    userSb,
+    "public",
+    "ops_provider_execution_governance_admin_snapshot",
+    {
+      p_tenant_uuid: tenantUuid,
+      p_limit: Math.min(Math.max(limit, 1), 100)
+    }
+  );
+
+  return {
+    ok: true,
+    step: "8M.11.10G",
+    action: "provider_execution_governance_snapshot",
+    boundary: "gateway_read_only_provider_execution_governance_snapshot",
+    authenticated_user_id: adminUserId,
+    result: data,
+    no_provider_call: true,
+    no_external_delivery: true,
+    no_queue_write: true,
+    no_candidate_write: true,
+    no_provider_event_write: true,
+    no_incident_mutation: true,
+    no_raw_event_write: true
+  };
+}
+
 async function routeGetAction(action, userSb, req, adminUserId) {
   switch (action) {
     case GET_ACTIONS.HEALTH:
@@ -1588,6 +1626,11 @@ async function routeGetAction(action, userSb, req, adminUserId) {
 
         case GET_ACTIONS.SLA_GOVERNANCE_SNAPSHOT:
       return handleSlaGovernanceSnapshot(req);
+    case GET_ACTIONS.PROVIDER_EXECUTION_GOVERNANCE_SNAPSHOT:
+    case "provider_execution_governance_snapshot":
+      return handleProviderExecutionGovernanceSnapshot(userSb, query, adminUserId);
+
+
 
     
     case GET_ACTIONS.NOTIFICATION_DISPATCHER_SNAPSHOT:
