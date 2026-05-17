@@ -1571,14 +1571,15 @@ async function handleNotificationDispatcherSnapshot(userSb, query) {
   );
 }
 
-async function handleProviderExecutionGovernanceSnapshot(userSb, req, adminUserId) {
-  const tenantUuid = query?.tenant_uuid;
+async function handleProviderExecutionGovernanceSnapshot(userSb, reqOrQuery, adminUserId) {
+  const params = reqOrQuery?.query || reqOrQuery || {};
+  const tenantUuid = params?.tenant_uuid;
 
   if (!tenantUuid || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(tenantUuid))) {
     throw new Error("invalid_tenant_uuid");
   }
 
-  const limit = Number.isFinite(Number(query?.limit)) ? Number(query.limit) : 20;
+  const limit = Number.isFinite(Number(params?.limit)) ? Number(params.limit) : 20;
 
   const data = await callRpc(
     userSb,
