@@ -1,0 +1,1114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Provider Delivery Execution | LogicPals Operations OS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Hard font fix: prevent corrupted icon/symbol rendering -->
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --panel-soft: #f1f5f9;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --brand: #6366f1;
+      --brand-dark: #4f46e5;
+      --good-bg: #dcfce7;
+      --good-text: #166534;
+      --bad-bg: #fee2e2;
+      --bad-text: #991b1b;
+      --warn-bg: #fef3c7;
+      --warn-text: #92400e;
+      --blue-bg: #dbeafe;
+      --blue-text: #1d4ed8;
+      --code-bg: #020617;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body,
+    button,
+    input,
+    select,
+    textarea,
+    table,
+    pre,
+    code {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .topbar {
+      height: 56px;
+      background: #0f172a;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: .01em;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--brand);
+      box-shadow: 0 0 0 4px rgba(99,102,241,.25);
+    }
+
+    .top-pills {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .top-pill {
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.14);
+      color: white;
+      font-weight: 700;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: calc(100vh - 56px);
+    }
+
+    .sidebar {
+      background: white;
+      border-right: 1px solid var(--border);
+      padding: 24px 16px;
+    }
+
+    .sidebar-section {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .22em;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin: 0 0 10px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 4px;
+      margin-bottom: 22px;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav a:hover {
+      background: var(--panel-soft);
+    }
+
+    .nav a.active {
+      background: #eef2ff;
+      color: #3730a3;
+    }
+
+    .main {
+      padding: 32px;
+      max-width: 1500px;
+      width: 100%;
+    }
+
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 20px;
+    }
+
+    .title h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+      line-height: 1.1;
+      letter-spacing: -.04em;
+    }
+
+    .title p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 900px;
+      font-size: 15px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    button,
+    .button-link {
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(15,23,42,.05);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+    }
+
+    button.primary {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: white;
+    }
+
+    button.primary:hover {
+      background: var(--brand-dark);
+    }
+
+    .banner {
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1e3a8a;
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    .status {
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-weight: 800;
+      margin-bottom: 18px;
+      display: none;
+    }
+
+    .status.ok {
+      display: block;
+      background: var(--good-bg);
+      color: var(--good-text);
+      border: 1px solid #bbf7d0;
+    }
+
+    .status.err {
+      display: block;
+      background: var(--bad-bg);
+      color: var(--bad-text);
+      border: 1px solid #fecaca;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 1px 2px rgba(15,23,42,.04);
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: .22em;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .metric-value {
+      font-size: 30px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -.04em;
+      margin-bottom: 8px;
+    }
+
+    .metric-help {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .section {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin-bottom: 18px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(15,23,42,.04);
+    }
+
+    .section-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 17px;
+      font-weight: 900;
+      margin: 0;
+    }
+
+    .section-subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .count-pill {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #2563eb;
+      border-radius: 999px;
+      font-weight: 900;
+      padding: 6px 10px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #475569;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-weight: 900;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .badge.good {
+      background: var(--good-bg);
+      color: var(--good-text);
+    }
+
+    .badge.bad {
+      background: var(--bad-bg);
+      color: var(--bad-text);
+    }
+
+    .badge.warn {
+      background: var(--warn-bg);
+      color: var(--warn-text);
+    }
+
+    .badge.blue {
+      background: var(--blue-bg);
+      color: var(--blue-text);
+    }
+
+    .badge.indigo {
+      background: #eef2ff;
+      color: #3730a3;
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .safety-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+    }
+
+    .safety-row:last-child {
+      border-bottom: 0;
+    }
+
+    pre {
+      margin: 0;
+      background: var(--code-bg);
+      color: #e5e7eb;
+      padding: 18px;
+      min-height: 420px;
+      max-height: 560px;
+      overflow: auto;
+      font-size: 12px;
+      border-radius: 0 0 14px 14px;
+      line-height: 1.55;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .footer {
+      color: var(--muted);
+      font-size: 12px;
+      margin: 22px 0 8px;
+    }
+
+    @media (max-width: 1200px) {
+      .cards {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .grid-two {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 850px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .main {
+        padding: 20px;
+      }
+
+      .header {
+        display: block;
+      }
+
+      .actions {
+        justify-content: flex-start;
+        margin-top: 16px;
+      }
+
+      .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <span>LogicPals Operations OS</span>
+    </div>
+    <div class="top-pills">
+      <span class="top-pill">Read-only</span>
+      <span class="top-pill">Provider Delivery</span>
+      <span class="top-pill">8M.11.11F</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">Operations</div>
+      <nav class="nav">
+        <a href="/admin/admin-incidents.html">Incident Management <span>›</span></a>
+        <a href="/admin/admin-sla.html">SLA Governance <span>›</span></a>
+        <a href="/admin/admin-execution-governance.html">Execution Governance <span>›</span></a>
+        <a href="/admin/admin-notification-dispatcher.html">Notification Dispatcher <span>›</span></a>
+        <a href="/admin/admin-provider-execution-governance.html">Provider Governance <span>›</span></a>
+        <a class="active" href="/admin/admin-provider-delivery-execution.html">Provider Delivery <span>•</span></a>
+      </nav>
+
+      <div class="sidebar-section">Safety</div>
+      <nav class="nav">
+        <a href="#delivery-executions">Delivery Executions</a>
+        <a href="#delivery-events">Delivery Events</a>
+        <a href="#provider-candidates">Provider Candidates</a>
+        <a href="#dispatch-queue">Dispatch Queue</a>
+        <a href="#raw-snapshot">Raw Snapshot</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <section class="header">
+        <div class="title">
+          <h1>Provider Delivery Execution</h1>
+          <p>
+            Read-only operational view for dry-run provider delivery executions, delivery audit events,
+            provider execution candidates, dispatch queue safety, adapters, and execution controls.
+            This temporary panel does not execute providers, dispatch notifications, or mutate operational data.
+          </p>
+        </div>
+        <div class="actions">
+          <button class="primary" id="refreshBtn">Refresh Snapshot</button>
+          <button id="copyBtn">Copy JSON</button>
+          <a class="button-link" href="/admin/admin-provider-execution-governance.html">Open Provider Governance</a>
+          <a class="button-link" href="/admin/admin-notification-dispatcher.html">Open Notification Dispatcher</a>
+        </div>
+      </section>
+
+      <div class="banner">
+        Read-only boundary active. Browser → ops-gateway → public snapshot RPC. No direct Supabase table reads, no queue write,
+        no delivery execution write, no provider call, no external delivery, no incident mutation.
+      </div>
+
+      <div id="statusBox" class="status"></div>
+
+      <section class="cards">
+        <div class="card">
+          <div class="metric-label">Adapters</div>
+          <div id="adapterCount" class="metric-value">—</div>
+          <div class="metric-help">registered adapters</div>
+        </div>
+        <div class="card">
+          <div class="metric-label">Controls</div>
+          <div id="controlCount" class="metric-value">—</div>
+          <div class="metric-help">provider policies</div>
+        </div>
+        <div class="card">
+          <div class="metric-label">Candidates</div>
+          <div id="candidateCount" class="metric-value">—</div>
+          <div class="metric-help">audit-only candidates</div>
+        </div>
+        <div class="card">
+          <div class="metric-label">Executions</div>
+          <div id="executionCount" class="metric-value">—</div>
+          <div class="metric-help">delivery dry-runs</div>
+        </div>
+        <div class="card">
+          <div class="metric-label">Provider Ready</div>
+          <div id="providerReadyCount" class="metric-value">—</div>
+          <div class="metric-help">must be 0 now</div>
+        </div>
+        <div class="card">
+          <div class="metric-label">External Attempts</div>
+          <div id="externalAttemptCount" class="metric-value">—</div>
+          <div class="metric-help">must be 0 now</div>
+        </div>
+      </section>
+
+      <section id="delivery-executions" class="section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Provider Delivery Executions</h2>
+            <div class="section-subtitle">Dry-run delivery execution records only. These are not provider calls.</div>
+          </div>
+          <span id="deliveryExecutionsCountPill" class="count-pill">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Execution</th>
+                <th>Candidate</th>
+                <th>Dispatch</th>
+                <th>Provider</th>
+                <th>Channel</th>
+                <th>Mode</th>
+                <th>Status</th>
+                <th>Response</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="deliveryExecutionsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="delivery-events" class="section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Provider Delivery Execution Events</h2>
+            <div class="section-subtitle">Append-only delivery audit events. No delivered/provider/external events should appear yet.</div>
+          </div>
+          <span id="deliveryEventsCountPill" class="count-pill">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Event</th>
+                <th>Execution</th>
+                <th>Candidate</th>
+                <th>Dispatch</th>
+                <th>Provider</th>
+                <th>Channel</th>
+                <th>Status</th>
+                <th>Worker</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="deliveryEventsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="provider-candidates" class="section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Provider Execution Candidates</h2>
+            <div class="section-subtitle">Candidate records from the provider execution governance layer. Still audit-only.</div>
+          </div>
+          <span id="candidatesCountPill" class="count-pill">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Candidate</th>
+                <th>Dispatch</th>
+                <th>Provider</th>
+                <th>Channel</th>
+                <th>Mode</th>
+                <th>Status</th>
+                <th>Decision</th>
+                <th>Reason</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="candidatesBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="dispatch-queue" class="section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Notification Dispatch Queue</h2>
+            <div class="section-subtitle">Prepared queue items only. Provider handoff remains disabled.</div>
+          </div>
+          <span id="dispatchQueueCountPill" class="count-pill">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Queue</th>
+                <th>Channel</th>
+                <th>Target</th>
+                <th>Status</th>
+                <th>Policy</th>
+                <th>Provider Selected</th>
+                <th>External Attempt</th>
+                <th>Retry</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="dispatchQueueBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Delivery Adapters</h2>
+            <div class="section-subtitle">Registry view. External adapters remain placeholders until later provider activation steps.</div>
+          </div>
+          <span id="adaptersCountPill" class="count-pill">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Adapter</th>
+                <th>Channel</th>
+                <th>Provider</th>
+                <th>Active</th>
+                <th>Retry</th>
+                <th>Idempotency</th>
+                <th>Requires Secret</th>
+                <th>Boundary</th>
+              </tr>
+            </thead>
+            <tbody id="adaptersBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Provider Execution Controls</h2>
+            <div class="section-subtitle">Environment safety policies. Internal admin remains dry-run; external providers remain blocked.</div>
+          </div>
+          <span id="controlsCountPill" class="count-pill">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Provider</th>
+                <th>Channel</th>
+                <th>Environment</th>
+                <th>Mode</th>
+                <th>Enabled</th>
+                <th>Approval</th>
+                <th>Dry Run</th>
+                <th>Sandbox</th>
+                <th>Boundary</th>
+              </tr>
+            </thead>
+            <tbody id="controlsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="grid-two">
+        <div class="section">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Safety Summary</h2>
+              <div class="section-subtitle">Expected all clean at this phase.</div>
+            </div>
+            <span id="generatedAtPill" class="count-pill">—</span>
+          </div>
+          <div id="safetyBody"></div>
+        </div>
+
+        <div id="raw-snapshot" class="section">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Raw Snapshot Preview</h2>
+              <div class="section-subtitle">For QC only.</div>
+            </div>
+          </div>
+          <pre id="rawJson">{}</pre>
+        </div>
+      </section>
+
+      <div class="footer">
+        8M.11.11F temporary admin panel. Final Figma design can replace this later. Functional contract must remain read-only.
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const TENANT_UUID = "67c0ebf5-7f52-4d69-ba89-1a1b7baf14be";
+    const SNAPSHOT_ACTION = "provider_delivery_execution_snapshot";
+    const SNAPSHOT_LIMIT = 20;
+
+    let lastSnapshot = null;
+
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+    function text(value, fallback = "—") {
+      if (value === null || value === undefined || value === "") return fallback;
+      return String(value);
+    }
+
+    function shortId(value) {
+      if (!value) return "—";
+      const s = String(value);
+      if (s.length <= 12) return s;
+      return s.slice(0, 8) + "…" + s.slice(-4);
+    }
+
+    function fmtDate(value) {
+      if (!value) return "—";
+      try {
+        return new Date(value).toLocaleString();
+      } catch (_) {
+        return String(value);
+      }
+    }
+
+    function esc(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function boolBadge(value) {
+      return value === true
+        ? '<span class="badge good">true</span>'
+        : value === false
+          ? '<span class="badge bad">false</span>'
+          : '<span class="badge">—</span>';
+    }
+
+    function modeBadge(value) {
+      const v = String(value ?? "");
+      if (v === "dry_run") return '<span class="badge warn">dry_run</span>';
+      if (v === "blocked") return '<span class="badge bad">blocked</span>';
+      return `<span class="badge">${esc(v || "—")}</span>`;
+    }
+
+    function statusBadge(value) {
+      const v = String(value ?? "");
+      if (v.includes("completed") || v.includes("succeeded") || v.includes("ready")) {
+        return `<span class="badge good">${esc(v)}</span>`;
+      }
+      if (v.includes("failed") || v.includes("blocked")) {
+        return `<span class="badge bad">${esc(v)}</span>`;
+      }
+      if (v.includes("queued") || v.includes("pending")) {
+        return `<span class="badge warn">${esc(v)}</span>`;
+      }
+      return `<span class="badge">${esc(v || "—")}</span>`;
+    }
+
+    function channelBadge(value) {
+      const v = String(value ?? "");
+      if (v === "internal_admin") return '<span class="badge good">internal_admin</span>';
+      if (v === "email") return '<span class="badge blue">email</span>';
+      if (v === "slack_webhook") return '<span class="badge blue">slack_webhook</span>';
+      return `<span class="badge">${esc(v || "—")}</span>`;
+    }
+
+    function showStatus(message, kind) {
+      const box = $("statusBox");
+      box.className = "status " + (kind === "ok" ? "ok" : "err");
+      box.textContent = message;
+    }
+
+    function clearStatus() {
+      const box = $("statusBox");
+      box.className = "status";
+      box.textContent = "";
+    }
+
+    async function getAccessToken() {
+      if (window.LPadminAuth && typeof window.LPadminAuth.getAccessToken === "function") {
+        return window.LPadminAuth.getAccessToken();
+      }
+
+      if (window.lpAdminClient && typeof window.lpAdminClient.getAccessToken === "function") {
+        return window.lpAdminClient.getAccessToken();
+      }
+
+      const candidates = [
+        "lp_admin_access_token",
+        "admin_access_token",
+        "access_token",
+        "sb-access-token",
+        "supabase.auth.token"
+      ];
+
+      for (const key of candidates) {
+        const value = localStorage.getItem(key) || sessionStorage.getItem(key);
+        if (value) return value;
+      }
+
+      return "";
+    }
+
+    async function fetchSnapshot() {
+      clearStatus();
+
+      const token = await getAccessToken();
+
+      if (!token) {
+        showStatus("Missing admin access token. Please sign in as admin first.", "err");
+        return;
+      }
+
+      const url =
+        `/api/ops/ops-gateway?action=${encodeURIComponent(SNAPSHOT_ACTION)}` +
+        `&tenant_uuid=${encodeURIComponent(TENANT_UUID)}` +
+        `&limit=${encodeURIComponent(SNAPSHOT_LIMIT)}`;
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Accept": "application/json"
+        },
+        cache: "no-store"
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok || !data || data.ok !== true) {
+        lastSnapshot = data;
+        renderRaw(data || { error: "invalid_json_response" });
+        showStatus(`Snapshot failed. HTTP ${response.status}. ${data?.error || data?.details?.message || "Unknown error"}`, "err");
+        return;
+      }
+
+      lastSnapshot = data;
+      renderSnapshot(data);
+      showStatus("Snapshot refreshed. Read-only provider delivery boundary confirmed.", "ok");
+    }
+
+    function renderSnapshot(wrapper) {
+      const result = wrapper.result || {};
+      const summary = result.summary || {};
+      const safety = result.safety || {};
+
+      $("adapterCount").textContent = text(summary.adapter_count, "0");
+      $("controlCount").textContent = text(summary.provider_execution_control_count, "0");
+      $("candidateCount").textContent = text(summary.provider_execution_candidate_count, "0");
+      $("executionCount").textContent = text(summary.provider_delivery_execution_count, "0");
+      $("providerReadyCount").textContent = text(summary.provider_ready_count, "0");
+      $("externalAttemptCount").textContent = text(summary.external_attempt_count, "0");
+
+      $("generatedAtPill").textContent = fmtDate(result.generated_at);
+
+      renderAdapters(result.adapters || []);
+      renderControls(result.controls || []);
+      renderCandidates(result.candidates || []);
+      renderDeliveryExecutions(result.delivery_executions || []);
+      renderDeliveryEvents(result.delivery_events || []);
+      renderDispatchQueue(result.dispatch_queue || []);
+      renderSafety(safety);
+      renderRaw(wrapper);
+    }
+
+    function setRows(tbodyId, countPillId, rows, emptyCols) {
+      $(countPillId).textContent = `${rows.length} row${rows.length === 1 ? "" : "s"}`;
+      $(tbodyId).innerHTML = rows.length
+        ? rows.join("")
+        : `<tr><td colspan="${emptyCols}" class="small">No rows returned.</td></tr>`;
+    }
+
+    function renderAdapters(rows) {
+      setRows(
+        "adaptersBody",
+        "adaptersCountPill",
+        rows.map(row => `
+          <tr>
+            <td>${esc(row.adapter_key)}</td>
+            <td>${channelBadge(row.channel)}</td>
+            <td>${esc(row.provider_name || "—")}</td>
+            <td>${boolBadge(row.is_active)}</td>
+            <td>${boolBadge(row.supports_retry)}</td>
+            <td>${boolBadge(row.supports_idempotency)}</td>
+            <td>${boolBadge(row.requires_secret)}</td>
+            <td><span class="badge indigo">${esc(row.boundary || "—")}</span></td>
+          </tr>
+        `),
+        8
+      );
+    }
+
+    function renderControls(rows) {
+      setRows(
+        "controlsBody",
+        "controlsCountPill",
+        rows.map(row => `
+          <tr>
+            <td>${esc(row.provider_key)}</td>
+            <td>${channelBadge(row.channel)}</td>
+            <td><span class="badge">${esc(row.environment || "—")}</span></td>
+            <td>${modeBadge(row.execution_mode)}</td>
+            <td>${boolBadge(row.enabled)}</td>
+            <td>${boolBadge(row.manual_approval_required)}</td>
+            <td>${boolBadge(row.dry_run_enabled)}</td>
+            <td>${boolBadge(row.provider_sandbox_enabled)}</td>
+            <td><span class="badge indigo">${esc(row.boundary || "—")}</span></td>
+          </tr>
+        `),
+        9
+      );
+    }
+
+    function renderCandidates(rows) {
+      setRows(
+        "candidatesBody",
+        "candidatesCountPill",
+        rows.map(row => `
+          <tr>
+            <td>${shortId(row.id)}</td>
+            <td>${shortId(row.dispatch_id)}</td>
+            <td>${esc(row.provider_key || "—")}</td>
+            <td>${channelBadge(row.channel)}</td>
+            <td>${modeBadge(row.execution_mode)}</td>
+            <td>${statusBadge(row.candidate_status)}</td>
+            <td>${statusBadge(row.decision)}</td>
+            <td>${esc(row.evaluation_reason || row.reason || "—")}</td>
+            <td>${fmtDate(row.created_at)}</td>
+          </tr>
+        `),
+        9
+      );
+    }
+
+    function renderDeliveryExecutions(rows) {
+      setRows(
+        "deliveryExecutionsBody",
+        "deliveryExecutionsCountPill",
+        rows.map(row => `
+          <tr>
+            <td>${shortId(row.id)}</td>
+            <td>${shortId(row.execution_candidate_id)}</td>
+            <td>${shortId(row.dispatch_id)}</td>
+            <td>${esc(row.provider_key || "—")}</td>
+            <td>${channelBadge(row.channel)}</td>
+            <td>${modeBadge(row.execution_mode)}</td>
+            <td>${statusBadge(row.execution_status)}</td>
+            <td>${row.provider_response_code || row.provider_response_id ? esc(`${row.provider_response_code || ""} ${row.provider_response_id || ""}`) : "—"}</td>
+            <td>${fmtDate(row.created_at)}</td>
+          </tr>
+        `),
+        9
+      );
+    }
+
+    function renderDeliveryEvents(rows) {
+      setRows(
+        "deliveryEventsBody",
+        "deliveryEventsCountPill",
+        rows.map(row => `
+          <tr>
+            <td>${esc(row.event_type || "—")}</td>
+            <td>${shortId(row.execution_id)}</td>
+            <td>${shortId(row.execution_candidate_id)}</td>
+            <td>${shortId(row.dispatch_id)}</td>
+            <td>${esc(row.provider_key || "—")}</td>
+            <td>${channelBadge(row.channel)}</td>
+            <td>${statusBadge(row.event_status)}</td>
+            <td>${esc(row.worker_id || "—")}</td>
+            <td>${fmtDate(row.created_at)}</td>
+          </tr>
+        `),
+        9
+      );
+    }
+
+    function renderDispatchQueue(rows) {
+      setRows(
+        "dispatchQueueBody",
+        "dispatchQueueCountPill",
+        rows.map(row => `
+          <tr>
+            <td>${shortId(row.id)}</td>
+            <td>${channelBadge(row.channel)}</td>
+            <td>${esc(row.target_type || "—")} / ${esc(row.target_key || "—")}</td>
+            <td>${statusBadge(row.delivery_status)}</td>
+            <td>${statusBadge(row.policy_decision)}<div class="small">${esc(row.policy_reason || "")}</div></td>
+            <td>${boolBadge(row.provider_selected)}</td>
+            <td>${boolBadge(row.external_delivery_attempted)}</td>
+            <td>${esc(row.retry_count ?? "—")}</td>
+            <td>${fmtDate(row.created_at)}</td>
+          </tr>
+        `),
+        9
+      );
+    }
+
+    function renderSafety(safety) {
+      const order = [
+        ["read_only_snapshot", "Read-only snapshot"],
+        ["no_provider_call", "No provider call"],
+        ["no_external_delivery", "No external delivery"],
+        ["no_queue_write", "No queue write"],
+        ["no_candidate_write", "No candidate write"],
+        ["no_delivery_execution_write", "No delivery execution write"],
+        ["no_delivery_event_write", "No delivery event write"],
+        ["no_command_execution", "No command execution"],
+        ["no_incident_mutation", "No incident mutation"],
+        ["no_incident_event_write", "No incident event write"],
+        ["no_raw_event_write", "No raw event write"],
+        ["provider_boundary_clean", "Provider boundary clean"],
+        ["secret_material_clean", "Secret material clean"]
+      ];
+
+      $("safetyBody").innerHTML = order.map(([key, label]) => `
+        <div class="safety-row">
+          <strong>${esc(label)}</strong>
+          ${boolBadge(safety[key])}
+        </div>
+      `).join("");
+    }
+
+    function renderRaw(value) {
+      $("rawJson").textContent = JSON.stringify(value || {}, null, 2);
+    }
+
+    async function copyJson() {
+      const value = JSON.stringify(lastSnapshot || {}, null, 2);
+      await navigator.clipboard.writeText(value);
+      showStatus("Snapshot JSON copied to clipboard.", "ok");
+    }
+
+    $("refreshBtn").addEventListener("click", fetchSnapshot);
+    $("copyBtn").addEventListener("click", copyJson);
+
+    fetchSnapshot().catch(error => {
+      console.error(error);
+      showStatus(error && error.message ? error.message : "Snapshot failed.", "err");
+    });
+  </script>
+</body>
+</html>
