@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Provider Execution Governance | LogicPals Operations OS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <script src="/api/env.js" defer></script>
+  <script src="/assets/js/admin-auth.js" defer></script>
+  <script src="/assets/lp-admin-client.js" defer></script>
+
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --line-2: #cbd5e1;
+      --brand: #6366f1;
+      --brand-dark: #4f46e5;
+      --good-bg: #dcfce7;
+      --good-text: #166534;
+      --bad-bg: #fee2e2;
+      --bad-text: #991b1b;
+      --warn-bg: #fef3c7;
+      --warn-text: #92400e;
+      --blue-bg: #dbeafe;
+      --blue-text: #1d4ed8;
+      --dark: #020617;
+      --sidebar: #ffffff;
+      --topbar: #0f172a;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+    }
+
+    .topbar {
+      height: 56px;
+      background: var(--topbar);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--brand);
+      box-shadow: 0 0 0 4px rgba(99,102,241,0.18);
+    }
+
+    .top-pills {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .pill-dark {
+      color: white;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      min-height: calc(100vh - 56px);
+    }
+
+    aside {
+      background: var(--sidebar);
+      border-right: 1px solid var(--line);
+      padding: 18px 14px;
+    }
+
+    .nav-title {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      margin: 14px 0 8px;
+    }
+
+    .nav a {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-decoration: none;
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-weight: 650;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .nav a:hover { background: #f1f5f9; }
+    .nav a.active { background: #eef2ff; color: #3730a3; }
+    .nav .chev { color: var(--muted); }
+
+    main {
+      padding: 28px 34px 42px;
+      max-width: 1420px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 30px;
+      letter-spacing: -0.04em;
+      line-height: 1.15;
+    }
+
+    .subtitle {
+      margin-top: 10px;
+      max-width: 950px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 15px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    button, .button-link {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button.primary {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: white;
+    }
+
+    button.primary:hover { background: var(--brand-dark); }
+    button:hover, .button-link:hover { border-color: var(--line-2); }
+
+    .boundary {
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1e3a8a;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-weight: 800;
+      margin: 12px 0 16px;
+      line-height: 1.5;
+    }
+
+    .status {
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: none;
+      line-height: 1.5;
+      font-weight: 700;
+    }
+
+    .status.good {
+      display: block;
+      background: var(--good-bg);
+      color: var(--good-text);
+      border: 1px solid #86efac;
+    }
+
+    .status.bad {
+      display: block;
+      background: var(--bad-bg);
+      color: var(--bad-text);
+      border: 1px solid #fecaca;
+    }
+
+    .status.warn {
+      display: block;
+      background: var(--warn-bg);
+      color: var(--warn-text);
+      border: 1px solid #fde68a;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+      min-height: 110px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-weight: 900;
+    }
+
+    .metric-value {
+      margin-top: 12px;
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+
+    .metric-help {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 12px;
+    }
+
+    .section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      padding: 16px 18px;
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section h2 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: -0.02em;
+    }
+
+    .section-note {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    .row-pill {
+      border: 1px solid #bfdbfe;
+      color: #2563eb;
+      background: #eff6ff;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 920px;
+    }
+
+    th {
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #475569;
+      background: #f8fafc;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 850;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .badge.good {
+      background: var(--good-bg);
+      color: var(--good-text);
+      border-color: #bbf7d0;
+    }
+
+    .badge.bad {
+      background: var(--bad-bg);
+      color: var(--bad-text);
+      border-color: #fecaca;
+    }
+
+    .badge.warn {
+      background: var(--warn-bg);
+      color: var(--warn-text);
+      border-color: #fde68a;
+    }
+
+    .badge.blue {
+      background: var(--blue-bg);
+      color: var(--blue-text);
+      border-color: #bfdbfe;
+    }
+
+    .badge.neutral {
+      background: #f1f5f9;
+      color: #334155;
+      border-color: #e2e8f0;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .kv {
+      padding: 0;
+    }
+
+    .kv-row {
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .kv-row:last-child { border-bottom: 0; }
+
+    .kv-key {
+      padding: 13px 14px;
+      color: #334155;
+      font-weight: 800;
+      background: #f8fafc;
+    }
+
+    .kv-val {
+      padding: 13px 14px;
+    }
+
+    .raw {
+      background: var(--dark);
+      color: #e5e7eb;
+      border-radius: 0;
+      padding: 18px;
+      overflow: auto;
+      max-height: 520px;
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .footer {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 18px;
+    }
+
+    .empty {
+      padding: 18px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    @media (max-width: 1100px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { display: none; }
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-2 { grid-template-columns: 1fr; }
+      main { padding: 22px; }
+      .header { flex-direction: column; }
+      .actions { justify-content: flex-start; }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span>LogicPals Operations OS</span>
+    </div>
+    <div class="top-pills">
+      <span class="pill-dark">Read-only</span>
+      <span class="pill-dark">Provider Governance</span>
+      <span class="pill-dark">8M.11.10H</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <div class="nav-title">Operations</div>
+      <nav class="nav">
+        <a href="/admin/admin-incidents.html">Incident Management <span class="chev">›</span></a>
+        <a href="/admin/admin-sla-governance.html">SLA Governance <span class="chev">›</span></a>
+        <a href="/admin/admin-execution-governance.html">Execution Governance <span class="chev">›</span></a>
+        <a href="/admin/admin-notification-dispatcher.html">Notification Dispatcher <span class="chev">›</span></a>
+        <a class="active" href="/admin/admin-provider-execution-governance.html">Provider Governance <span class="chev">•</span></a>
+        <a href="/admin/admin-circuit-breakers.html">Circuit Breakers <span class="chev">›</span></a>
+      </nav>
+
+      <div class="nav-title">Safety</div>
+      <nav class="nav">
+        <a href="#controls">Execution Controls</a>
+        <a href="#candidates">Provider Candidates</a>
+        <a href="#events">Provider Events</a>
+        <a href="#queue">Dispatch Queue</a>
+        <a href="#raw">Raw Snapshot</a>
+      </nav>
+    </aside>
+
+    <main>
+      <div class="header">
+        <div>
+          <h1>Provider Execution Governance</h1>
+          <div class="subtitle">
+            Read-only operational view for provider execution controls, dry-run candidates, provider execution audit events,
+            delivery adapters, and notification dispatch queue safety. This temporary panel does not execute providers,
+            dispatch notifications, or mutate operational data.
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="refreshBtn">Refresh Snapshot</button>
+          <button id="copyBtn">Copy JSON</button>
+          <a class="button-link" href="/admin/admin-notification-dispatcher.html">Open Notification Dispatcher</a>
+        </div>
+      </div>
+
+      <div class="boundary">
+        Read-only boundary active. Browser → ops-gateway → public snapshot RPC. No direct Supabase table reads, no queue write,
+        no candidate write, no provider call, no external delivery, no incident mutation.
+      </div>
+
+      <div id="status" class="status"></div>
+
+      <section class="cards">
+        <div class="metric">
+          <div class="metric-label">Adapters</div>
+          <div class="metric-value" id="metricAdapters">—</div>
+          <div class="metric-help">registered adapters</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Active</div>
+          <div class="metric-value" id="metricActiveAdapters">—</div>
+          <div class="metric-help">enabled adapters</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Controls</div>
+          <div class="metric-value" id="metricControls">—</div>
+          <div class="metric-help">provider controls</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Candidates</div>
+          <div class="metric-value" id="metricCandidates">—</div>
+          <div class="metric-help">audit-only candidates</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Provider Ready</div>
+          <div class="metric-value" id="metricProviderReady">—</div>
+          <div class="metric-help">must be 0 now</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">External Attempts</div>
+          <div class="metric-value" id="metricExternalAttempts">—</div>
+          <div class="metric-help">must be 0 now</div>
+        </div>
+      </section>
+
+      <section class="section" id="adapters">
+        <div class="section-header">
+          <div>
+            <h2>Delivery Adapters</h2>
+            <div class="section-note">Registry only. External adapters remain inactive placeholders.</div>
+          </div>
+          <span class="row-pill" id="adaptersCount">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Adapter</th>
+                <th>Channel</th>
+                <th>Provider</th>
+                <th>Active</th>
+                <th>Retry</th>
+                <th>Idempotency</th>
+                <th>Requires Secret</th>
+                <th>Boundary</th>
+              </tr>
+            </thead>
+            <tbody id="adaptersBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section" id="controls">
+        <div class="section-header">
+          <div>
+            <h2>Provider Execution Controls</h2>
+            <div class="section-note">Environment safety policies. Internal admin remains dry-run; external providers remain blocked.</div>
+          </div>
+          <span class="row-pill" id="controlsCount">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Provider</th>
+                <th>Channel</th>
+                <th>Environment</th>
+                <th>Mode</th>
+                <th>Enabled</th>
+                <th>Approval</th>
+                <th>Dry Run</th>
+                <th>Sandbox</th>
+                <th>Policy</th>
+              </tr>
+            </thead>
+            <tbody id="controlsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section" id="candidates">
+        <div class="section-header">
+          <div>
+            <h2>Provider Execution Candidates</h2>
+            <div class="section-note">Audit-only candidate records. These are not provider executions.</div>
+          </div>
+          <span class="row-pill" id="candidatesCount">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Candidate</th>
+                <th>Dispatch</th>
+                <th>Provider</th>
+                <th>Channel</th>
+                <th>Mode</th>
+                <th>Status</th>
+                <th>Decision</th>
+                <th>Reason</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="candidatesBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section" id="events">
+        <div class="section-header">
+          <div>
+            <h2>Provider Execution Events</h2>
+            <div class="section-note">Internal preparation audit events only. No delivered/provider/external events at this phase.</div>
+          </div>
+          <span class="row-pill" id="eventsCount">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Event</th>
+                <th>Status</th>
+                <th>Provider</th>
+                <th>Channel</th>
+                <th>Environment</th>
+                <th>Worker</th>
+                <th>Boundary</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="eventsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section" id="queue">
+        <div class="section-header">
+          <div>
+            <h2>Notification Dispatch Queue</h2>
+            <div class="section-note">Prepared queue items only. Provider handoff is still disabled.</div>
+          </div>
+          <span class="row-pill" id="queueCount">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Channel</th>
+                <th>Target</th>
+                <th>Status</th>
+                <th>Policy</th>
+                <th>Provider Selected</th>
+                <th>External Attempt</th>
+                <th>Retry</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="queueBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="grid-2">
+        <section class="section">
+          <div class="section-header">
+            <div>
+              <h2>Safety Summary</h2>
+              <div class="section-note">Expected all clean at this phase.</div>
+            </div>
+            <span class="row-pill" id="generatedAt">—</span>
+          </div>
+          <div class="kv" id="safetyBody"></div>
+        </section>
+
+        <section class="section" id="raw">
+          <div class="section-header">
+            <div>
+              <h2>Raw Snapshot Preview</h2>
+              <div class="section-note">For QC only.</div>
+            </div>
+          </div>
+          <pre class="raw" id="rawJson">{}</pre>
+        </section>
+      </section>
+
+      <div class="footer">
+        8M.11.10H temporary panel. Final Figma design can replace this later. Functional contract must remain read-only.
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const TENANT_UUID =
+      window.LOGICPALS_TENANT_UUID ||
+      window.LP_TENANT_UUID ||
+      localStorage.getItem("lp_tenant_uuid") ||
+      "67c0ebf5-7f52-4d69-ba89-1a1b7baf14be";
+
+    let latestSnapshot = null;
+
+    function qs(id) {
+      return document.getElementById(id);
+    }
+
+    function text(value, fallback = "—") {
+      if (value === null || value === undefined || value === "") return fallback;
+      return String(value);
+    }
+
+    function shortId(value) {
+      if (!value) return "—";
+      const s = String(value);
+      if (s.length <= 16) return s;
+      return `${s.slice(0, 8)}…${s.slice(-6)}`;
+    }
+
+    function fmtDate(value) {
+      if (!value) return "—";
+      try {
+        return new Date(value).toLocaleString();
+      } catch (_) {
+        return String(value);
+      }
+    }
+
+    function badge(value, kind) {
+      const v = value === true ? "true" : value === false ? "false" : text(value);
+      let cls = "neutral";
+
+      if (kind) {
+        cls = kind;
+      } else if (value === true || ["succeeded", "allowed", "dry_run", "dry_run_ready", "queued", "internal_admin"].includes(String(value))) {
+        cls = "good";
+      } else if (value === false || ["blocked", "failed", "rejected", "provider_ready"].includes(String(value))) {
+        cls = "bad";
+      } else if (["pending", "manual", "manual_only", "warning"].includes(String(value))) {
+        cls = "warn";
+      } else if (["email", "slack_webhook", "internal_admin"].includes(String(value))) {
+        cls = "blue";
+      }
+
+      return `<span class="badge ${cls}">${escapeHtml(v)}</span>`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function setStatus(message, type = "good") {
+      const el = qs("status");
+      el.className = `status ${type}`;
+      el.textContent = message;
+    }
+
+    function clearStatus() {
+      const el = qs("status");
+      el.className = "status";
+      el.textContent = "";
+    }
+
+    function getAccessToken() {
+      if (window.LPAdminAuth && typeof window.LPAdminAuth.getAccessToken === "function") {
+        return window.LPAdminAuth.getAccessToken();
+      }
+
+      if (window.lpAdminClient && typeof window.lpAdminClient.getAccessToken === "function") {
+        return window.lpAdminClient.getAccessToken();
+      }
+
+      return (
+        localStorage.getItem("lp_access_token") ||
+        localStorage.getItem("access_token") ||
+        sessionStorage.getItem("lp_access_token") ||
+        sessionStorage.getItem("access_token") ||
+        ""
+      );
+    }
+
+    async function fetchSnapshot() {
+      clearStatus();
+
+      const token = await Promise.resolve(getAccessToken());
+
+      if (!token) {
+        setStatus("Missing admin access token. Please sign in as admin first.", "bad");
+        return;
+      }
+
+      const url = `/api/ops/ops-gateway?action=provider_execution_governance_snapshot&tenant_uuid=${encodeURIComponent(TENANT_UUID)}&limit=20`;
+
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json"
+        }
+      });
+
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok || !json || json.ok !== true) {
+        setStatus(`Snapshot failed. ${json?.details?.message || json?.error || res.statusText}`, "bad");
+        latestSnapshot = json;
+        renderRaw(json || {});
+        return;
+      }
+
+      latestSnapshot = json;
+      render(json);
+      setStatus("Snapshot refreshed. Read-only provider execution boundary confirmed.", "good");
+    }
+
+    function unwrap(payload) {
+      return payload?.result || {};
+    }
+
+    function render(payload) {
+      const snap = unwrap(payload);
+      const summary = snap.summary || {};
+      const safety = snap.safety || {};
+
+      qs("metricAdapters").textContent = text(summary.adapter_count, "0");
+      qs("metricActiveAdapters").textContent = text(summary.active_adapter_count, "0");
+      qs("metricControls").textContent = text(summary.provider_execution_control_count, "0");
+      qs("metricCandidates").textContent = text(summary.provider_execution_candidate_count, "0");
+      qs("metricProviderReady").textContent = text(summary.provider_ready_count, "0");
+      qs("metricExternalAttempts").textContent = text(summary.external_attempt_count, "0");
+
+      renderAdapters(snap.adapters || []);
+      renderControls(snap.controls || []);
+      renderCandidates(snap.candidates || []);
+      renderEvents(snap.events || []);
+      renderQueue(snap.dispatch_queue || []);
+      renderSafety(safety, snap.generated_at);
+
+      renderRaw(payload);
+    }
+
+    function renderAdapters(rows) {
+      qs("adaptersCount").textContent = `${rows.length} rows`;
+      qs("adaptersBody").innerHTML = rows.length ? rows.map((r) => `
+        <tr>
+          <td class="mono">${escapeHtml(r.adapter_key)}</td>
+          <td>${badge(r.channel)}</td>
+          <td class="mono">${escapeHtml(r.provider_name)}</td>
+          <td>${badge(r.is_active)}</td>
+          <td>${badge(r.supports_retry)}</td>
+          <td>${badge(r.supports_idempotency)}</td>
+          <td>${badge(r.requires_secret)}</td>
+          <td class="mono">${escapeHtml(r.metadata?.adapter_boundary || r.metadata?.description || "registry_only_no_provider_delivery")}</td>
+        </tr>
+      `).join("") : `<tr><td colspan="8"><div class="empty">No adapter records.</div></td></tr>`;
+    }
+
+    function renderControls(rows) {
+      qs("controlsCount").textContent = `${rows.length} rows`;
+      qs("controlsBody").innerHTML = rows.length ? rows.map((r) => `
+        <tr>
+          <td class="mono">${escapeHtml(r.provider_key)}</td>
+          <td>${badge(r.channel)}</td>
+          <td>${badge(r.environment)}</td>
+          <td>${badge(r.execution_mode, r.execution_mode === "blocked" ? "bad" : "warn")}</td>
+          <td>${badge(r.enabled)}</td>
+          <td>${badge(r.manual_approval_required)}</td>
+          <td>${badge(r.dry_run_enabled)}</td>
+          <td>${badge(r.provider_sandbox_enabled)}</td>
+          <td class="mono">v${escapeHtml(r.policy_version)}</td>
+        </tr>
+      `).join("") : `<tr><td colspan="9"><div class="empty">No provider execution controls.</div></td></tr>`;
+    }
+
+    function renderCandidates(rows) {
+      qs("candidatesCount").textContent = `${rows.length} rows`;
+      qs("candidatesBody").innerHTML = rows.length ? rows.map((r) => `
+        <tr>
+          <td class="mono">${shortId(r.id)}</td>
+          <td class="mono">${shortId(r.dispatch_id)}</td>
+          <td class="mono">${escapeHtml(r.provider_key)}</td>
+          <td>${badge(r.channel)}</td>
+          <td>${badge(r.execution_mode, r.execution_mode === "dry_run" ? "warn" : undefined)}</td>
+          <td>${badge(r.candidate_status)}</td>
+          <td>${badge(r.decision)}</td>
+          <td class="mono">${escapeHtml(r.evaluation_reason)}</td>
+          <td>${fmtDate(r.created_at)}</td>
+        </tr>
+      `).join("") : `<tr><td colspan="9"><div class="empty">No provider execution candidates.</div></td></tr>`;
+    }
+
+    function renderEvents(rows) {
+      qs("eventsCount").textContent = `${rows.length} rows`;
+      qs("eventsBody").innerHTML = rows.length ? rows.map((r) => `
+        <tr>
+          <td class="mono">${escapeHtml(r.event_type)}</td>
+          <td>${badge(r.event_status)}</td>
+          <td class="mono">${escapeHtml(r.provider_key)}</td>
+          <td>${badge(r.channel)}</td>
+          <td>${badge(r.environment)}</td>
+          <td class="mono">${escapeHtml(r.worker_id)}</td>
+          <td class="mono">${escapeHtml(r.diagnostics?.boundary || "audit_only")}</td>
+          <td>${fmtDate(r.created_at)}</td>
+        </tr>
+      `).join("") : `<tr><td colspan="8"><div class="empty">No provider execution events.</div></td></tr>`;
+    }
+
+    function renderQueue(rows) {
+      qs("queueCount").textContent = `${rows.length} rows`;
+      qs("queueBody").innerHTML = rows.length ? rows.map((r) => `
+        <tr>
+          <td>${badge(r.channel)}</td>
+          <td><span class="mono">${escapeHtml(r.target_type)} / ${escapeHtml(r.target_key)}</span></td>
+          <td>${badge(r.delivery_status)}</td>
+          <td>${badge(r.policy_decision)}</td>
+          <td>${badge(r.provider_selected)}</td>
+          <td>${badge(r.external_delivery_attempted)}</td>
+          <td class="mono">${escapeHtml(r.retry_count ?? 0)} / ${escapeHtml(r.max_retry_count ?? "—")}</td>
+          <td>${fmtDate(r.created_at)}</td>
+        </tr>
+      `).join("") : `<tr><td colspan="8"><div class="empty">No dispatch queue rows.</div></td></tr>`;
+    }
+
+    function renderSafety(safety, generatedAt) {
+      qs("generatedAt").textContent = fmtDate(generatedAt);
+
+      const rows = [
+        ["Read-only snapshot", safety.read_only_snapshot],
+        ["No provider call", safety.no_provider_call],
+        ["No external delivery", safety.no_external_delivery],
+        ["No queue write", safety.no_queue_write],
+        ["No candidate write", safety.no_candidate_write],
+        ["No provider event write", safety.no_provider_event_write],
+        ["No command execution", safety.no_command_execution],
+        ["No incident mutation", safety.no_incident_mutation],
+        ["No incident event write", safety.no_incident_event_write],
+        ["No raw event write", safety.no_raw_event_write],
+        ["Provider boundary clean", safety.provider_boundary_clean],
+        ["Secret material clean", safety.secret_material_clean]
+      ];
+
+      qs("safetyBody").innerHTML = rows.map(([k, v]) => `
+        <div class="kv-row">
+          <div class="kv-key">${escapeHtml(k)}</div>
+          <div class="kv-val">${badge(v)}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderRaw(payload) {
+      qs("rawJson").textContent = JSON.stringify(payload || {}, null, 2);
+    }
+
+    async function copyJson() {
+      if (!latestSnapshot) {
+        setStatus("No snapshot loaded yet.", "warn");
+        return;
+      }
+
+      await navigator.clipboard.writeText(JSON.stringify(latestSnapshot, null, 2));
+      setStatus("Snapshot JSON copied.", "good");
+    }
+
+    qs("refreshBtn").addEventListener("click", fetchSnapshot);
+    qs("copyBtn").addEventListener("click", copyJson);
+
+    window.addEventListener("load", () => {
+      setTimeout(fetchSnapshot, 300);
+    });
+  </script>
+</body>
+</html>
