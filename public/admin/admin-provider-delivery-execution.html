@@ -467,6 +467,58 @@
       }
     }
   </style>
+
+  <!-- 8M.11.11F hard font rescue: prevent icon-font corruption -->
+  <style id="lp-hard-font-rescue">
+    html,
+    body,
+    body *,
+    button,
+    input,
+    select,
+    textarea,
+    table,
+    thead,
+    tbody,
+    tr,
+    th,
+    td,
+    div,
+    span,
+    p,
+    a,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    pre,
+    code {
+      font-family: Arial, Helvetica, sans-serif !important;
+      font-feature-settings: normal !important;
+      font-variant-ligatures: none !important;
+      text-rendering: optimizeLegibility !important;
+    }
+
+    pre,
+    code,
+    #rawJson {
+      font-family: Consolas, "Courier New", monospace !important;
+    }
+
+    .material-icons,
+    .material-symbols-outlined,
+    .material-symbols-rounded,
+    .material-symbols-sharp,
+    [class*="material-icons"],
+    [class*="material-symbols"] {
+      font-family: Arial, Helvetica, sans-serif !important;
+      font-feature-settings: normal !important;
+      font-variant-ligatures: none !important;
+    }
+  </style>
+
 </head>
 
 <body>
@@ -1110,5 +1162,38 @@
       showStatus(error && error.message ? error.message : "Snapshot failed.", "err");
     });
   </script>
+
+  <!-- 8M.11.11F runtime font rescue -->
+  <script id="lp-hard-font-runtime-rescue">
+    (function () {
+      function forceReadableFonts() {
+        var readable = 'Arial, Helvetica, sans-serif';
+        var mono = 'Consolas, "Courier New", monospace';
+
+        document.documentElement.style.fontFamily = readable;
+        document.body.style.fontFamily = readable;
+
+        document.querySelectorAll('*').forEach(function (el) {
+          var tag = (el.tagName || '').toLowerCase();
+          if (tag === 'pre' || tag === 'code' || el.id === 'rawJson') {
+            el.style.fontFamily = mono;
+          } else {
+            el.style.fontFamily = readable;
+          }
+          el.style.fontVariantLigatures = 'none';
+          el.style.fontFeatureSettings = 'normal';
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', forceReadableFonts);
+      } else {
+        forceReadableFonts();
+      }
+
+      window.addEventListener('load', forceReadableFonts);
+    })();
+  </script>
+
 </body>
 </html>
