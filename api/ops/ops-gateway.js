@@ -165,6 +165,7 @@ const GET_ACTIONS = Object.freeze({
   NOTIFICATION_DISPATCHER_SNAPSHOT: "notification_dispatcher_snapshot",
 
   PROVIDER_EXECUTION_GOVERNANCE_SNAPSHOT: "provider_execution_governance_snapshot",
+  PROVIDER_DELIVERY_EXECUTION_SNAPSHOT: "provider_delivery_execution_snapshot",
   EXECUTE_PROVIDER_DELIVERY_DRY_RUN: "execute_provider_delivery_dry_run",
 });
 
@@ -1652,6 +1653,78 @@ async function handleExecuteProviderDeliveryDryRun(userSb, body, adminUserId) {
   };
 }
 
+
+async function handleProviderDeliveryExecutionSnapshot(userSb, req, adminUserId) {
+  const query =
+    req && req.query && typeof req.query === "object"
+      ? req.query
+      : {};
+
+  let searchParams = null;
+
+  try {
+    const parsedUrl = new URL(req && req.url ? req.url : "", "https://logicpals.local");
+    searchParams = parsedUrl.searchParams;
+  } catch (_) {
+    searchParams = null;
+  }
+
+  const getParam = (key) => {
+    if (query && Object.prototype.hasOwnProperty.call(query, key)) {
+      return query[key];
+    }
+
+    if (query && query.query && typeof query.query === "object" && Object.prototype.hasOwnProperty.call(query.query, key)) {
+      return query.query[key];
+    }
+
+    if (searchParams && searchParams.has(key)) {
+      return searchParams.get(key);
+    }
+
+    return undefined;
+  };
+
+  const tenantUuid = requireUuid(
+    getParam("tenant_uuid") || getParam("tenantUuid") || getParam("tenant"),
+    "tenant_uuid"
+  );
+
+  const limit = optionalLimit(getParam("limit"), 20);
+
+  const result = await callRpc(
+    userSb,
+    "public",
+    "ops_provider_delivery_execution_admin_snapshot",
+    {
+      p_tenant_uuid: tenantUuid,
+      p_limit: limit
+    }
+  );
+
+  return {
+    ok: true,
+    step: "8M.11.11E",
+    action: "provider_delivery_execution_snapshot",
+    boundary: "gateway_read_only_provider_delivery_execution_snapshot",
+    authenticated_user_id: adminUserId,
+    result,
+    safety: {
+      read_only_snapshot: true,
+      no_provider_call: true,
+      no_external_delivery: true,
+      no_queue_write: true,
+      no_candidate_write: true,
+      no_delivery_execution_write: true,
+      no_delivery_event_write: true,
+      no_command_execution: true,
+      no_incident_mutation: true,
+      no_incident_event_write: true,
+      no_raw_event_write: true
+    }
+  };
+}
+
 async function handleProviderExecutionGovernanceSnapshot(userSb, reqOrQuery, adminUserId) {
   const params = reqOrQuery?.query || reqOrQuery || {};
   const tenantUuid = params?.tenant_uuid;
@@ -1708,7 +1781,11 @@ async function routeGetAction(action, userSb, req, adminUserId) {
 
         case GET_ACTIONS.SLA_GOVERNANCE_SNAPSHOT:
       return handleSlaGovernanceSnapshot(req);
-    case GET_ACTIONS.PROVIDER_EXECUTION_GOVERNANCE_SNAPSHOT:
+    
+    case GET_ACTIONS.PROVIDER_DELIVERY_EXECUTION_SNAPSHOT:
+    case "provider_delivery_execution_snapshot":
+      return handleProviderDeliveryExecutionSnapshot(userSb, req, adminUserId);
+case GET_ACTIONS.PROVIDER_EXECUTION_GOVERNANCE_SNAPSHOT:
     case "provider_execution_governance_snapshot":
       return handleProviderExecutionGovernanceSnapshot(userSb, req, adminUserId);
 
