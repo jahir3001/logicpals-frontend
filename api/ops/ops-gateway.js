@@ -1571,7 +1571,7 @@ async function handleNotificationDispatcherSnapshot(userSb, query) {
   );
 }
 
-async function handleProviderExecutionGovernanceSnapshot(userSb, query, adminUserId) {
+async function handleProviderExecutionGovernanceSnapshot(userSb, req, adminUserId) {
   const tenantUuid = query?.tenant_uuid;
 
   if (!tenantUuid || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(tenantUuid))) {
@@ -1628,7 +1628,7 @@ async function routeGetAction(action, userSb, req, adminUserId) {
       return handleSlaGovernanceSnapshot(req);
     case GET_ACTIONS.PROVIDER_EXECUTION_GOVERNANCE_SNAPSHOT:
     case "provider_execution_governance_snapshot":
-      return handleProviderExecutionGovernanceSnapshot(userSb, query, adminUserId);
+      return handleProviderExecutionGovernanceSnapshot(userSb, req, adminUserId);
 
 
 
