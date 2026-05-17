@@ -519,6 +519,12 @@
     }
   </style>
 
+
+  <!-- 8M.11.11F admin auth helpers -->
+  <script src="/api/env.js" defer></script>
+  <script src="/assets/admin-auth.js" defer></script>
+  <script src="/assets/lpadmin-api.js" defer></script>
+
 </head>
 
 <body>
@@ -901,25 +907,64 @@
     }
 
     async function getAccessToken() {
+      // Existing LogicPals admin helpers
       if (window.LPadminAuth && typeof window.LPadminAuth.getAccessToken === "function") {
-        return window.LPadminAuth.getAccessToken();
+        const token = await window.LPadminAuth.getAccessToken();
+        if (token) return token;
       }
 
       if (window.lpAdminClient && typeof window.lpAdminClient.getAccessToken === "function") {
-        return window.lpAdminClient.getAccessToken();
+        const token = await window.lpAdminClient.getAccessToken();
+        if (token) return token;
       }
 
-      const candidates = [
-        "lp_admin_access_token",
-        "admin_access_token",
-        "access_token",
-        "sb-access-token",
-        "supabase.auth.token"
-      ];
+      if (window.LPAdminAuth && typeof window.LPAdminAuth.getAccessToken === "function") {
+        const token = await window.LPAdminAuth.getAccessToken();
+        if (token) return token;
+      }
 
-      for (const key of candidates) {
-        const value = localStorage.getItem(key) || sessionStorage.getItem(key);
-        if (value) return value;
+      if (window.supabaseClient && window.supabaseClient.auth && typeof window.supabaseClient.auth.getSession === "function") {
+        const sessionResult = await window.supabaseClient.auth.getSession();
+        const token = sessionResult?.data?.session?.access_token;
+        if (token) return token;
+      }
+
+      if (window.supabase && window.supabase.auth && typeof window.supabase.auth.getSession === "function") {
+        const sessionResult = await window.supabase.auth.getSession();
+        const token = sessionResult?.data?.session?.access_token;
+        if (token) return token;
+      }
+
+      // Direct storage scan for Supabase session objects
+      const stores = [localStorage, sessionStorage];
+
+      for (const store of stores) {
+        for (let i = 0; i < store.length; i++) {
+          const key = store.key(i);
+          const value = store.getItem(key);
+
+          if (!value) continue;
+
+          if (
+            key === "lp_admin_access_token" ||
+            key === "admin_access_token" ||
+            key === "access_token" ||
+            key === "sb-access-token"
+          ) {
+            return value;
+          }
+
+          try {
+            const parsed = JSON.parse(value);
+
+            if (parsed?.access_token) return parsed.access_token;
+            if (parsed?.currentSession?.access_token) return parsed.currentSession.access_token;
+            if (parsed?.session?.access_token) return parsed.session.access_token;
+            if (parsed?.data?.session?.access_token) return parsed.data.session.access_token;
+          } catch (_) {
+            // Ignore non-JSON storage values
+          }
+        }
       }
 
       return "";
