@@ -618,14 +618,53 @@
     }
 
     async function waitForEnv() {
-      for (let i = 0; i < 40; i++) {
-        const url = getEnvValue("SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_URL", "supabaseUrl");
-        const key = getEnvValue("SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "supabaseAnonKey");
-        if (url && key) return { url, key };
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-      throw new Error("Supabase environment values were not found. Check /api/env.js.");
-    }
+  const fromWindowUrl = getEnvValue(
+    "SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "VITE_SUPABASE_URL",
+    "supabaseUrl",
+    "supabase_url"
+  );
+
+  const fromWindowKey = getEnvValue(
+    "SUPABASE_ANON_KEY",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "VITE_SUPABASE_ANON_KEY",
+    "supabaseAnonKey",
+    "supabase_anon_key",
+    "SUPABASE_PUBLIC_ANON_KEY"
+  );
+
+  if (fromWindowUrl && fromWindowKey) {
+    return {
+      url: fromWindowUrl,
+      key: fromWindowKey
+    };
+  }
+
+  const response = await fetch("/api/env.js", {
+    method: "GET",
+    headers: {
+      "Accept": "application/json"
+    },
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to load Supabase environment from /api/env.js");
+  }
+
+  const env = await response.json();
+
+  const url = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || env.supabaseUrl;
+  const key = env.SUPABASE_ANON_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY || env.supabaseAnonKey;
+
+  if (!url || !key) {
+    throw new Error("Supabase environment JSON did not include SUPABASE_URL and SUPABASE_ANON_KEY.");
+  }
+
+  return { url, key };
+}
 
     async function initSupabase() {
       const env = await waitForEnv();
