@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Governance | Operations OS</title>
 
+  <!-- /api/env.js returns JSON in this project, so do NOT load it as a script. -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -25,9 +26,7 @@
       --radius: 14px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -68,9 +67,7 @@
       font-weight: 900;
     }
 
-    .nav-section {
-      margin-top: 18px;
-    }
+    .nav-section { margin-top: 18px; }
 
     .nav-label {
       font-size: 11px;
@@ -101,6 +98,7 @@
 
     .main {
       padding: 22px;
+      overflow-x: hidden;
     }
 
     .topbar {
@@ -133,7 +131,7 @@
 
     .select,
     .button {
-      height: 40px;
+      min-height: 40px;
       border-radius: 10px;
       border: 1px solid var(--border);
       background: #fff;
@@ -153,6 +151,11 @@
       background: #fff;
       color: #374151;
       border-color: var(--border);
+    }
+
+    .button:disabled {
+      opacity: .6;
+      cursor: not-allowed;
     }
 
     .status-strip {
@@ -223,35 +226,12 @@
       white-space: nowrap;
     }
 
-    .badge.green {
-      color: #166534;
-      background: #dcfce7;
-    }
-
-    .badge.red {
-      color: #991b1b;
-      background: #fee2e2;
-    }
-
-    .badge.amber {
-      color: #92400e;
-      background: #fef3c7;
-    }
-
-    .badge.blue {
-      color: #1d4ed8;
-      background: #dbeafe;
-    }
-
-    .badge.purple {
-      color: #6d28d9;
-      background: #ede9fe;
-    }
-
-    .badge.gray {
-      color: #374151;
-      background: #f3f4f6;
-    }
+    .badge.green { color: #166534; background: #dcfce7; }
+    .badge.red { color: #991b1b; background: #fee2e2; }
+    .badge.amber { color: #92400e; background: #fef3c7; }
+    .badge.blue { color: #1d4ed8; background: #dbeafe; }
+    .badge.purple { color: #6d28d9; background: #ede9fe; }
+    .badge.gray { color: #374151; background: #f3f4f6; }
 
     .table-wrap {
       overflow-x: auto;
@@ -283,27 +263,39 @@
       vertical-align: top;
     }
 
-    tr:last-child td {
-      border-bottom: 0;
-    }
+    tr:last-child td { border-bottom: 0; }
 
     .mono {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
       font-size: 12px;
     }
 
-    .muted {
-      color: var(--muted);
+    .muted { color: var(--muted); }
+
+    .notice,
+    .error {
+      padding: 14px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      display: none;
+      line-height: 1.45;
     }
 
     .error {
       border: 1px solid #fecaca;
       background: #fef2f2;
       color: #991b1b;
-      padding: 14px;
-      border-radius: 12px;
-      margin-bottom: 16px;
-      display: none;
+    }
+
+    .notice {
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1e40af;
+    }
+
+    .notice a {
+      color: #1d4ed8;
+      font-weight: 800;
     }
 
     .loading {
@@ -320,19 +312,10 @@
     }
 
     @media (max-width: 1100px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar {
-        display: none;
-      }
-
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
       .status-strip,
-      .grid {
-        grid-template-columns: 1fr;
-      }
-
+      .grid { grid-template-columns: 1fr; }
       .topbar {
         align-items: flex-start;
         flex-direction: column;
@@ -388,11 +371,13 @@
           </select>
 
           <button id="refreshBtn" class="button">Refresh</button>
-          <button id="signOutBtn" class="button secondary">Sign out</button>
+          <button id="signInBtn" class="button secondary" style="display:none;">Sign in</button>
+          <button id="signOutBtn" class="button secondary" style="display:none;">Sign out</button>
         </div>
       </div>
 
       <div id="loading" class="loading">Loading governance snapshot...</div>
+      <div id="noticeBox" class="notice"></div>
       <div id="errorBox" class="error"></div>
 
       <section class="status-strip">
@@ -554,7 +539,10 @@
   </div>
 
   <script>
+    const ADMIN_GOVERNANCE_PATH = "/admin/admin-governance.html";
     let supabaseClient = null;
+    let currentSession = null;
+    let authChecked = false;
 
     function getEnvValue(...keys) {
       const containers = [
@@ -618,79 +606,127 @@
     function setError(message) {
       const box = document.getElementById("errorBox");
       box.style.display = message ? "block" : "none";
-      box.textContent = message || "";
+      box.innerHTML = message ? escapeHtml(message) : "";
+    }
+
+    function setNotice(html) {
+      const box = document.getElementById("noticeBox");
+      box.style.display = html ? "block" : "none";
+      box.innerHTML = html || "";
     }
 
     function setLoading(isLoading) {
       document.getElementById("loading").style.display = isLoading ? "block" : "none";
+      document.getElementById("refreshBtn").disabled = isLoading;
     }
 
     function emptyRow(colspan, text) {
       return `<tr><td colspan="${colspan}" class="muted">${escapeHtml(text)}</td></tr>`;
     }
 
+    function loginUrl() {
+      return `/login.html?redirect=${encodeURIComponent(ADMIN_GOVERNANCE_PATH)}&next=${encodeURIComponent(ADMIN_GOVERNANCE_PATH)}`;
+    }
+
     async function waitForEnv() {
-  const fromWindowUrl = getEnvValue(
-    "SUPABASE_URL",
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "VITE_SUPABASE_URL",
-    "supabaseUrl",
-    "supabase_url"
-  );
+      const fromWindowUrl = getEnvValue(
+        "SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_URL",
+        "VITE_SUPABASE_URL",
+        "supabaseUrl",
+        "supabase_url"
+      );
 
-  const fromWindowKey = getEnvValue(
-    "SUPABASE_ANON_KEY",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    "VITE_SUPABASE_ANON_KEY",
-    "supabaseAnonKey",
-    "supabase_anon_key",
-    "SUPABASE_PUBLIC_ANON_KEY"
-  );
+      const fromWindowKey = getEnvValue(
+        "SUPABASE_ANON_KEY",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "VITE_SUPABASE_ANON_KEY",
+        "supabaseAnonKey",
+        "supabase_anon_key",
+        "SUPABASE_PUBLIC_ANON_KEY"
+      );
 
-  if (fromWindowUrl && fromWindowKey) {
-    return {
-      url: fromWindowUrl,
-      key: fromWindowKey
-    };
-  }
+      if (fromWindowUrl && fromWindowKey) {
+        return { url: fromWindowUrl, key: fromWindowKey };
+      }
 
-  const response = await fetch("/api/env.js", {
-    method: "GET",
-    headers: {
-      "Accept": "application/json"
-    },
-    cache: "no-store"
-  });
+      const response = await fetch("/api/env.js", {
+        method: "GET",
+        headers: { "Accept": "application/json" },
+        cache: "no-store"
+      });
 
-  if (!response.ok) {
-    throw new Error("Failed to load Supabase environment from /api/env.js");
-  }
+      if (!response.ok) {
+        throw new Error("Failed to load Supabase environment from /api/env.js");
+      }
 
-  const env = await response.json();
+      const env = await response.json();
 
-  const url =
-    env.SUPABASE_URL ||
-    env.NEXT_PUBLIC_SUPABASE_URL ||
-    env.VITE_SUPABASE_URL ||
-    env.supabaseUrl ||
-    env.supabase_url;
+      const url =
+        env.SUPABASE_URL ||
+        env.NEXT_PUBLIC_SUPABASE_URL ||
+        env.VITE_SUPABASE_URL ||
+        env.supabaseUrl ||
+        env.supabase_url;
 
-  const key =
-    env.SUPABASE_ANON_KEY ||
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    env.VITE_SUPABASE_ANON_KEY ||
-    env.supabaseAnonKey ||
-    env.supabase_anon_key ||
-    env.SUPABASE_PUBLIC_ANON_KEY;
+      const key =
+        env.SUPABASE_ANON_KEY ||
+        env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+        env.VITE_SUPABASE_ANON_KEY ||
+        env.supabaseAnonKey ||
+        env.supabase_anon_key ||
+        env.SUPABASE_PUBLIC_ANON_KEY;
 
-  if (!url || !key) {
-    throw new Error("Supabase environment JSON did not include SUPABASE_URL and SUPABASE_ANON_KEY.");
-  }
+      if (!url || !key) {
+        throw new Error("Supabase environment JSON did not include SUPABASE_URL and SUPABASE_ANON_KEY.");
+      }
 
-  return { url, key };
-}
+      return { url, key };
+    }
+
+    function findStoredSupabaseAuth() {
+      const candidates = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const storageKey = localStorage.key(i);
+        if (!storageKey) continue;
+
+        const lower = storageKey.toLowerCase();
+        if (
+          lower.includes("supabase") ||
+          lower.includes("sb-") ||
+          lower.includes("auth-token") ||
+          lower.includes("access_token")
+        ) {
+          candidates.push(storageKey);
+        }
+      }
+
+      for (const storageKey of candidates) {
+        try {
+          const raw = localStorage.getItem(storageKey);
+          if (!raw) continue;
+
+          const parsed = JSON.parse(raw);
+          const session = parsed.currentSession || parsed.session || parsed;
+
+          if (session && session.access_token && session.refresh_token) {
+            return {
+              access_token: session.access_token,
+              refresh_token: session.refresh_token
+            };
+          }
+        } catch {
+          // Ignore unrelated localStorage entries.
+        }
+      }
+
+      return null;
+    }
 
     async function initSupabase() {
+      if (supabaseClient) return true;
+
       const env = await waitForEnv();
 
       if (!window.supabase || !window.supabase.createClient) {
@@ -701,7 +737,8 @@
         auth: {
           persistSession: true,
           autoRefreshToken: true,
-          detectSessionInUrl: true
+          detectSessionInUrl: true,
+          flowType: "pkce"
         }
       });
 
@@ -711,23 +748,56 @@
         throw new Error(error.message);
       }
 
-      if (!data.session) {
-        setError("You are not signed in to an admin session. Please sign in first, then open /admin/admin-governance.html again. This page will not redirect to dashboard.html.");
-        return false;
+      currentSession = data.session || null;
+
+      if (!currentSession) {
+        const stored = findStoredSupabaseAuth();
+
+        if (stored) {
+          const setResult = await supabaseClient.auth.setSession(stored);
+          if (!setResult.error && setResult.data && setResult.data.session) {
+            currentSession = setResult.data.session;
+          }
+        }
       }
 
+      authChecked = true;
       return true;
+    }
+
+    function showSignedOutState() {
+      document.getElementById("signInBtn").style.display = "inline-flex";
+      document.getElementById("signOutBtn").style.display = "none";
+
+      setNotice(
+        `No active Supabase admin session was found for this page. ` +
+        `<a href="${loginUrl()}">Sign in again</a> and return to the governance panel.`
+      );
+      setError("");
+      renderSnapshot({});
+    }
+
+    function showSignedInState() {
+      document.getElementById("signInBtn").style.display = "none";
+      document.getElementById("signOutBtn").style.display = "inline-flex";
+      setNotice("");
+      setError("");
     }
 
     async function loadSnapshot() {
       setError("");
+      setNotice("");
       setLoading(true);
 
       try {
-        if (!supabaseClient) {
-          const ok = await initSupabase();
-          if (!ok) return;
+        await initSupabase();
+
+        if (!currentSession) {
+          showSignedOutState();
+          return;
         }
+
+        showSignedInState();
 
         const days = Number(document.getElementById("windowSelect").value || 7);
         const limit = Number(document.getElementById("limitSelect").value || 25);
@@ -739,7 +809,20 @@
         });
 
         if (error) {
-          throw new Error(error.message);
+          const message = String(error.message || "");
+          if (
+            message.toLowerCase().includes("insufficient privileges") ||
+            message.toLowerCase().includes("permission denied") ||
+            message.toLowerCase().includes("not authorized") ||
+            message.toLowerCase().includes("42501")
+          ) {
+            throw new Error(
+              "You are signed in, but this account is not authorized for the governance snapshot RPC. " +
+              "Use a super_admin, org_admin, governance_admin, incident_responder, breaker_operator, or legacy admin role."
+            );
+          }
+
+          throw new Error(message || "Failed to load governance snapshot.");
         }
 
         renderSnapshot(data || {});
@@ -754,19 +837,22 @@
       const counts = snapshot.counts || {};
       const health = snapshot.health || {};
 
-      document.getElementById("auditHealth").textContent = health.audit_status || "unknown";
-      document.getElementById("activePoliciesCount").textContent = counts.active_policies ?? "0";
-      document.getElementById("recentEvaluationsCount").textContent = counts.recent_evaluations ?? "0";
-      document.getElementById("blockedCount").textContent = counts.blocked_decisions ?? "0";
-      document.getElementById("pendingApprovalsCount").textContent = counts.pending_approval_requirements ?? "0";
+      document.getElementById("auditHealth").textContent = health.audit_status || "—";
+      document.getElementById("activePoliciesCount").textContent = counts.active_policies ?? "—";
+      document.getElementById("recentEvaluationsCount").textContent = counts.recent_evaluations ?? "—";
+      document.getElementById("blockedCount").textContent = counts.blocked_decisions ?? "—";
+      document.getElementById("pendingApprovalsCount").textContent = counts.pending_approval_requirements ?? "—";
 
       const auditBadge = document.getElementById("auditBadge");
       if (health.audit_status === "pass") {
         auditBadge.className = "badge green";
         auditBadge.textContent = "Pass";
-      } else {
+      } else if (health.audit_status) {
         auditBadge.className = "badge red";
-        auditBadge.textContent = health.audit_status || "Unknown";
+        auditBadge.textContent = health.audit_status;
+      } else {
+        auditBadge.className = "badge gray";
+        auditBadge.textContent = "Unknown";
       }
 
       renderActivePolicies(snapshot.active_policies || []);
@@ -893,12 +979,16 @@
     document.getElementById("windowSelect").addEventListener("change", loadSnapshot);
     document.getElementById("limitSelect").addEventListener("change", loadSnapshot);
 
+    document.getElementById("signInBtn").addEventListener("click", () => {
+      window.location.href = loginUrl();
+    });
+
     document.getElementById("signOutBtn").addEventListener("click", async () => {
       if (supabaseClient) {
         await supabaseClient.auth.signOut();
       }
-      setError("Signed out. Please sign in again before loading the governance snapshot.");
-      renderSnapshot({});
+      currentSession = null;
+      showSignedOutState();
     });
 
     window.addEventListener("load", loadSnapshot);
