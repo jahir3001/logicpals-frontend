@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Governance | Operations OS</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/api/env.js" defer></script>
+
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --green: #16a34a;
+      --red: #dc2626;
+      --amber: #d97706;
+      --blue: #2563eb;
+      --purple: #7c3aed;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: #ffffff;
+      border-right: 1px solid var(--border);
+      padding: 20px 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 18px;
+      margin-bottom: 28px;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--primary);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+    }
+
+    .nav-section {
+      margin-top: 18px;
+    }
+
+    .nav-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin: 18px 8px 8px;
+      font-weight: 700;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      color: #374151;
+      border-radius: 10px;
+      font-size: 14px;
+      text-decoration: none;
+      margin-bottom: 4px;
+    }
+
+    .nav-item.active {
+      background: #eef2ff;
+      color: var(--primary-dark);
+      font-weight: 700;
+    }
+
+    .main {
+      padding: 22px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .title-wrap h1 {
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: -0.03em;
+    }
+
+    .title-wrap p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .select,
+    .button {
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #fff;
+      padding: 0 12px;
+      font-size: 14px;
+    }
+
+    .button {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .button.secondary {
+      background: #fff;
+      color: #374151;
+      border-color: var(--border);
+    }
+
+    .status-strip {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .metric-value {
+      margin-top: 8px;
+      font-size: 26px;
+      font-weight: 850;
+      letter-spacing: -0.03em;
+    }
+
+    .metric-foot {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 12px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .badge.green {
+      color: #166534;
+      background: #dcfce7;
+    }
+
+    .badge.red {
+      color: #991b1b;
+      background: #fee2e2;
+    }
+
+    .badge.amber {
+      color: #92400e;
+      background: #fef3c7;
+    }
+
+    .badge.blue {
+      color: #1d4ed8;
+      background: #dbeafe;
+    }
+
+    .badge.purple {
+      color: #6d28d9;
+      background: #ede9fe;
+    }
+
+    .badge.gray {
+      color: #374151;
+      background: #f3f4f6;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      background: #f9fafb;
+      color: #4b5563;
+      padding: 11px 12px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .error {
+      border: 1px solid #fecaca;
+      background: #fef2f2;
+      color: #991b1b;
+      padding: 14px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .loading {
+      display: none;
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 1100px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .status-strip,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">O</div>
+        <div>
+          <div>Operations OS</div>
+          <div class="muted" style="font-size:12px;font-weight:600;">Governance Foundation</div>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Operations</div>
+        <a class="nav-item" href="/admin/admin-incidents.html">Incidents</a>
+        <a class="nav-item" href="/admin/admin-circuit-breakers.html">Circuit Breakers</a>
+        <a class="nav-item active" href="/admin/admin-governance.html">Governance</a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Read-only</div>
+        <div class="nav-item active">Policy Snapshot</div>
+        <div class="nav-item">Audit Health</div>
+        <div class="nav-item">Pending Approvals</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="title-wrap">
+          <h1>Governance Snapshot</h1>
+          <p>Read-only policy, decision, audit health, and approval visibility.</p>
+        </div>
+
+        <div class="toolbar">
+          <select id="windowSelect" class="select">
+            <option value="1">Last 24 hours</option>
+            <option value="7" selected>Last 7 days</option>
+            <option value="30">Last 30 days</option>
+          </select>
+
+          <select id="limitSelect" class="select">
+            <option value="10">10 items</option>
+            <option value="25" selected>25 items</option>
+            <option value="50">50 items</option>
+          </select>
+
+          <button id="refreshBtn" class="button">Refresh</button>
+          <button id="signOutBtn" class="button secondary">Sign out</button>
+        </div>
+      </div>
+
+      <div id="loading" class="loading">Loading governance snapshot...</div>
+      <div id="errorBox" class="error"></div>
+
+      <section class="status-strip">
+        <div class="card">
+          <div class="metric-label">Audit Health</div>
+          <div id="auditHealth" class="metric-value">—</div>
+          <div class="metric-foot">Evaluation/event integrity</div>
+        </div>
+
+        <div class="card">
+          <div class="metric-label">Active Policies</div>
+          <div id="activePoliciesCount" class="metric-value">—</div>
+          <div class="metric-foot">Current effective versions</div>
+        </div>
+
+        <div class="card">
+          <div class="metric-label">Recent Evaluations</div>
+          <div id="recentEvaluationsCount" class="metric-value">—</div>
+          <div class="metric-foot">Selected time window</div>
+        </div>
+
+        <div class="card">
+          <div class="metric-label">Blocked Decisions</div>
+          <div id="blockedCount" class="metric-value">—</div>
+          <div class="metric-foot">Governance blocked</div>
+        </div>
+
+        <div class="card">
+          <div class="metric-label">Pending Approvals</div>
+          <div id="pendingApprovalsCount" class="metric-value">—</div>
+          <div class="metric-foot">Approval requirement stubs</div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="card">
+          <div class="section-title">
+            <h2>Active Policies</h2>
+            <span class="badge blue">Read-only</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Policy</th>
+                  <th>Family</th>
+                  <th>Risk</th>
+                  <th>Version</th>
+                  <th>Default</th>
+                  <th>Rules</th>
+                </tr>
+              </thead>
+              <tbody id="activePoliciesBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">
+            <h2>Audit Health</h2>
+            <span id="auditBadge" class="badge gray">Unknown</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <tbody id="auditHealthBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="card">
+          <div class="section-title">
+            <h2>Recent Evaluations</h2>
+            <span class="badge purple">Policy decisions</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Policy</th>
+                  <th>Action</th>
+                  <th>Decision</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody id="recentEvaluationsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">
+            <h2>Pending Approval Requirements</h2>
+            <span class="badge amber">Stub only</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Requested</th>
+                  <th>Action</th>
+                  <th>Status</th>
+                  <th>Required</th>
+                </tr>
+              </thead>
+              <tbody id="pendingApprovalsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="card">
+          <div class="section-title">
+            <h2>Blocked Decisions</h2>
+            <span class="badge red">Blocked</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Policy</th>
+                  <th>Action</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody id="blockedDecisionsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">
+            <h2>Decision Counts</h2>
+            <span class="badge green">Summary</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Decision</th>
+                  <th>Count</th>
+                </tr>
+              </thead>
+              <tbody id="decisionCountsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <div class="footer-note">
+        8M.12G is read-only. This page calls only <span class="mono">ops_governance.get_governance_snapshot</span>.
+        It does not activate policies, approve/reject approvals, execute commands, mutate incidents, call providers, or modify evidence exports.
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let supabaseClient = null;
+
+    function getEnvValue(...keys) {
+      for (const key of keys) {
+        if (window[key]) return window[key];
+        if (window.__ENV && window.__ENV[key]) return window.__ENV[key];
+        if (window.ENV && window.ENV[key]) return window.ENV[key];
+      }
+      return null;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function formatDate(value) {
+      if (!value) return "—";
+      try {
+        return new Date(value).toLocaleString();
+      } catch {
+        return "—";
+      }
+    }
+
+    function decisionBadge(decision) {
+      const d = String(decision || "unknown");
+      if (d === "allow") return `<span class="badge green">allow</span>`;
+      if (d === "block") return `<span class="badge red">block</span>`;
+      if (d === "require_approval") return `<span class="badge amber">require approval</span>`;
+      if (d === "dry_run_only") return `<span class="badge blue">dry run only</span>`;
+      if (d === "sandbox_only") return `<span class="badge purple">sandbox only</span>`;
+      return `<span class="badge gray">${escapeHtml(d)}</span>`;
+    }
+
+    function riskBadge(risk) {
+      const r = String(risk || "unknown");
+      if (r === "critical") return `<span class="badge red">critical</span>`;
+      if (r === "high") return `<span class="badge amber">high</span>`;
+      if (r === "medium") return `<span class="badge blue">medium</span>`;
+      if (r === "low") return `<span class="badge green">low</span>`;
+      return `<span class="badge gray">${escapeHtml(r)}</span>`;
+    }
+
+    function setError(message) {
+      const box = document.getElementById("errorBox");
+      box.style.display = message ? "block" : "none";
+      box.textContent = message || "";
+    }
+
+    function setLoading(isLoading) {
+      document.getElementById("loading").style.display = isLoading ? "block" : "none";
+    }
+
+    function emptyRow(colspan, text) {
+      return `<tr><td colspan="${colspan}" class="muted">${escapeHtml(text)}</td></tr>`;
+    }
+
+    async function waitForEnv() {
+      for (let i = 0; i < 40; i++) {
+        const url = getEnvValue("SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_URL", "supabaseUrl");
+        const key = getEnvValue("SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "supabaseAnonKey");
+        if (url && key) return { url, key };
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      throw new Error("Supabase environment values were not found. Check /api/env.js.");
+    }
+
+    async function initSupabase() {
+      const env = await waitForEnv();
+
+      if (!window.supabase || !window.supabase.createClient) {
+        throw new Error("Supabase JS client did not load.");
+      }
+
+      supabaseClient = window.supabase.createClient(env.url, env.key);
+
+      const { data, error } = await supabaseClient.auth.getSession();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (!data.session) {
+        window.location.href = "/login.html?redirect=/admin/admin-governance.html";
+        return false;
+      }
+
+      return true;
+    }
+
+    async function loadSnapshot() {
+      setError("");
+      setLoading(true);
+
+      try {
+        if (!supabaseClient) {
+          const ok = await initSupabase();
+          if (!ok) return;
+        }
+
+        const days = Number(document.getElementById("windowSelect").value || 7);
+        const limit = Number(document.getElementById("limitSelect").value || 25);
+        const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+        const { data, error } = await supabaseClient.rpc("get_governance_snapshot", {
+          p_since: since,
+          p_limit: limit
+        });
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        renderSnapshot(data || {});
+      } catch (err) {
+        setError(err.message || "Failed to load governance snapshot.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function renderSnapshot(snapshot) {
+      const counts = snapshot.counts || {};
+      const health = snapshot.health || {};
+
+      document.getElementById("auditHealth").textContent = health.audit_status || "unknown";
+      document.getElementById("activePoliciesCount").textContent = counts.active_policies ?? "0";
+      document.getElementById("recentEvaluationsCount").textContent = counts.recent_evaluations ?? "0";
+      document.getElementById("blockedCount").textContent = counts.blocked_decisions ?? "0";
+      document.getElementById("pendingApprovalsCount").textContent = counts.pending_approval_requirements ?? "0";
+
+      const auditBadge = document.getElementById("auditBadge");
+      if (health.audit_status === "pass") {
+        auditBadge.className = "badge green";
+        auditBadge.textContent = "Pass";
+      } else {
+        auditBadge.className = "badge red";
+        auditBadge.textContent = health.audit_status || "Unknown";
+      }
+
+      renderActivePolicies(snapshot.active_policies || []);
+      renderAuditHealth(health);
+      renderRecentEvaluations(snapshot.recent_evaluations || []);
+      renderPendingApprovals(snapshot.pending_approval_requirements || []);
+      renderBlockedDecisions(snapshot.blocked_decisions || []);
+      renderDecisionCounts(snapshot.decision_counts || []);
+    }
+
+    function renderActivePolicies(items) {
+      const body = document.getElementById("activePoliciesBody");
+
+      if (!items.length) {
+        body.innerHTML = emptyRow(6, "No active policies found.");
+        return;
+      }
+
+      body.innerHTML = items.map(item => `
+        <tr>
+          <td>
+            <div class="mono">${escapeHtml(item.policy_key)}</div>
+            <div class="muted">${escapeHtml(item.display_name)}</div>
+          </td>
+          <td>${escapeHtml(item.policy_family)}</td>
+          <td>${riskBadge(item.risk_tier)}</td>
+          <td>v${escapeHtml(item.policy_version)}</td>
+          <td>${decisionBadge(item.decision_default)}</td>
+          <td>${escapeHtml(item.rule_count ?? 0)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderAuditHealth(health) {
+      const rows = [
+        ["Audit status", health.audit_status || "unknown"],
+        ["Missing events", health.missing_event_count ?? "0"],
+        ["Duplicate events", health.duplicate_event_count ?? "0"],
+        ["Decision mismatches", health.decision_mismatch_count ?? "0"],
+        ["Sensitive eval payloads", health.sensitive_eval_payload_count ?? "0"],
+        ["Sensitive event payloads", health.sensitive_event_payload_count ?? "0"]
+      ];
+
+      document.getElementById("auditHealthBody").innerHTML = rows.map(([label, value]) => `
+        <tr>
+          <td class="muted">${escapeHtml(label)}</td>
+          <td class="mono">${escapeHtml(value)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderRecentEvaluations(items) {
+      const body = document.getElementById("recentEvaluationsBody");
+
+      if (!items.length) {
+        body.innerHTML = emptyRow(5, "No recent evaluations found.");
+        return;
+      }
+
+      body.innerHTML = items.map(item => `
+        <tr>
+          <td>${formatDate(item.evaluated_at)}</td>
+          <td class="mono">${escapeHtml(item.policy_key)}</td>
+          <td class="mono">${escapeHtml(item.action_key)}</td>
+          <td>${decisionBadge(item.decision)}</td>
+          <td class="mono">${escapeHtml(item.reason_code)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderPendingApprovals(items) {
+      const body = document.getElementById("pendingApprovalsBody");
+
+      if (!items.length) {
+        body.innerHTML = emptyRow(4, "No pending approvals found.");
+        return;
+      }
+
+      body.innerHTML = items.map(item => `
+        <tr>
+          <td>${formatDate(item.requested_at)}</td>
+          <td class="mono">${escapeHtml(item.action_key)}</td>
+          <td><span class="badge amber">${escapeHtml(item.approval_status)}</span></td>
+          <td>${escapeHtml(item.approved_count ?? 0)} / ${escapeHtml(item.required_approvals ?? 1)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderBlockedDecisions(items) {
+      const body = document.getElementById("blockedDecisionsBody");
+
+      if (!items.length) {
+        body.innerHTML = emptyRow(4, "No blocked decisions found.");
+        return;
+      }
+
+      body.innerHTML = items.map(item => `
+        <tr>
+          <td>${formatDate(item.evaluated_at)}</td>
+          <td class="mono">${escapeHtml(item.policy_key)}</td>
+          <td class="mono">${escapeHtml(item.action_key)}</td>
+          <td class="mono">${escapeHtml(item.reason_code)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderDecisionCounts(items) {
+      const body = document.getElementById("decisionCountsBody");
+
+      if (!items.length) {
+        body.innerHTML = emptyRow(2, "No decision counts found.");
+        return;
+      }
+
+      body.innerHTML = items.map(item => `
+        <tr>
+          <td>${decisionBadge(item.decision)}</td>
+          <td class="mono">${escapeHtml(item.count)}</td>
+        </tr>
+      `).join("");
+    }
+
+    document.getElementById("refreshBtn").addEventListener("click", loadSnapshot);
+    document.getElementById("windowSelect").addEventListener("change", loadSnapshot);
+    document.getElementById("limitSelect").addEventListener("change", loadSnapshot);
+
+    document.getElementById("signOutBtn").addEventListener("click", async () => {
+      if (supabaseClient) {
+        await supabaseClient.auth.signOut();
+      }
+      window.location.href = "/login.html";
+    });
+
+    window.addEventListener("load", loadSnapshot);
+  </script>
+</body>
+</html>
