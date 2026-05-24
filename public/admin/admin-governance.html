@@ -6,7 +6,6 @@
   <title>Governance | Operations OS</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/api/env.js" defer></script>
 
   <style>
     :root {
@@ -558,11 +557,24 @@
     let supabaseClient = null;
 
     function getEnvValue(...keys) {
+      const containers = [
+        window,
+        window.__ENV,
+        window.ENV,
+        window.__LOGICPALS_ENV__,
+        window.__APP_ENV__,
+        window.APP_ENV,
+        window.APP_CONFIG,
+        window.CONFIG,
+        window.env
+      ].filter(Boolean);
+
       for (const key of keys) {
-        if (window[key]) return window[key];
-        if (window.__ENV && window.__ENV[key]) return window.__ENV[key];
-        if (window.ENV && window.ENV[key]) return window.ENV[key];
+        for (const container of containers) {
+          if (container && container[key]) return container[key];
+        }
       }
+
       return null;
     }
 
@@ -656,8 +668,20 @@
 
   const env = await response.json();
 
-  const url = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || env.supabaseUrl;
-  const key = env.SUPABASE_ANON_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY || env.supabaseAnonKey;
+  const url =
+    env.SUPABASE_URL ||
+    env.NEXT_PUBLIC_SUPABASE_URL ||
+    env.VITE_SUPABASE_URL ||
+    env.supabaseUrl ||
+    env.supabase_url;
+
+  const key =
+    env.SUPABASE_ANON_KEY ||
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    env.VITE_SUPABASE_ANON_KEY ||
+    env.supabaseAnonKey ||
+    env.supabase_anon_key ||
+    env.SUPABASE_PUBLIC_ANON_KEY;
 
   if (!url || !key) {
     throw new Error("Supabase environment JSON did not include SUPABASE_URL and SUPABASE_ANON_KEY.");
@@ -673,7 +697,13 @@
         throw new Error("Supabase JS client did not load.");
       }
 
-      supabaseClient = window.supabase.createClient(env.url, env.key);
+      supabaseClient = window.supabase.createClient(env.url, env.key, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true
+        }
+      });
 
       const { data, error } = await supabaseClient.auth.getSession();
 
@@ -682,7 +712,7 @@
       }
 
       if (!data.session) {
-        window.location.href = "/login.html?redirect=/admin/admin-governance.html";
+        setError("You are not signed in to an admin session. Please sign in first, then open /admin/admin-governance.html again. This page will not redirect to dashboard.html.");
         return false;
       }
 
@@ -867,7 +897,8 @@
       if (supabaseClient) {
         await supabaseClient.auth.signOut();
       }
-      window.location.href = "/login.html";
+      setError("Signed out. Please sign in again before loading the governance snapshot.");
+      renderSnapshot({});
     });
 
     window.addEventListener("load", loadSnapshot);
