@@ -584,7 +584,7 @@
       </section>
 
       <div class="footer-note">
-        8M.12G is read-only. This page calls only <span class="mono">ops_governance.get_governance_snapshot</span>.
+        8M.12G is read-only. This page calls only <span class="mono">ops_governance.get_governance_snapshot</span> through Supabase schema-scoped RPC.
         It does not activate policies, approve/reject approvals, execute commands, mutate incidents, call providers, or modify evidence exports.
       </div>
     </main>
@@ -835,10 +835,12 @@
         const limit = Number(document.getElementById("limitSelect").value || 25);
         const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
-        const { data, error } = await supabaseClient.rpc("get_governance_snapshot", {
-          p_since: since,
-          p_limit: limit
-        });
+        const { data, error } = await supabaseClient
+          .schema("ops_governance")
+          .rpc("get_governance_snapshot", {
+            p_since: since,
+            p_limit: limit
+          });
 
         if (error) {
           const message = String(error.message || "");
@@ -851,6 +853,17 @@
             throw new Error(
               "You are signed in, but this account is not authorized for the governance snapshot RPC. " +
               "Use a super_admin, org_admin, governance_admin, incident_responder, breaker_operator, or legacy admin role."
+            );
+          }
+
+          if (
+            message.toLowerCase().includes("schema cache") ||
+            message.toLowerCase().includes("could not find the function") ||
+            message.toLowerCase().includes("pgrst202")
+          ) {
+            throw new Error(
+              "Governance snapshot RPC was not found through the expected schema-scoped API call. " +
+              "Confirm Supabase API exposes the ops_governance schema and that get_governance_snapshot exists."
             );
           }
 
