@@ -591,6 +591,7 @@
   </div>
 
   <script>
+    const SUPABASE_AUTH_STORAGE_KEY = "sb-ovszuxerimbmzfblzkgd-auth-token";
     let supabaseClient = null;
     let currentSession = null;
 
@@ -731,6 +732,76 @@
       return { url, key };
     }
 
+    function findStoredSupabaseAuth() {
+      const candidates = [SUPABASE_AUTH_STORAGE_KEY];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const storageKey = localStorage.key(i);
+        if (!storageKey) continue;
+
+        const lower = storageKey.toLowerCase();
+        if (
+          lower.includes("supabase") ||
+          lower.includes("sb-") ||
+          lower.includes("auth-token") ||
+          lower.includes("access_token")
+        ) {
+          candidates.push(storageKey);
+        }
+      }
+
+      for (const storageKey of [...new Set(candidates)]) {
+        try {
+          const raw = localStorage.getItem(storageKey);
+          if (!raw) continue;
+
+          const parsed = JSON.parse(raw);
+          const session = parsed.currentSession || parsed.session || parsed;
+
+          if (session && session.access_token && session.refresh_token) {
+            return {
+              access_token: session.access_token,
+              refresh_token: session.refresh_token
+            };
+          }
+        } catch {
+          // Ignore unrelated localStorage entries.
+        }
+      }
+
+      return null;
+    }
+
+    function decodeJwtPayload(token) {
+      try {
+        const part = String(token || "").split(".")[1];
+        if (!part) return null;
+        const normalized = part.replace(/-/g, "+").replace(/_/g, "/");
+        const padded = normalized.padEnd(normalized.length + (4 - normalized.length % 4) % 4, "=");
+        return JSON.parse(atob(padded));
+      } catch {
+        return null;
+      }
+    }
+
+    function currentSessionHasAdminClaim() {
+      const payload = decodeJwtPayload(currentSession && currentSession.access_token);
+      const app = (payload && payload.app_metadata) || {};
+      const role = app.role || app.user_role || app.app_role;
+      const roles = Array.isArray(app.roles) ? app.roles : [];
+      const allowed = [
+        "super_admin",
+        "org_admin",
+        "governance_admin",
+        "incident_responder",
+        "breaker_operator",
+        "admin",
+        "admin_regular",
+        "admin_olympiad"
+      ];
+      return allowed.includes(role) || roles.some(r => allowed.includes(r));
+    }
+
     async function initSupabase() {
       if (supabaseClient) return true;
 
@@ -742,6 +813,7 @@
 
       supabaseClient = window.supabase.createClient(env.url, env.key, {
         auth: {
+          storageKey: SUPABASE_AUTH_STORAGE_KEY,
           persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: true,
@@ -750,13 +822,37 @@
       });
 
       const { data, error } = await supabaseClient.auth.getSession();
-      if (error) throw new Error(error.message);
+
+      if (error) {
+        throw new Error(error.message);
+      }
 
       currentSession = data.session || null;
 
+      if (!currentSession) {
+        const stored = findStoredSupabaseAuth();
+
+        if (stored) {
+          const setResult = await supabaseClient.auth.setSession(stored);
+          if (!setResult.error && setResult.data && setResult.data.session) {
+            currentSession = setResult.data.session;
+          }
+        }
+      }
+
+      if (currentSession && currentSession.refresh_token) {
+        const refreshed = await supabaseClient.auth.refreshSession({
+          refresh_token: currentSession.refresh_token
+        });
+
+        if (!refreshed.error && refreshed.data && refreshed.data.session) {
+          currentSession = refreshed.data.session;
+        }
+      }
+
       supabaseClient.auth.onAuthStateChange((_event, session) => {
         currentSession = session || null;
-        updateAuthUi();
+        if (typeof updateAuthUi === "function") updateAuthUi();
       });
 
       return true;
@@ -806,6 +902,15 @@
           throw new Error("Sign in completed but no session was returned.");
         }
 
+        if (currentSession.refresh_token) {
+          const refreshed = await supabaseClient.auth.refreshSession({
+            refresh_token: currentSession.refresh_token
+          });
+          if (!refreshed.error && refreshed.data && refreshed.data.session) {
+            currentSession = refreshed.data.session;
+          }
+        }
+
         updateAuthUi();
         document.getElementById("adminPassword").value = "";
         await loadSnapshot();
@@ -849,8 +954,8 @@
             message.toLowerCase().includes("42501")
           ) {
             throw new Error(
-              "You are signed in, but this account is not authorized for the governance snapshot RPC. " +
-              "Use a super_admin, org_admin, governance_admin, incident_responder, breaker_operator, or legacy admin role."
+              "You are signed in, but the current Supabase access token does not contain an authorized admin role. " +
+              "Click Sign out, then sign in again with jahir3001@gmail.com so the refreshed JWT includes super_admin/governance_admin."
             );
           }
 
