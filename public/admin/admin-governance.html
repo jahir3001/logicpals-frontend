@@ -163,6 +163,26 @@
       cursor: not-allowed;
     }
 
+    .button.small {
+      min-height: 32px;
+      padding: 0 10px;
+      font-size: 12px;
+      border-radius: 9px;
+    }
+
+    .button.dry-run {
+      background: var(--purple);
+      border-color: var(--purple);
+    }
+
+    .wide-card {
+      margin-bottom: 16px;
+    }
+
+    .nowrap {
+      white-space: nowrap;
+    }
+
     .status-strip {
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -543,6 +563,39 @@
         </div>
       </section>
 
+      <section class="card wide-card" id="dryRunCandidatesCard">
+        <div class="section-title">
+          <div>
+            <h2>Approval-Gated Dry Run</h2>
+            <div class="muted" style="font-size:12px;margin-top:4px;">
+              Dry-run only. Writes governance audit proof without executing commands or mutating incidents/providers.
+            </div>
+          </div>
+          <span class="badge amber">Dry-run only</span>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Policy</th>
+                <th>Action</th>
+                <th>Status</th>
+                <th>Approvals</th>
+                <th>Readiness</th>
+                <th>Last Dry Run</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="dryRunCandidatesBody">
+              <tr>
+                <td colspan="7" class="muted">Loading dry-run candidates...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <section class="grid">
         <div class="card">
           <div class="section-title">
@@ -584,8 +637,11 @@
       </section>
 
       <div class="footer-note">
-        8M.12G is read-only. This page calls only <span class="mono">public.get_governance_snapshot</span>, a controlled wrapper around <span class="mono">ops_governance.get_governance_snapshot</span>.
-        It does not activate policies, approve/reject approvals, execute commands, mutate incidents, call providers, or modify evidence exports.
+        8M.12M keeps governance execution dry-run only. This page calls controlled public wrappers:
+        <span class="mono">public.get_governance_snapshot</span>,
+        <span class="mono">public.get_approval_dry_run_candidates</span>, and
+        <span class="mono">public.dry_run_approved_governed_action</span>.
+        It does not approve/reject approvals, execute commands, mutate incidents, call providers, send notifications, or modify evidence exports.
       </div>
     </main>
   </div>
@@ -594,6 +650,7 @@
     const SUPABASE_AUTH_STORAGE_KEY = "sb-ovszuxerimbmzfblzkgd-auth-token";
     let supabaseClient = null;
     let currentSession = null;
+    let dryRunCandidates = [];
 
     function getEnvValue(...keys) {
       const containers = [
@@ -652,6 +709,21 @@
       if (r === "medium") return `<span class="badge blue">medium</span>`;
       if (r === "low") return `<span class="badge green">low</span>`;
       return `<span class="badge gray">${escapeHtml(r)}</span>`;
+    }
+
+    function approvalStatusBadge(status) {
+      const s = String(status || "unknown");
+      if (s === "approved") return `<span class="badge green">approved</span>`;
+      if (s === "pending") return `<span class="badge amber">pending</span>`;
+      if (s === "rejected") return `<span class="badge red">rejected</span>`;
+      return `<span class="badge gray">${escapeHtml(s)}</span>`;
+    }
+
+    function dryRunLatestLabel(event) {
+      if (!event) return "—";
+      const status = event.execution_status || event.event_type || "recorded";
+      const idem = event.idempotency_key ? ` · ${String(event.idempotency_key).slice(0, 18)}…` : "";
+      return `${status}${idem}`;
     }
 
     function setError(message) {
@@ -872,6 +944,8 @@
       setNotice("Please sign in with your admin Supabase account on this page. This avoids the student dashboard redirect.");
       setError("");
       renderSnapshot({});
+      dryRunCandidates = [];
+      renderDryRunCandidates();
     }
 
     async function signInInline() {
@@ -963,6 +1037,7 @@
         }
 
         renderSnapshot(data || {});
+        await loadDryRunCandidates();
       } catch (err) {
         setError(err.message || "Failed to load governance snapshot.");
       } finally {
@@ -1110,6 +1185,140 @@
           <td class="mono">${escapeHtml(item.count)}</td>
         </tr>
       `).join("");
+    }
+
+    function getSelectedSinceIso() {
+      const days = Number(document.getElementById("windowSelect").value || 7);
+      return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    }
+
+    function getSelectedLimit() {
+      const value = Number(document.getElementById("limitSelect").value || 25);
+      return Number.isFinite(value) ? value : 25;
+    }
+
+    function buildDryRunIdempotencyKey(approvalRequirementId) {
+      const randomPart =
+        window.crypto && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+      return `8M12M-ui-dry-run-${approvalRequirementId}-${randomPart}`;
+    }
+
+    async function loadDryRunCandidates() {
+      if (!supabaseClient || !currentSession) {
+        dryRunCandidates = [];
+        renderDryRunCandidates();
+        return;
+      }
+
+      const since = getSelectedSinceIso();
+      const limit = getSelectedLimit();
+
+      const { data, error } = await supabaseClient.rpc("get_approval_dry_run_candidates", {
+        p_since: since,
+        p_limit: limit
+      });
+
+      if (error) {
+        setError(error.message || "Could not load approval-gated dry-run candidates.");
+        dryRunCandidates = [];
+        renderDryRunCandidates();
+        return;
+      }
+
+      dryRunCandidates = Array.isArray(data && data.candidates) ? data.candidates : [];
+      renderDryRunCandidates();
+    }
+
+    function renderDryRunCandidates() {
+      const body = document.getElementById("dryRunCandidatesBody");
+      if (!body) return;
+
+      if (!dryRunCandidates.length) {
+        body.innerHTML = emptyRow(7, "No approval-gated dry-run candidates found.");
+        return;
+      }
+
+      body.innerHTML = dryRunCandidates.map((item) => {
+        const enabled = item.dry_run_action_enabled === true;
+        const status = item.approval_status || "unknown";
+        const approvals = `${item.approved_count ?? 0} / ${item.required_approvals ?? 1}`;
+        const readiness = item.readiness_reason || "unknown";
+        const latest = dryRunLatestLabel(item.latest_dry_run_event);
+
+        const button = enabled
+          ? `<button class="button small dry-run" data-dry-run-id="${escapeHtml(item.approval_requirement_id)}">Dry-run</button>`
+          : `<button class="button small secondary" disabled>${escapeHtml(status === "pending" ? "Pending approval" : status)}</button>`;
+
+        return `
+          <tr>
+            <td>
+              <div class="mono">${escapeHtml(item.policy_key || "—")}</div>
+              <div class="muted">${escapeHtml(item.environment || "—")}</div>
+            </td>
+            <td>
+              <div class="mono">${escapeHtml(item.action_key || "—")}</div>
+              <div class="muted">${escapeHtml(item.subject_type || "—")}: ${escapeHtml(item.subject_id || "—")}</div>
+            </td>
+            <td>${approvalStatusBadge(status)}</td>
+            <td class="mono nowrap">${escapeHtml(approvals)}</td>
+            <td class="mono">${escapeHtml(readiness)}</td>
+            <td class="mono">${escapeHtml(latest)}</td>
+            <td>${button}</td>
+          </tr>
+        `;
+      }).join("");
+
+      body.querySelectorAll("[data-dry-run-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+          runApprovalDryRun(button.getAttribute("data-dry-run-id"), button);
+        });
+      });
+    }
+
+    async function runApprovalDryRun(approvalRequirementId, button) {
+      if (!approvalRequirementId || !supabaseClient || !currentSession) return;
+
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = "Running...";
+
+      try {
+        setError("");
+        setNotice("");
+
+        const idempotencyKey = buildDryRunIdempotencyKey(approvalRequirementId);
+
+        const { data, error } = await supabaseClient.rpc("dry_run_approved_governed_action", {
+          p_approval_requirement_id: approvalRequirementId,
+          p_idempotency_key: idempotencyKey,
+          p_actor_type: "admin",
+          p_execution_context: {
+            source: "admin-governance.html",
+            ui_step: "8M.12M",
+            mode: "dry_run_only"
+          }
+        });
+
+        if (error) throw new Error(error.message || "Dry-run failed.");
+
+        if (data && data.execution_status === "dry_run") {
+          setNotice("Dry-run completed and audit event was written. No real execution occurred.");
+        } else if (data && data.execution_status === "blocked") {
+          setNotice(`Dry-run blocked: ${data.readiness_reason || "not execution ready"}`);
+        } else {
+          setNotice("Dry-run response received.");
+        }
+
+        await loadSnapshot();
+      } catch (err) {
+        setError(err.message || "Dry-run failed.");
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
     }
 
     document.getElementById("refreshBtn").addEventListener("click", loadSnapshot);
