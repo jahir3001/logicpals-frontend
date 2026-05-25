@@ -357,12 +357,149 @@
       margin-top: 14px;
     }
 
+
+    .health-section {
+      margin: 18px 0 16px;
+      border: 1px solid #dbeafe;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    }
+
+    .health-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .health-header h2 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.03em;
+    }
+
+    .health-header p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .health-alert {
+      display: none;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .health-alert.info {
+      display: block;
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1e40af;
+    }
+
+    .health-alert.error {
+      display: block;
+      border: 1px solid #fecaca;
+      background: #fef2f2;
+      color: #991b1b;
+    }
+
+    .health-metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .health-metric-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+    }
+
+    .health-metric-card .metric-value {
+      font-size: 28px;
+    }
+
+    .health-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .kv-list > div {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--border);
+      padding: 11px 0;
+    }
+
+    .kv-list > div:last-child { border-bottom: 0; }
+
+    .kv-list span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .kv-list strong {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .risk-flag {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 13px 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 10px;
+      background: #ffffff;
+    }
+
+    .risk-flag strong {
+      display: block;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .risk-flag p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .risk-flag .badge {
+      height: fit-content;
+    }
+
+    .list-empty {
+      color: var(--muted);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      background: #fff;
+      font-size: 13px;
+    }
+
     @media (max-width: 1100px) {
       .layout { grid-template-columns: 1fr; }
       .sidebar { display: none; }
       .status-strip,
       .grid,
-      .login-grid { grid-template-columns: 1fr; }
+      .login-grid,
+      .health-metric-grid,
+      .health-two-col { grid-template-columns: 1fr; }
       .topbar {
         align-items: flex-start;
         flex-direction: column;
@@ -391,9 +528,10 @@
 
       <div class="nav-section">
         <div class="nav-label">Read-only</div>
-        <div class="nav-item active">Policy Snapshot</div>
-        <div class="nav-item">Audit Health</div>
-        <div class="nav-item">Pending Approvals</div>
+        <a class="nav-item active" href="#policy-snapshot">Policy Snapshot</a>
+        <a class="nav-item" href="#audit-health-panel">Audit Health</a>
+        <a class="nav-item" href="#pending-approvals-panel">Pending Approvals</a>
+        <a class="nav-item" href="#health-intelligence">Health Intelligence</a>
       </div>
     </aside>
 
@@ -452,7 +590,7 @@
         </p>
       </section>
 
-      <section class="status-strip">
+      <section class="status-strip" id="policy-snapshot">
         <div class="card">
           <div class="metric-label">Audit Health</div>
           <div id="auditHealth" class="metric-value">—</div>
@@ -507,7 +645,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="card" id="audit-health-panel">
           <div class="section-title">
             <h2>Audit Health</h2>
             <span id="auditBadge" class="badge gray">Unknown</span>
@@ -542,7 +680,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="card" id="pending-approvals-panel">
           <div class="section-title">
             <h2>Pending Approval Requirements</h2>
             <span class="badge amber">Stub only</span>
@@ -596,6 +734,144 @@
         </div>
       </section>
 
+
+
+      <section class="card wide-card health-section" id="health-intelligence">
+        <div class="health-header">
+          <div>
+            <h2>Health Intelligence</h2>
+            <p>Read-only operational health score, SLA posture, source freshness, confidence, formula version, and risk flags from <span class="mono">public.get_health_intelligence_snapshot</span>.</p>
+          </div>
+          <div class="toolbar">
+            <button id="refreshHealthBtn" class="button secondary">Refresh Health</button>
+            <span class="badge blue">Read-only</span>
+          </div>
+        </div>
+
+        <div id="healthIntelligenceAlert" class="health-alert"></div>
+
+        <div class="health-metric-grid">
+          <div class="health-metric-card">
+            <div class="metric-label">Health Score</div>
+            <div id="healthScoreValue" class="metric-value">—</div>
+            <div id="healthScoreFormula" class="metric-foot">Formula: —</div>
+          </div>
+
+          <div class="health-metric-card">
+            <div class="metric-label">Health Status</div>
+            <div id="healthStatusValue" class="metric-value">—</div>
+            <div id="healthGradeValue" class="metric-foot">Grade: —</div>
+          </div>
+
+          <div class="health-metric-card">
+            <div class="metric-label">Confidence</div>
+            <div id="healthConfidenceValue" class="metric-value">—</div>
+            <div id="healthFreshnessValue" class="metric-foot">Freshness: —</div>
+          </div>
+
+          <div class="health-metric-card">
+            <div class="metric-label">Highest Risk</div>
+            <div id="highestRiskValue" class="metric-value">—</div>
+            <div id="riskFlagCountValue" class="metric-foot">Risk flags: —</div>
+          </div>
+        </div>
+
+        <div class="health-two-col">
+          <div class="card" style="box-shadow:none;">
+            <div class="section-title">
+              <h2>Risk Flags</h2>
+              <span class="badge amber">Explainability</span>
+            </div>
+            <div id="riskFlagsList" class="list-empty">No risk flags loaded.</div>
+          </div>
+
+          <div class="card" style="box-shadow:none;">
+            <div class="section-title">
+              <h2>SLA Snapshot</h2>
+              <span class="badge purple">SLA posture</span>
+            </div>
+            <div class="kv-list">
+              <div><span>Compliance Rate</span><strong id="slaComplianceRate">—</strong></div>
+              <div><span>Breach Rate</span><strong id="slaBreachRate">—</strong></div>
+              <div><span>Open Breaches</span><strong id="slaOpenBreaches">—</strong></div>
+              <div><span>Incidents Checked</span><strong id="slaIncidentsChecked">—</strong></div>
+              <div><span>Worst Breach Minutes</span><strong id="slaWorstBreachMinutes">—</strong></div>
+              <div><span>Source Freshness</span><strong id="slaSourceFreshness">—</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="health-two-col">
+          <div class="card" style="box-shadow:none;">
+            <div class="section-title">
+              <h2>Recent Calculation Runs</h2>
+              <span class="badge green">Run ledger</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Mode</th>
+                    <th>Status</th>
+                    <th>Metrics</th>
+                    <th>Source</th>
+                    <th>Finished</th>
+                  </tr>
+                </thead>
+                <tbody id="healthRunsTableBody">
+                  <tr><td colspan="5" class="muted">No runs loaded.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" style="box-shadow:none;">
+            <div class="section-title">
+              <h2>Recent Health Events</h2>
+              <span class="badge blue">Audit proof</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Event</th>
+                    <th>Actor</th>
+                    <th>Risk</th>
+                  </tr>
+                </thead>
+                <tbody id="healthEventsTableBody">
+                  <tr><td colspan="4" class="muted">No health events loaded.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="box-shadow:none;">
+          <div class="section-title">
+            <h2>Recent Metric Snapshots</h2>
+            <span class="badge gray">Read-only metrics</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Domain</th>
+                  <th>Metric</th>
+                  <th>Value</th>
+                  <th>Freshness</th>
+                  <th>Window End</th>
+                </tr>
+              </thead>
+              <tbody id="healthMetricsTableBody">
+                <tr><td colspan="5" class="muted">No metric snapshots loaded.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <section class="grid">
         <div class="card">
           <div class="section-title">
@@ -639,9 +915,10 @@
       <div class="footer-note">
         8M.12M keeps governance execution dry-run only. This page calls controlled public wrappers:
         <span class="mono">public.get_governance_snapshot</span>,
-        <span class="mono">public.get_approval_dry_run_candidates</span>, and
-        <span class="mono">public.dry_run_approved_governed_action</span>.
-        It does not approve/reject approvals, execute commands, mutate incidents, call providers, send notifications, or modify evidence exports.
+        <span class="mono">public.get_approval_dry_run_candidates</span>,
+        <span class="mono">public.dry_run_approved_governed_action</span>, and
+        <span class="mono">public.get_health_intelligence_snapshot</span>.
+        It does not approve/reject approvals, execute commands, mutate incidents, call providers, send notifications, modify evidence exports, or write health intelligence rows.
       </div>
     </main>
   </div>
@@ -724,6 +1001,75 @@
       const status = event.execution_status || event.event_type || "recorded";
       const idem = event.idempotency_key ? ` · ${String(event.idempotency_key).slice(0, 18)}…` : "";
       return `${status}${idem}`;
+    }
+
+
+    function formatNumber(value, decimals = 2) {
+      if (value === null || value === undefined || value === "") return "—";
+      const n = Number(value);
+      return Number.isFinite(n) ? n.toFixed(decimals) : "—";
+    }
+
+    function formatPercent(value) {
+      if (value === null || value === undefined || value === "") return "—";
+      const n = Number(value);
+      return Number.isFinite(n) ? `${n.toFixed(2)}%` : "—";
+    }
+
+    function setHealthAlert(message, type = "info") {
+      const box = document.getElementById("healthIntelligenceAlert");
+      if (!box) return;
+
+      if (!message) {
+        box.className = "health-alert";
+        box.textContent = "";
+        return;
+      }
+
+      box.className = `health-alert ${type}`;
+      box.textContent = message;
+    }
+
+    function resetHealthIntelligence() {
+      const ids = [
+        "healthScoreValue",
+        "healthScoreFormula",
+        "healthStatusValue",
+        "healthGradeValue",
+        "healthConfidenceValue",
+        "healthFreshnessValue",
+        "highestRiskValue",
+        "riskFlagCountValue",
+        "slaComplianceRate",
+        "slaBreachRate",
+        "slaOpenBreaches",
+        "slaIncidentsChecked",
+        "slaWorstBreachMinutes",
+        "slaSourceFreshness"
+      ];
+
+      ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = id === "healthScoreFormula" ? "Formula: —" : id === "healthGradeValue" ? "Grade: —" : id === "healthFreshnessValue" ? "Freshness: —" : id === "riskFlagCountValue" ? "Risk flags: —" : "—";
+      });
+
+      const riskFlagsList = document.getElementById("riskFlagsList");
+      if (riskFlagsList) riskFlagsList.innerHTML = `<div class="list-empty">No risk flags loaded.</div>`;
+
+      const runsBody = document.getElementById("healthRunsTableBody");
+      if (runsBody) runsBody.innerHTML = emptyRow(5, "No recent runs loaded.");
+
+      const eventsBody = document.getElementById("healthEventsTableBody");
+      if (eventsBody) eventsBody.innerHTML = emptyRow(4, "No health events loaded.");
+
+      const metricsBody = document.getElementById("healthMetricsTableBody");
+      if (metricsBody) metricsBody.innerHTML = emptyRow(5, "No metric snapshots loaded.");
+
+      setHealthAlert("");
+    }
+
+    function riskFlagBadge(level) {
+      return riskBadge(level || "low");
     }
 
     function setError(message) {
@@ -946,6 +1292,8 @@
       renderSnapshot({});
       dryRunCandidates = [];
       renderDryRunCandidates();
+      resetHealthIntelligence();
+      setHealthAlert("Sign in as an admin to load the read-only health intelligence snapshot.", "info");
     }
 
     async function signInInline() {
@@ -1038,6 +1386,7 @@
 
         renderSnapshot(data || {});
         await loadDryRunCandidates();
+        await loadHealthIntelligenceSnapshot();
       } catch (err) {
         setError(err.message || "Failed to load governance snapshot.");
       } finally {
@@ -1321,6 +1670,166 @@
       }
     }
 
+
+
+    async function loadHealthIntelligenceSnapshot() {
+      if (!supabaseClient || !currentSession) {
+        resetHealthIntelligence();
+        setHealthAlert("Sign in as an admin to load the read-only health intelligence snapshot.", "info");
+        return;
+      }
+
+      try {
+        setHealthAlert("");
+
+        const since = getSelectedSinceIso();
+        const limit = getSelectedLimit();
+
+        const { data, error } = await supabaseClient.rpc("get_health_intelligence_snapshot", {
+          p_since: since,
+          p_limit: limit,
+          p_workspace_key: "logicpals",
+          p_environment_key: "production"
+        });
+
+        if (error) {
+          throw new Error(error.message || "Could not load health intelligence snapshot.");
+        }
+
+        if (!data || data.ok !== true || data.contract_name !== "health_intelligence_snapshot") {
+          throw new Error("Health intelligence snapshot RPC returned an invalid contract.");
+        }
+
+        renderHealthIntelligenceSnapshot(data);
+      } catch (err) {
+        resetHealthIntelligence();
+        setHealthAlert(err.message || "Could not load health intelligence snapshot.", "error");
+      }
+    }
+
+    function renderHealthIntelligenceSnapshot(snapshot) {
+      const latest = snapshot.latest_health_score || {};
+      const sla = snapshot.latest_sla_snapshot || {};
+      const runs = Array.isArray(snapshot.recent_calculation_runs) ? snapshot.recent_calculation_runs : [];
+      const events = Array.isArray(snapshot.recent_health_score_events) ? snapshot.recent_health_score_events : [];
+      const metrics = Array.isArray(snapshot.recent_metric_snapshots) ? snapshot.recent_metric_snapshots : [];
+
+      document.getElementById("healthScoreValue").textContent = formatNumber(latest.health_score);
+      document.getElementById("healthScoreFormula").textContent = `Formula: ${latest.score_formula_version || "—"}`;
+      document.getElementById("healthStatusValue").textContent = latest.health_status || "unknown";
+      document.getElementById("healthGradeValue").textContent = `Grade: ${latest.health_grade || "unknown"}`;
+      document.getElementById("healthConfidenceValue").textContent = formatPercent(latest.score_confidence);
+      document.getElementById("healthFreshnessValue").textContent = `Freshness: ${latest.data_freshness_status || "unknown"}`;
+      document.getElementById("highestRiskValue").textContent = latest.highest_risk_level || "unknown";
+      document.getElementById("riskFlagCountValue").textContent = `Risk flags: ${latest.risk_flag_count ?? 0}`;
+
+      document.getElementById("slaComplianceRate").textContent = formatPercent(sla.sla_compliance_rate);
+      document.getElementById("slaBreachRate").textContent = formatPercent(sla.sla_breach_rate);
+      document.getElementById("slaOpenBreaches").textContent = sla.open_breach_count ?? "—";
+      document.getElementById("slaIncidentsChecked").textContent = sla.incidents_checked ?? "—";
+      document.getElementById("slaWorstBreachMinutes").textContent = formatNumber(sla.worst_breach_minutes);
+      document.getElementById("slaSourceFreshness").textContent = sla.source_freshness_status || "unknown";
+
+      renderRiskFlags(latest.risk_flags || []);
+      renderHealthRuns(runs);
+      renderHealthEvents(events);
+      renderHealthMetricSnapshots(metrics);
+
+      if (Number(latest.score_confidence) < 50) {
+        setHealthAlert("Health score loaded. Confidence is currently low because source freshness/coverage is conservative in this foundation layer.", "info");
+      } else {
+        setHealthAlert("");
+      }
+    }
+
+    function renderRiskFlags(flags) {
+      const box = document.getElementById("riskFlagsList");
+      if (!box) return;
+
+      if (!Array.isArray(flags) || flags.length === 0) {
+        box.innerHTML = `<div class="list-empty">No risk flags detected.</div>`;
+        return;
+      }
+
+      box.innerHTML = flags.map((flag) => `
+        <div class="risk-flag">
+          <div>
+            <strong>${escapeHtml(flag.risk_key || "risk_flag")}</strong>
+            <p>${escapeHtml(flag.reason || "No reason provided.")}</p>
+            <p class="mono">${escapeHtml(flag.metric_key || "—")}: ${escapeHtml(flag.metric_value ?? "—")}</p>
+          </div>
+          ${riskFlagBadge(flag.risk_level || "low")}
+        </div>
+      `).join("");
+    }
+
+    function renderHealthRuns(runs) {
+      const body = document.getElementById("healthRunsTableBody");
+      if (!body) return;
+
+      if (!Array.isArray(runs) || runs.length === 0) {
+        body.innerHTML = emptyRow(5, "No recent calculation runs found.");
+        return;
+      }
+
+      body.innerHTML = runs.slice(0, 10).map((run) => `
+        <tr>
+          <td class="mono">${escapeHtml(run.calculation_mode || "—")}</td>
+          <td>${escapeHtml(run.run_status || "—")}</td>
+          <td class="mono">${escapeHtml(run.metrics_generated ?? "—")}</td>
+          <td>${escapeHtml(run.source_status || "—")}</td>
+          <td>${formatDate(run.finished_at || run.started_at)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderHealthEvents(events) {
+      const body = document.getElementById("healthEventsTableBody");
+      if (!body) return;
+
+      if (!Array.isArray(events) || events.length === 0) {
+        body.innerHTML = emptyRow(4, "No recent health events found.");
+        return;
+      }
+
+      body.innerHTML = events.slice(0, 10).map((event) => {
+        const payload = event.event_payload || {};
+        return `
+          <tr>
+            <td>${formatDate(event.occurred_at)}</td>
+            <td class="mono">${escapeHtml(event.event_type || event.event_name || "—")}</td>
+            <td>${escapeHtml(event.actor_type || "system")}</td>
+            <td>${riskFlagBadge(payload.highest_risk_level || "low")}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderHealthMetricSnapshots(metrics) {
+      const body = document.getElementById("healthMetricsTableBody");
+      if (!body) return;
+
+      if (!Array.isArray(metrics) || metrics.length === 0) {
+        body.innerHTML = emptyRow(5, "No recent metric snapshots found.");
+        return;
+      }
+
+      body.innerHTML = metrics.slice(0, 25).map((metric) => {
+        const value = metric.metric_value ?? metric.metric_text_value ?? metric.metric_bool_value ?? "—";
+        return `
+          <tr>
+            <td>${escapeHtml(metric.metric_domain || "—")}</td>
+            <td class="mono">${escapeHtml(metric.metric_key || "—")}</td>
+            <td class="mono">${escapeHtml(value)}</td>
+            <td>${escapeHtml(metric.source_freshness_status || "unknown")}</td>
+            <td>${formatDate(metric.window_end)}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+
+    document.getElementById("refreshHealthBtn").addEventListener("click", loadHealthIntelligenceSnapshot);
     document.getElementById("refreshBtn").addEventListener("click", loadSnapshot);
     document.getElementById("windowSelect").addEventListener("change", loadSnapshot);
     document.getElementById("limitSelect").addEventListener("change", loadSnapshot);
