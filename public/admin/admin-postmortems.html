@@ -1,0 +1,1074 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Postmortems & Operational Learning | Operations OS</title>
+  <meta name="description" content="Evidence-linked incident reviews, readiness gates, action items, and immutable learning records." />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/api/env.js" defer></script>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --panel-soft: #f9fafb;
+      --text: #111827;
+      --muted: #667085;
+      --muted-2: #98a2b3;
+      --border: #e5e7eb;
+      --border-strong: #d0d5dd;
+      --primary: #6366f1;
+      --primary-700: #4f46e5;
+      --primary-soft: #eef2ff;
+      --green: #16a34a;
+      --green-soft: #ecfdf3;
+      --amber: #d97706;
+      --amber-soft: #fffaeb;
+      --red: #dc2626;
+      --red-soft: #fef3f2;
+      --blue: #2563eb;
+      --blue-soft: #eff6ff;
+      --shadow: 0 12px 30px rgba(16, 24, 40, .08);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --sidebar: 280px;
+      --drawer: 520px;
+      --header: 72px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: .55; }
+    .app {
+      display: grid;
+      grid-template-columns: var(--sidebar) minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    .sidebar {
+      background: #fff;
+      border-right: 1px solid var(--border);
+      padding: 24px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .brand-mark {
+      width: 38px; height: 38px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      display: grid; place-items: center; color: #fff; font-weight: 800;
+      box-shadow: 0 10px 20px rgba(99,102,241,.25);
+    }
+    .brand-title { font-size: 16px; font-weight: 800; line-height: 1.15; }
+    .brand-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .nav-section { margin: 18px 0 8px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 10px; color: #344054;
+      text-decoration: none; font-weight: 650; font-size: 14px;
+      margin-bottom: 4px;
+    }
+    .nav-item.active { background: var(--primary-soft); color: var(--primary-700); }
+    .nav-item .dot { width: 8px; height: 8px; border-radius: 99px; background: var(--border-strong); }
+    .nav-item.active .dot { background: var(--primary); }
+
+    .main { min-width: 0; }
+    .topbar {
+      height: var(--header);
+      background: rgba(255,255,255,.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px;
+      position: sticky; top: 0; z-index: 20;
+    }
+    .topbar-left { display: flex; flex-direction: column; gap: 2px; }
+    .topbar-title { font-size: 15px; font-weight: 800; }
+    .topbar-sub { color: var(--muted); font-size: 12px; }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .session-pill { border: 1px solid var(--border); background: #fff; border-radius: 999px; padding: 8px 12px; color: var(--muted); font-size: 13px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .content { padding: 28px; }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 22px;
+    }
+    .eyebrow { color: var(--primary-700); font-weight: 800; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
+    h1 { font-size: 32px; line-height: 1.1; margin: 0; letter-spacing: -.03em; }
+    .hero p { margin: 10px 0 0; color: var(--muted); max-width: 760px; line-height: 1.55; }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr .7fr auto auto;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .input, .select, .textarea {
+      width: 100%; border: 1px solid var(--border); background: #fff; color: var(--text);
+      border-radius: 12px; padding: 11px 12px; outline: none;
+      box-shadow: 0 1px 2px rgba(16,24,40,.03);
+    }
+    .textarea { min-height: 96px; resize: vertical; }
+    .input:focus, .select:focus, .textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,.14); }
+    .btn {
+      border: 1px solid var(--border); background: #fff; color: #344054;
+      padding: 10px 14px; border-radius: 12px; font-weight: 800;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 42px;
+    }
+    .btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn.primary:hover:not(:disabled) { background: var(--primary-700); }
+    .btn.danger { color: var(--red); border-color: #fecaca; background: #fff; }
+    .btn.soft { background: var(--panel-soft); }
+    .btn.small { min-height: 34px; padding: 7px 10px; border-radius: 10px; font-size: 13px; }
+
+    .grid-kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
+    .card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: 0 1px 2px rgba(16,24,40,.04);
+    }
+    .kpi { padding: 16px; }
+    .kpi-label { color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+    .kpi-value { font-size: 28px; font-weight: 850; letter-spacing: -.04em; margin-top: 8px; }
+    .kpi-note { margin-top: 4px; font-size: 12px; color: var(--muted); }
+
+    .layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(340px, .85fr); gap: 18px; }
+    .panel-head { padding: 16px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .panel-title { font-weight: 850; letter-spacing: -.02em; }
+    .panel-sub { color: var(--muted); font-size: 13px; margin-top: 3px; }
+    .panel-body { padding: 16px 18px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    td { padding: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; white-space: nowrap; }
+    tr:hover td { background: #fafafa; }
+    .row-title { font-weight: 800; color: var(--text); }
+    .row-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px;
+      font-size: 12px; font-weight: 800; border: 1px solid transparent; white-space: nowrap;
+    }
+    .badge.green { background: var(--green-soft); color: #067647; border-color: #abefc6; }
+    .badge.amber { background: var(--amber-soft); color: #b54708; border-color: #fedf89; }
+    .badge.red { background: var(--red-soft); color: #b42318; border-color: #fecdca; }
+    .badge.blue { background: var(--blue-soft); color: #175cd3; border-color: #bfdbfe; }
+    .badge.gray { background: #f2f4f7; color: #475467; border-color: #e4e7ec; }
+    .badge.indigo { background: var(--primary-soft); color: var(--primary-700); border-color: #c7d2fe; }
+
+    .score-wrap { display: flex; align-items: center; gap: 10px; min-width: 130px; }
+    .score-bar { height: 8px; background: #eef2f6; border-radius: 99px; flex: 1; overflow: hidden; }
+    .score-fill { height: 100%; background: var(--primary); border-radius: inherit; width: 0%; }
+    .score-text { font-weight: 850; font-size: 13px; }
+
+    .empty {
+      border: 1px dashed var(--border-strong); background: #fcfcfd; border-radius: var(--radius);
+      padding: 34px; text-align: center; color: var(--muted);
+    }
+    .empty strong { display: block; color: var(--text); font-size: 16px; margin-bottom: 6px; }
+
+    .control-strip { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 10px; margin-bottom: 14px; }
+    .strip-item { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: #fff; }
+    .strip-label { color: var(--muted); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+    .strip-value { margin-top: 6px; font-weight: 850; font-size: 14px; }
+
+    .readiness-box { padding: 18px; border: 1px solid var(--border); border-radius: var(--radius); background: linear-gradient(180deg, #fff, #fbfbff); }
+    .readiness-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+    .readiness-score { font-size: 34px; font-weight: 900; letter-spacing: -.05em; }
+    .checklist { display: grid; gap: 8px; }
+    .check-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border: 1px solid var(--border); border-radius: 12px; background: #fff; }
+    .check-icon { width: 20px; height: 20px; border-radius: 99px; display: grid; place-items: center; font-size: 12px; font-weight: 900; flex: 0 0 auto; }
+    .check-icon.ok { background: var(--green-soft); color: var(--green); }
+    .check-icon.warn { background: var(--amber-soft); color: var(--amber); }
+    .check-icon.bad { background: var(--red-soft); color: var(--red); }
+    .check-title { font-weight: 800; font-size: 13px; }
+    .check-desc { color: var(--muted); font-size: 12px; margin-top: 2px; line-height: 1.4; }
+
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid var(--border); padding: 0 18px; }
+    .tab { border: 0; background: transparent; padding: 12px 10px; color: var(--muted); font-weight: 800; border-bottom: 2px solid transparent; }
+    .tab.active { color: var(--primary-700); border-bottom-color: var(--primary); }
+    .drawer-overlay { position: fixed; inset: 0; background: rgba(16,24,40,.28); opacity: 0; pointer-events: none; transition: .2s ease; z-index: 40; }
+    .drawer-overlay.open { opacity: 1; pointer-events: auto; }
+    .drawer {
+      position: fixed; right: 0; top: 0; height: 100vh; width: min(var(--drawer), 100vw);
+      background: #fff; border-left: 1px solid var(--border); box-shadow: var(--shadow);
+      transform: translateX(105%); transition: .24s ease; z-index: 50; display: flex; flex-direction: column;
+    }
+    .drawer.open { transform: translateX(0); }
+    .drawer-head { padding: 20px; border-bottom: 1px solid var(--border); }
+    .drawer-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .drawer-title { font-size: 20px; font-weight: 900; letter-spacing: -.03em; line-height: 1.2; }
+    .drawer-meta { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .drawer-body { overflow: auto; flex: 1; }
+    .drawer-actions { padding: 14px 20px; border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; background: #fff; }
+    .tab-panel { display: none; padding: 18px 20px 24px; }
+    .tab-panel.active { display: block; }
+    .stack { display: grid; gap: 12px; }
+    .mini-card { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: #fff; }
+    .mini-title { font-weight: 850; margin-bottom: 4px; }
+    .mini-sub { color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .keyval { display: grid; grid-template-columns: 160px 1fr; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f2f4f7; font-size: 13px; }
+    .keyval:last-child { border-bottom: 0; }
+    .key { color: var(--muted); font-weight: 750; }
+    .val { color: var(--text); word-break: break-word; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; }
+    details { border: 1px solid var(--border); border-radius: 12px; background: #fff; padding: 10px 12px; }
+    summary { cursor: pointer; font-weight: 850; }
+    pre { white-space: pre-wrap; word-break: break-word; background: #0b1020; color: #e5e7eb; border-radius: 12px; padding: 12px; overflow: auto; font-size: 12px; line-height: 1.45; }
+
+    .toast-wrap { position: fixed; right: 18px; bottom: 18px; z-index: 80; display: grid; gap: 10px; }
+    .toast { background: #111827; color: #fff; padding: 12px 14px; border-radius: 12px; box-shadow: var(--shadow); max-width: 420px; font-size: 14px; }
+    .toast.error { background: #991b1b; }
+    .toast.success { background: #166534; }
+    .toast.warn { background: #92400e; }
+    .loader { width: 18px; height: 18px; border: 2px solid #c7d2fe; border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+
+    .auth-screen { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+    .auth-card { max-width: 520px; width: 100%; padding: 28px; }
+    .auth-card h1 { font-size: 28px; }
+    .auth-card p { color: var(--muted); line-height: 1.55; }
+
+    @media (max-width: 1180px) {
+      .grid-kpis { grid-template-columns: repeat(3, minmax(0,1fr)); }
+      .layout { grid-template-columns: 1fr; }
+      .control-strip { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    @media (max-width: 860px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .toolbar { grid-template-columns: 1fr; }
+      .hero { grid-template-columns: 1fr; }
+      .grid-kpis { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .topbar { padding: 0 16px; }
+      .content { padding: 18px; }
+    }
+    @media (max-width: 560px) {
+      .grid-kpis { grid-template-columns: 1fr; }
+      .control-strip { grid-template-columns: 1fr; }
+      .drawer-actions { grid-template-columns: 1fr; }
+      h1 { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="authScreen" class="auth-screen hidden">
+    <div class="card auth-card">
+      <div class="brand" style="margin-bottom:18px">
+        <div class="brand-mark">OS</div>
+        <div>
+          <div class="brand-title">Operations OS</div>
+          <div class="brand-sub">Admin protected surface</div>
+        </div>
+      </div>
+      <h1>Sign in required</h1>
+      <p>This admin surface requires an authenticated Operations OS administrator session. Sign in through your normal LogicPals admin login, then return to this page.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px">
+        <a class="btn primary" href="/login.html">Go to Login</a>
+        <button class="btn" id="retryAuthBtn">Retry session</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="app" class="app hidden">
+    <aside class="sidebar" aria-label="Operations navigation">
+      <div class="brand">
+        <div class="brand-mark">OS</div>
+        <div>
+          <div class="brand-title">Operations OS</div>
+          <div class="brand-sub">Evidence Control Plane</div>
+        </div>
+      </div>
+      <div class="nav-section">Overview</div>
+      <a class="nav-item" href="/admin.html"><span class="dot"></span>Admin Home</a>
+      <a class="nav-item" href="/admin-governance.html"><span class="dot"></span>Governance</a>
+      <a class="nav-item" href="/admin-incidents.html"><span class="dot"></span>Incidents</a>
+      <a class="nav-item active" href="/admin-postmortems.html"><span class="dot"></span>Postmortems</a>
+      <div class="nav-section">Operational Trust</div>
+      <a class="nav-item" href="#"><span class="dot"></span>Evidence Packs</a>
+      <a class="nav-item" href="#"><span class="dot"></span>Health Intelligence</a>
+      <a class="nav-item" href="#"><span class="dot"></span>Action Items</a>
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="#"><span class="dot"></span>Audit Trail</a>
+      <a class="nav-item" href="#"><span class="dot"></span>Settings</a>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-title">Postmortems & Operational Learning</div>
+          <div class="topbar-sub">Evidence-linked reviews, readiness gates, action items, and immutable learning records.</div>
+        </div>
+        <div class="topbar-right">
+          <span id="healthPill" class="badge gray">Snapshot idle</span>
+          <span id="userPill" class="session-pill">Checking session…</span>
+          <button id="signOutBtn" class="btn small">Sign out</button>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="hero">
+          <div>
+            <div class="eyebrow">Operational Learning & Evidence Control Center</div>
+            <h1>Postmortems & Operational Learning</h1>
+            <p>Evidence-linked incident reviews with readiness gates, governance workflow, corrective actions, and immutable learning records. Nothing moves forward unless the evidence and learning requirements are satisfied.</p>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end">
+            <button id="refreshBtn" class="btn soft">Refresh</button>
+            <button id="openDrawerBtn" class="btn primary" disabled>Open Full Review</button>
+          </div>
+        </div>
+
+        <div class="toolbar" aria-label="Snapshot lookup controls">
+          <input id="lookupValue" class="input" placeholder="Enter postmortem UUID or incident key, for example INC-2026-004" />
+          <select id="lookupType" class="select">
+            <option value="auto">Auto detect</option>
+            <option value="postmortem_id">Postmortem ID</option>
+            <option value="incident_key">Incident Key</option>
+          </select>
+          <select id="eventLimit" class="select">
+            <option value="25">25 events</option>
+            <option value="50" selected>50 events</option>
+            <option value="100">100 events</option>
+            <option value="200">200 events</option>
+          </select>
+          <button id="loadBtn" class="btn primary">Load Snapshot</button>
+          <button id="clearBtn" class="btn">Clear</button>
+        </div>
+
+        <div class="grid-kpis">
+          <div class="card kpi"><div class="kpi-label">Postmortems</div><div id="kpiTotal" class="kpi-value">0</div><div class="kpi-note">Loaded registry rows</div></div>
+          <div class="card kpi"><div class="kpi-label">Readiness</div><div id="kpiReadiness" class="kpi-value">—</div><div class="kpi-note">Latest gate score</div></div>
+          <div class="card kpi"><div class="kpi-label">Evidence</div><div id="kpiEvidence" class="kpi-value">0</div><div class="kpi-note">Linked evidence items</div></div>
+          <div class="card kpi"><div class="kpi-label">Actions</div><div id="kpiActions" class="kpi-value">0</div><div class="kpi-note">Open / active items</div></div>
+          <div class="card kpi"><div class="kpi-label">Events</div><div id="kpiEvents" class="kpi-value">0</div><div class="kpi-note">Audit events loaded</div></div>
+          <div class="card kpi"><div class="kpi-label">Revision</div><div id="kpiRevision" class="kpi-value">—</div><div class="kpi-note">Immutable snapshot state</div></div>
+        </div>
+
+        <div class="layout">
+          <section class="card">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">Postmortem Registry</div>
+                <div class="panel-sub">RPC-safe snapshot registry. Direct table reads are intentionally not used.</div>
+              </div>
+              <span id="registryCount" class="badge gray">0 loaded</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Incident</th>
+                    <th>Title</th>
+                    <th>Severity</th>
+                    <th>Status</th>
+                    <th>Readiness</th>
+                    <th>Evidence</th>
+                    <th>Action Items</th>
+                    <th>Owner</th>
+                    <th>Updated</th>
+                  </tr>
+                </thead>
+                <tbody id="postmortemRows"></tbody>
+              </table>
+            </div>
+            <div id="emptyState" class="panel-body">
+              <div class="empty">
+                <strong>No postmortem snapshot loaded yet</strong>
+                Enter a postmortem UUID or incident key above. This foundation UI uses the safe read-only RPC and does not read protected tables directly.
+              </div>
+            </div>
+          </section>
+
+          <aside class="stack">
+            <section class="card">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-title">Readiness Gate</div>
+                  <div class="panel-sub">Deterministic review gate from 8M.14F.</div>
+                </div>
+                <button id="evalBtn" class="btn small primary" disabled>Evaluate</button>
+              </div>
+              <div class="panel-body">
+                <div id="readinessPanel" class="readiness-box">
+                  <div class="readiness-top">
+                    <div>
+                      <div class="kpi-label">Score</div>
+                      <div class="readiness-score">—</div>
+                    </div>
+                    <span class="badge gray">No snapshot</span>
+                  </div>
+                  <div class="checklist">
+                    <div class="check-item">
+                      <div class="check-icon warn">!</div>
+                      <div><div class="check-title">Load a postmortem</div><div class="check-desc">Readiness, missing requirements, and warnings appear here.</div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="panel-head">
+                <div>
+                  <div class="panel-title">Evidence Integrity</div>
+                  <div class="panel-sub">Evidence, timeline, SLA, health, and revision posture.</div>
+                </div>
+              </div>
+              <div id="evidencePanel" class="panel-body stack">
+                <div class="mini-card"><div class="mini-title">No evidence snapshot loaded</div><div class="mini-sub">Load a postmortem to see evidence control status.</div></div>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="drawerOverlay" class="drawer-overlay"></div>
+  <aside id="drawer" class="drawer" aria-label="Postmortem detail drawer">
+    <div class="drawer-head">
+      <div class="drawer-title-row">
+        <div>
+          <div id="drawerTitle" class="drawer-title">Postmortem Detail</div>
+          <div id="drawerSubtitle" class="panel-sub">No snapshot selected</div>
+        </div>
+        <button id="closeDrawerBtn" class="btn small">Close</button>
+      </div>
+      <div id="drawerMeta" class="drawer-meta"></div>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="overview">Overview</button>
+      <button class="tab" data-tab="sections">Sections</button>
+      <button class="tab" data-tab="evidence">Evidence</button>
+      <button class="tab" data-tab="timeline">Timeline</button>
+      <button class="tab" data-tab="actions">Actions</button>
+      <button class="tab" data-tab="workflow">Workflow</button>
+      <button class="tab" data-tab="revisions">Revisions</button>
+      <button class="tab" data-tab="events">Events</button>
+    </div>
+    <div class="drawer-body">
+      <div id="tab-overview" class="tab-panel active"></div>
+      <div id="tab-sections" class="tab-panel"></div>
+      <div id="tab-evidence" class="tab-panel"></div>
+      <div id="tab-timeline" class="tab-panel"></div>
+      <div id="tab-actions" class="tab-panel"></div>
+      <div id="tab-workflow" class="tab-panel"></div>
+      <div id="tab-revisions" class="tab-panel"></div>
+      <div id="tab-events" class="tab-panel"></div>
+    </div>
+    <div class="drawer-actions">
+      <button id="submitBtn" class="btn primary" disabled>Submit for Review</button>
+      <button id="approveBtn" class="btn" disabled>Approve</button>
+      <button id="changesBtn" class="btn" disabled>Request Changes</button>
+      <button id="publishBtn" class="btn" disabled>Publish</button>
+      <button id="sealBtn" class="btn" disabled>Seal Revision</button>
+      <button id="drawerRefreshBtn" class="btn soft">Refresh Snapshot</button>
+    </div>
+  </aside>
+
+  <div id="toastWrap" class="toast-wrap"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const ADMIN_ROLES = new Set(['super_admin', 'org_admin', 'governance_admin', 'incident_responder', 'breaker_operator', 'postmortem_operator']);
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const LS_KEY = 'ops_postmortem_last_lookup_v1';
+      const CACHE_KEY = 'ops_postmortem_cached_rows_v1';
+
+      let supabaseClient = null;
+      let currentUser = null;
+      let currentSnapshot = null;
+      let cachedRows = [];
+      let busy = false;
+
+      const $ = (id) => document.getElementById(id);
+      const app = $('app');
+      const authScreen = $('authScreen');
+
+      function escapeHtml(value) {
+        return String(value ?? '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#039;');
+      }
+
+      function formatDate(value) {
+        if (!value) return '—';
+        const d = new Date(value);
+        if (Number.isNaN(d.getTime())) return '—';
+        return d.toLocaleString(undefined, { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+      }
+
+      function toNumber(value, fallback = 0) {
+        const n = Number(value);
+        return Number.isFinite(n) ? n : fallback;
+      }
+
+      function titleCase(value) {
+        return String(value ?? 'unknown').replaceAll('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
+      }
+
+      function badge(text, tone = 'gray') {
+        return `<span class="badge ${tone}">${escapeHtml(text)}</span>`;
+      }
+
+      function statusTone(status) {
+        switch (String(status || '').toLowerCase()) {
+          case 'published': return 'green';
+          case 'approved': return 'blue';
+          case 'in_review': return 'indigo';
+          case 'changes_requested': return 'amber';
+          case 'draft': return 'gray';
+          default: return 'gray';
+        }
+      }
+
+      function severityTone(sev) {
+        const s = String(sev || '').toLowerCase();
+        if (s.includes('critical') || s === 'sev1' || s === 'p0') return 'red';
+        if (s === 'sev2' || s === 'p1' || s.includes('high')) return 'amber';
+        if (s === 'sev3' || s === 'p2' || s.includes('medium')) return 'blue';
+        return 'gray';
+      }
+
+      function toast(message, type = '') {
+        const el = document.createElement('div');
+        el.className = `toast ${type}`.trim();
+        el.textContent = message;
+        $('toastWrap').appendChild(el);
+        setTimeout(() => el.remove(), 5200);
+      }
+
+      function setBusy(value, label = 'Working…') {
+        busy = value;
+        $('loadBtn').disabled = value;
+        $('refreshBtn').disabled = value;
+        $('drawerRefreshBtn').disabled = value;
+        $('healthPill').innerHTML = value ? `<span class="loader"></span> ${escapeHtml(label)}` : (currentSnapshot ? 'Snapshot loaded' : 'Snapshot idle');
+        $('healthPill').className = value ? 'badge indigo' : (currentSnapshot ? 'badge green' : 'badge gray');
+      }
+
+      function getEnvValue(...names) {
+        for (const name of names) {
+          if (window[name]) return window[name];
+        }
+        if (window.__SUPABASE_CONFIG__) {
+          for (const name of names) {
+            if (window.__SUPABASE_CONFIG__[name]) return window.__SUPABASE_CONFIG__[name];
+          }
+        }
+        if (window.__ENV__) {
+          for (const name of names) {
+            if (window.__ENV__[name]) return window.__ENV__[name];
+          }
+        }
+        return null;
+      }
+
+      async function waitForEnv(timeoutMs = 4500) {
+        const start = Date.now();
+        while (Date.now() - start < timeoutMs) {
+          const url = getEnvValue('SUPABASE_URL', 'supabaseUrl', 'VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL');
+          const key = getEnvValue('SUPABASE_ANON_KEY', 'supabaseAnonKey', 'VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY');
+          if (url && key && window.supabase) return { url, key };
+          await new Promise(r => setTimeout(r, 80));
+        }
+        throw new Error('Supabase environment was not loaded. Check /api/env.js.');
+      }
+
+      function getUserRoles(user) {
+        const appMeta = user?.app_metadata || {};
+        const userMeta = user?.user_metadata || {};
+        const roles = new Set();
+        const add = (v) => {
+          if (!v) return;
+          if (Array.isArray(v)) v.forEach(add);
+          else roles.add(String(v));
+        };
+        add(appMeta.role); add(appMeta.roles); add(userMeta.role); add(userMeta.roles);
+        return roles;
+      }
+
+      function isAdminUser(user) {
+        const roles = getUserRoles(user);
+        for (const role of roles) if (ADMIN_ROLES.has(role)) return true;
+        return false;
+      }
+
+      async function initSupabase() {
+        const { url, key } = await waitForEnv();
+        supabaseClient = window.supabase.createClient(url, key, {
+          auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        });
+      }
+
+      async function requireAuth() {
+        const { data, error } = await supabaseClient.auth.getUser();
+        if (error || !data?.user) {
+          showAuth();
+          return false;
+        }
+        currentUser = data.user;
+        $('userPill').textContent = data.user.email || data.user.id;
+        if (!isAdminUser(data.user)) {
+          showAuth('Your session is signed in but does not include an Operations OS admin role. Backend RPCs may also reject this request.');
+          return false;
+        }
+        authScreen.classList.add('hidden');
+        app.classList.remove('hidden');
+        return true;
+      }
+
+      function showAuth(message) {
+        app.classList.add('hidden');
+        authScreen.classList.remove('hidden');
+        if (message) toast(message, 'warn');
+      }
+
+      function getLookupArgs() {
+        const raw = $('lookupValue').value.trim();
+        const type = $('lookupType').value;
+        const args = {
+          p_postmortem_id: null,
+          p_incident_id: null,
+          p_incident_key: null,
+          p_include_revision_snapshots: false,
+          p_include_event_history: true,
+          p_event_limit: Number($('eventLimit').value || 50)
+        };
+        if (!raw) return args;
+        const detected = type === 'auto' ? (UUID_RE.test(raw) ? 'postmortem_id' : 'incident_key') : type;
+        if (detected === 'postmortem_id') args.p_postmortem_id = raw;
+        else if (detected === 'incident_key') args.p_incident_key = raw;
+        return args;
+      }
+
+      async function callRpc(name, args) {
+        const { data, error } = await supabaseClient.rpc(name, args);
+        if (error) throw error;
+        return data;
+      }
+
+      function idempotency(prefix) {
+        if (window.crypto?.randomUUID) return `${prefix}-${crypto.randomUUID()}`;
+        return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
+
+      function getSnapshotParts(snapshot) {
+        const s = snapshot?.snapshot || {};
+        return {
+          postmortem: s.postmortem || {},
+          sections: Array.isArray(s.sections) ? s.sections : [],
+          actionItems: Array.isArray(s.action_items) ? s.action_items : [],
+          evidenceLinks: Array.isArray(s.evidence_links) ? s.evidence_links : [],
+          timelineSnapshots: Array.isArray(s.timeline_snapshots) ? s.timeline_snapshots : [],
+          readinessEvaluations: Array.isArray(s.readiness_evaluations) ? s.readiness_evaluations : [],
+          revisionSnapshots: Array.isArray(s.revision_snapshots) ? s.revision_snapshots : [],
+          events: Array.isArray(s.events) ? s.events : [],
+          counts: s.counts || {}
+        };
+      }
+
+      function rowFromSnapshot(snapshot) {
+        const { postmortem, actionItems, evidenceLinks, timelineSnapshots, revisionSnapshots, counts } = getSnapshotParts(snapshot);
+        const activeActions = actionItems.filter(a => !['completed', 'cancelled'].includes(String(a.status || '').toLowerCase())).length;
+        return {
+          id: postmortem.id,
+          incident_key: postmortem.incident_key || '—',
+          title: postmortem.title || 'Untitled postmortem',
+          status: postmortem.status || 'unknown',
+          severity: postmortem.severity || 'unknown',
+          readiness_score: toNumber(postmortem.readiness_score, 0),
+          ready_for_review: Boolean(postmortem.ready_for_review),
+          evidence_count: Number(counts.evidence_link_count ?? evidenceLinks.length ?? 0),
+          timeline_count: Number(counts.timeline_snapshot_count ?? timelineSnapshots.length ?? 0),
+          action_count: activeActions,
+          owner: postmortem.review_owner_label || '—',
+          updated_at: postmortem.updated_at || postmortem.created_at,
+          published_revision: postmortem.published_revision,
+          revision_count: Number(counts.revision_snapshot_count ?? revisionSnapshots.length ?? 0)
+        };
+      }
+
+      function saveCache(snapshot) {
+        if (!snapshot?.ok) return;
+        const row = rowFromSnapshot(snapshot);
+        if (!row.id) return;
+        cachedRows = [row, ...cachedRows.filter(r => r.id !== row.id)].slice(0, 12);
+        localStorage.setItem(CACHE_KEY, JSON.stringify(cachedRows));
+        localStorage.setItem(LS_KEY, JSON.stringify({ id: row.id, incident_key: row.incident_key, saved_at: new Date().toISOString() }));
+      }
+
+      function loadCache() {
+        try { cachedRows = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]'); }
+        catch { cachedRows = []; }
+        renderRegistry();
+      }
+
+      async function loadSnapshot(args = getLookupArgs()) {
+        try {
+          setBusy(true, 'Loading snapshot…');
+          const data = await callRpc('get_postmortem_snapshot', args);
+          if (!data?.ok) {
+            toast(data?.error || 'Snapshot request failed.', 'error');
+            return data;
+          }
+          currentSnapshot = data;
+          const row = rowFromSnapshot(data);
+          $('lookupValue').value = row.id || row.incident_key || $('lookupValue').value;
+          $('lookupType').value = row.id ? 'postmortem_id' : 'incident_key';
+          saveCache(data);
+          renderAll();
+          toast('Postmortem snapshot loaded.', 'success');
+          return data;
+        } catch (err) {
+          console.error(err);
+          toast(err.message || 'Failed to load postmortem snapshot.', 'error');
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      async function refreshCurrent() {
+        if (currentSnapshot) {
+          const row = rowFromSnapshot(currentSnapshot);
+          return loadSnapshot({ p_postmortem_id: row.id, p_incident_id: null, p_incident_key: null, p_include_revision_snapshots: false, p_include_event_history: true, p_event_limit: Number($('eventLimit').value || 50) });
+        }
+        return loadSnapshot();
+      }
+
+      function renderAll() {
+        renderKpis();
+        renderRegistry();
+        renderReadinessPanel();
+        renderEvidencePanel();
+        renderDrawer();
+        updateButtons();
+      }
+
+      function renderKpis() {
+        if (!currentSnapshot) {
+          $('kpiTotal').textContent = cachedRows.length || '0';
+          $('kpiReadiness').textContent = '—';
+          $('kpiEvidence').textContent = '0';
+          $('kpiActions').textContent = '0';
+          $('kpiEvents').textContent = '0';
+          $('kpiRevision').textContent = '—';
+          return;
+        }
+        const { postmortem, actionItems, evidenceLinks, events, revisionSnapshots } = getSnapshotParts(currentSnapshot);
+        const openActions = actionItems.filter(a => !['completed', 'cancelled'].includes(String(a.status || '').toLowerCase())).length;
+        $('kpiTotal').textContent = String(cachedRows.length || 1);
+        $('kpiReadiness').textContent = `${toNumber(postmortem.readiness_score, 0).toFixed(0)}%`;
+        $('kpiEvidence').textContent = String(evidenceLinks.length);
+        $('kpiActions').textContent = String(openActions);
+        $('kpiEvents').textContent = String(events.length);
+        $('kpiRevision').textContent = revisionSnapshots.length ? 'Sealed' : (postmortem.status === 'published' ? 'Ready' : 'Not sealed');
+      }
+
+      function renderRegistry() {
+        const tbody = $('postmortemRows');
+        const rows = [...cachedRows];
+        tbody.innerHTML = '';
+        $('emptyState').classList.toggle('hidden', rows.length > 0);
+        $('registryCount').textContent = `${rows.length} loaded`;
+        rows.forEach(row => {
+          const tr = document.createElement('tr');
+          tr.tabIndex = 0;
+          tr.style.cursor = 'pointer';
+          tr.dataset.postmortemId = row.id;
+          const evidenceTone = row.evidence_count > 0 ? 'green' : 'amber';
+          const readinessTone = row.ready_for_review ? 'green' : (row.readiness_score >= 80 ? 'blue' : 'amber');
+          tr.innerHTML = `
+            <td><div class="row-title mono">${escapeHtml(row.incident_key || '—')}</div><div class="row-sub mono">${escapeHtml((row.id || '').slice(0, 8))}</div></td>
+            <td><div class="row-title">${escapeHtml(row.title)}</div><div class="row-sub">${row.timeline_count > 0 ? 'Timeline linked' : 'Timeline missing'}</div></td>
+            <td>${badge(titleCase(row.severity), severityTone(row.severity))}</td>
+            <td>${badge(titleCase(row.status), statusTone(row.status))}</td>
+            <td><div class="score-wrap"><div class="score-bar"><div class="score-fill" style="width:${Math.max(0, Math.min(100, row.readiness_score))}%"></div></div><span class="score-text">${row.readiness_score.toFixed(0)}%</span></div>${row.ready_for_review ? badge('Ready', 'green') : badge('Blocked', readinessTone)}</td>
+            <td>${badge(row.evidence_count > 0 ? `${row.evidence_count} linked` : 'Missing', evidenceTone)}</td>
+            <td>${badge(`${row.action_count} open`, row.action_count ? 'amber' : 'green')}</td>
+            <td>${escapeHtml(row.owner || '—')}</td>
+            <td>${escapeHtml(formatDate(row.updated_at))}</td>
+          `;
+          tr.addEventListener('click', () => loadSnapshot({ p_postmortem_id: row.id, p_incident_id: null, p_incident_key: null, p_include_revision_snapshots: false, p_include_event_history: true, p_event_limit: Number($('eventLimit').value || 50) }).then(openDrawer));
+          tbody.appendChild(tr);
+        });
+      }
+
+      function readinessChecklist(checks = {}, warnings = [], blocking = []) {
+        const items = [
+          ['required_sections_complete', 'Required sections complete', `${checks.required_section_complete_count ?? 0}/${checks.required_section_count ?? 0} required sections complete`],
+          ['timeline_snapshot_exists', 'Timeline snapshot exists', `${checks.timeline_item_count ?? 0} timeline items captured`],
+          ['evidence_links_exist', 'Evidence links exist', `${checks.evidence_count ?? 0} linked evidence records`],
+          ['chain_status_recorded', 'Chain status recorded', 'Evidence chain status is available'],
+          ['sla_snapshot_linked', 'SLA snapshot linked', 'SLA context attached to the postmortem'],
+          ['health_score_linked', 'Health score linked', 'Operational health context attached'],
+          ['action_items_reviewed', 'Action items reviewed', `${checks.action_item_count ?? 0} corrective action items`],
+          ['learning_taxonomy_complete', 'Learning taxonomy complete', 'Failure domain, recurrence risk, and learning category captured']
+        ];
+        return items.map(([key, title, desc]) => {
+          const ok = Boolean(checks[key]);
+          const warn = !ok && warnings.some(w => String(w).includes(key.replace('_linked', '').replace('_exists', '')));
+          return `<div class="check-item"><div class="check-icon ${ok ? 'ok' : warn ? 'warn' : 'bad'}">${ok ? '✓' : warn ? '!' : '×'}</div><div><div class="check-title">${escapeHtml(title)}</div><div class="check-desc">${escapeHtml(desc)}</div></div></div>`;
+        }).join('') + (blocking.length ? `<div class="mini-card"><div class="mini-title">Why blocked?</div><div class="mini-sub">${blocking.map(x => `• ${escapeHtml(x)}`).join('<br>')}</div></div>` : '');
+      }
+
+      function renderReadinessPanel() {
+        const panel = $('readinessPanel');
+        if (!currentSnapshot) return;
+        const { postmortem, readinessEvaluations } = getSnapshotParts(currentSnapshot);
+        const snapshot = postmortem.readiness_snapshot || {};
+        const score = toNumber(postmortem.readiness_score ?? snapshot.readiness_score, 0);
+        const ready = Boolean(postmortem.ready_for_review ?? snapshot.ready_for_review);
+        const checks = snapshot.checks || readinessEvaluations[0]?.checks || {};
+        const warnings = snapshot.warnings || readinessEvaluations[0]?.warnings || [];
+        const blocking = snapshot.blocking_requirements || readinessEvaluations[0]?.blocking_requirements || [];
+        panel.innerHTML = `
+          <div class="readiness-top">
+            <div><div class="kpi-label">Score</div><div class="readiness-score">${score.toFixed(0)}%</div></div>
+            ${ready ? badge('Ready for Review', 'green') : badge('Blocked by Quality Gate', 'amber')}
+          </div>
+          <div class="score-bar" style="margin-bottom:14px;height:10px"><div class="score-fill" style="width:${Math.max(0, Math.min(100, score))}%"></div></div>
+          <div class="checklist">${readinessChecklist(checks, warnings, blocking)}</div>
+        `;
+      }
+
+      function renderEvidencePanel() {
+        const panel = $('evidencePanel');
+        if (!currentSnapshot) return;
+        const { postmortem, evidenceLinks, timelineSnapshots, revisionSnapshots } = getSnapshotParts(currentSnapshot);
+        const readiness = postmortem.readiness_snapshot || {};
+        const checks = readiness.checks || {};
+        const cards = [
+          ['Evidence Links', evidenceLinks.length > 0 ? 'Linked' : 'Missing', evidenceLinks.length > 0 ? 'green' : 'amber', `${evidenceLinks.length} evidence records`],
+          ['Timeline Snapshot', timelineSnapshots.length > 0 || postmortem.timeline_snapshot_id ? 'Linked' : 'Missing', timelineSnapshots.length > 0 || postmortem.timeline_snapshot_id ? 'green' : 'amber', `${timelineSnapshots.length} timeline snapshots`],
+          ['SLA Snapshot', checks.sla_snapshot_linked || postmortem.sla_snapshot_id ? 'Linked' : 'Not linked', checks.sla_snapshot_linked || postmortem.sla_snapshot_id ? 'green' : 'amber', postmortem.sla_snapshot_id || 'No SLA snapshot reference'],
+          ['Health Score', checks.health_score_linked || postmortem.health_score_id ? 'Linked' : 'Not linked', checks.health_score_linked || postmortem.health_score_id ? 'green' : 'amber', postmortem.health_score_id || 'No health score reference'],
+          ['Immutable Revision', revisionSnapshots.length > 0 ? 'Sealed' : 'Not sealed', revisionSnapshots.length > 0 ? 'green' : 'gray', `${revisionSnapshots.length} revision snapshots`]
+        ];
+        panel.innerHTML = cards.map(([title, state, tone, note]) => `
+          <div class="mini-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div class="mini-title">${escapeHtml(title)}</div>${badge(state, tone)}</div><div class="mini-sub">${escapeHtml(note)}</div></div>
+        `).join('');
+      }
+
+      function renderDrawer() {
+        if (!currentSnapshot) return;
+        const parts = getSnapshotParts(currentSnapshot);
+        const pm = parts.postmortem;
+        $('drawerTitle').textContent = pm.title || 'Untitled postmortem';
+        $('drawerSubtitle').textContent = `${pm.incident_key || 'No incident key'} • ${pm.id || ''}`;
+        $('drawerMeta').innerHTML = `${badge(titleCase(pm.status), statusTone(pm.status))}${badge(titleCase(pm.severity), severityTone(pm.severity))}${pm.ready_for_review ? badge('Ready', 'green') : badge('Blocked', 'amber')}${parts.revisionSnapshots.length ? badge('Immutable', 'green') : badge('Not sealed', 'gray')}`;
+        renderOverview(parts);
+        renderSections(parts.sections);
+        renderEvidence(parts);
+        renderTimeline(parts.timelineSnapshots);
+        renderActions(parts.actionItems);
+        renderWorkflow(parts);
+        renderRevisions(parts.revisionSnapshots);
+        renderEvents(parts.events);
+      }
+
+      function renderOverview({ postmortem, counts }) {
+        $('tab-overview').innerHTML = `
+          <div class="control-strip">
+            <div class="strip-item"><div class="strip-label">Readiness</div><div class="strip-value">${toNumber(postmortem.readiness_score, 0).toFixed(0)}%</div></div>
+            <div class="strip-item"><div class="strip-label">Evidence</div><div class="strip-value">${counts.evidence_link_count || 0}</div></div>
+            <div class="strip-item"><div class="strip-label">Actions</div><div class="strip-value">${counts.action_item_count || 0}</div></div>
+            <div class="strip-item"><div class="strip-label">Events</div><div class="strip-value">${counts.event_count || 0}</div></div>
+            <div class="strip-item"><div class="strip-label">Revision</div><div class="strip-value">${counts.revision_snapshot_count || 0}</div></div>
+          </div>
+          <div class="mini-card">
+            ${kv('Incident Key', postmortem.incident_key)}
+            ${kv('Status', titleCase(postmortem.status))}
+            ${kv('Created', formatDate(postmortem.created_at))}
+            ${kv('Updated', formatDate(postmortem.updated_at))}
+            ${kv('Submitted', formatDate(postmortem.submitted_for_review_at))}
+            ${kv('Approved', formatDate(postmortem.approved_at))}
+            ${kv('Published', formatDate(postmortem.published_at))}
+            ${kv('Published Revision', postmortem.published_revision || '—')}
+          </div>
+          <details style="margin-top:12px"><summary>Raw postmortem metadata</summary><pre>${escapeHtml(JSON.stringify(postmortem.metadata || {}, null, 2))}</pre></details>
+        `;
+      }
+
+      function kv(k, v) { return `<div class="keyval"><div class="key">${escapeHtml(k)}</div><div class="val">${escapeHtml(v || '—')}</div></div>`; }
+
+      function renderSections(sections) {
+        $('tab-sections').innerHTML = sections.length ? `<div class="stack">${sections.map(s => `
+          <div class="mini-card">
+            <div style="display:flex;justify-content:space-between;gap:10px"><div><div class="mini-title">${escapeHtml(s.section_title || titleCase(s.section_key))}</div><div class="mini-sub mono">${escapeHtml(s.section_key)}</div></div>${badge(titleCase(s.status), s.status === 'complete' ? 'green' : 'amber')}</div>
+            <div class="mini-sub" style="margin-top:10px">${escapeHtml(s.plain_text_summary || s.content?.value || 'No summary yet.')}</div>
+            <div style="margin-top:8px">${s.required_for_review ? badge('Required for review', 'indigo') : badge('Optional', 'gray')}</div>
+          </div>`).join('')}</div>` : `<div class="empty"><strong>No sections</strong>No structured sections were returned.</div>`;
+      }
+
+      function renderEvidence({ evidenceLinks, postmortem }) {
+        $('tab-evidence').innerHTML = `
+          <div class="stack">
+            <div class="mini-card">${kv('Timeline Snapshot ID', postmortem.timeline_snapshot_id)}${kv('SLA Snapshot ID', postmortem.sla_snapshot_id)}${kv('Health Score ID', postmortem.health_score_id)}</div>
+            ${evidenceLinks.length ? evidenceLinks.map(e => `<div class="mini-card"><div style="display:flex;justify-content:space-between;gap:10px"><div class="mini-title">${escapeHtml(e.evidence_title || e.source_key || e.evidence_source || 'Evidence')}</div>${badge(titleCase(e.link_status || 'linked'), e.link_status === 'active' ? 'green' : 'gray')}</div><div class="mini-sub">${escapeHtml(e.evidence_summary || 'No summary')}</div><div class="mini-sub mono" style="margin-top:6px">${escapeHtml(e.evidence_hash || '')}</div></div>`).join('') : '<div class="empty"><strong>No evidence links</strong>This is why the readiness gate may be blocking review.</div>'}
+          </div>`;
+      }
+
+      function renderTimeline(timelines) {
+        $('tab-timeline').innerHTML = timelines.length ? `<div class="stack">${timelines.map(t => {
+          const snap = t.timeline_snapshot || t;
+          const items = t.items || [];
+          return `<div class="mini-card"><div style="display:flex;justify-content:space-between"><div class="mini-title">Timeline Snapshot</div>${badge(titleCase(snap.snapshot_status || 'created'), 'blue')}</div><div class="mini-sub">${items.length} items • ${formatDate(snap.captured_at)}</div>${items.slice(0,8).map(i => `<div class="keyval"><div class="key">${escapeHtml(formatDate(i.occurred_at))}</div><div class="val">${escapeHtml(i.item_title || i.item_summary || i.event_name || 'Timeline item')}</div></div>`).join('')}</div>`;
+        }).join('')}</div>` : `<div class="empty"><strong>No timeline snapshot</strong>Timeline snapshot is missing for this postmortem.</div>`;
+      }
+
+      function renderActions(actions) {
+        $('tab-actions').innerHTML = actions.length ? `<div class="stack">${actions.map(a => `<div class="mini-card"><div style="display:flex;justify-content:space-between;gap:10px"><div><div class="mini-title">${escapeHtml(a.title)}</div><div class="mini-sub">${escapeHtml(a.description || '')}</div></div>${badge(titleCase(a.status), a.status === 'completed' ? 'green' : a.status === 'blocked' ? 'red' : 'amber')}</div>${kv('Type', titleCase(a.action_type))}${kv('Priority', titleCase(a.priority))}${kv('Owner', a.owner_label || a.owner_id)}${kv('Due', formatDate(a.due_at))}</div>`).join('')}</div>` : `<div class="empty"><strong>No action items</strong>Corrective actions are required for operational learning quality.</div>`;
+      }
+
+      function renderWorkflow({ postmortem }) {
+        const status = String(postmortem.status || 'draft');
+        const steps = ['draft', 'in_review', 'approved', 'published'];
+        $('tab-workflow').innerHTML = `
+          <div class="stack">
+            <div class="mini-card"><div class="mini-title">Workflow State</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${steps.map(step => badge(titleCase(step), step === status ? 'indigo' : 'gray')).join('')}</div></div>
+            <div class="mini-card"><div class="mini-title">Action Rules</div>
+              ${kv('Submit for Review', postmortem.ready_for_review && ['draft','changes_requested'].includes(status) ? 'Enabled' : 'Disabled until readiness passes')}
+              ${kv('Approve', status === 'in_review' && postmortem.ready_for_review ? 'Enabled' : 'Disabled')}
+              ${kv('Publish', status === 'approved' ? 'Enabled' : 'Disabled')}
+              ${kv('Seal Revision', status === 'published' ? 'Enabled' : 'Disabled')}
+            </div>
+          </div>`;
+      }
+
+      function renderRevisions(revisions) {
+        $('tab-revisions').innerHTML = revisions.length ? `<div class="stack">${revisions.map(r => `<div class="mini-card"><div style="display:flex;justify-content:space-between"><div class="mini-title">Revision #${escapeHtml(r.published_revision || '—')}</div>${badge(titleCase(r.revision_status || 'sealed'), 'green')}</div>${kv('Hash', r.snapshot_hash)}${kv('Algorithm', r.snapshot_hash_algorithm)}${kv('Sealed At', formatDate(r.sealed_at))}</div>`).join('')}</div>` : `<div class="empty"><strong>No sealed revisions</strong>Revision sealing is available after publish.</div>`;
+      }
+
+      function renderEvents(events) {
+        $('tab-events').innerHTML = events.length ? `<div class="stack">${events.map(e => `<div class="mini-card"><div style="display:flex;justify-content:space-between;gap:10px"><div><div class="mini-title">${escapeHtml(e.event_name || e.event_type)}</div><div class="mini-sub">${escapeHtml(formatDate(e.occurred_at))}</div></div>${badge(titleCase(e.event_type), 'gray')}</div><details style="margin-top:10px"><summary>Payload</summary><pre>${escapeHtml(JSON.stringify(e.event_payload || {}, null, 2))}</pre></details></div>`).join('')}</div>` : `<div class="empty"><strong>No events</strong>No postmortem event history returned.</div>`;
+      }
+
+      function updateButtons() {
+        const enabled = Boolean(currentSnapshot);
+        $('openDrawerBtn').disabled = !enabled;
+        $('evalBtn').disabled = !enabled || busy;
+        if (!enabled) return;
+        const { postmortem } = getSnapshotParts(currentSnapshot);
+        const status = String(postmortem.status || 'draft');
+        const ready = Boolean(postmortem.ready_for_review);
+        $('submitBtn').disabled = !(ready && ['draft', 'changes_requested'].includes(status));
+        $('approveBtn').disabled = !(ready && status === 'in_review' && toNumber(postmortem.readiness_score, 0) >= 80);
+        $('changesBtn').disabled = !(['in_review', 'approved'].includes(status));
+        $('publishBtn').disabled = !(status === 'approved');
+        $('sealBtn').disabled = !(status === 'published');
+      }
+
+      function openDrawer() { if (currentSnapshot) { $('drawerOverlay').classList.add('open'); $('drawer').classList.add('open'); } }
+      function closeDrawer() { $('drawerOverlay').classList.remove('open'); $('drawer').classList.remove('open'); }
+
+      async function runAction(type) {
+        if (!currentSnapshot || busy) return;
+        const { postmortem } = getSnapshotParts(currentSnapshot);
+        const id = postmortem.id;
+        const meta = { ui: 'admin-postmortems.html', step: '8M.14J', action: type };
+        try {
+          setBusy(true, `${titleCase(type)}…`);
+          let result;
+          if (type === 'evaluate') {
+            result = await callRpc('evaluate_postmortem_readiness', { p_postmortem_id: id, p_evaluated_by_label: 'Admin Postmortem UI', p_metadata: meta, p_idempotency_key: idempotency('8M14J-evaluate') });
+          } else if (type === 'submit') {
+            result = await callRpc('submit_postmortem_for_review', { p_postmortem_id: id, p_review_owner_id: null, p_review_owner_label: 'Operations Reviewer', p_submitted_by_label: 'Admin Postmortem UI', p_metadata: meta, p_idempotency_key: idempotency('8M14J-submit') });
+          } else if (type === 'approve') {
+            result = await callRpc('approve_postmortem', { p_postmortem_id: id, p_approval_comment: 'Approved from Admin Postmortem UI', p_approved_by_label: 'Admin Postmortem UI', p_metadata: meta, p_idempotency_key: idempotency('8M14J-approve') });
+          } else if (type === 'changes') {
+            const reason = prompt('Reason for requesting changes:');
+            if (!reason) return;
+            result = await callRpc('request_postmortem_changes', { p_postmortem_id: id, p_reason: reason, p_comment: reason, p_requested_by_label: 'Admin Postmortem UI', p_metadata: meta, p_idempotency_key: idempotency('8M14J-changes') });
+          } else if (type === 'publish') {
+            if (!confirm('Publish this postmortem? Published postmortems become immutable after publish/seal protections.')) return;
+            result = await callRpc('publish_postmortem', { p_postmortem_id: id, p_publish_note: 'Published from Admin Postmortem UI', p_published_by_label: 'Admin Postmortem UI', p_metadata: meta, p_idempotency_key: idempotency('8M14J-publish') });
+          } else if (type === 'seal') {
+            result = await callRpc('seal_postmortem_revision', { p_postmortem_id: id, p_revision_note: 'Sealed from Admin Postmortem UI', p_sealed_by_label: 'Admin Postmortem UI', p_metadata: meta, p_idempotency_key: idempotency('8M14J-seal') });
+          }
+          if (result?.ok) toast(`${titleCase(type)} completed.`, 'success');
+          else toast(result?.error || `${titleCase(type)} was blocked by backend contract.`, 'warn');
+          await refreshCurrent();
+        } catch (err) {
+          console.error(err);
+          toast(err.message || `${titleCase(type)} failed.`, 'error');
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      function bindEvents() {
+        $('loadBtn').addEventListener('click', () => loadSnapshot());
+        $('refreshBtn').addEventListener('click', refreshCurrent);
+        $('drawerRefreshBtn').addEventListener('click', refreshCurrent);
+        $('openDrawerBtn').addEventListener('click', openDrawer);
+        $('closeDrawerBtn').addEventListener('click', closeDrawer);
+        $('drawerOverlay').addEventListener('click', closeDrawer);
+        $('clearBtn').addEventListener('click', () => { localStorage.removeItem(LS_KEY); localStorage.removeItem(CACHE_KEY); cachedRows = []; currentSnapshot = null; $('lookupValue').value = ''; renderAll(); });
+        $('signOutBtn').addEventListener('click', async () => { await supabaseClient.auth.signOut(); location.href = '/login.html'; });
+        $('retryAuthBtn').addEventListener('click', async () => { await requireAuth(); });
+        $('evalBtn').addEventListener('click', () => runAction('evaluate'));
+        $('submitBtn').addEventListener('click', () => runAction('submit'));
+        $('approveBtn').addEventListener('click', () => runAction('approve'));
+        $('changesBtn').addEventListener('click', () => runAction('changes'));
+        $('publishBtn').addEventListener('click', () => runAction('publish'));
+        $('sealBtn').addEventListener('click', () => runAction('seal'));
+        document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+          document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
+          btn.classList.add('active');
+          $(`tab-${btn.dataset.tab}`).classList.add('active');
+        }));
+        $('lookupValue').addEventListener('keydown', (e) => { if (e.key === 'Enter') loadSnapshot(); });
+      }
+
+      async function boot() {
+        try {
+          bindEvents();
+          loadCache();
+          await initSupabase();
+          const ok = await requireAuth();
+          if (!ok) return;
+          const params = new URLSearchParams(location.search);
+          const fromUrl = params.get('postmortem_id') || params.get('incident_key') || params.get('incident');
+          if (fromUrl) {
+            $('lookupValue').value = fromUrl;
+            $('lookupType').value = params.get('postmortem_id') ? 'postmortem_id' : 'incident_key';
+            await loadSnapshot();
+          } else {
+            try {
+              const last = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+              if (last?.id) { $('lookupValue').value = last.id; $('lookupType').value = 'postmortem_id'; }
+            } catch {}
+          }
+          renderAll();
+        } catch (err) {
+          console.error(err);
+          showAuth(err.message || 'Admin page failed to initialize.');
+        }
+      }
+
+      boot();
+    })();
+  </script>
+</body>
+</html>
