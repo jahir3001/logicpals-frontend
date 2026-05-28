@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%236366f1'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-size='24' font-family='Arial' fill='white' font-weight='700'%3EOS%3C/text%3E%3C/svg%3E">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Postmortems & Operational Learning | Operations OS</title>
@@ -775,7 +776,7 @@
 
       function showReferenceRequiredNotice() {
         toast('Enter a postmortem UUID or incident key first, then click Load Snapshot.', 'warn');
-        $('snapshotState').textContent = 'Reference required';
+        $('healthPill').textContent = 'Reference required';
         $('lookupValue')?.focus();
       }
 
@@ -883,7 +884,7 @@
           }
           const rows = Array.isArray(data.rows) ? data.rows : [];
           applyRegistryRows(rows);
-          $('snapshotState').textContent = rows.length ? `Registry loaded: ${rows.length}` : 'Registry empty';
+          $('healthPill').textContent = rows.length ? `Registry loaded: ${rows.length}` : 'Registry empty';
           toast(rows.length ? `Loaded ${rows.length} postmortem registry row(s).` : 'No postmortems found yet.', rows.length ? 'success' : 'warn');
           if (autoLoadLatest && rows[0]?.postmortem_id) {
             $('lookupValue').value = rows[0].postmortem_id;
