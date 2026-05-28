@@ -335,7 +335,7 @@
             <p>Evidence-linked incident reviews with readiness gates, governance workflow, corrective actions, and immutable learning records. Nothing moves forward unless the evidence and learning requirements are satisfied.</p>
           </div>
           <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end">
-            <button id="refreshBtn" class="btn soft" title="Refreshes the currently loaded or last cached postmortem only. Enter a reference first if none is loaded.">Refresh Loaded</button>
+            <button id="refreshBtn" class="btn soft" title="Refreshes the loaded postmortem; if none is loaded, refreshes the RPC-safe registry.">Refresh Registry</button>
             <button id="openDrawerBtn" class="btn primary" disabled>Open Full Review</button>
           </div>
         </div>
@@ -358,7 +358,7 @@
         </div>
 
         <div class="grid-kpis">
-          <div class="card kpi"><div class="kpi-label">Postmortems</div><div id="kpiTotal" class="kpi-value">0</div><div class="kpi-note">Loaded registry rows</div></div>
+          <div class="card kpi"><div class="kpi-label">Postmortems</div><div id="kpiTotal" class="kpi-value">0</div><div class="kpi-note">Registry rows loaded</div></div>
           <div class="card kpi"><div class="kpi-label">Readiness</div><div id="kpiReadiness" class="kpi-value">—</div><div class="kpi-note">Latest gate score</div></div>
           <div class="card kpi"><div class="kpi-label">Evidence</div><div id="kpiEvidence" class="kpi-value">0</div><div class="kpi-note">Linked evidence items</div></div>
           <div class="card kpi"><div class="kpi-label">Actions</div><div id="kpiActions" class="kpi-value">0</div><div class="kpi-note">Open / active items</div></div>
@@ -371,7 +371,7 @@
             <div class="panel-head">
               <div>
                 <div class="panel-title">Postmortem Registry</div>
-                <div class="panel-sub">RPC-safe snapshot registry. Direct table reads are intentionally not used.</div>
+                <div class="panel-sub">RPC-safe registry from public.get_postmortem_registry. Direct table reads are intentionally not used.</div>
               </div>
               <span id="registryCount" class="badge gray">0 loaded</span>
             </div>
@@ -396,7 +396,7 @@
             <div id="emptyState" class="panel-body">
               <div class="empty">
                 <strong>No postmortem snapshot loaded yet</strong>
-                Enter a postmortem UUID or incident key above. This foundation UI uses the safe read-only RPC and does not read protected tables directly.
+                The registry loads through a safe read-only RPC. Select a row, or enter a postmortem UUID / incident key above and click Load Snapshot.
               </div>
             </div>
           </section>
@@ -841,6 +841,70 @@
         renderRegistry();
       }
 
+      function normalizeRegistryRow(row) {
+        const score = toNumber(row.readiness_score, 0);
+        return {
+          id: row.postmortem_id || row.id,
+          incident_key: row.incident_key || '—',
+          title: row.title || 'Untitled postmortem',
+          status: row.status || 'unknown',
+          severity: row.severity || 'unknown',
+          readiness_score: score,
+          ready_for_review: Boolean(row.ready_for_review),
+          evidence_count: Number(row.evidence_link_count ?? row.evidence_count ?? 0),
+          timeline_count: Number(row.timeline_snapshot_count ?? row.timeline_count ?? 0),
+          action_count: Number(row.open_action_item_count ?? row.action_count ?? 0),
+          owner: row.review_owner_label || row.owner_label || '—',
+          updated_at: row.updated_at || row.created_at,
+          published_revision: row.published_revision,
+          revision_count: Number(row.revision_snapshot_count ?? row.revision_count ?? 0)
+        };
+      }
+
+      function applyRegistryRows(rows) {
+        cachedRows = (Array.isArray(rows) ? rows : []).map(normalizeRegistryRow).filter(r => r.id).slice(0, 100);
+        localStorage.setItem(CACHE_KEY, JSON.stringify(cachedRows.slice(0, 12)));
+        renderAll();
+      }
+
+      async function loadRegistry({ autoLoadLatest = false } = {}) {
+        try {
+          setBusy(true, 'Loading registry…');
+          const data = await callRpc('get_postmortem_registry', {
+            p_status: null,
+            p_incident_key: null,
+            p_limit: 50,
+            p_offset: 0,
+            p_include_published: true
+          });
+          if (!data?.ok) {
+            toast(data?.error || 'Postmortem registry RPC did not return ok.', 'error');
+            return data;
+          }
+          const rows = Array.isArray(data.rows) ? data.rows : [];
+          applyRegistryRows(rows);
+          $('snapshotState').textContent = rows.length ? `Registry loaded: ${rows.length}` : 'Registry empty';
+          toast(rows.length ? `Loaded ${rows.length} postmortem registry row(s).` : 'No postmortems found yet.', rows.length ? 'success' : 'warn');
+          if (autoLoadLatest && rows[0]?.postmortem_id) {
+            $('lookupValue').value = rows[0].postmortem_id;
+            $('lookupType').value = 'postmortem_id';
+            await loadSnapshot();
+          }
+          return data;
+        } catch (err) {
+          console.error(err);
+          const msg = err.message || '';
+          if (msg.includes('get_postmortem_registry') || msg.includes('function') || msg.includes('schema cache')) {
+            toast('Registry RPC is not installed yet. Run the 8M.14J.1 registry SQL bundle, then refresh.', 'warn');
+          } else {
+            toast(msg || 'Failed to load postmortem registry.', 'error');
+          }
+          return { ok: false, error: msg || 'registry_load_failed' };
+        } finally {
+          setBusy(false);
+        }
+      }
+
       async function loadSnapshot(args = getLookupArgs()) {
         if (!hasSnapshotReference(args)) {
           showReferenceRequiredNotice();
@@ -874,8 +938,7 @@
       async function refreshCurrent() {
         const args = lastKnownSnapshotArgs();
         if (args) return loadSnapshot(args);
-        showReferenceRequiredNotice();
-        return { ok: false, error: 'client_reference_required' };
+        return loadRegistry({ autoLoadLatest: false });
       }
 
       function renderAll() {
@@ -1206,11 +1269,13 @@
             $('lookupValue').value = fromUrl;
             $('lookupType').value = params.get('postmortem_id') ? 'postmortem_id' : 'incident_key';
             await loadSnapshot();
+            await loadRegistry({ autoLoadLatest: false });
           } else {
             try {
               const last = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
               if (last?.id) { $('lookupValue').value = last.id; $('lookupType').value = 'postmortem_id'; }
             } catch {}
+            await loadRegistry({ autoLoadLatest: false });
           }
           renderAll();
         } catch (err) {
