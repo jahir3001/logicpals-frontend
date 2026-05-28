@@ -335,7 +335,7 @@
             <p>Evidence-linked incident reviews with readiness gates, governance workflow, corrective actions, and immutable learning records. Nothing moves forward unless the evidence and learning requirements are satisfied.</p>
           </div>
           <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end">
-            <button id="refreshBtn" class="btn soft">Refresh</button>
+            <button id="refreshBtn" class="btn soft" title="Refreshes the currently loaded or last cached postmortem only. Enter a reference first if none is loaded.">Refresh Loaded</button>
             <button id="openDrawerBtn" class="btn primary" disabled>Open Full Review</button>
           </div>
         </div>
@@ -717,6 +717,68 @@
         return args;
       }
 
+      function hasSnapshotReference(args) {
+        return Boolean(args && (args.p_postmortem_id || args.p_incident_id || args.p_incident_key));
+      }
+
+      function lastKnownSnapshotArgs() {
+        if (currentSnapshot?.ok) {
+          const row = rowFromSnapshot(currentSnapshot);
+          if (row.id) {
+            return {
+              p_postmortem_id: row.id,
+              p_incident_id: null,
+              p_incident_key: null,
+              p_include_revision_snapshots: false,
+              p_include_event_history: true,
+              p_event_limit: Number($('eventLimit').value || 50)
+            };
+          }
+          if (row.incident_key) {
+            return {
+              p_postmortem_id: null,
+              p_incident_id: null,
+              p_incident_key: row.incident_key,
+              p_include_revision_snapshots: false,
+              p_include_event_history: true,
+              p_event_limit: Number($('eventLimit').value || 50)
+            };
+          }
+        }
+
+        try {
+          const last = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+          if (last?.id) {
+            return {
+              p_postmortem_id: last.id,
+              p_incident_id: null,
+              p_incident_key: null,
+              p_include_revision_snapshots: false,
+              p_include_event_history: true,
+              p_event_limit: Number($('eventLimit').value || 50)
+            };
+          }
+          if (last?.incident_key) {
+            return {
+              p_postmortem_id: null,
+              p_incident_id: null,
+              p_incident_key: last.incident_key,
+              p_include_revision_snapshots: false,
+              p_include_event_history: true,
+              p_event_limit: Number($('eventLimit').value || 50)
+            };
+          }
+        } catch {}
+
+        return null;
+      }
+
+      function showReferenceRequiredNotice() {
+        toast('Enter a postmortem UUID or incident key first, then click Load Snapshot.', 'warn');
+        $('snapshotState').textContent = 'Reference required';
+        $('lookupValue')?.focus();
+      }
+
       async function callRpc(name, args) {
         const { data, error } = await supabaseClient.rpc(name, args);
         if (error) throw error;
@@ -780,11 +842,17 @@
       }
 
       async function loadSnapshot(args = getLookupArgs()) {
+        if (!hasSnapshotReference(args)) {
+          showReferenceRequiredNotice();
+          return { ok: false, error: 'client_reference_required' };
+        }
+
         try {
           setBusy(true, 'Loading snapshot…');
           const data = await callRpc('get_postmortem_snapshot', args);
           if (!data?.ok) {
-            toast(data?.error || 'Snapshot request failed.', 'error');
+            const err = data?.error || 'Snapshot request failed.';
+            toast(err === 'postmortem_or_incident_reference_required' ? 'Enter a postmortem UUID or incident key first.' : err, 'error');
             return data;
           }
           currentSnapshot = data;
@@ -804,11 +872,10 @@
       }
 
       async function refreshCurrent() {
-        if (currentSnapshot) {
-          const row = rowFromSnapshot(currentSnapshot);
-          return loadSnapshot({ p_postmortem_id: row.id, p_incident_id: null, p_incident_key: null, p_include_revision_snapshots: false, p_include_event_history: true, p_event_limit: Number($('eventLimit').value || 50) });
-        }
-        return loadSnapshot();
+        const args = lastKnownSnapshotArgs();
+        if (args) return loadSnapshot(args);
+        showReferenceRequiredNotice();
+        return { ok: false, error: 'client_reference_required' };
       }
 
       function renderAll() {
