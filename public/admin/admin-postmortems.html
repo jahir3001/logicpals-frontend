@@ -273,11 +273,20 @@
           <div class="brand-sub">Admin protected surface</div>
         </div>
       </div>
-      <h1>Sign in required</h1>
-      <p>This admin surface requires an authenticated Operations OS administrator session. Sign in through your normal LogicPals admin login, then return to this page.</p>
+      <h1>Admin Sign In</h1>
+      <p>This admin surface requires an authenticated Operations OS administrator session. Sign in here and you will stay on this Postmortems admin console.</p>
+      <div style="margin-top:18px">
+        <label style="display:block;font-weight:800;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Admin Email</label>
+        <input id="adminEmail" class="input" type="email" autocomplete="email" placeholder="admin@example.com" />
+      </div>
+      <div style="margin-top:14px">
+        <label style="display:block;font-weight:800;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Password</label>
+        <input id="adminPassword" class="input" type="password" autocomplete="current-password" placeholder="Password" />
+      </div>
+      <div id="authError" style="display:none;color:var(--red);font-size:14px;margin-top:12px"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px">
-        <a class="btn primary" href="/login.html">Go to Login</a>
-        <button class="btn" id="retryAuthBtn">Retry session</button>
+        <button class="btn primary" id="signInBtn" type="button">Sign in to Admin</button>
+        <button class="btn" id="retryAuthBtn" type="button">Retry session</button>
       </div>
     </div>
   </div>
@@ -292,10 +301,10 @@
         </div>
       </div>
       <div class="nav-section">Overview</div>
-      <a class="nav-item" href="/admin.html"><span class="dot"></span>Admin Home</a>
-      <a class="nav-item" href="/admin-governance.html"><span class="dot"></span>Governance</a>
-      <a class="nav-item" href="/admin-incidents.html"><span class="dot"></span>Incidents</a>
-      <a class="nav-item active" href="/admin-postmortems.html"><span class="dot"></span>Postmortems</a>
+      <a class="nav-item" href="/admin/admin.html"><span class="dot"></span>Admin Home</a>
+      <a class="nav-item" href="/admin/admin-governance.html"><span class="dot"></span>Governance</a>
+      <a class="nav-item" href="/admin/admin-incidents.html"><span class="dot"></span>Incidents</a>
+      <a class="nav-item active" href="/admin/admin-postmortems.html"><span class="dot"></span>Postmortems</a>
       <div class="nav-section">Operational Trust</div>
       <a class="nav-item" href="#"><span class="dot"></span>Evidence Packs</a>
       <a class="nav-item" href="#"><span class="dot"></span>Health Intelligence</a>
@@ -685,6 +694,8 @@
       function showAuth(message) {
         app.classList.add('hidden');
         authScreen.classList.remove('hidden');
+        const errorBox = $('authError');
+        if (errorBox && message) { errorBox.textContent = message; errorBox.style.display = 'block'; }
         if (message) toast(message, 'warn');
       }
 
@@ -1061,7 +1072,36 @@
         }
       }
 
+      async function signInAdmin() {
+        const email = $('adminEmail')?.value?.trim();
+        const password = $('adminPassword')?.value || '';
+        const errorBox = $('authError');
+        if (errorBox) { errorBox.style.display = 'none'; errorBox.textContent = ''; }
+        if (!email || !password) {
+          if (errorBox) { errorBox.textContent = 'Please enter admin email and password.'; errorBox.style.display = 'block'; }
+          return;
+        }
+        try {
+          if (!supabaseClient) await initSupabase();
+          $('signInBtn').disabled = true;
+          $('signInBtn').textContent = 'Signing in…';
+          const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          const ok = await requireAuth();
+          if (ok) {
+            toast('Admin session loaded.', 'success');
+            renderAll();
+          }
+        } catch (err) {
+          if (errorBox) { errorBox.textContent = err.message || 'Admin sign in failed.'; errorBox.style.display = 'block'; }
+        } finally {
+          if ($('signInBtn')) { $('signInBtn').disabled = false; $('signInBtn').textContent = 'Sign in to Admin'; }
+        }
+      }
+
       function bindEvents() {
+        if ($('signInBtn')) $('signInBtn').addEventListener('click', signInAdmin);
+        if ($('adminPassword')) $('adminPassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') signInAdmin(); });
         $('loadBtn').addEventListener('click', () => loadSnapshot());
         $('refreshBtn').addEventListener('click', refreshCurrent);
         $('drawerRefreshBtn').addEventListener('click', refreshCurrent);
