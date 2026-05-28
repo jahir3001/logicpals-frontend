@@ -6,7 +6,6 @@
   <title>Postmortems & Operational Learning | Operations OS</title>
   <meta name="description" content="Evidence-linked incident reviews, readiness gates, action items, and immutable learning records." />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/api/env.js" defer></script>
   <style>
     :root {
       --bg: #f8fafc;
@@ -274,23 +273,12 @@
           <div class="brand-sub">Admin protected surface</div>
         </div>
       </div>
-      <h1>Admin Sign In</h1>
-      <p>This admin surface requires an authenticated Operations OS administrator session. Sign in here and you will stay on this Postmortems admin console.</p>
-      <form id="adminSignInForm" style="display:grid;gap:12px;margin-top:18px">
-        <label>
-          <span class="kpi-label">Admin email</span>
-          <input id="authEmail" class="input" type="email" autocomplete="email" placeholder="admin@example.com" required />
-        </label>
-        <label>
-          <span class="kpi-label">Password</span>
-          <input id="authPassword" class="input" type="password" autocomplete="current-password" placeholder="Enter password" required />
-        </label>
-        <div id="authError" class="mini-sub" style="color:#b42318;min-height:18px"></div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn primary" id="authSignInBtn" type="submit">Sign in to Admin</button>
-          <button class="btn" id="retryAuthBtn" type="button">Retry session</button>
-        </div>
-      </form>
+      <h1>Sign in required</h1>
+      <p>This admin surface requires an authenticated Operations OS administrator session. Sign in through your normal LogicPals admin login, then return to this page.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px">
+        <a class="btn primary" href="/login.html">Go to Login</a>
+        <button class="btn" id="retryAuthBtn">Retry session</button>
+      </div>
     </div>
   </div>
 
@@ -304,10 +292,10 @@
         </div>
       </div>
       <div class="nav-section">Overview</div>
-      <a class="nav-item" href="/admin/admin.html"><span class="dot"></span>Admin Home</a>
-      <a class="nav-item" href="/admin/admin-governance.html"><span class="dot"></span>Governance</a>
-      <a class="nav-item" href="/admin/admin-incidents.html"><span class="dot"></span>Incidents</a>
-      <a class="nav-item active" href="/admin/admin-postmortems.html"><span class="dot"></span>Postmortems</a>
+      <a class="nav-item" href="/admin.html"><span class="dot"></span>Admin Home</a>
+      <a class="nav-item" href="/admin-governance.html"><span class="dot"></span>Governance</a>
+      <a class="nav-item" href="/admin-incidents.html"><span class="dot"></span>Incidents</a>
+      <a class="nav-item active" href="/admin-postmortems.html"><span class="dot"></span>Postmortems</a>
       <div class="nav-section">Operational Trust</div>
       <a class="nav-item" href="#"><span class="dot"></span>Evidence Packs</a>
       <a class="nav-item" href="#"><span class="dot"></span>Health Intelligence</a>
@@ -512,11 +500,6 @@
       const app = $('app');
       const authScreen = $('authScreen');
 
-      function setAuthError(message = '') {
-        const el = $('authError');
-        if (el) el.textContent = message || '';
-      }
-
       function escapeHtml(value) {
         return String(value ?? '')
           .replaceAll('&', '&amp;')
@@ -582,32 +565,73 @@
         $('healthPill').className = value ? 'badge indigo' : (currentSnapshot ? 'badge green' : 'badge gray');
       }
 
-      function getEnvValue(...names) {
+      const SUPABASE_AUTH_STORAGE_KEY = 'logicpals-admin-auth-v1';
+
+      function readEnvValue(source, ...names) {
+        if (!source || typeof source !== 'object') return null;
         for (const name of names) {
-          if (window[name]) return window[name];
-        }
-        if (window.__SUPABASE_CONFIG__) {
-          for (const name of names) {
-            if (window.__SUPABASE_CONFIG__[name]) return window.__SUPABASE_CONFIG__[name];
-          }
-        }
-        if (window.__ENV__) {
-          for (const name of names) {
-            if (window.__ENV__[name]) return window.__ENV__[name];
-          }
+          if (source[name]) return source[name];
         }
         return null;
       }
 
-      async function waitForEnv(timeoutMs = 4500) {
-        const start = Date.now();
-        while (Date.now() - start < timeoutMs) {
-          const url = getEnvValue('SUPABASE_URL', 'supabaseUrl', 'VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL');
-          const key = getEnvValue('SUPABASE_ANON_KEY', 'supabaseAnonKey', 'VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY');
-          if (url && key && window.supabase) return { url, key };
-          await new Promise(r => setTimeout(r, 80));
+      function parseEnvJsText(text) {
+        const out = {};
+        const patterns = [
+          [/SUPABASE_URL["']?\s*[:=]\s*["']([^"']+)["']/i, 'SUPABASE_URL'],
+          [/SUPABASE_ANON_KEY["']?\s*[:=]\s*["']([^"']+)["']/i, 'SUPABASE_ANON_KEY'],
+          [/supabaseUrl["']?\s*[:=]\s*["']([^"']+)["']/i, 'supabaseUrl'],
+          [/supabaseAnonKey["']?\s*[:=]\s*["']([^"']+)["']/i, 'supabaseAnonKey']
+        ];
+        for (const [regex, key] of patterns) {
+          const m = text.match(regex);
+          if (m && m[1]) out[key] = m[1];
         }
-        throw new Error('Supabase environment was not loaded. Check /api/env.js.');
+        return out;
+      }
+
+      async function loadSupabaseEnv() {
+        if (!window.supabase) {
+          throw new Error('Supabase JS client was not loaded. Check CDN/network access.');
+        }
+
+        const fromWindow = {
+          SUPABASE_URL: readEnvValue(window, 'SUPABASE_URL', 'VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL'),
+          SUPABASE_ANON_KEY: readEnvValue(window, 'SUPABASE_ANON_KEY', 'VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY')
+        };
+
+        let url = fromWindow.SUPABASE_URL
+          || readEnvValue(window.__SUPABASE_CONFIG__, 'SUPABASE_URL', 'supabaseUrl', 'VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL')
+          || readEnvValue(window.__ENV__, 'SUPABASE_URL', 'supabaseUrl', 'VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL');
+        let key = fromWindow.SUPABASE_ANON_KEY
+          || readEnvValue(window.__SUPABASE_CONFIG__, 'SUPABASE_ANON_KEY', 'supabaseAnonKey', 'VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY')
+          || readEnvValue(window.__ENV__, 'SUPABASE_ANON_KEY', 'supabaseAnonKey', 'VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY');
+
+        if (url && key) return { url, key };
+
+        const res = await fetch('/api/env.js', {
+          method: 'GET',
+          headers: { 'Accept': 'application/json, text/javascript, text/plain, */*' },
+          cache: 'no-store'
+        });
+        if (!res.ok) throw new Error(`/api/env.js returned ${res.status}`);
+
+        const text = await res.text();
+        let env = {};
+        try {
+          env = JSON.parse(text);
+        } catch (_) {
+          env = parseEnvJsText(text);
+        }
+
+        url = readEnvValue(env, 'SUPABASE_URL', 'supabaseUrl', 'VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL');
+        key = readEnvValue(env, 'SUPABASE_ANON_KEY', 'supabaseAnonKey', 'VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY');
+
+        if (!url || !key) {
+          throw new Error('Supabase environment was not loaded. /api/env.js did not provide SUPABASE_URL and SUPABASE_ANON_KEY.');
+        }
+
+        return { url, key };
       }
 
       function getUserRoles(user) {
@@ -630,9 +654,14 @@
       }
 
       async function initSupabase() {
-        const { url, key } = await waitForEnv();
+        const { url, key } = await loadSupabaseEnv();
         supabaseClient = window.supabase.createClient(url, key, {
-          auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: SUPABASE_AUTH_STORAGE_KEY
+          }
         });
       }
 
@@ -656,8 +685,7 @@
       function showAuth(message) {
         app.classList.add('hidden');
         authScreen.classList.remove('hidden');
-        setAuthError(message || '');
-        if (message) console.warn(message);
+        if (message) toast(message, 'warn');
       }
 
       function getLookupArgs() {
@@ -1034,37 +1062,6 @@
       }
 
       function bindEvents() {
-        const adminSignInForm = $('adminSignInForm');
-        if (adminSignInForm) {
-          adminSignInForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            if (!supabaseClient || busy) return;
-            const email = $('authEmail').value.trim();
-            const password = $('authPassword').value;
-            if (!email || !password) {
-              setAuthError('Email and password are required.');
-              return;
-            }
-            try {
-              setAuthError('');
-              $('authSignInBtn').disabled = true;
-              $('authSignInBtn').textContent = 'Signing in…';
-              const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-              if (error) throw error;
-              const ok = await requireAuth();
-              if (ok) {
-                toast('Admin session active.', 'success');
-                renderAll();
-              }
-            } catch (err) {
-              console.error(err);
-              setAuthError(err.message || 'Admin sign in failed.');
-            } finally {
-              $('authSignInBtn').disabled = false;
-              $('authSignInBtn').textContent = 'Sign in to Admin';
-            }
-          });
-        }
         $('loadBtn').addEventListener('click', () => loadSnapshot());
         $('refreshBtn').addEventListener('click', refreshCurrent);
         $('drawerRefreshBtn').addEventListener('click', refreshCurrent);
@@ -1072,13 +1069,7 @@
         $('closeDrawerBtn').addEventListener('click', closeDrawer);
         $('drawerOverlay').addEventListener('click', closeDrawer);
         $('clearBtn').addEventListener('click', () => { localStorage.removeItem(LS_KEY); localStorage.removeItem(CACHE_KEY); cachedRows = []; currentSnapshot = null; $('lookupValue').value = ''; renderAll(); });
-        $('signOutBtn').addEventListener('click', async () => {
-          await supabaseClient.auth.signOut();
-          currentUser = null;
-          currentSnapshot = null;
-          $('userPill').textContent = 'Signed out';
-          showAuth('Signed out. Sign in again to continue.');
-        });
+        $('signOutBtn').addEventListener('click', async () => { await supabaseClient.auth.signOut(); currentUser = null; currentSnapshot = null; app.classList.add('hidden'); showAuth('Signed out. Sign in again to continue.'); });
         $('retryAuthBtn').addEventListener('click', async () => { await requireAuth(); });
         $('evalBtn').addEventListener('click', () => runAction('evaluate'));
         $('submitBtn').addEventListener('click', () => runAction('submit'));
