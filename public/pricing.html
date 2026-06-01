@@ -918,6 +918,16 @@
     function trackView() {
       const eid = makeId('pricing_view');
       window.dataLayer.push({ event: 'pricing_page_viewed', payment_mode: PAYMENT_MODE });
+      if (window.LP_track) {
+  window.LP_track('view_pricing', {
+    page: 'pricing',
+    payment_mode: PAYMENT_MODE,
+    default_plan: sel.key,
+    value: sel.price,
+    currency: 'BDT',
+    source: new URLSearchParams(window.location.search).get('source') || 'direct'
+  });
+}
       if (typeof fbq === 'function') fbq('track', 'ViewContent', { content_name: 'Pricing Page V2', currency: 'BDT', value: sel.price }, { eventID: eid });
       else if (window.lpTrack) window.lpTrack('ViewContent', { content_name: 'Pricing Page V2', currency: 'BDT', value: sel.price });
       serverEvent({ event_name: 'ViewContent', event_id: eid, custom_data: { content_name: 'Pricing Page V2', currency: 'BDT', value: sel.price, payment_mode: PAYMENT_MODE } });
@@ -927,6 +937,16 @@
       sel = { key, price: Number(price), label: label || key };
       const eid = makeId('planselect');
       window.dataLayer.push({ event: 'plan_selected', tier: key, price_bdt: Number(price), payment_mode: PAYMENT_MODE });
+      if (window.LP_track) {
+  window.LP_track('subscription_clicked', {
+    plan: key,
+    plan_label: label || key,
+    value: Number(price),
+    currency: 'BDT',
+    payment_mode: PAYMENT_MODE,
+    funnel_step: 'plan_selected'
+  });
+}
       if (typeof fbq === 'function') fbq('track', 'ViewContent', { content_name: 'Plan Selected', plan: key, currency: 'BDT', value: Number(price) }, { eventID: eid });
       else if (window.lpTrack) window.lpTrack('ViewContent', { content_name: 'Plan Selected', plan: key, currency: 'BDT', value: Number(price) });
       serverEvent({ event_name: 'ViewContent', event_id: eid, custom_data: { content_name: 'Plan Selected', plan: key, currency: 'BDT', value: Number(price), payment_mode: PAYMENT_MODE } });
@@ -936,6 +956,17 @@
       const ceid = makeId('checkout'), peid = makeId('paymentinfo');
       const sp = new URLSearchParams(window.location.search).get('source') || 'direct';
       window.dataLayer.push({ event: 'plan_checkout_intent', tier: sel.key, price_bdt: sel.price, source, payment_mode: PAYMENT_MODE });
+      if (window.LP_track) {
+  window.LP_track('checkout_intent', {
+    plan: sel.key,
+    plan_label: sel.label,
+    value: sel.price,
+    currency: 'BDT',
+    payment_mode: PAYMENT_MODE,
+    channel: source,
+    funnel_step: 'manual_payment_whatsapp'
+  });
+}
       if (typeof fbq === 'function') {
         fbq('track', 'InitiateCheckout', { plan: sel.key, currency: 'BDT', value: sel.price, channel: source }, { eventID: ceid });
         fbq('track', 'AddPaymentInfo', { plan: sel.key, currency: 'BDT', value: sel.price, payment_method: 'bkash_nagad_manual' }, { eventID: peid });
