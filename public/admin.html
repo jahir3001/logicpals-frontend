@@ -1641,8 +1641,10 @@
                 <!-- Gate legend -->
                 <div style="padding:10px 14px;border-bottom:1px solid var(--lp-border);background:var(--lp-surface);display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--lp-muted)">
                   <span>Gates checked per problem:</span>
-                  <span>✓ hints jsonb length ≥ 3</span>
-                  <span>✓ socratic_questions length ≥ 1</span>
+                  <span style="color:var(--lp-danger-text);font-weight:600">✓ bas_score NOT NULL (DB trigger)</span>
+                  <span style="color:var(--lp-danger-text);font-weight:600">✓ goas_score NOT NULL (DB trigger)</span>
+                  <span>✓ hints length ≥ 3</span>
+                  <span>✓ socratic_questions ≥ 1</span>
                   <span>✓ proof_reference_solutions if proof_required</span>
                   <span>✓ geometry_data if geometry_no_formulas</span>
                 </div>
@@ -4716,20 +4718,38 @@
     }
 
     /* ── RPC wrappers for content mutations ──────────────── */
+    /* ── Content mutation helpers (direct Supabase — no gateway) ── */
+    function contentDbError(err) {
+      // Surface the DB trigger error cleanly
+      const msg = err?.message || String(err);
+      if (msg.includes('BAS and GOAS') || msg.includes('bas_score') || msg.includes('goas_score') || msg.includes('enforce_olympiad_publish_gate')) {
+        return 'Cannot publish: BAS and GOAS evaluation scores are missing on this problem. Run the AI evaluation pipeline to generate them first.';
+      }
+      return msg;
+    }
+
     async function rpcChangePublishState(problemId, newState) {
       try {
-        await postAdminAction('problem_set_publish_state', { problem_id: problemId, publish_state: newState });
+        const { error } = await contentSb
+          .from('problems')
+          .update({ publish_state: newState })
+          .eq('id', problemId);
+        if (error) throw new Error(contentDbError(error));
         window.LPAdmin?.toast(`State → ${newState}`, 'success', 2200);
-        await openProblemDrawer(problemId); // re-open to refresh
+        await openProblemDrawer(problemId);
         await Promise.all([loadProblemBrowser(), loadReviewQueue(), loadContentCounts()]).catch(() => {});
       } catch (err) {
-        window.LPAdmin?.toast(`Failed: ${err.message}`, 'error', 4000);
+        window.LPAdmin?.toast(`Failed: ${err.message}`, 'error', 5000);
       }
     }
 
     async function rpcFlagProblem(problemId) {
       try {
-        await postAdminAction('problem_flag_review', { problem_id: problemId });
+        const { error } = await contentSb
+          .from('problems')
+          .update({ publish_state: 'review' })
+          .eq('id', problemId);
+        if (error) throw new Error(contentDbError(error));
         window.LPAdmin?.toast('Problem flagged for review', 'success', 2200);
         await Promise.all([loadProblemBrowser(), loadReviewQueue()]).catch(() => {});
       } catch (err) {
@@ -4739,7 +4759,11 @@
 
     async function rpcToggleActive(problemId, active) {
       try {
-        await postAdminAction('problem_set_active', { problem_id: problemId, is_active: active });
+        const { error } = await contentSb
+          .from('problems')
+          .update({ is_active: active })
+          .eq('id', problemId);
+        if (error) throw new Error(contentDbError(error));
         window.LPAdmin?.toast(`Problem ${active ? 'reactivated' : 'deactivated'}`, 'success', 2200);
         await openProblemDrawer(problemId);
         await Promise.all([loadProblemBrowser(), loadContentCounts()]).catch(() => {});
@@ -5111,10 +5135,11 @@
       if (body) body.innerHTML = '<div class="lp-telemetry-empty">Fetching all unpublished Olympiad problems…</div>';
       if (heldCard) heldCard.style.display = 'none';
 
-      // Step 1: all active olympiad problems not yet published
+      // Step 1: fetch all active olympiad problems not yet published
+      // Include bas_score + goas_score — required by enforce_olympiad_publish_gate() DB trigger
       const { data: problems, error } = await contentSb
         .from('problems')
-        .select('id, title, skill_track, difficulty_tier, proof_required, geometry_data, diagram_data, hints, socratic_questions, publish_state')
+        .select('id, title, skill_track, difficulty_tier, proof_required, geometry_data, diagram_data, hints, socratic_questions, publish_state, bas_score, goas_score')
         .eq('section', 'olympiad')
         .eq('is_active', true)
         .neq('publish_state', 'published');
@@ -5131,23 +5156,28 @@
         (refs || []).forEach(r => solvedSet.add(r.problem_id));
       }
 
-      // Step 3: gate evaluation
+      // Step 3: gate evaluation — mirrors enforce_olympiad_publish_gate() trigger
       const passing = [];
       const failing = [];
 
       (problems || []).forEach(p => {
         const blockers = [];
 
+        // DB trigger gate: BAS and GOAS scores must be present
+        if (p.bas_score == null) blockers.push('BAS score missing (DB trigger will block)');
+        if (p.goas_score == null) blockers.push('GOAS score missing (DB trigger will block)');
+
+        // Content gates
         const hints = Array.isArray(p.hints) ? p.hints.filter(Boolean) : [];
         if (hints.length < 3) blockers.push(`Hints: ${hints.length}/3`);
 
         const sq = Array.isArray(p.socratic_questions) ? p.socratic_questions.filter(Boolean) : [];
-        if (sq.length < 1) blockers.push(`Socratic: ${sq.length} found`);
+        if (sq.length < 1) blockers.push(`Socratic questions: ${sq.length} found`);
 
-        if (p.proof_required && !solvedSet.has(p.id)) blockers.push('No proof reference');
+        if (p.proof_required && !solvedSet.has(p.id)) blockers.push('No proof reference solution');
 
         if (p.skill_track === 'geometry_no_formulas' && !p.geometry_data && !p.diagram_data) {
-          blockers.push('Missing geometry diagram');
+          blockers.push('geometry_no_formulas — missing geometry_data');
         }
 
         if (blockers.length === 0) passing.push(p);
@@ -5155,6 +5185,10 @@
       });
 
       bulkGatePassingIds = passing.map(p => p.id);
+
+      // Stats
+      const missingBas  = (problems || []).filter(p => p.bas_score  == null).length;
+      const missingGoas = (problems || []).filter(p => p.goas_score == null).length;
 
       // Render summary
       if (body) {
@@ -5165,17 +5199,23 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
                 <span style="font-size:14px;font-weight:700;color:#166534">${passing.length} problem${passing.length !== 1 ? 's' : ''} pass all gates — ready to publish</span>
               </div>
-              ${failing.length > 0 ? `<div style="font-size:13px;color:var(--lp-muted)">${failing.length} problem${failing.length !== 1 ? 's' : ''} held back (see table below)</div>` : ''}
+              ${failing.length > 0 ? `<div style="font-size:13px;color:var(--lp-muted)">${failing.length} held back</div>` : ''}
             </div>
             <div style="margin-top:10px;font-size:12.5px;color:var(--lp-muted)">
-              Gate passed: hints ≥ 3 · socratic ≥ 1 ${proofIds.length ? `· ${solvedSet.size}/${proofIds.length} proof refs` : ''} · geometry where required
+              Gate passed: BAS scores present · GOAS scores present · hints ≥ 3 · socratic ≥ 1
+              ${proofIds.length ? ` · ${solvedSet.size}/${proofIds.length} proof refs` : ''} · geometry where required
             </div>`;
         } else {
-          body.innerHTML = `<div class="lp-telemetry-empty">No problems pass all gates yet. See blockers table below.</div>`;
+          const basNote = missingBas > 0
+            ? `<div style="margin-top:8px;font-size:12.5px;color:var(--lp-warning-text);background:var(--lp-warning-bg);padding:8px 12px;border-radius:8px;border:1px solid var(--lp-warning-border)">
+                 ⚠ ${missingBas} problem${missingBas !== 1 ? 's' : ''} missing BAS score and ${missingGoas} missing GOAS score.
+                 These must be populated by the AI evaluation pipeline before publication is possible.
+               </div>` : '';
+          body.innerHTML = `<div class="lp-telemetry-empty">No problems pass all gates yet. See blockers below.</div>${basNote}`;
         }
       }
 
-      // Update badge and publish button
+      // Update badge + button
       if (statusBadge) {
         statusBadge.textContent = `${passing.length} ready / ${failing.length} held`;
         statusBadge.className = `admin-badge ${passing.length > 0 ? 'admin-badge-green' : 'admin-badge-amber'}`;
@@ -5201,7 +5241,11 @@
         heldCard.style.display = 'none';
       }
 
-      window.LPAdmin?.toast(`Gate check complete: ${passing.length} ready, ${failing.length} held back`, passing.length > 0 ? 'success' : 'info', 3200);
+      window.LPAdmin?.toast(
+        `Gate check complete: ${passing.length} ready, ${failing.length} held back${missingBas > 0 ? ` (${missingBas} missing BAS/GOAS)` : ''}`,
+        passing.length > 0 ? 'success' : 'info',
+        3500
+      );
     }
 
     async function executeBulkPublish() {
@@ -5210,49 +5254,79 @@
       let published = 0;
       let failed = 0;
       const errors = [];
+      const ids = [...bulkGatePassingIds];
+      const BATCH = 20;
 
-      // Publish in batches of 20 via RPC
-      for (let i = 0; i < bulkGatePassingIds.length; i++) {
-        const id = bulkGatePassingIds[i];
-        try {
-          await postAdminAction('problem_set_publish_state', { problem_id: id, publish_state: 'published' });
-          published++;
-        } catch (err) {
-          failed++;
-          errors.push({ id, message: err.message });
-        }
-        // Update button progress
-        if (btn) btn.textContent = `Publishing… (${published + failed} / ${bulkGatePassingIds.length})`;
+      if (btn) btn.textContent = `Publishing 0 / ${ids.length}…`;
+
+      // Run in parallel batches of 20
+      for (let i = 0; i < ids.length; i += BATCH) {
+        const chunk = ids.slice(i, i + BATCH);
+        const results = await Promise.allSettled(
+          chunk.map(id =>
+            contentSb.from('problems').update({ publish_state: 'published' }).eq('id', id)
+          )
+        );
+        results.forEach((result, j) => {
+          const id = chunk[j];
+          if (result.status === 'fulfilled' && !result.value.error) {
+            published++;
+          } else {
+            failed++;
+            const errMsg = result.status === 'rejected'
+              ? result.reason?.message
+              : contentDbError(result.value.error);
+            errors.push({ id, message: errMsg });
+          }
+        });
+        if (btn) btn.textContent = `Publishing… (${published + failed} / ${ids.length})`;
       }
 
-      // Render result summary
+      // Group errors by type
+      const basGoas = errors.filter(e => e.message?.includes('BAS') || e.message?.includes('GOAS') || e.message?.includes('enforce_olympiad'));
+      const other   = errors.filter(e => !e.message?.includes('BAS') && !e.message?.includes('GOAS') && !e.message?.includes('enforce_olympiad'));
+
+      // Render result
       const body = document.getElementById('bulkPublishBody');
       if (body) {
-        const successHtml = published > 0
-          ? `<div style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:12px 14px;margin-bottom:8px">
-               <span style="font-size:14px;font-weight:700;color:#166534">✓ ${published} problem${published !== 1 ? 's' : ''} published successfully</span>
-             </div>`
-          : '';
-        const failHtml = failed > 0
-          ? `<div style="background:var(--lp-danger-bg);border:1px solid var(--lp-danger-border);border-radius:10px;padding:12px 14px">
-               <div style="font-weight:700;color:var(--lp-danger-text);margin-bottom:6px">⚠ ${failed} failed:</div>
-               ${errors.map(e => `<div style="font-size:12px;color:var(--lp-danger-text)">${escapeHtml(e.id)}: ${escapeHtml(e.message)}</div>`).join('')}
-             </div>`
-          : '';
-        body.innerHTML = successHtml + failHtml;
+        let html = '';
+
+        if (published > 0) {
+          html += `<div style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:8px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+            <span style="font-size:14px;font-weight:700;color:#166534">✓ ${published} problem${published !== 1 ? 's' : ''} published successfully</span>
+          </div>`;
+        }
+
+        if (basGoas.length > 0) {
+          html += `<div style="background:var(--lp-warning-bg);border:1px solid var(--lp-warning-border);border-radius:10px;padding:12px 14px;margin-bottom:8px">
+            <div style="font-weight:700;color:var(--lp-warning-text);margin-bottom:6px">⚠ ${basGoas.length} blocked by DB trigger — BAS / GOAS scores missing</div>
+            <div style="font-size:12.5px;color:var(--lp-warning-text);line-height:1.5">These problems passed the content gate but the <code>enforce_olympiad_publish_gate()</code> DB trigger requires <code>bas_score</code> and <code>goas_score</code> to be non-null. Run the AI evaluation pipeline on these problems first, then re-run Bulk Publish.</div>
+          </div>`;
+        }
+
+        if (other.length > 0) {
+          html += `<div style="background:var(--lp-danger-bg);border:1px solid var(--lp-danger-border);border-radius:10px;padding:12px 14px">
+            <div style="font-weight:700;color:var(--lp-danger-text);margin-bottom:6px">✗ ${other.length} other error${other.length !== 1 ? 's' : ''}:</div>
+            ${other.slice(0, 10).map(e => `<div style="font-size:11.5px;color:var(--lp-danger-text);font-family:var(--lp-font-mono)">${escapeHtml(e.id.slice(0,8))}…: ${escapeHtml(e.message)}</div>`).join('')}
+            ${other.length > 10 ? `<div style="font-size:11.5px;color:var(--lp-danger-text);margin-top:4px">…and ${other.length - 10} more</div>` : ''}
+          </div>`;
+        }
+
+        body.innerHTML = html || '<div class="lp-telemetry-empty">No result.</div>';
       }
 
       const statusBadge = document.getElementById('bulkGateStatusBadge');
       if (statusBadge) {
         statusBadge.textContent = `Published: ${published} · Failed: ${failed}`;
-        statusBadge.className = `admin-badge ${failed === 0 ? 'admin-badge-green' : 'admin-badge-amber'}`;
+        statusBadge.className = `admin-badge ${failed === 0 ? 'admin-badge-green' : published > 0 ? 'admin-badge-amber' : 'admin-badge-danger'}`;
       }
       if (btn) { btn.textContent = `Bulk Publish (0 ready)`; btn.disabled = true; }
       bulkGatePassingIds = [];
 
-      window.LPAdmin?.toast(`Bulk publish done: ${published} published, ${failed} failed`, failed > 0 ? 'warning' : 'success', 4000);
+      const tone = failed === 0 ? 'success' : published > 0 ? 'warning' : 'error';
+      window.LPAdmin?.toast(`Bulk publish: ${published} published, ${failed} failed`, tone, 4500);
 
-      // Refresh counts and health
       await Promise.allSettled([loadContentCounts(), loadContentHealth(), loadProblemBrowser()]);
     }
 
