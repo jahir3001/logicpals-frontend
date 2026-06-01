@@ -459,6 +459,14 @@
     }
 
     getOrCreateDeviceId(); // seed immediately on page load
+    // GA4 Founder Event: signup page reached
+if (window.LP_track) {
+  window.LP_track('signup_started', {
+    method: 'email',
+    tier: 'free_trial',
+    page: 'signup'
+  });
+}
 
     function makeEventId(prefix) {
       return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -688,13 +696,23 @@ if (!sessionData?.session?.user?.id) {
           // P1.6: Re-confirm device_id is seeded before landing on dashboard
           getOrCreateDeviceId();
 
-          // GA4: sign_up event
-                    // GA4: sign_up event
-          window.LP_track('sign_up', { method: 'email', tier: 'free_trial' });
+          // GA4 Founder Events
+if (window.LP_track) {
+  window.LP_track('sign_up', {
+    method: 'email',
+    tier: 'free_trial'
+  });
 
-          const leadEventId = makeEventId('lead');
-          const completeRegistrationEventId = makeEventId('complete_registration');
-          const startTrialSuccessEventId = makeEventId('starttrial_success');
+  window.LP_track('signup_completed', {
+    method: 'email',
+    tier: 'free_trial',
+    status: 'success'
+  });
+}
+
+const leadEventId = makeEventId('lead');
+const completeRegistrationEventId = makeEventId('complete_registration');
+const startTrialSuccessEventId = makeEventId('starttrial_success');
 
           // Browser-side Meta events with dedup IDs
           if (typeof fbq === 'function') {
