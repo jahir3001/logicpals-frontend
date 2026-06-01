@@ -1,14 +1,22 @@
-// LogicPals Event Tracking Layer
+// LogicPals Legacy Tracking Wrapper
+// Canonical tracker is /assets/js/lp-tracking.js
 
-window.lpTrack = function (eventName, params = {}) {
-  try {
-    if (typeof fbq === 'function') {
-      fbq('track', eventName, params);
+(function () {
+  'use strict';
+
+  window.lpTrack = function (eventName, params = {}) {
+    try {
+      if (typeof window.LP_track === 'function') {
+        window.LP_track(eventName, params);
+      }
+
+      if (typeof window.fbq === 'function') {
+        window.fbq('trackCustom', eventName, params || {});
+      }
+
       console.log('[LP Track]', eventName, params);
-    } else {
-      console.warn('fbq not loaded');
+    } catch (err) {
+      console.warn('[LP Track] failed:', eventName, err);
     }
-  } catch (err) {
-    console.error('Tracking error:', err);
-  }
-};
+  };
+})();

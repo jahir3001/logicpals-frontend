@@ -1840,5 +1840,62 @@
       } catch(_) { board.innerHTML = `<span class="lb-pill">Rankings update daily</span>`; }
     })();
   </script>
+<script>
+(function () {
+  'use strict';
+
+  function lpEvent(name, params) {
+    const payload = Object.assign({
+      page_path: window.location.pathname,
+      page_url: window.location.href,
+      source: new URLSearchParams(window.location.search).get('source') || 'direct'
+    }, params || {});
+
+    if (typeof window.LP_track === 'function') {
+      window.LP_track(name, payload);
+    } else {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push(Object.assign({ event: name }, payload));
+    }
+
+    console.log('[GA4 Founder Event]', name, payload);
+  }
+
+  // Homepage viewed
+  lpEvent('homepage_view', {
+    page_type: 'landing'
+  });
+
+  // Start trial clicks
+  document.querySelectorAll('a[href="signup.html"], a[href="/signup.html"]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      lpEvent('click_start_trial', {
+        button_text: (el.textContent || '').trim(),
+        funnel_step: 'trial_cta'
+      });
+    });
+  });
+
+  // Pricing clicks from homepage
+  document.querySelectorAll('a[href="pricing.html"], a[href="/pricing.html"], a[href="#pricing"]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      lpEvent('view_pricing_intent', {
+        button_text: (el.textContent || '').trim(),
+        funnel_step: 'pricing_interest'
+      });
+    });
+  });
+
+  // Plan card clicks
+  document.querySelectorAll('.plan-btn').forEach(function (el) {
+    el.addEventListener('click', function () {
+      lpEvent('subscription_clicked', {
+        button_text: (el.textContent || '').trim(),
+        funnel_step: 'plan_interest'
+      });
+    });
+  });
+})();
+</script>
 </body>
 </html>
