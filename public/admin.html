@@ -1592,13 +1592,22 @@
               <!-- PANEL 4: Review Queue ─────────────────────────────── -->
               <div class="lp-telemetry-table-card" style="margin-bottom:20px">
                 <div class="lp-telemetry-card-head">
-                  <div class="lp-telemetry-card-title">Review Queue</div>
+                  <div>
+                    <div class="lp-telemetry-card-title">Review Queue</div>
+                    <div class="lp-cell-subtle" style="margin-top:3px">Problems with publish blockers — actual issues only, not all drafts</div>
+                  </div>
                   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                    <select class="admin-select" id="reviewQueuePageSize" style="min-width:74px" title="Items per page">
+                      <option value="20">20 / page</option>
+                      <option value="30">30 / page</option>
+                      <option value="50" selected>50 / page</option>
+                      <option value="100">100 / page</option>
+                    </select>
                     <span class="admin-badge admin-badge-amber" id="reviewQueueBadge">0 items</span>
                     <button class="admin-btn admin-btn-secondary admin-btn-sm" id="btnReviewQueueRefresh" type="button">Refresh</button>
                   </div>
                 </div>
-                <div class="lp-telemetry-table-wrap">
+                <div class="lp-telemetry-table-wrap" style="max-height:520px">
                   <table class="lp-telemetry-table">
                     <thead>
                       <tr><th>Title</th><th>Section / Track</th><th>Tier</th><th>State</th><th>Blockers</th><th>Actions</th></tr>
@@ -1607,6 +1616,11 @@
                       <tr><td colspan="6" class="lp-telemetry-empty">Loading…</td></tr>
                     </tbody>
                   </table>
+                </div>
+                <div class="lp-pagination-bar" id="reviewQueuePaginationBar" style="display:none">
+                  <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnReviewQueuePrev" type="button" disabled>← Prev</button>
+                  <span id="reviewQueuePaginationInfo" style="font-size:12.5px;color:var(--lp-muted)">Page 1</span>
+                  <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnReviewQueueNext" type="button" disabled>Next →</button>
                 </div>
               </div>
 
@@ -4821,28 +4835,96 @@
       }
     }
 
-    /* ── Review Queue ─────────────────────────────────────── */
+    /* ── Review Queue — paginated ────────────────────────────── */
+    let reviewQueueAllRows = [];
+    let reviewQueuePage    = 0;
+
+    function reviewQueuePageSize() {
+      return parseInt(document.getElementById('reviewQueuePageSize')?.value || '50', 10);
+    }
+
+    function renderReviewQueuePage() {
+      const body    = document.getElementById('reviewQueueBody');
+      const badge   = document.getElementById('reviewQueueBadge');
+      const bar     = document.getElementById('reviewQueuePaginationBar');
+      const info    = document.getElementById('reviewQueuePaginationInfo');
+      const prev    = document.getElementById('btnReviewQueuePrev');
+      const next    = document.getElementById('btnReviewQueueNext');
+      if (!body) return;
+
+      const total    = reviewQueueAllRows.length;
+      const pageSize = reviewQueuePageSize();
+      const pages    = Math.max(1, Math.ceil(total / pageSize));
+      reviewQueuePage = Math.min(reviewQueuePage, pages - 1);
+
+      if (badge) {
+        badge.textContent  = `${total} item${total !== 1 ? 's' : ''}`;
+        badge.className    = `admin-badge ${total === 0 ? 'admin-badge-green' : 'admin-badge-amber'}`;
+      }
+
+      if (!total) {
+        body.innerHTML = `<tr><td colspan="6" class="lp-telemetry-empty">✓ Review queue is empty — nothing blocking publication.</td></tr>`;
+        if (bar) bar.style.display = 'none';
+        return;
+      }
+
+      const start = reviewQueuePage * pageSize;
+      const end   = Math.min(start + pageSize, total);
+      const page  = reviewQueueAllRows.slice(start, end);
+
+      if (bar)  bar.style.display  = 'flex';
+      if (info) info.textContent = `Showing ${start + 1}–${end} of ${total} (page ${reviewQueuePage + 1} of ${pages})`;
+      if (prev) prev.disabled = reviewQueuePage === 0;
+      if (next) next.disabled = end >= total;
+
+      body.innerHTML = page.map(row => `
+        <tr data-problem-id="${escapeHtml(row.id)}" style="cursor:pointer">
+          <td style="max-width:200px;word-break:break-word"><span style="font-weight:600">${escapeHtml(row.title || '—')}</span></td>
+          <td class="lp-cell-stack"><span>${trackChip(row.section)}</span><span class="lp-cell-subtle lp-mono" style="font-size:11px">${escapeHtml(row.skill_track || '—')}</span></td>
+          <td>${tierChip(row.difficulty_tier)}</td>
+          <td>${publishStateBadge(row.publish_state)}</td>
+          <td>${row.blockers.length
+            ? row.blockers.map(b => `<div style="font-size:11.5px;color:var(--lp-danger-text);margin-bottom:3px">⚠ ${escapeHtml(b)}</div>`).join('')
+            : '<span style="color:var(--lp-success);font-size:12px">✓ No blockers</span>'
+          }</td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              ${row.publish_state === 'review'
+                ? `<button class="admin-btn admin-btn-primary admin-btn-sm" onclick="event.stopPropagation();rpcChangePublishState('${escapeHtml(row.id)}','published')" ${row.blockers.length ? 'title="Has blockers"' : ''}>Publish</button>`
+                : `<button class="admin-btn admin-btn-secondary admin-btn-sm" onclick="event.stopPropagation();rpcChangePublishState('${escapeHtml(row.id)}','review')">Submit Review</button>`}
+              <button class="admin-btn admin-btn-ghost admin-btn-sm" onclick="event.stopPropagation();openProblemDrawer('${escapeHtml(row.id)}')">View</button>
+            </div>
+          </td>
+        </tr>`).join('');
+
+      body.querySelectorAll('tr[data-problem-id]').forEach(tr => {
+        tr.addEventListener('click', () => openProblemDrawer(tr.getAttribute('data-problem-id')));
+      });
+    }
+
     async function loadReviewQueue() {
       if (!contentSb) return;
-      const body = document.getElementById('reviewQueueBody');
+      const body  = document.getElementById('reviewQueueBody');
       const badge = document.getElementById('reviewQueueBadge');
       if (!body) return;
       body.innerHTML = `<tr><td colspan="6" class="lp-telemetry-empty">Loading…</td></tr>`;
 
       try {
-        // Fetch problems in review state, OR olympiad problems with missing assets
+        // Fetch problems in review state OR draft with potential blockers
+        // Only fetch active problems — excludes cleanly-published ones
         const { data: reviewProblems, error } = await contentSb
           .from('problems')
-          .select('id, title, section, skill_track, difficulty_tier, age_category, publish_state, proof_required, geometry_data, diagram_data, hints, socratic_questions')
+          .select('id, title, section, skill_track, difficulty_tier, age_category, publish_state, proof_required, geometry_data, diagram_data, hints, socratic_questions, gate_job_id, bas_score, goas_score, validated_at')
           .eq('is_active', true)
           .in('publish_state', ['review', 'draft'])
-          .order('created_at', { ascending: false })
-          .limit(200);
+          .order('publish_state', { ascending: true }) // review first, then draft
+          .order('created_at',   { ascending: false })
+          .limit(500);
         if (error) throw error;
 
-        // Fetch proof_reference_solutions for proof_required problems in the batch
+        // Batch-check proof references
         const proofRequiredIds = (reviewProblems || []).filter(p => p.proof_required).map(p => p.id);
-        let solvedIds = new Set();
+        const solvedIds = new Set();
         if (proofRequiredIds.length) {
           const { data: refs } = await contentSb
             .from('proof_reference_solutions')
@@ -4851,42 +4933,31 @@
           (refs || []).forEach(r => solvedIds.add(r.problem_id));
         }
 
-        const rows = (reviewProblems || []).map(p => ({
-          ...p,
-          blockers: getBlockers(p, solvedIds.has(p.id) ? {} : null),
-        })).filter(p => p.publish_state === 'review' || p.blockers.length > 0);
-
-        if (badge) badge.textContent = `${rows.length} items`;
-        if (!rows.length) {
-          body.innerHTML = `<tr><td colspan="6" class="lp-telemetry-empty">✓ Review queue is empty. Nothing blocking publication.</td></tr>`;
-          return;
+        // Batch-check gate job approval status
+        const jobIds = [...new Set((reviewProblems || []).filter(p => p.gate_job_id).map(p => p.gate_job_id))];
+        const approvedJobIds = new Set();
+        if (jobIds.length) {
+          const { data: jobs } = await contentSb
+            .from('olympiad_generation_jobs')
+            .select('id, status')
+            .in('id', jobIds);
+          (jobs || []).filter(j => j.status === 'approved').forEach(j => approvedJobIds.add(j.id));
         }
 
-        body.innerHTML = rows.map(row => `
-          <tr data-problem-id="${escapeHtml(row.id)}" style="cursor:pointer">
-            <td style="max-width:200px;word-break:break-word"><span style="font-weight:600">${escapeHtml(row.title || '—')}</span></td>
-            <td class="lp-cell-stack"><span>${trackChip(row.section)}</span><span class="lp-cell-subtle lp-mono" style="font-size:11px">${escapeHtml(row.skill_track || '—')}</span></td>
-            <td>${tierChip(row.difficulty_tier)}</td>
-            <td>${publishStateBadge(row.publish_state)}</td>
-            <td>${row.blockers.length
-              ? row.blockers.map(b => `<div class="lp-draw-missing" style="font-size:11.5px;color:var(--lp-danger-text);margin-bottom:3px">⚠ ${escapeHtml(b)}</div>`).join('')
-              : '<span style="color:var(--lp-success);font-size:12px">✓ No blockers</span>'
-            }</td>
-            <td>
-              <div style="display:flex;gap:6px;flex-wrap:wrap">
-                ${row.publish_state === 'review'
-                  ? `<button class="admin-btn admin-btn-primary admin-btn-sm" onclick="event.stopPropagation();rpcChangePublishState('${escapeHtml(row.id)}','published')" ${row.blockers.length ? 'title="Has blockers"' : ''}>Publish</button>`
-                  : `<button class="admin-btn admin-btn-secondary admin-btn-sm" onclick="event.stopPropagation();rpcChangePublishState('${escapeHtml(row.id)}','review')">Submit Review</button>`}
-                <button class="admin-btn admin-btn-ghost admin-btn-sm" onclick="event.stopPropagation();openProblemDrawer('${escapeHtml(row.id)}')">View</button>
-              </div>
-            </td>
-          </tr>`).join('');
+        // Only keep problems that have at least one real blocker
+        // (pure draft with no blockers = freshly seeded, shown in Problem Browser instead)
+        reviewQueueAllRows = (reviewProblems || [])
+          .map(p => ({
+            ...p,
+            blockers: getBlockers(p, solvedIds.has(p.id) ? {} : null, approvedJobIds),
+          }))
+          .filter(p => p.publish_state === 'review' || p.blockers.length > 0);
 
-        body.querySelectorAll('tr[data-problem-id]').forEach(tr => {
-          tr.addEventListener('click', () => openProblemDrawer(tr.getAttribute('data-problem-id')));
-        });
+        reviewQueuePage = 0;
+        renderReviewQueuePage();
       } catch (err) {
         body.innerHTML = `<tr><td colspan="6" class="lp-telemetry-empty" style="color:var(--lp-danger-text)">${escapeHtml(err.message)}</td></tr>`;
+        reviewQueueAllRows = [];
       }
     }
 
@@ -5122,9 +5193,23 @@
         loadProblemBrowser().catch(() => {});
       });
 
-      // Review queue refresh
+      // Review queue refresh + pagination
       document.getElementById('btnReviewQueueRefresh')?.addEventListener('click', () => {
         loadReviewQueue().catch(err => window.LPAdmin?.toast(`Queue refresh failed: ${err.message}`, 'error', 3000));
+      });
+
+      document.getElementById('reviewQueuePageSize')?.addEventListener('change', () => {
+        reviewQueuePage = 0;
+        renderReviewQueuePage();
+      });
+
+      document.getElementById('btnReviewQueuePrev')?.addEventListener('click', () => {
+        if (reviewQueuePage > 0) { reviewQueuePage--; renderReviewQueuePage(); }
+      });
+
+      document.getElementById('btnReviewQueueNext')?.addEventListener('click', () => {
+        const pages = Math.ceil(reviewQueueAllRows.length / reviewQueuePageSize());
+        if (reviewQueuePage < pages - 1) { reviewQueuePage++; renderReviewQueuePage(); }
       });
 
       // Content health refresh
