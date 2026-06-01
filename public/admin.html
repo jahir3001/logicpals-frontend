@@ -4408,8 +4408,9 @@
         : [p.socratic_1 ?? p.socratic_question_1, p.socratic_2 ?? p.socratic_question_2, p.socratic_3 ?? p.socratic_question_3].filter(Boolean);
       if (sq.length < 1) blockers.push(`Socratic questions missing (${sq.length} found)`);
       // Geometry
-      if ((p.section === 'olympiad' || !p.section) && p.skill_track === 'geometry_no_formulas' && !p.geometry_data && !p.diagram_data) {
-        blockers.push('geometry_no_formulas — missing geometry_data diagram');
+      if ((p.section === 'olympiad' || !p.section) && p.skill_track === 'geometry_no_formulas'
+          && !hasRealDiagramData(p.geometry_data) && !hasRealDiagramData(p.diagram_data)) {
+        blockers.push('geometry_no_formulas — no diagram content');
       }
       return blockers;
     }
@@ -4730,6 +4731,19 @@
       return msg;
     }
 
+    /* ── Diagram content validator — catches null AND empty {} objects ── */
+    function hasRealDiagramData(val) {
+      if (val == null) return false;
+      if (typeof val === 'string') return val.trim().length > 5;
+      if (typeof val === 'object') {
+        const keys = Object.keys(val);
+        if (!keys.length) return false; // empty {}
+        // Must have at least one meaningful key (svg, type, shapes, elements, etc.)
+        return keys.some(k => ['svg','type','shapes','elements','points','radius','angle','data'].includes(k));
+      }
+      return false;
+    }
+
     function getBlockers(p, proofRef, approvedJobIds) {
       const blockers = [];
 
@@ -4754,9 +4768,11 @@
       const sq = Array.isArray(p.socratic_questions) ? p.socratic_questions.filter(Boolean) : [];
       if (sq.length < 1) blockers.push(`Socratic questions missing`);
 
-      if ((p.section === 'olympiad') && p.skill_track === 'geometry_no_formulas'
-          && !p.geometry_data && !p.diagram_data)
-        blockers.push('geometry_no_formulas — missing geometry_data');
+      if (p.skill_track === 'geometry_no_formulas'
+          && !hasRealDiagramData(p.geometry_data)
+          && !hasRealDiagramData(p.diagram_data)) {
+        blockers.push('geometry_no_formulas — no diagram content (geometry_data and diagram_data are empty or null)');
+      }
 
       return blockers;
     }
