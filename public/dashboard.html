@@ -356,13 +356,22 @@
 
     setStatus('good','Signed in');$('btnSignOut').disabled=false;
 
-	// Meta standard event — authenticated dashboard view
-		if (window.lpTrack) {
- 		 window.lpTrack('ViewContent', {
-   		 content_name: 'Dashboard',
-   		 content_category: 'Student App'
-  	     });
-	  }
+	// GA4 founder event — dashboard viewed
+if (window.LP_track) {
+  window.LP_track('dashboard_view', {
+    page: 'dashboard',
+    area: 'student_app',
+    track: 'regular'
+  });
+}
+
+// Meta standard event — authenticated dashboard view
+if (window.lpTrack) {
+  window.lpTrack('ViewContent', {
+    content_name: 'Dashboard',
+    content_category: 'Student App'
+  });
+}
 	
     const uname=user.user_metadata?.full_name||user.user_metadata?.name||(user.email?user.email.split('@')[0]:'there');
     safe($('helloText'),'Hi '+uname+' \uD83D\uDC4B');safe($('updatedText'),'just now');
@@ -561,7 +570,15 @@
       $('leaderboardList').innerHTML='<div class="lb-empty">Complete problems to appear on your school leaderboard.</div>';
       $('chartInsight').textContent='Complete problems to see trends.';
       renderChart($('chartSvg'),[]);
-      $('btnStart').addEventListener('click',()=>location.assign('/learn.html?track=regular'));
+     $('btnStart').addEventListener('click',()=>{
+  if (window.LP_track) {
+    window.LP_track('lesson_started', {
+      source: 'dashboard',
+      track: 'regular'
+    });
+  }
+  location.assign('/learn.html?track=regular');
+});
       applyRegularTutorHintFlag();
       return;
     }
@@ -600,7 +617,15 @@
     renderInsights(attempts);
     renderLeaderboard(schoolPeers,childId,childData);
     setupChartTabs(attempts);
-    $('btnStart').addEventListener('click',()=>location.assign('/learn.html?track=regular'));
+    $('btnStart').addEventListener('click',()=>{
+  if (window.LP_track) {
+    window.LP_track('lesson_started', {
+      source: 'dashboard',
+      track: 'regular'
+    });
+  }
+  location.assign('/learn.html?track=regular');
+});
     applyRegularTutorHintFlag();
   }
 
