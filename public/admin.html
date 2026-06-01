@@ -813,6 +813,301 @@
     .lp-flag-note { font-size:12px; color: var(--lp-muted); line-height:1.5; }
     @media (max-width: 980px) { .lp-flag-grid { grid-template-columns: 1fr; } }
 
+    /* ─── Content tab ─────────────────────────────────────── */
+    .lp-dist-grid {
+      display: grid;
+      grid-template-columns: 170px repeat(5, minmax(0, 1fr));
+      gap: 5px;
+      overflow-x: auto;
+    }
+
+    .lp-dist-cell {
+      padding: 9px 10px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.2;
+      transition: opacity 0.15s;
+    }
+
+    .lp-dist-cell:not(.tier-header):not(.track-label):not(.corner) { cursor: pointer; }
+    .lp-dist-cell:not(.tier-header):not(.track-label):not(.corner):hover { opacity: 0.8; }
+
+    .lp-dist-cell.corner,
+    .lp-dist-cell.tier-header {
+      background: var(--lp-surface);
+      color: var(--lp-muted);
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      border: 1px solid var(--lp-border);
+    }
+
+    .lp-dist-cell.track-label {
+      background: var(--lp-surface-2);
+      color: var(--lp-text-2);
+      font-size: 11.5px;
+      font-weight: 700;
+      text-align: left;
+      padding-left: 12px;
+      border: 1px solid var(--lp-border);
+      display: flex;
+      align-items: center;
+    }
+
+    .lp-dist-cell.empty {
+      background: var(--lp-danger-bg);
+      color: var(--lp-danger-text);
+      border: 1px solid var(--lp-danger-border);
+    }
+
+    .lp-dist-cell.sparse {
+      background: var(--lp-warning-bg);
+      color: var(--lp-warning-text);
+      border: 1px solid var(--lp-warning-border);
+    }
+
+    .lp-dist-cell.adequate {
+      background: rgba(34,197,94,.09);
+      color: #166534;
+      border: 1px solid rgba(34,197,94,.18);
+    }
+
+    /* Tier chips */
+    .lp-tier-chip {
+      display: inline-flex;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--lp-font-mono);
+      background: var(--lp-surface-2);
+      color: var(--lp-text-2);
+      border: 1px solid var(--lp-border);
+    }
+
+    .lp-tier-chip.warmup { background: rgba(34,197,94,.08); color: #166534; border-color: rgba(34,197,94,.2); }
+    .lp-tier-chip.standard { background: rgba(79,70,229,.08); color: var(--lp-indigo-dark); border-color: rgba(79,70,229,.18); }
+    .lp-tier-chip.challenge { background: rgba(245,158,11,.1); color: var(--lp-warning-text); border-color: var(--lp-warning-border); }
+    .lp-tier-chip.contest { background: rgba(239,68,68,.08); color: var(--lp-danger-text); border-color: var(--lp-danger-border); }
+    .lp-tier-chip.elite { background: rgba(124,58,237,.1); color: #6d28d9; border-color: rgba(124,58,237,.2); }
+
+    /* Publish state badges */
+    .lp-publish-badge { display:inline-flex; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:700; }
+    .lp-publish-badge.draft { background:var(--lp-surface-2); color:var(--lp-text-2); border:1px solid var(--lp-border); }
+    .lp-publish-badge.review { background:var(--lp-warning-bg); color:var(--lp-warning-text); border:1px solid var(--lp-warning-border); }
+    .lp-publish-badge.published { background:rgba(34,197,94,.08); color:#166534; border:1px solid rgba(34,197,94,.2); }
+    .lp-publish-badge.archived { background:var(--lp-surface-2); color:var(--lp-muted); border:1px solid var(--lp-border); }
+
+    /* Browser filter bar */
+    .lp-browser-filters {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--lp-border);
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      background: var(--lp-surface);
+    }
+
+    .lp-browser-filters .admin-field { min-width: 110px; }
+
+    .lp-browser-search {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    /* Problem browser row hover */
+    .lp-telemetry-table tbody tr[data-problem-id]:hover {
+      background: var(--lp-surface);
+      cursor: pointer;
+    }
+
+    /* Pagination bar */
+    .lp-pagination-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 14px;
+      border-top: 1px solid var(--lp-border);
+      background: var(--lp-surface);
+      font-size: 12.5px;
+      color: var(--lp-muted);
+    }
+
+    /* Health issue items */
+    .lp-health-issue {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--lp-border);
+      border-radius: 10px;
+      background: var(--lp-card);
+      margin-bottom: 8px;
+    }
+
+    .lp-health-issue-icon {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .lp-health-issue-body { flex: 1; min-width: 0; }
+    .lp-health-issue-title { font-size:13px; font-weight:700; color:var(--lp-text); margin-bottom:2px; }
+    .lp-health-issue-desc { font-size:12px; color:var(--lp-muted); line-height:1.4; }
+
+    /* Slide-in drawer */
+    .lp-content-drawer-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,12,20,0.4);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      z-index: 200;
+    }
+
+    .lp-content-drawer-backdrop.active { display: block; }
+
+    .lp-content-drawer {
+      position: fixed;
+      top: 0; right: 0;
+      width: 560px;
+      max-width: 96vw;
+      height: 100vh;
+      background: var(--lp-card);
+      border-left: 1px solid var(--lp-border);
+      box-shadow: -4px 0 40px rgba(0,0,0,0.18);
+      transform: translateX(110%);
+      transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
+      z-index: 201;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .lp-content-drawer.open { transform: translateX(0); }
+
+    .lp-content-drawer-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid var(--lp-border);
+      background: var(--lp-surface);
+      flex-shrink: 0;
+    }
+
+    .lp-content-drawer-title { font-size:15px; font-weight:800; color:var(--lp-text); line-height:1.3; }
+    .lp-content-drawer-meta { font-size:12px; color:var(--lp-muted); margin-top:3px; }
+
+    .lp-content-drawer-close {
+      background: var(--lp-surface-2);
+      border: 1px solid var(--lp-border);
+      border-radius: 8px;
+      width: 32px; height: 32px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      color: var(--lp-muted);
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .lp-content-drawer-close:hover { background: var(--lp-surface); color: var(--lp-text); }
+
+    .lp-content-drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .lp-drawer-section { display: grid; gap: 6px; }
+
+    .lp-drawer-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--lp-muted);
+    }
+
+    .lp-drawer-prose {
+      font-size: 13px;
+      color: var(--lp-text);
+      line-height: 1.6;
+      word-break: break-word;
+    }
+
+    .lp-drawer-missing {
+      font-size: 12.5px;
+      color: var(--lp-danger-text);
+      background: var(--lp-danger-bg);
+      border: 1px solid var(--lp-danger-border);
+      border-radius: 8px;
+      padding: 8px 12px;
+    }
+
+    .lp-drawer-actions {
+      padding-top: 6px;
+      border-top: 1px solid var(--lp-border);
+    }
+
+    .lp-drawer-geometry {
+      border: 1px solid var(--lp-border);
+      border-radius: 10px;
+      padding: 14px;
+      background: var(--lp-surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 120px;
+      overflow: auto;
+    }
+
+    /* Content overview count cards */
+    .lp-content-counts-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      padding: 14px;
+      background: var(--lp-card);
+      border: 1px solid var(--lp-border);
+      border-top: none;
+      border-radius: 0 0 var(--lp-r-lg) var(--lp-r-lg);
+    }
+
+    @media (max-width: 1200px) { .lp-content-counts-grid { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+    @media (max-width: 760px) { .lp-content-counts-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+
+    .lp-content-count-card {
+      background: var(--lp-surface);
+      border: 1px solid var(--lp-border);
+      border-radius: var(--lp-r-lg);
+      padding: 12px 14px;
+    }
+
+    .lp-content-count-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--lp-muted); margin-bottom:6px; }
+    .lp-content-count-value { font-size:20px; font-weight:800; color:var(--lp-text); letter-spacing:-0.02em; line-height:1.1; }
+    .lp-content-count-sub { font-size:11px; color:var(--lp-subtle); margin-top:4px; }
+
+    /* Legend items */
+    .lp-dist-legend { display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+    .lp-dist-legend-item { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--lp-muted); }
+    .lp-dist-legend-dot { width:12px; height:12px; border-radius:3px; flex-shrink:0; }
+
+    @media (max-width: 760px) {
+      .lp-content-drawer { width: 100%; }
+    }
+
   </style>
 </head>
 
@@ -883,8 +1178,8 @@
 
           <div class="admin-stat-card lp-stat-accent-indigo">
             <div class="admin-stat-label">Total Problems</div>
-            <div class="admin-stat-value" id="statProblems">567</div>
-            <div class="admin-stat-delta flat">Regular + Olympiad</div>
+            <div class="admin-stat-value" id="statProblems">—</div>
+            <div class="admin-stat-delta flat" id="statProblemsBreakdown">Loading…</div>
           </div>
 
           <div class="admin-stat-card lp-stat-accent-teal">
@@ -901,10 +1196,10 @@
 
           <div class="admin-stat-card lp-stat-accent-green">
             <div class="admin-stat-label">QC Score</div>
-            <div class="admin-stat-value" id="statQC">100</div>
+            <div class="admin-stat-value" id="statQC">131</div>
             <div class="admin-stat-delta up">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
-              P0–P4 all gates
+              P0–P6 all gates
             </div>
           </div>
 
@@ -970,7 +1265,7 @@
                     </div>
                     <div class="admin-kv-row">
                       <span class="admin-kv-key">Phase</span>
-                      <span class="admin-kv-value">P5 unlocked</span>
+                      <span class="admin-kv-value">Complete — All 7 phases</span>
                     </div>
                   </div>
                 </div>
@@ -1125,32 +1420,210 @@
           <!-- ── Panel: Content ── -->
           <div class="lp-panel" id="tab-content" role="tabpanel">
             <div style="padding:22px">
-              <div class="admin-banner admin-banner-warn" style="margin-bottom:18px">
-                <svg class="admin-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+
+              <div class="admin-banner admin-banner-info" style="margin-bottom:18px">
+                <svg class="admin-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 <div class="admin-banner-body">
-                  <div class="admin-banner-title">Content tools pending</div>
-                  UI scaffolding is complete. Actions will be wired to admin RPCs after confirmation. No direct table writes.
+                  <div class="admin-banner-title">Content Management — RPC-only mutations</div>
+                  Browse, review, and publish problems. All state changes go through admin RPCs. Browser never writes directly to the problems table.
                 </div>
               </div>
 
-              <div class="admin-grid admin-grid-2" style="gap:12px">
-                <div class="lp-action-card">
-                  <div class="lp-action-card-title">Regular Content</div>
-                  <div class="lp-action-card-desc">Upload, review, and publish problems for the regular track. Supports 567 published problems today.</div>
-                  <div class="lp-action-card-btns">
-                    <button class="admin-btn admin-btn-secondary admin-btn-sm gated" type="button" disabled>Upload Problems</button>
-                    <button class="admin-btn admin-btn-ghost admin-btn-sm gated" type="button" disabled>Review Queue</button>
+              <!-- PANEL 1: Library Overview ───────────────────────── -->
+              <div style="margin-bottom:20px">
+                <div class="lp-telemetry-card-head" style="border:1px solid var(--lp-border);border-radius:var(--lp-r-lg) var(--lp-r-lg) 0 0">
+                  <div class="lp-telemetry-card-title">Library Overview</div>
+                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                    <span id="contentOverviewUpdatedAt" style="font-size:12px;color:var(--lp-muted)">—</span>
+                    <button class="admin-btn admin-btn-secondary admin-btn-sm" id="btnContentRefresh" type="button">Refresh All</button>
                   </div>
                 </div>
-                <div class="lp-action-card">
-                  <div class="lp-action-card-title">Olympiad Content</div>
-                  <div class="lp-action-card-desc">Manage 7 skill tracks across competition levels. Strict admin_olympiad / super_admin gate.</div>
-                  <div class="lp-action-card-btns">
-                    <button class="admin-btn admin-btn-secondary admin-btn-sm gated" type="button" disabled>Upload Problems</button>
-                    <button class="admin-btn admin-btn-ghost admin-btn-sm gated" type="button" disabled>Skill Tracks</button>
+                <div class="lp-content-counts-grid">
+                  <div class="lp-content-count-card">
+                    <div class="lp-content-count-label">Total Active</div>
+                    <div class="lp-content-count-value" id="cntTotal">—</div>
+                    <div class="lp-content-count-sub">is_active = true</div>
+                  </div>
+                  <div class="lp-content-count-card">
+                    <div class="lp-content-count-label">Regular</div>
+                    <div class="lp-content-count-value" id="cntRegular">—</div>
+                    <div class="lp-content-count-sub">section = regular</div>
+                  </div>
+                  <div class="lp-content-count-card">
+                    <div class="lp-content-count-label">Olympiad</div>
+                    <div class="lp-content-count-value" id="cntOlympiad">—</div>
+                    <div class="lp-content-count-sub">section = olympiad</div>
+                  </div>
+                  <div class="lp-content-count-card">
+                    <div class="lp-content-count-label">Draft</div>
+                    <div class="lp-content-count-value" id="cntDraft">—</div>
+                    <div class="lp-content-count-sub">publish_state = draft</div>
+                  </div>
+                  <div class="lp-content-count-card">
+                    <div class="lp-content-count-label">Published</div>
+                    <div class="lp-content-count-value" id="cntPublished">—</div>
+                    <div class="lp-content-count-sub">publish_state = published</div>
+                  </div>
+                  <div class="lp-content-count-card">
+                    <div class="lp-content-count-label">Needs Review</div>
+                    <div class="lp-content-count-value" id="cntReview">—</div>
+                    <div class="lp-content-count-sub">publish_state = review</div>
                   </div>
                 </div>
               </div>
+
+              <!-- Distribution grid ───────────────────────────────── -->
+              <div class="lp-telemetry-table-card" style="margin-bottom:20px">
+                <div class="lp-telemetry-card-head">
+                  <div class="lp-telemetry-card-title">Olympiad Distribution (7 Tracks × 5 Tiers)</div>
+                  <div class="lp-dist-legend">
+                    <div class="lp-dist-legend-item"><div class="lp-dist-legend-dot" style="background:var(--lp-danger-bg);border:1px solid var(--lp-danger-border)"></div>0 problems</div>
+                    <div class="lp-dist-legend-item"><div class="lp-dist-legend-dot" style="background:var(--lp-warning-bg);border:1px solid var(--lp-warning-border)"></div>1–2 problems</div>
+                    <div class="lp-dist-legend-item"><div class="lp-dist-legend-dot" style="background:rgba(34,197,94,.09);border:1px solid rgba(34,197,94,.18)"></div>3+ problems</div>
+                  </div>
+                </div>
+                <div style="padding:14px;overflow-x:auto">
+                  <div id="contentDistGrid"><div class="lp-telemetry-empty">Loading distribution…</div></div>
+                </div>
+              </div>
+
+              <!-- PANEL 2: Problem Browser ─────────────────────────── -->
+              <div class="lp-telemetry-table-card" style="margin-bottom:20px" id="problemBrowserCard">
+                <div class="lp-telemetry-card-head">
+                  <div class="lp-telemetry-card-title">Problem Browser</div>
+                  <span class="admin-badge admin-badge-indigo" id="browserCountBadge">Loading…</span>
+                </div>
+
+                <!-- Filter bar -->
+                <div class="lp-browser-filters">
+                  <div class="admin-field" style="min-width:110px">
+                    <label class="admin-label" for="filterSection">Section</label>
+                    <select class="admin-select" id="filterSection">
+                      <option value="">All sections</option>
+                      <option value="regular">regular</option>
+                      <option value="olympiad">olympiad</option>
+                    </select>
+                  </div>
+                  <div class="admin-field" style="min-width:150px">
+                    <label class="admin-label" for="filterTrack">Skill Track</label>
+                    <select class="admin-select" id="filterTrack">
+                      <option value="">All tracks</option>
+                      <option value="constraints">constraints</option>
+                      <option value="counting">counting</option>
+                      <option value="divisibility">divisibility</option>
+                      <option value="geometry_no_formulas">geometry_no_formulas</option>
+                      <option value="invariants">invariants</option>
+                      <option value="mixed">mixed</option>
+                      <option value="worst_case">worst_case</option>
+                    </select>
+                  </div>
+                  <div class="admin-field" style="min-width:120px">
+                    <label class="admin-label" for="filterTier">Difficulty</label>
+                    <select class="admin-select" id="filterTier">
+                      <option value="">All tiers</option>
+                      <option value="warmup">warmup</option>
+                      <option value="standard">standard</option>
+                      <option value="challenge">challenge</option>
+                      <option value="contest">contest</option>
+                      <option value="elite">elite</option>
+                    </select>
+                  </div>
+                  <div class="admin-field" style="min-width:120px">
+                    <label class="admin-label" for="filterPublishState">Pub State</label>
+                    <select class="admin-select" id="filterPublishState">
+                      <option value="">All states</option>
+                      <option value="draft">draft</option>
+                      <option value="review">review</option>
+                      <option value="published">published</option>
+                      <option value="archived">archived</option>
+                    </select>
+                  </div>
+                  <div class="admin-field" style="min-width:110px">
+                    <label class="admin-label" for="filterHasDiagram">Diagram</label>
+                    <select class="admin-select" id="filterHasDiagram">
+                      <option value="">Any</option>
+                      <option value="yes">Has diagram</option>
+                      <option value="no">No diagram</option>
+                    </select>
+                  </div>
+                  <div class="admin-field lp-browser-search">
+                    <label class="admin-label" for="filterSearch">Search title</label>
+                    <input class="admin-input" id="filterSearch" type="text" placeholder="Type to search…" />
+                  </div>
+                  <div style="padding-top:19px">
+                    <button class="admin-btn admin-btn-secondary admin-btn-sm" id="btnBrowserApply" type="button">Apply</button>
+                  </div>
+                  <div style="padding-top:19px">
+                    <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnBrowserReset" type="button">Reset</button>
+                  </div>
+                </div>
+
+                <!-- Table -->
+                <div class="lp-telemetry-table-wrap" style="max-height:520px">
+                  <table class="lp-telemetry-table">
+                    <thead>
+                      <tr>
+                        <th style="min-width:200px">Title</th>
+                        <th>Section</th>
+                        <th>Track</th>
+                        <th>Tier</th>
+                        <th>Age Cat.</th>
+                        <th>State</th>
+                        <th>Proof</th>
+                        <th>Diagram</th>
+                        <th>Active</th>
+                        <th>Created</th>
+                      </tr>
+                    </thead>
+                    <tbody id="problemBrowserBody">
+                      <tr><td colspan="10" class="lp-telemetry-empty">Loading problems…</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="lp-pagination-bar">
+                  <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnBrowserPrev" type="button" disabled>← Prev</button>
+                  <span id="browserPaginationInfo" style="font-size:12.5px;color:var(--lp-muted)">Page 1</span>
+                  <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnBrowserNext" type="button" disabled>Next →</button>
+                </div>
+              </div>
+
+              <!-- PANEL 4: Review Queue ─────────────────────────────── -->
+              <div class="lp-telemetry-table-card" style="margin-bottom:20px">
+                <div class="lp-telemetry-card-head">
+                  <div class="lp-telemetry-card-title">Review Queue</div>
+                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                    <span class="admin-badge admin-badge-amber" id="reviewQueueBadge">0 items</span>
+                    <button class="admin-btn admin-btn-secondary admin-btn-sm" id="btnReviewQueueRefresh" type="button">Refresh</button>
+                  </div>
+                </div>
+                <div class="lp-telemetry-table-wrap">
+                  <table class="lp-telemetry-table">
+                    <thead>
+                      <tr><th>Title</th><th>Section / Track</th><th>Tier</th><th>State</th><th>Blockers</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="reviewQueueBody">
+                      <tr><td colspan="6" class="lp-telemetry-empty">Loading…</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- PANEL 5: Content Health ──────────────────────────── -->
+              <div class="lp-telemetry-table-card">
+                <div class="lp-telemetry-card-head">
+                  <div class="lp-telemetry-card-title">Content Health</div>
+                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                    <span class="admin-badge" id="contentHealthBadge">Checking…</span>
+                    <button class="admin-btn admin-btn-secondary admin-btn-sm" id="btnContentHealthRefresh" type="button">Refresh</button>
+                  </div>
+                </div>
+                <div id="contentHealthBody" style="padding:14px">
+                  <div class="lp-telemetry-empty">Loading health checks…</div>
+                </div>
+              </div>
+
             </div>
           </div>
           <!-- /tab-content -->
@@ -1858,6 +2331,7 @@
           if (key === 'telemetry') loadMonitoringDashboard().catch(() => {});
           if (key === 'overview') loadOverviewIncidentSnapshot().catch(() => {});
           if (key === 'flags') loadFeatureFlags().catch(() => {});
+          if (key === 'content') loadContentTab().catch(() => {});
 
         });
       });
@@ -3792,6 +4266,752 @@
       };
     }
 
+    /* ═══════════════════════════════════════════════════════
+       PART A: Dynamic problem counts
+       ═══════════════════════════════════════════════════════ */
+    async function loadProblemCounts(sb) {
+      try {
+        const [{ count: total }, { count: regular }, { count: olympiad }] = await Promise.all([
+          sb.from('problems').select('*', { count: 'exact', head: true }).eq('is_active', true),
+          sb.from('problems').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('section', 'regular'),
+          sb.from('problems').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('section', 'olympiad'),
+        ]);
+        const el = document.getElementById('statProblems');
+        const sub = document.getElementById('statProblemsBreakdown');
+        if (el) el.textContent = (total ?? 0).toLocaleString();
+        if (sub) sub.textContent = `Regular: ${(regular ?? 0).toLocaleString()} · Olympiad: ${(olympiad ?? 0).toLocaleString()}`;
+      } catch (err) {
+        const el = document.getElementById('statProblems');
+        if (el) el.textContent = 'Err';
+        const sub = document.getElementById('statProblemsBreakdown');
+        if (sub) sub.textContent = err.message;
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       PART B: Content tab — state & helpers
+       ═══════════════════════════════════════════════════════ */
+    let contentSb = null;
+    let contentBrowserPage = 0;
+    const CONTENT_PAGE_SIZE = 50;
+    let contentBrowserFilters = { section: '', track: '', tier: '', publish_state: '', has_diagram: '', search: '' };
+    let contentLoaded = false;
+
+    const SKILL_TRACKS = ['constraints','counting','divisibility','geometry_no_formulas','invariants','mixed','worst_case'];
+    const DIFF_TIERS   = ['warmup','standard','challenge','contest','elite'];
+
+    function publishStateBadge(state) {
+      const s = String(state || 'draft').toLowerCase();
+      return `<span class="lp-publish-badge ${s}">${escapeHtml(s)}</span>`;
+    }
+
+    function tierChip(tier) {
+      const t = String(tier || '').toLowerCase();
+      return `<span class="lp-tier-chip ${escapeHtml(t)}">${escapeHtml(t || '—')}</span>`;
+    }
+
+    function buildHintsHtml(p) {
+      const hints = [p.hint_1 ?? p.hint1, p.hint_2 ?? p.hint2, p.hint_3 ?? p.hint3].filter(Boolean);
+      if (!hints.length) return '';
+      return `<div class="lp-drawer-section">
+        <div class="lp-drawer-label">Hints (${hints.length})</div>
+        ${hints.map((h, i) => `<div class="lp-drawer-prose" style="padding-left:8px;border-left:2px solid var(--lp-border)"><strong>Hint ${i+1}:</strong> ${escapeHtml(String(h))}</div>`).join('')}
+      </div>`;
+    }
+
+    function buildSocraticHtml(p) {
+      const qs = [p.socratic_1 ?? p.socratic_question_1, p.socratic_2 ?? p.socratic_question_2, p.socratic_3 ?? p.socratic_question_3].filter(Boolean);
+      if (!qs.length) return '';
+      return `<div class="lp-drawer-section">
+        <div class="lp-drawer-label">Socratic Questions (${qs.length})</div>
+        ${qs.map((q, i) => `<div class="lp-drawer-prose" style="padding-left:8px;border-left:2px solid var(--lp-indigo);opacity:0.85"><strong>Q${i+1}:</strong> ${escapeHtml(String(q))}</div>`).join('')}
+      </div>`;
+    }
+
+    function renderGeometryPreview(geometryData) {
+      if (!geometryData) return '';
+      try {
+        const gd = typeof geometryData === 'string' ? JSON.parse(geometryData) : geometryData;
+        if (gd && gd.svg) {
+          return `<div class="lp-drawer-section">
+            <div class="lp-drawer-label">Geometry Diagram</div>
+            <div class="lp-drawer-geometry">${gd.svg}</div>
+          </div>`;
+        }
+        return `<div class="lp-drawer-section">
+          <div class="lp-drawer-label">Geometry Data (JSON)</div>
+          <div class="lp-drawer-geometry" style="font-family:var(--lp-font-mono);font-size:11px;text-align:left;justify-content:flex-start;white-space:pre-wrap">${escapeHtml(JSON.stringify(gd, null, 2).slice(0, 800))}</div>
+        </div>`;
+      } catch { return ''; }
+    }
+
+    function getBlockers(p, proofRef) {
+      const blockers = [];
+      if (p.proof_required && !proofRef) blockers.push('Missing proof reference solution');
+      const hints = [p.hint_1 ?? p.hint1, p.hint_2 ?? p.hint2, p.hint_3 ?? p.hint3].filter(Boolean);
+      if (!hints.length) blockers.push('Missing hints (0 of 3)');
+      if (p.section === 'olympiad' && p.skill_track === 'geometry_no_formulas' && !p.geometry_data) {
+        blockers.push('geometry_no_formulas track — missing geometry_data diagram');
+      }
+      if (!p.problem_text && !p.body && !p.question_text && !p.content) {
+        blockers.push('No problem body text found');
+      }
+      return blockers;
+    }
+
+    /* ── Content overview counts ────────────────────────── */
+    async function loadContentCounts() {
+      if (!contentSb) return;
+      try {
+        const [
+          { count: total },
+          { count: regular },
+          { count: olympiad },
+          { count: draft },
+          { count: published },
+          { count: review },
+        ] = await Promise.all([
+          contentSb.from('problems').select('*',{count:'exact',head:true}).eq('is_active',true),
+          contentSb.from('problems').select('*',{count:'exact',head:true}).eq('is_active',true).eq('section','regular'),
+          contentSb.from('problems').select('*',{count:'exact',head:true}).eq('is_active',true).eq('section','olympiad'),
+          contentSb.from('problems').select('*',{count:'exact',head:true}).eq('is_active',true).eq('publish_state','draft'),
+          contentSb.from('problems').select('*',{count:'exact',head:true}).eq('is_active',true).eq('publish_state','published'),
+          contentSb.from('problems').select('*',{count:'exact',head:true}).eq('is_active',true).eq('publish_state','review'),
+        ]);
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = (val ?? 0).toLocaleString(); };
+        set('cntTotal', total); set('cntRegular', regular); set('cntOlympiad', olympiad);
+        set('cntDraft', draft); set('cntPublished', published); set('cntReview', review);
+        // Sync global stat card too
+        const s = document.getElementById('statProblems');
+        const b = document.getElementById('statProblemsBreakdown');
+        if (s) s.textContent = (total ?? 0).toLocaleString();
+        if (b) b.textContent = `Regular: ${(regular ?? 0).toLocaleString()} · Olympiad: ${(olympiad ?? 0).toLocaleString()}`;
+        setText('contentOverviewUpdatedAt', `Updated ${new Date().toLocaleTimeString()}`);
+      } catch (err) {
+        window.LPAdmin?.toast(`Count load error: ${err.message}`, 'error', 3000);
+      }
+    }
+
+    /* ── Olympiad distribution grid ─────────────────────── */
+    async function loadDistributionGrid() {
+      if (!contentSb) return;
+      const container = document.getElementById('contentDistGrid');
+      if (!container) return;
+      try {
+        const { data, error } = await contentSb
+          .from('problems')
+          .select('skill_track, difficulty_tier')
+          .eq('section', 'olympiad')
+          .eq('is_active', true);
+        if (error) throw error;
+
+        const matrix = {};
+        (data || []).forEach(row => {
+          if (!row.skill_track || !row.difficulty_tier) return;
+          const key = `${row.skill_track}:${row.difficulty_tier}`;
+          matrix[key] = (matrix[key] || 0) + 1;
+        });
+
+        let html = '<div class="lp-dist-grid">';
+        // Corner + tier headers
+        html += '<div class="lp-dist-cell corner">Track / Tier</div>';
+        DIFF_TIERS.forEach(tier => {
+          html += `<div class="lp-dist-cell tier-header">${escapeHtml(tier)}</div>`;
+        });
+        // Track rows
+        SKILL_TRACKS.forEach(track => {
+          html += `<div class="lp-dist-cell track-label">${escapeHtml(track)}</div>`;
+          DIFF_TIERS.forEach(tier => {
+            const count = matrix[`${track}:${tier}`] || 0;
+            const cls = count === 0 ? 'empty' : count <= 2 ? 'sparse' : 'adequate';
+            html += `<div class="lp-dist-cell ${cls}" data-track="${escapeHtml(track)}" data-tier="${escapeHtml(tier)}" title="Click to filter browser: ${track} / ${tier} — ${count} problem${count !== 1 ? 's' : ''}">${count}</div>`;
+          });
+        });
+        html += '</div>';
+        container.innerHTML = html;
+
+        // Wire cell clicks → filter browser
+        container.querySelectorAll('[data-track]').forEach(cell => {
+          cell.addEventListener('click', () => {
+            const track = cell.getAttribute('data-track');
+            const tier = cell.getAttribute('data-tier');
+            const secEl = document.getElementById('filterSection');
+            const trkEl = document.getElementById('filterTrack');
+            const tirEl = document.getElementById('filterTier');
+            if (secEl) secEl.value = 'olympiad';
+            if (trkEl) trkEl.value = track;
+            if (tirEl) tirEl.value = tier;
+            contentBrowserFilters = { ...contentBrowserFilters, section: 'olympiad', track, tier };
+            contentBrowserPage = 0;
+            loadProblemBrowser().catch(() => {});
+            document.getElementById('problemBrowserCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+        });
+      } catch (err) {
+        if (container) container.innerHTML = `<div class="lp-telemetry-empty" style="color:var(--lp-danger-text)">${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    /* ── Problem Browser ─────────────────────────────────── */
+    async function loadProblemBrowser() {
+      if (!contentSb) return;
+      const body = document.getElementById('problemBrowserBody');
+      if (!body) return;
+      body.innerHTML = `<tr><td colspan="10" class="lp-telemetry-empty">Loading…</td></tr>`;
+
+      const { section, track, tier, publish_state, has_diagram, search } = contentBrowserFilters;
+
+      try {
+        let query = contentSb
+          .from('problems')
+          .select('id, title, section, skill_track, difficulty_tier, age_category, publish_state, proof_required, geometry_data, is_active, created_at', { count: 'exact' })
+          .order('created_at', { ascending: false })
+          .range(contentBrowserPage * CONTENT_PAGE_SIZE, (contentBrowserPage + 1) * CONTENT_PAGE_SIZE - 1);
+
+        if (section) query = query.eq('section', section);
+        if (track)   query = query.eq('skill_track', track);
+        if (tier)    query = query.eq('difficulty_tier', tier);
+        if (publish_state) query = query.eq('publish_state', publish_state);
+        if (has_diagram === 'yes') query = query.not('geometry_data', 'is', null);
+        if (has_diagram === 'no')  query = query.is('geometry_data', null);
+        if (search)  query = query.ilike('title', `%${search}%`);
+
+        const { data, count, error } = await query;
+        if (error) throw error;
+
+        const rows = data || [];
+        const total = count ?? rows.length;
+        const pageCount = Math.max(1, Math.ceil(total / CONTENT_PAGE_SIZE));
+
+        const badge = document.getElementById('browserCountBadge');
+        if (badge) badge.textContent = `${total.toLocaleString()} problems`;
+        const info = document.getElementById('browserPaginationInfo');
+        if (info) info.textContent = `Page ${contentBrowserPage + 1} of ${pageCount} (${total.toLocaleString()} total)`;
+
+        const prev = document.getElementById('btnBrowserPrev');
+        const next = document.getElementById('btnBrowserNext');
+        if (prev) prev.disabled = contentBrowserPage === 0;
+        if (next) next.disabled = (contentBrowserPage + 1) * CONTENT_PAGE_SIZE >= total;
+
+        if (!rows.length) {
+          body.innerHTML = `<tr><td colspan="10" class="lp-telemetry-empty">No problems match the current filters.</td></tr>`;
+          return;
+        }
+
+        body.innerHTML = rows.map(row => `
+          <tr data-problem-id="${escapeHtml(row.id)}">
+            <td style="max-width:220px;word-break:break-word"><span style="font-weight:600;color:var(--lp-text)">${escapeHtml(row.title || '—')}</span></td>
+            <td>${trackChip(row.section)}</td>
+            <td class="lp-mono" style="font-size:11.5px">${escapeHtml(row.skill_track || '—')}</td>
+            <td>${tierChip(row.difficulty_tier)}</td>
+            <td class="lp-mono" style="font-size:11.5px">${escapeHtml(row.age_category || '—')}</td>
+            <td>${publishStateBadge(row.publish_state)}</td>
+            <td>${row.proof_required ? '<span class="admin-badge admin-badge-indigo">yes</span>' : '<span style="color:var(--lp-subtle);font-size:12px">—</span>'}</td>
+            <td>${row.geometry_data != null ? '<span class="admin-badge admin-badge-teal">yes</span>' : '<span style="color:var(--lp-subtle);font-size:12px">—</span>'}</td>
+            <td>${row.is_active ? '<span class="admin-badge admin-badge-green">active</span>' : '<span class="admin-badge admin-badge-amber">off</span>'}</td>
+            <td class="lp-mono" style="font-size:11.5px;white-space:nowrap">${escapeHtml(row.created_at ? new Date(row.created_at).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric'}) : '—')}</td>
+          </tr>`).join('');
+
+        body.querySelectorAll('tr[data-problem-id]').forEach(tr => {
+          tr.addEventListener('click', () => openProblemDrawer(tr.getAttribute('data-problem-id')));
+        });
+      } catch (err) {
+        body.innerHTML = `<tr><td colspan="10" class="lp-telemetry-empty" style="color:var(--lp-danger-text)">${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    /* ── Problem Detail Drawer ───────────────────────────── */
+    async function openProblemDrawer(id) {
+      if (!contentSb || !id) return;
+
+      const drawerBody = document.getElementById('drawerBody');
+      if (drawerBody) drawerBody.innerHTML = '<div class="lp-telemetry-empty">Loading…</div>';
+      document.getElementById('contentDrawer')?.classList.add('open');
+      document.getElementById('contentDrawerBackdrop')?.classList.add('active');
+
+      try {
+        const { data: p, error } = await contentSb
+          .from('problems')
+          .select('*')
+          .eq('id', id)
+          .single();
+        if (error) throw error;
+
+        let proofRef = null;
+        if (p.proof_required) {
+          const { data: prd } = await contentSb
+            .from('proof_reference_solutions')
+            .select('*')
+            .eq('problem_id', id)
+            .maybeSingle();
+          proofRef = prd;
+        }
+
+        renderProblemDrawer(p, proofRef);
+      } catch (err) {
+        if (drawerBody) drawerBody.innerHTML = `<div class="lp-monitoring-inline-error">${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function closeProblemDrawer() {
+      document.getElementById('contentDrawer')?.classList.remove('open');
+      document.getElementById('contentDrawerBackdrop')?.classList.remove('active');
+    }
+
+    function renderProblemDrawer(p, proofRef) {
+      const titleEl = document.getElementById('drawerTitle');
+      const metaEl  = document.getElementById('drawerMeta');
+      const body    = document.getElementById('drawerBody');
+      if (!body) return;
+
+      if (titleEl) titleEl.textContent = p.title || 'Problem';
+      if (metaEl)  metaEl.textContent  = [p.section, p.skill_track, p.difficulty_tier, p.age_category].filter(Boolean).join(' · ');
+
+      const problemText = p.problem_text || p.body || p.content || p.question_text || p.statement || '(no problem text found)';
+      const solution    = p.solution || p.solution_text || p.model_solution || '';
+      const keyInsight  = p.key_insight || p.insight || '';
+
+      const blockers = getBlockers(p, proofRef);
+
+      body.innerHTML = `
+        <!-- Chips row -->
+        <div class="lp-drawer-section">
+          <div class="lp-drawer-label">Classification</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            ${trackChip(p.section)}
+            ${tierChip(p.difficulty_tier)}
+            <span class="admin-badge admin-badge-neutral">${escapeHtml(p.skill_track || '—')}</span>
+            <span class="admin-badge admin-badge-neutral">${escapeHtml(p.age_category || '—')}</span>
+            ${publishStateBadge(p.publish_state)}
+            ${p.proof_required ? '<span class="admin-badge admin-badge-indigo">proof required</span>' : ''}
+            ${p.is_active ? '<span class="admin-badge admin-badge-green">active</span>' : '<span class="admin-badge admin-badge-amber">inactive</span>'}
+          </div>
+        </div>
+
+        <!-- Timing -->
+        <div class="lp-drawer-section">
+          <div class="lp-drawer-label">Time Window</div>
+          <div class="lp-mono" style="font-size:13px">${escapeHtml(String(p.expected_time_min ?? '?'))}s – ${escapeHtml(String(p.expected_time_max ?? '?'))}s</div>
+        </div>
+
+        <!-- Problem body -->
+        <div class="lp-drawer-section">
+          <div class="lp-drawer-label">Problem Text</div>
+          <div class="lp-drawer-prose">${escapeHtml(problemText)}</div>
+        </div>
+
+        <!-- Geometry -->
+        ${renderGeometryPreview(p.geometry_data || p.diagram_data)}
+
+        <!-- Answer key -->
+        ${p.answer_key ? `<div class="lp-drawer-section"><div class="lp-drawer-label">Answer Key</div><div class="lp-drawer-prose lp-mono" style="background:var(--lp-surface);padding:8px 10px;border-radius:8px;border:1px solid var(--lp-border)">${escapeHtml(p.answer_key)}</div></div>` : ''}
+
+        <!-- Solution -->
+        ${solution ? `<div class="lp-drawer-section"><div class="lp-drawer-label">Model Solution</div><div class="lp-drawer-prose">${escapeHtml(solution)}</div></div>` : ''}
+
+        <!-- Key insight -->
+        ${keyInsight ? `<div class="lp-drawer-section"><div class="lp-drawer-label">Key Insight</div><div class="lp-drawer-prose" style="background:rgba(79,70,229,.05);padding:10px 12px;border-radius:8px;border-left:3px solid var(--lp-indigo)">${escapeHtml(keyInsight)}</div></div>` : ''}
+
+        <!-- Hints -->
+        ${buildHintsHtml(p)}
+
+        <!-- Socratic questions -->
+        ${buildSocraticHtml(p)}
+
+        <!-- Strategy tags -->
+        ${p.strategy_tags ? `<div class="lp-drawer-section"><div class="lp-drawer-label">Strategy Tags</div><div class="lp-mono" style="font-size:11.5px;background:var(--lp-surface);padding:8px 10px;border-radius:8px;border:1px solid var(--lp-border);word-break:break-all">${escapeHtml(JSON.stringify(p.strategy_tags))}</div></div>` : ''}
+
+        <!-- Proof reference -->
+        ${p.proof_required ? `<div class="lp-drawer-section">
+          <div class="lp-drawer-label">Proof Reference Solution</div>
+          ${proofRef
+            ? `<div class="lp-drawer-prose">${escapeHtml(proofRef.solution_text || proofRef.reference_solution || proofRef.content || JSON.stringify(proofRef).slice(0, 400))}</div>`
+            : '<div class="lp-drawer-missing">⚠ No reference solution found — blocks publication</div>'
+          }
+        </div>` : ''}
+
+        <!-- Blockers -->
+        ${blockers.length ? `<div class="lp-drawer-section">
+          <div class="lp-drawer-label">Publication Blockers</div>
+          ${blockers.map(b => `<div class="lp-drawer-missing">⚠ ${escapeHtml(b)}</div>`).join('')}
+        </div>` : ''}
+
+        <!-- Actions -->
+        <div class="lp-drawer-section lp-drawer-actions">
+          <div class="lp-drawer-label">Actions — via RPC only</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            ${p.publish_state === 'draft'
+              ? `<button class="admin-btn admin-btn-secondary admin-btn-sm" onclick="rpcChangePublishState('${escapeHtml(p.id)}','review')">→ Submit for Review</button>`
+              : ''}
+            ${p.publish_state === 'review'
+              ? `<button class="admin-btn admin-btn-primary admin-btn-sm" onclick="rpcChangePublishState('${escapeHtml(p.id)}','published')" ${blockers.length ? 'title="Has blockers — check before publishing"' : ''}>→ Publish</button>
+                 <button class="admin-btn admin-btn-ghost admin-btn-sm" onclick="rpcChangePublishState('${escapeHtml(p.id)}','draft')">← Back to Draft</button>`
+              : ''}
+            ${p.publish_state === 'published'
+              ? `<button class="admin-btn admin-btn-ghost admin-btn-sm" onclick="rpcChangePublishState('${escapeHtml(p.id)}','draft')">Unpublish → Draft</button>`
+              : ''}
+            <button class="admin-btn admin-btn-ghost admin-btn-sm" onclick="rpcFlagProblem('${escapeHtml(p.id)}')">Flag for Review</button>
+            ${p.is_active
+              ? `<button class="admin-btn admin-btn-ghost admin-btn-sm" onclick="rpcToggleActive('${escapeHtml(p.id)}', false)">Deactivate</button>`
+              : `<button class="admin-btn admin-btn-secondary admin-btn-sm" onclick="rpcToggleActive('${escapeHtml(p.id)}', true)">Reactivate</button>`}
+          </div>
+        </div>
+
+        <!-- Raw ID -->
+        <div style="font-size:11px;color:var(--lp-subtle);font-family:var(--lp-font-mono);padding-top:4px">ID: ${escapeHtml(p.id)}</div>
+      `;
+    }
+
+    /* ── RPC wrappers for content mutations ──────────────── */
+    async function rpcChangePublishState(problemId, newState) {
+      try {
+        await postAdminAction('problem_set_publish_state', { problem_id: problemId, publish_state: newState });
+        window.LPAdmin?.toast(`State → ${newState}`, 'success', 2200);
+        await openProblemDrawer(problemId); // re-open to refresh
+        await Promise.all([loadProblemBrowser(), loadReviewQueue(), loadContentCounts()]).catch(() => {});
+      } catch (err) {
+        window.LPAdmin?.toast(`Failed: ${err.message}`, 'error', 4000);
+      }
+    }
+
+    async function rpcFlagProblem(problemId) {
+      try {
+        await postAdminAction('problem_flag_review', { problem_id: problemId });
+        window.LPAdmin?.toast('Problem flagged for review', 'success', 2200);
+        await Promise.all([loadProblemBrowser(), loadReviewQueue()]).catch(() => {});
+      } catch (err) {
+        window.LPAdmin?.toast(`Flag failed: ${err.message}`, 'error', 4000);
+      }
+    }
+
+    async function rpcToggleActive(problemId, active) {
+      try {
+        await postAdminAction('problem_set_active', { problem_id: problemId, is_active: active });
+        window.LPAdmin?.toast(`Problem ${active ? 'reactivated' : 'deactivated'}`, 'success', 2200);
+        await openProblemDrawer(problemId);
+        await Promise.all([loadProblemBrowser(), loadContentCounts()]).catch(() => {});
+      } catch (err) {
+        window.LPAdmin?.toast(`Toggle failed: ${err.message}`, 'error', 4000);
+      }
+    }
+
+    /* ── Review Queue ─────────────────────────────────────── */
+    async function loadReviewQueue() {
+      if (!contentSb) return;
+      const body = document.getElementById('reviewQueueBody');
+      const badge = document.getElementById('reviewQueueBadge');
+      if (!body) return;
+      body.innerHTML = `<tr><td colspan="6" class="lp-telemetry-empty">Loading…</td></tr>`;
+
+      try {
+        // Fetch problems in review state, OR olympiad problems with missing assets
+        const { data: reviewProblems, error } = await contentSb
+          .from('problems')
+          .select('id, title, section, skill_track, difficulty_tier, age_category, publish_state, proof_required, geometry_data, hint_1, hint_2, hint_3, hint1, hint2, hint3, problem_text, body, content, question_text, statement')
+          .eq('is_active', true)
+          .in('publish_state', ['review', 'draft'])
+          .order('created_at', { ascending: false })
+          .limit(100);
+        if (error) throw error;
+
+        // Fetch proof_reference_solutions for proof_required problems in the batch
+        const proofRequiredIds = (reviewProblems || []).filter(p => p.proof_required).map(p => p.id);
+        let solvedIds = new Set();
+        if (proofRequiredIds.length) {
+          const { data: refs } = await contentSb
+            .from('proof_reference_solutions')
+            .select('problem_id')
+            .in('problem_id', proofRequiredIds);
+          (refs || []).forEach(r => solvedIds.add(r.problem_id));
+        }
+
+        const rows = (reviewProblems || []).map(p => ({
+          ...p,
+          blockers: getBlockers(p, solvedIds.has(p.id) ? {} : null),
+        })).filter(p => p.publish_state === 'review' || p.blockers.length > 0);
+
+        if (badge) badge.textContent = `${rows.length} items`;
+        if (!rows.length) {
+          body.innerHTML = `<tr><td colspan="6" class="lp-telemetry-empty">✓ Review queue is empty. Nothing blocking publication.</td></tr>`;
+          return;
+        }
+
+        body.innerHTML = rows.map(row => `
+          <tr data-problem-id="${escapeHtml(row.id)}" style="cursor:pointer">
+            <td style="max-width:200px;word-break:break-word"><span style="font-weight:600">${escapeHtml(row.title || '—')}</span></td>
+            <td class="lp-cell-stack"><span>${trackChip(row.section)}</span><span class="lp-cell-subtle lp-mono" style="font-size:11px">${escapeHtml(row.skill_track || '—')}</span></td>
+            <td>${tierChip(row.difficulty_tier)}</td>
+            <td>${publishStateBadge(row.publish_state)}</td>
+            <td>${row.blockers.length
+              ? row.blockers.map(b => `<div class="lp-draw-missing" style="font-size:11.5px;color:var(--lp-danger-text);margin-bottom:3px">⚠ ${escapeHtml(b)}</div>`).join('')
+              : '<span style="color:var(--lp-success);font-size:12px">✓ No blockers</span>'
+            }</td>
+            <td>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                ${row.publish_state === 'review'
+                  ? `<button class="admin-btn admin-btn-primary admin-btn-sm" onclick="event.stopPropagation();rpcChangePublishState('${escapeHtml(row.id)}','published')" ${row.blockers.length ? 'title="Has blockers"' : ''}>Publish</button>`
+                  : `<button class="admin-btn admin-btn-secondary admin-btn-sm" onclick="event.stopPropagation();rpcChangePublishState('${escapeHtml(row.id)}','review')">Submit Review</button>`}
+                <button class="admin-btn admin-btn-ghost admin-btn-sm" onclick="event.stopPropagation();openProblemDrawer('${escapeHtml(row.id)}')">View</button>
+              </div>
+            </td>
+          </tr>`).join('');
+
+        body.querySelectorAll('tr[data-problem-id]').forEach(tr => {
+          tr.addEventListener('click', () => openProblemDrawer(tr.getAttribute('data-problem-id')));
+        });
+      } catch (err) {
+        body.innerHTML = `<tr><td colspan="6" class="lp-telemetry-empty" style="color:var(--lp-danger-text)">${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    /* ── Content Health ───────────────────────────────────── */
+    async function loadContentHealth() {
+      if (!contentSb) return;
+      const container = document.getElementById('contentHealthBody');
+      const badge = document.getElementById('contentHealthBadge');
+      if (!container) return;
+      container.innerHTML = `<div class="lp-telemetry-empty">Running health checks…</div>`;
+
+      try {
+        // 1. Gaps: (track, tier) cells with < 3 problems
+        const { data: distData } = await contentSb
+          .from('problems')
+          .select('skill_track, difficulty_tier')
+          .eq('section', 'olympiad')
+          .eq('is_active', true);
+
+        const matrix = {};
+        (distData || []).forEach(row => {
+          if (!row.skill_track || !row.difficulty_tier) return;
+          const key = `${row.skill_track}:${row.difficulty_tier}`;
+          matrix[key] = (matrix[key] || 0) + 1;
+        });
+
+        const gapCells = [];
+        SKILL_TRACKS.forEach(track => {
+          DIFF_TIERS.forEach(tier => {
+            const count = matrix[`${track}:${tier}`] || 0;
+            if (count < 3) gapCells.push({ track, tier, count });
+          });
+        });
+
+        // 2. Geometry problems without diagram
+        const { count: missingDiagramCount } = await contentSb
+          .from('problems')
+          .select('*', { count: 'exact', head: true })
+          .eq('section', 'olympiad')
+          .eq('skill_track', 'geometry_no_formulas')
+          .eq('is_active', true)
+          .is('geometry_data', null);
+
+        // Also check diagram_data column (both possible names)
+        let missingDiagramCount2 = 0;
+        try {
+          const { count: c2 } = await contentSb
+            .from('problems')
+            .select('*', { count: 'exact', head: true })
+            .eq('section', 'olympiad')
+            .eq('skill_track', 'geometry_no_formulas')
+            .eq('is_active', true)
+            .is('diagram_data', null);
+          missingDiagramCount2 = c2 ?? 0;
+        } catch { /* diagram_data column may not exist */ }
+
+        // 3. Proof required without reference solution
+        const { data: proofProblems } = await contentSb
+          .from('problems')
+          .select('id')
+          .eq('is_active', true)
+          .eq('proof_required', true);
+
+        let orphanProofCount = 0;
+        if (proofProblems?.length) {
+          const proofIds = proofProblems.map(p => p.id);
+          const { data: refData } = await contentSb
+            .from('proof_reference_solutions')
+            .select('problem_id')
+            .in('problem_id', proofIds);
+          const solvedSet = new Set((refData || []).map(r => r.problem_id));
+          orphanProofCount = proofIds.filter(id => !solvedSet.has(id)).length;
+        }
+
+        const totalIssues = gapCells.length + (missingDiagramCount ?? 0) + orphanProofCount;
+        if (badge) {
+          badge.textContent = `${totalIssues} issue${totalIssues !== 1 ? 's' : ''}`;
+          badge.className = totalIssues === 0 ? 'admin-badge admin-badge-green' : totalIssues < 10 ? 'admin-badge admin-badge-amber' : 'admin-badge admin-badge-danger';
+        }
+
+        let html = '';
+
+        // Gaps section
+        if (gapCells.length) {
+          const zeroCount = gapCells.filter(c => c.count === 0).length;
+          const sparseCount = gapCells.filter(c => c.count > 0 && c.count < 3).length;
+          html += `<div class="lp-health-issue" style="border-color:var(--lp-danger-border)">
+            <div class="lp-health-issue-icon" style="background:var(--lp-danger-bg);color:var(--lp-danger-text)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+            </div>
+            <div class="lp-health-issue-body">
+              <div class="lp-health-issue-title">Distribution Gaps — ${gapCells.length} cells below target (${zeroCount} empty, ${sparseCount} sparse)</div>
+              <div class="lp-health-issue-desc" style="margin-top:6px">
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px;margin-top:6px">
+                  ${gapCells.map(c => `
+                    <button class="admin-btn admin-btn-ghost admin-btn-sm" style="font-size:11px;text-align:left;justify-content:flex-start" 
+                      onclick="setContentFilter('olympiad','${escapeHtml(c.track)}','${escapeHtml(c.tier)}')" 
+                      title="Filter browser to ${c.track} / ${c.tier}">
+                      ${c.count === 0 ? '🔴' : '🟡'} ${escapeHtml(c.track)} / ${escapeHtml(c.tier)} (${c.count})
+                    </button>`).join('')}
+                </div>
+              </div>
+            </div>
+          </div>`;
+        }
+
+        // Missing diagrams
+        const diagCount = missingDiagramCount ?? 0;
+        if (diagCount > 0) {
+          html += `<div class="lp-health-issue" style="border-color:var(--lp-warning-border)">
+            <div class="lp-health-issue-icon" style="background:var(--lp-warning-bg);color:var(--lp-warning-text)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m3 9 4-4 4 4 4-4 4 4"/></svg>
+            </div>
+            <div class="lp-health-issue-body">
+              <div class="lp-health-issue-title">Missing Geometry Diagrams — ${diagCount} geometry_no_formulas problems have no geometry_data</div>
+              <div class="lp-health-issue-desc">
+                These problems are in the geometry_no_formulas track but lack SVG diagram data. 
+                <button class="admin-btn admin-btn-ghost admin-btn-sm" style="font-size:11.5px;margin-top:6px" 
+                  onclick="setContentFilter('olympiad','geometry_no_formulas','','','no')">
+                  View in Browser
+                </button>
+              </div>
+            </div>
+          </div>`;
+        }
+
+        // Proofs without reference
+        if (orphanProofCount > 0) {
+          html += `<div class="lp-health-issue" style="border-color:var(--lp-warning-border)">
+            <div class="lp-health-issue-icon" style="background:var(--lp-warning-bg);color:var(--lp-warning-text)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <div class="lp-health-issue-body">
+              <div class="lp-health-issue-title">Proofs Without Reference Solutions — ${orphanProofCount} of ${proofProblems?.length ?? '?'} proof-required problems have no entry in proof_reference_solutions</div>
+              <div class="lp-health-issue-desc">These problems require a written proof but have no reference solution in the DB. This blocks publication. 
+                <button class="admin-btn admin-btn-ghost admin-btn-sm" style="font-size:11.5px;margin-top:6px" onclick="filterProofOrphans()">View in Browser</button>
+              </div>
+            </div>
+          </div>`;
+        }
+
+        if (totalIssues === 0) {
+          html = `<div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(34,197,94,.06);border-radius:10px;border:1px solid rgba(34,197,94,.2)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+            <span style="font-size:13px;font-weight:600;color:#166534">All content health checks pass. No gaps, missing diagrams, or orphan proofs.</span>
+          </div>`;
+        }
+
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = `<div class="lp-monitoring-inline-error">${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function setContentFilter(section, track, tier, publish_state = '', has_diagram = '') {
+      const fields = { filterSection: section, filterTrack: track, filterTier: tier, filterPublishState: publish_state, filterHasDiagram: has_diagram };
+      Object.entries(fields).forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.value = val; });
+      contentBrowserFilters = { section, track, tier, publish_state, has_diagram, search: '' };
+      contentBrowserPage = 0;
+      loadProblemBrowser().catch(() => {});
+      document.getElementById('problemBrowserCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    async function filterProofOrphans() {
+      // Filter browser to proof_required problems
+      document.getElementById('filterSection').value = '';
+      document.getElementById('filterTrack').value = '';
+      document.getElementById('filterTier').value = '';
+      document.getElementById('filterPublishState').value = '';
+      document.getElementById('filterHasDiagram').value = '';
+      contentBrowserFilters = { section: '', track: '', tier: '', publish_state: '', has_diagram: '', search: '' };
+      contentBrowserPage = 0;
+      window.LPAdmin?.toast('Showing all problems — filter manually by proof_required after browsing', 'info', 3500);
+      await loadProblemBrowser();
+      document.getElementById('problemBrowserCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    /* ── Main content tab loader ─────────────────────────── */
+    async function loadContentTab() {
+      if (!contentSb) return;
+      contentLoaded = true;
+      await Promise.allSettled([
+        loadContentCounts(),
+        loadDistributionGrid(),
+        loadProblemBrowser(),
+        loadReviewQueue(),
+        loadContentHealth(),
+      ]);
+    }
+
+    /* ── Wire content tab interactions ───────────────────── */
+    function wireContent() {
+      // Refresh all
+      document.getElementById('btnContentRefresh')?.addEventListener('click', async () => {
+        await loadContentTab().catch(err => window.LPAdmin?.toast(`Refresh failed: ${err.message}`, 'error', 3000));
+        window.LPAdmin?.toast('Content refreshed', 'success', 2000);
+      });
+
+      // Browser apply / reset / pagination
+      document.getElementById('btnBrowserApply')?.addEventListener('click', () => {
+        contentBrowserFilters = {
+          section:       document.getElementById('filterSection')?.value || '',
+          track:         document.getElementById('filterTrack')?.value   || '',
+          tier:          document.getElementById('filterTier')?.value     || '',
+          publish_state: document.getElementById('filterPublishState')?.value || '',
+          has_diagram:   document.getElementById('filterHasDiagram')?.value  || '',
+          search:        document.getElementById('filterSearch')?.value  || '',
+        };
+        contentBrowserPage = 0;
+        loadProblemBrowser().catch(() => {});
+      });
+
+      document.getElementById('btnBrowserReset')?.addEventListener('click', () => {
+        ['filterSection','filterTrack','filterTier','filterPublishState','filterHasDiagram','filterSearch'].forEach(id => {
+          const el = document.getElementById(id); if (el) el.value = '';
+        });
+        contentBrowserFilters = { section: '', track: '', tier: '', publish_state: '', has_diagram: '', search: '' };
+        contentBrowserPage = 0;
+        loadProblemBrowser().catch(() => {});
+      });
+
+      // Enter key in search box
+      document.getElementById('filterSearch')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('btnBrowserApply')?.click();
+      });
+
+      document.getElementById('btnBrowserPrev')?.addEventListener('click', () => {
+        if (contentBrowserPage > 0) { contentBrowserPage--; loadProblemBrowser().catch(() => {}); }
+      });
+
+      document.getElementById('btnBrowserNext')?.addEventListener('click', () => {
+        contentBrowserPage++;
+        loadProblemBrowser().catch(() => {});
+      });
+
+      // Review queue refresh
+      document.getElementById('btnReviewQueueRefresh')?.addEventListener('click', () => {
+        loadReviewQueue().catch(err => window.LPAdmin?.toast(`Queue refresh failed: ${err.message}`, 'error', 3000));
+      });
+
+      // Content health refresh
+      document.getElementById('btnContentHealthRefresh')?.addEventListener('click', () => {
+        loadContentHealth().catch(err => window.LPAdmin?.toast(`Health check failed: ${err.message}`, 'error', 3000));
+      });
+
+      // Drawer close
+      document.getElementById('btnCloseDrawer')?.addEventListener('click', closeProblemDrawer);
+      document.getElementById('contentDrawerBackdrop')?.addEventListener('click', closeProblemDrawer);
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') closeProblemDrawer(); });
+    }
+
     async function loadFeatureFlags() {
       const rows = await postAdminAction('feature_flags_list', {});
       const body = document.getElementById('featureFlagsBody');
@@ -3958,6 +5178,7 @@
     wireNav();
     wireTelemetry();
     wireFeatureFlags();
+    wireContent();
     updateGlobalOpsBadge();
 
     LPAdmin.init({
@@ -3981,6 +5202,12 @@
         // Fetch schema version from DB
         fetchSchema(sb);
 
+        // Dynamic problem counts (Part A)
+        loadProblemCounts(sb).catch(() => {});
+
+        // Store sb for content tab queries
+        contentSb = sb;
+
         // Preload feature flags for admin control plane
         loadFeatureFlags().catch(() => {});
 
@@ -4000,5 +5227,22 @@
 
   })();
   </script>
+  <!-- ── Problem Detail Drawer ── -->
+  <div class="lp-content-drawer-backdrop" id="contentDrawerBackdrop"></div>
+  <div class="lp-content-drawer" id="contentDrawer" role="dialog" aria-modal="true" aria-label="Problem details">
+    <div class="lp-content-drawer-header">
+      <div style="min-width:0;flex:1">
+        <div class="lp-content-drawer-title" id="drawerTitle">Problem</div>
+        <div class="lp-content-drawer-meta" id="drawerMeta">—</div>
+      </div>
+      <button class="lp-content-drawer-close" id="btnCloseDrawer" type="button" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="lp-content-drawer-body" id="drawerBody">
+      <div class="lp-telemetry-empty">Select a problem from the browser to view details.</div>
+    </div>
+  </div>
+
 </body>
 </html>
