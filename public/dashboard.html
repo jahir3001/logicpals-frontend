@@ -357,10 +357,12 @@
     setStatus('good','Signed in');$('btnSignOut').disabled=false;
 
 	// GA4 founder event — dashboard viewed
+/* GA4 Founder Event */
 if (window.LP_track) {
+  console.log('[GA4 Founder Event] dashboard_view');
+
   window.LP_track('dashboard_view', {
     page: 'dashboard',
-    area: 'student_app',
     track: 'regular'
   });
 }
