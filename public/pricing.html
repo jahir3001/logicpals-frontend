@@ -887,211 +887,335 @@
 
   </div>
 
-  <!-- WhatsApp Float -->
-<a id="whatsappPaymentConfirm"
-   href="https://wa.me/8801617000378?text=Hi%2C%20I%20am%20interested%20in%20LogicPals%20for%20my%20child"
-   target="_blank"
-   rel="noopener noreferrer"
-   aria-label="Chat on WhatsApp"
-   style="...">
-   ...
-</a>
-
-<script>
+  <script>
   window.dataLayer = window.dataLayer || [];
 
-  // your existing pricing JS here
+  function makeId(p) {
+    return `${p}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  }
 
-  const whatsappPaymentConfirm = document.getElementById('whatsappPaymentConfirm');
+  async function serverEvent({ event_name, event_id, custom_data = {} }) {
+    try {
+      const tc = sessionStorage.getItem('lp_meta_test_code') || '';
+      await fetch('/api/ab/admin-bundle.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        body: JSON.stringify({
+          op: 'meta_track',
+          event_name,
+          event_id,
+          custom_data,
+          event_source_url: window.location.href,
+          ...(tc ? { test_event_code: tc } : {})
+        })
+      });
+    } catch (_) {}
+  }
 
-  if (whatsappPaymentConfirm) {
-    whatsappPaymentConfirm.addEventListener('click', function () {
-      if (window.LP_track) {
-        window.LP_track('whatsapp_payment_clicked', {
-          page: 'pricing',
-          plan: sel.key,
-          plan_label: sel.label,
-          value: Number(sel.price),
-          currency: 'BDT',
-          payment_mode: PAYMENT_MODE,
-          payment_method: 'whatsapp_manual_confirmation',
-          funnel_step: 'payment_confirmation_started'
-        });
+  const PAYMENT_MODE = 'manual_whatsapp';
+  let sel = { key: 'scholar_monthly', label: 'Scholar Monthly', price: 999 };
+
+  function trackView() {
+    const eid = makeId('pricing_view');
+
+    window.dataLayer.push({
+      event: 'pricing_page_viewed',
+      payment_mode: PAYMENT_MODE
+    });
+
+    if (window.LP_track) {
+      window.LP_track('pricing_view', {
+        page: 'pricing',
+        payment_mode: PAYMENT_MODE,
+        referrer_source: document.referrer || 'direct',
+        source_param: new URLSearchParams(window.location.search).get('source') || 'direct',
+        funnel_step: 'pricing_viewed'
+      });
+    }
+
+    if (typeof fbq === 'function') {
+      fbq('track', 'ViewContent', {
+        content_name: 'Pricing Page V2',
+        currency: 'BDT',
+        value: 0
+      }, { eventID: eid });
+    } else if (window.lpTrack) {
+      window.lpTrack('ViewContent', {
+        content_name: 'Pricing Page V2',
+        currency: 'BDT',
+        value: 0
+      });
+    }
+
+    serverEvent({
+      event_name: 'ViewContent',
+      event_id: eid,
+      custom_data: {
+        content_name: 'Pricing Page V2',
+        currency: 'BDT',
+        value: 0,
+        payment_mode: PAYMENT_MODE
       }
     });
   }
-</script>
 
- 
-    window.dataLayer = window.dataLayer || [];
+  function trackPlan(key, price, label) {
+    sel = { key, price: Number(price), label: label || key };
+    const eid = makeId('planselect');
 
-    function makeId(p) { return `${p}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`; }
+    window.dataLayer.push({
+      event: 'plan_selected',
+      tier: key,
+      price_bdt: Number(price),
+      payment_mode: PAYMENT_MODE
+    });
 
-    async function serverEvent({ event_name, event_id, custom_data = {} }) {
-      try {
-        const tc = sessionStorage.getItem('lp_meta_test_code') || '';
-        await fetch('/api/ab/admin-bundle.js', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
-          body: JSON.stringify({ op: 'meta_track', event_name, event_id, custom_data, event_source_url: window.location.href, ...(tc ? { test_event_code: tc } : {}) })
-        });
-      } catch(_) {}
+    if (window.LP_track) {
+      window.LP_track('subscription_clicked', {
+        page: 'pricing',
+        plan: key,
+        plan_label: label || key,
+        value: Number(price),
+        currency: 'BDT',
+        payment_mode: PAYMENT_MODE,
+        funnel_step: 'plan_selected'
+      });
     }
 
-    const PAYMENT_MODE = 'manual_whatsapp';
-    let sel = { key: 'scholar_monthly', label: 'Scholar Monthly', price: 999 };
+    if (typeof fbq === 'function') {
+      fbq('track', 'ViewContent', {
+        content_name: 'Plan Selected',
+        plan: key,
+        currency: 'BDT',
+        value: Number(price)
+      }, { eventID: eid });
+    } else if (window.lpTrack) {
+      window.lpTrack('ViewContent', {
+        content_name: 'Plan Selected',
+        plan: key,
+        currency: 'BDT',
+        value: Number(price)
+      });
+    }
 
-    function trackView(){
-  const eid = makeId('pricing_view');
+    serverEvent({
+      event_name: 'ViewContent',
+      event_id: eid,
+      custom_data: {
+        content_name: 'Plan Selected',
+        plan: key,
+        currency: 'BDT',
+        value: Number(price),
+        payment_mode: PAYMENT_MODE
+      }
+    });
+  }
 
-  window.dataLayer.push({
-    event: 'pricing_page_viewed',
-    payment_mode: PAYMENT_MODE
+  function trackCheckout(source) {
+    const ceid = makeId('checkout');
+    const peid = makeId('paymentinfo');
+    const sp = new URLSearchParams(window.location.search).get('source') || 'direct';
+
+    window.dataLayer.push({
+      event: 'plan_checkout_intent',
+      tier: sel.key,
+      price_bdt: sel.price,
+      source,
+      payment_mode: PAYMENT_MODE
+    });
+
+    if (window.LP_track) {
+      window.LP_track('checkout_intent', {
+        page: 'pricing',
+        plan: sel.key,
+        plan_label: sel.label,
+        value: Number(sel.price),
+        currency: 'BDT',
+        payment_mode: PAYMENT_MODE,
+        channel: source || 'manual',
+        funnel_step: 'manual_payment_whatsapp'
+      });
+    }
+
+    if (typeof fbq === 'function') {
+      fbq('track', 'InitiateCheckout', {
+        plan: sel.key,
+        currency: 'BDT',
+        value: sel.price,
+        channel: source
+      }, { eventID: ceid });
+
+      fbq('track', 'AddPaymentInfo', {
+        plan: sel.key,
+        currency: 'BDT',
+        value: sel.price,
+        payment_method: 'bkash_nagad_manual'
+      }, { eventID: peid });
+    } else if (window.lpTrack) {
+      window.lpTrack('InitiateCheckout', {
+        plan: sel.key,
+        currency: 'BDT',
+        value: sel.price
+      });
+
+      window.lpTrack('AddPaymentInfo', {
+        plan: sel.key,
+        currency: 'BDT',
+        value: sel.price
+      });
+    }
+
+    serverEvent({
+      event_name: 'InitiateCheckout',
+      event_id: ceid,
+      custom_data: {
+        plan: sel.key,
+        currency: 'BDT',
+        value: sel.price,
+        channel: source,
+        payment_mode: PAYMENT_MODE,
+        source_param: sp
+      }
+    });
+
+    serverEvent({
+      event_name: 'AddPaymentInfo',
+      event_id: peid,
+      custom_data: {
+        plan: sel.key,
+        currency: 'BDT',
+        value: sel.price,
+        payment_method: 'bkash_nagad_manual',
+        payment_mode: PAYMENT_MODE
+      }
+    });
+  }
+
+  function updateWA() {
+    const base = '8801617000378';
+
+    const cm = encodeURIComponent(
+      `*PAYMENT CONFIRMATION*\nHi LogicPals,\nSelected Plan: ${sel.label}\nPrice: ৳${sel.price}\nI have sent payment. Please guide me for activation.`
+    );
+
+    const hm = encodeURIComponent(
+      `*PLAN HELP REQUEST*\nHi LogicPals,\nI need help choosing the right plan.\nCurrent interest: ${sel.label}\nPlease recommend the best option for my child.`
+    );
+
+    const c = document.getElementById('confirmPaymentBtn');
+    const h = document.getElementById('helpChoosePlanBtn');
+
+    if (c) c.href = `https://wa.me/${base}?text=${cm}`;
+    if (h) h.href = `https://wa.me/${base}?text=${hm}`;
+  }
+
+  function updateIndicator() {
+    const ind = document.getElementById('selIndicator');
+    const nm = document.getElementById('selPlanName');
+    const pr = document.getElementById('selPlanPrice');
+
+    if (ind && nm && pr) {
+      nm.textContent = sel.label;
+      pr.textContent = sel.price;
+      ind.classList.add('visible');
+    }
+  }
+
+  document.querySelectorAll('.plan-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      trackPlan(this.dataset.plan, this.dataset.price, this.dataset.label);
+      updateWA();
+      updateIndicator();
+
+      document.querySelectorAll('.plan').forEach(p => p.style.outline = 'none');
+
+      const planCard = this.closest('.plan');
+      if (planCard) planCard.style.outline = '2px solid rgba(59,130,246,.5)';
+
+      const mb = document.querySelector('.manual-box');
+      if (mb) {
+        window.scrollTo({
+          top: mb.getBoundingClientRect().top + window.pageYOffset - 90,
+          behavior: 'smooth'
+        });
+      }
+    });
   });
+
+  document.getElementById('confirmPaymentBtn')?.addEventListener('click', function () {
+    trackCheckout('whatsapp_confirm_payment');
+
+    if (window.LP_track) {
+      window.LP_track('whatsapp_payment_clicked', {
+        page: 'pricing',
+        plan: sel.key,
+        plan_label: sel.label,
+        value: Number(sel.price),
+        currency: 'BDT',
+        payment_mode: PAYMENT_MODE,
+        payment_method: 'whatsapp_manual_confirmation',
+        funnel_step: 'payment_confirmation_started'
+      });
+    }
+  });
+
+  document.getElementById('helpChoosePlanBtn')?.addEventListener('click', function () {
+    const heid = makeId('help_click');
+    const sp = new URLSearchParams(window.location.search).get('source') || 'direct';
+
+    window.dataLayer.push({
+      event: 'pricing_help_clicked',
+      tier: sel.key,
+      payment_mode: PAYMENT_MODE
+    });
+
+    if (typeof fbq === 'function') {
+      fbq('track', 'Contact', {
+        plan: sel.key,
+        contact_channel: 'whatsapp',
+        intent: 'plan_help',
+        currency: 'BDT',
+        value: sel.price
+      }, { eventID: heid });
+    } else if (window.lpTrack) {
+      window.lpTrack('Contact', {
+        plan: sel.key,
+        contact_channel: 'whatsapp',
+        intent: 'plan_help'
+      });
+    }
+
+    serverEvent({
+      event_name: 'Contact',
+      event_id: heid,
+      custom_data: {
+        plan: sel.key,
+        content_name: sel.label,
+        contact_channel: 'whatsapp',
+        intent: 'plan_help',
+        currency: 'BDT',
+        value: sel.price,
+        payment_mode: PAYMENT_MODE,
+        source_param: sp
+      }
+    });
+  });
+
+  trackView();
 
   if (window.LP_track) {
-    window.LP_track('pricing_view', {
+    window.LP_track('payment_instruction_viewed', {
       page: 'pricing',
       payment_mode: PAYMENT_MODE,
-      referrer_source: document.referrer || 'direct',
-      source_param: new URLSearchParams(window.location.search).get('source') || 'direct',
-      funnel_step: 'pricing_viewed'
+      payment_method: 'bkash_nagad_manual',
+      currency: 'BDT',
+      funnel_step: 'payment_instruction_viewed'
     });
   }
 
-  if (typeof fbq === 'function') {
-    fbq('track', 'ViewContent', {
-      content_name: 'Pricing Page V2',
-      currency: 'BDT',
-      value: 0
-    }, { eventID: eid });
-  } else if (window.lpTrack) {
-    window.lpTrack('ViewContent', {
-      content_name: 'Pricing Page V2',
-      currency: 'BDT',
-      value: 0
-    });
-  }
-
-  serverEvent({
-    event_name: 'ViewContent',
-    event_id: eid,
-    custom_data: {
-      content_name: 'Pricing Page V2',
-      currency: 'BDT',
-      value: 0,
-      payment_mode: PAYMENT_MODE
-    }
-  });
-}
-      if (typeof fbq === 'function') fbq('track', 'ViewContent', { content_name: 'Pricing Page V2', currency: 'BDT', value: sel.price }, { eventID: eid });
-      else if (window.lpTrack) window.lpTrack('ViewContent', { content_name: 'Pricing Page V2', currency: 'BDT', value: sel.price });
-      serverEvent({ event_name: 'ViewContent', event_id: eid, custom_data: { content_name: 'Pricing Page V2', currency: 'BDT', value: sel.price, payment_mode: PAYMENT_MODE } });
-    }
-
-    function trackPlan(key, price, label) {
-      sel = { key, price: Number(price), label: label || key };
-      const eid = makeId('planselect');
-      window.dataLayer.push({ event: 'plan_selected', tier: key, price_bdt: Number(price), payment_mode: PAYMENT_MODE });
-      if (window.LP_track) {
-  window.LP_track('subscription_clicked', {
-    page: 'pricing',
-    plan: key,
-    plan_label: label || key,
-    value: Number(price),
-    currency: 'BDT',
-    payment_mode: PAYMENT_MODE,
-    funnel_step: 'plan_selected'
-  });
-}
-      if (typeof fbq === 'function') fbq('track', 'ViewContent', { content_name: 'Plan Selected', plan: key, currency: 'BDT', value: Number(price) }, { eventID: eid });
-      else if (window.lpTrack) window.lpTrack('ViewContent', { content_name: 'Plan Selected', plan: key, currency: 'BDT', value: Number(price) });
-      serverEvent({ event_name: 'ViewContent', event_id: eid, custom_data: { content_name: 'Plan Selected', plan: key, currency: 'BDT', value: Number(price), payment_mode: PAYMENT_MODE } });
-    }
-
-    function trackCheckout(source) {
-      const ceid = makeId('checkout'), peid = makeId('paymentinfo');
-      const sp = new URLSearchParams(window.location.search).get('source') || 'direct';
-      window.dataLayer.push({ event: 'plan_checkout_intent', tier: sel.key, price_bdt: sel.price, source, payment_mode: PAYMENT_MODE });
-      if (window.LP_track) {
-  window.LP_track('checkout_intent', {
-    page: 'pricing',
-    plan: sel.key,
-    plan_label: sel.label,
-    value: Number(sel.price),
-    currency: 'BDT',
-    payment_mode: PAYMENT_MODE,
-    channel: source || 'manual',
-    funnel_step: 'manual_payment_whatsapp'
-  });
-}
-      if (typeof fbq === 'function') {
-        fbq('track', 'InitiateCheckout', { plan: sel.key, currency: 'BDT', value: sel.price, channel: source }, { eventID: ceid });
-        fbq('track', 'AddPaymentInfo', { plan: sel.key, currency: 'BDT', value: sel.price, payment_method: 'bkash_nagad_manual' }, { eventID: peid });
-      } else if (window.lpTrack) {
-        window.lpTrack('InitiateCheckout', { plan: sel.key, currency: 'BDT', value: sel.price });
-        window.lpTrack('AddPaymentInfo', { plan: sel.key, currency: 'BDT', value: sel.price });
-      }
-      serverEvent({ event_name: 'InitiateCheckout', event_id: ceid, custom_data: { plan: sel.key, currency: 'BDT', value: sel.price, channel: source, payment_mode: PAYMENT_MODE, source_param: sp } });
-      serverEvent({ event_name: 'AddPaymentInfo', event_id: peid, custom_data: { plan: sel.key, currency: 'BDT', value: sel.price, payment_method: 'bkash_nagad_manual', payment_mode: PAYMENT_MODE } });
-    }
-
-    function updateWA() {
-      const base = '8801617000378';
-      const cm = encodeURIComponent(
-        `*PAYMENT CONFIRMATION*\nHi LogicPals,\nSelected Plan: ${sel.label}\nPrice: ৳${sel.price}\nI have sent payment. Please guide me for activation.`
-      );
-      const hm = encodeURIComponent(
-        `*PLAN HELP REQUEST*\nHi LogicPals,\nI need help choosing the right plan.\nCurrent interest: ${sel.label}\nPlease recommend the best option for my child.`
-      );
-      const c = document.getElementById('confirmPaymentBtn');
-      const h = document.getElementById('helpChoosePlanBtn');
-      if (c) c.href = `https://wa.me/${base}?text=${cm}`;
-      if (h) h.href = `https://wa.me/${base}?text=${hm}`;
-    }
-
-    function updateIndicator() {
-      const ind = document.getElementById('selIndicator');
-      const nm = document.getElementById('selPlanName');
-      const pr = document.getElementById('selPlanPrice');
-      if (ind && nm && pr) { nm.textContent = sel.label; pr.textContent = sel.price; ind.classList.add('visible'); }
-    }
-
-    document.querySelectorAll('.plan-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        trackPlan(this.dataset.plan, this.dataset.price, this.dataset.label);
-        updateWA();
-        updateIndicator();
-        // Visual feedback
-        document.querySelectorAll('.plan').forEach(p => p.style.outline = 'none');
-        this.closest('.plan').style.outline = '2px solid rgba(59,130,246,.5)';
-        // Scroll to payment
-        const mb = document.querySelector('.manual-box');
-        if (mb) window.scrollTo({ top: mb.getBoundingClientRect().top + window.pageYOffset - 90, behavior: 'smooth' });
-      });
-    });
-
-    document.getElementById('confirmPaymentBtn')?.addEventListener('click', () => trackCheckout('whatsapp_confirm_payment'));
-
-    document.getElementById('helpChoosePlanBtn')?.addEventListener('click', () => {
-      const heid = makeId('help_click');
-      const sp = new URLSearchParams(window.location.search).get('source') || 'direct';
-      window.dataLayer.push({ event: 'pricing_help_clicked', tier: sel.key, payment_mode: PAYMENT_MODE });
-      if (typeof fbq === 'function') fbq('track', 'Contact', { plan: sel.key, contact_channel: 'whatsapp', intent: 'plan_help', currency: 'BDT', value: sel.price }, { eventID: heid });
-      else if (window.lpTrack) window.lpTrack('Contact', { plan: sel.key, contact_channel: 'whatsapp', intent: 'plan_help' });
-      serverEvent({ event_name: 'Contact', event_id: heid, custom_data: { plan: sel.key, content_name: sel.label, contact_channel: 'whatsapp', intent: 'plan_help', currency: 'BDT', value: sel.price, payment_mode: PAYMENT_MODE, source_param: sp } });
-    });
-
-    trackView();
-    if (window.LP_track) {
-  window.LP_track('payment_instruction_viewed', {
-    page: 'pricing',
-    payment_mode: PAYMENT_MODE,
-    payment_method: 'bkash_nagad_manual',
-    currency: 'BDT',
-    funnel_step: 'payment_instruction_viewed'
-  });
-}
-    updateWA();
-  </script>
+  updateWA();
+</script>
 </body>
 </html>
+
