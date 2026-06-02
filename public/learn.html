@@ -1176,22 +1176,22 @@
           // Try 3 progressively broader queries so we always find something if it exists
           // Query 1: exact level + skill
           if(qLevel && qSkill){
-            const r = await sb.from('problems').select('*').eq('is_active',true).eq('olympiad_level',qLevel).eq('skill_track',qSkill);
+            const r = await sb.from('problems').select('*').eq('is_active',true).eq('publish_state','published').eq('olympiad_level',qLevel).eq('skill_track',qSkill);
             if(!r.error && r.data?.length > 0){ puzzle = r.data[Math.floor(Math.random()*r.data.length)]; }
           }
           // Query 2: level only (any skill)
           if(!puzzle && qLevel){
-            const r = await sb.from('problems').select('*').eq('is_active',true).eq('olympiad_level',qLevel);
+            const r = await sb.from('problems').select('*').eq('is_active',true).eq('publish_state','published').eq('olympiad_level',qLevel);
             if(!r.error && r.data?.length > 0){ puzzle = r.data[Math.floor(Math.random()*r.data.length)]; }
           }
           // Query 3: any olympiad problem (skill_track IS NOT NULL)
           if(!puzzle){
-            const r = await sb.from('problems').select('*').eq('is_active',true).not('skill_track','is',null);
+            const r = await sb.from('problems').select('*').eq('is_active',true).eq('publish_state','published').not('skill_track','is',null);
             if(!r.error && r.data?.length > 0){ puzzle = r.data[Math.floor(Math.random()*r.data.length)]; }
           }
           // Query 4: track column = 'olympiad' (alternative schema)
           if(!puzzle){
-            const r = await sb.from('problems').select('*').eq('is_active',true).eq('track','olympiad');
+            const r = await sb.from('problems').select('*').eq('is_active',true).eq('publish_state','published').eq('track','olympiad');
             if(!r.error && r.data?.length > 0){ puzzle = r.data[Math.floor(Math.random()*r.data.length)]; }
           }
           if(!puzzle){
