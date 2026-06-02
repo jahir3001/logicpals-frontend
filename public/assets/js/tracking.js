@@ -4,20 +4,23 @@
 (function () {
   'use strict';
 
-  window.LP_track = function (eventName, params) {
+ window.dataLayer = window.dataLayer || [];
+
+window.gtag = window.gtag || function () {
+  window.dataLayer.push(arguments);
+};
+
+window.LP_track = function (eventName, params) {
   try {
-    const payload = Object.assign({ event: eventName }, params || {});
+    const cleanParams = params || {};
 
-    // 1) GTM dataLayer event
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push(payload);
+    // GTM custom event
+    window.dataLayer.push(Object.assign({ event: eventName }, cleanParams));
 
-    // 2) Direct GA4 event fallback
-    if (typeof window.gtag === 'function') {
-      window.gtag('event', eventName, params || {});
-    }
+    // GA4 direct event through gtag-compatible dataLayer command
+    window.gtag('event', eventName, cleanParams);
 
-    console.log('[LP Track]', eventName, params || {});
+    console.log('[LP Track]', eventName, cleanParams);
   } catch (e) {
     console.warn('[LP_track] failed:', eventName, e);
   }
