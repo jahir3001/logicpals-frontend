@@ -859,6 +859,129 @@
       font-size: 11px; font-weight: 700;
       animation: pulse-red 1.5s infinite;
     }
+
+    /* ── WELCOME / STATUS HEADER ──────────────────────────── */
+    .welcome-header {
+      background: linear-gradient(135deg, #fffbeb 0%, #fef9c3 100%);
+      border: 1.5px solid var(--gold-200);
+      border-radius: 16px;
+      padding: 18px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .welcome-left { display: flex; flex-direction: column; gap: 4px; }
+    .welcome-greeting { font-family: var(--font-display); font-size: 22px; font-weight: 800; color: var(--gray-900); line-height: 1.2; }
+    .welcome-sub { font-size: 13px; color: var(--gray-700); }
+    .welcome-stats { display: flex; gap: 20px; flex-wrap: wrap; }
+    .welcome-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 64px; }
+    .welcome-stat-val { font-family: var(--font-display); font-size: 20px; font-weight: 900; color: var(--gray-900); line-height: 1; }
+    .welcome-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--gray-700); }
+    .readiness-bar { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+    .readiness-track { height: 7px; flex: 1; min-width: 140px; background: var(--gold-100); border-radius: 999px; overflow: hidden; }
+    .readiness-fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #059669); border-radius: 999px; transition: width .6s ease; }
+    .readiness-pct { font-size: 12px; font-weight: 800; color: var(--gold-700); min-width: 36px; text-align: right; }
+
+    /* ── SKILL TRACK CARDS ────────────────────────────────── */
+    .skill-tracks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      max-width: 1100px;
+      margin: 0 auto 32px;
+    }
+    .skill-track-card {
+      background: white;
+      border: 2px solid var(--gold-200);
+      border-radius: 16px;
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .skill-track-card:hover { border-color: var(--gold-400); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,158,11,.14); }
+    .skill-track-card.selected { border-color: var(--gold-500); background: var(--gold-50); box-shadow: 0 8px 24px rgba(245,158,11,.2); }
+    .stc-header { display: flex; align-items: center; gap: 10px; }
+    .stc-icon { font-size: 26px; line-height: 1; }
+    .stc-name { font-family: var(--font-display); font-size: 15px; font-weight: 800; color: var(--gray-900); line-height: 1.25; }
+    .stc-mastery-row { display: flex; align-items: center; gap: 8px; }
+    .stc-mastery-bar { flex: 1; height: 6px; background: var(--gold-100); border-radius: 999px; overflow: hidden; }
+    .stc-mastery-fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #059669); border-radius: 999px; transition: width .5s ease; }
+    .stc-mastery-pct { font-size: 12px; font-weight: 800; color: var(--gold-700); min-width: 32px; text-align: right; }
+    .stc-meta { display: flex; gap: 12px; font-size: 12px; color: var(--gray-700); flex-wrap: wrap; }
+    .stc-meta span { display: flex; align-items: center; gap: 4px; }
+    .stc-next-tier { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: rgba(245,158,11,.1); color: var(--gold-800); border: 1px solid rgba(245,158,11,.2); }
+    .stc-start-btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 0; border-radius: 10px; background: var(--gold-500); color: white; font-size: 13px; font-weight: 800; letter-spacing: .02em; transition: background .2s; width: 100%; border: none; cursor: pointer; }
+    .stc-start-btn:hover { background: var(--gold-600); }
+
+    /* ── 3-MODE CARDS ─────────────────────────────────────── */
+    .mode-cards-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin: 24px 0 0;
+    }
+    @media (max-width: 720px) { .mode-cards-row { grid-template-columns: 1fr; } }
+    .mode-card {
+      border: 2px solid var(--gold-200);
+      border-radius: 14px;
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: all .2s;
+      background: white;
+      position: relative;
+    }
+    .mode-card:hover { border-color: var(--gold-400); background: var(--gold-50); }
+    .mode-card.active { border-color: var(--gold-500); background: var(--gold-50); box-shadow: 0 4px 16px rgba(245,158,11,.16); }
+    .mode-card.active::after { content: '✓'; position: absolute; top: 10px; right: 12px; font-size: 14px; font-weight: 900; color: var(--gold-600); }
+    .mc-icon { font-size: 28px; margin-bottom: 6px; }
+    .mc-name { font-family: var(--font-display); font-size: 15px; font-weight: 800; color: var(--gray-900); margin-bottom: 4px; }
+    .mc-desc { font-size: 12.5px; color: var(--gray-700); line-height: 1.5; }
+
+    /* ── TIER PROGRESSION LADDER ──────────────────────────── */
+    .tier-ladder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding: 6px 0 10px;
+    }
+    .tier-rung {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .tier-rung-circle {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      border: 2px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all .2s;
+      position: relative;
+    }
+    .tier-rung.unlocked .tier-rung-circle { border-color: var(--gold-400); background: var(--gold-50); cursor: pointer; }
+    .tier-rung.unlocked .tier-rung-circle:hover { border-color: var(--gold-600); background: var(--gold-100); }
+    .tier-rung.mastered .tier-rung-circle { border-color: #059669; background: #d1fae5; }
+    .tier-rung.locked .tier-rung-circle { border-color: var(--gray-300); background: var(--gray-100); opacity: .55; }
+    .tier-rung-label { font-size: 10px; font-weight: 700; color: var(--gray-700); text-transform: uppercase; letter-spacing: .03em; text-align: center; }
+    .tier-connector { width: 24px; height: 2px; background: var(--gold-200); flex-shrink: 0; margin: 0 -2px; position: relative; top: -14px; }
+    .tier-connector.done { background: #059669; }
+    </style>
+    }
     @keyframes pulse-red {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.6; }
@@ -927,6 +1050,33 @@
     <div class="banner banner-danger" id="errorBanner">
       <div class="banner-title" id="errorBannerTitle">Action required</div>
       <div class="banner-text" id="errorBannerText"></div>
+    </div>
+
+    <!-- Section A: Welcome / Status Header (always visible) -->
+    <div class="welcome-header" id="welcomeHeader" style="display:none">
+      <div class="welcome-left">
+        <div class="welcome-greeting" id="welcomeGreeting">Welcome back! 👋</div>
+        <div class="welcome-sub" id="welcomeSub">Your BdMO journey continues today</div>
+        <div class="readiness-bar">
+          <span style="font-size:11px;font-weight:700;color:var(--gray-700);white-space:nowrap">BdMO Readiness</span>
+          <div class="readiness-track"><div class="readiness-fill" id="readinessFill" style="width:0%"></div></div>
+          <div class="readiness-pct" id="readinessPct">—</div>
+        </div>
+      </div>
+      <div class="welcome-stats">
+        <div class="welcome-stat">
+          <div class="welcome-stat-val" id="wStatSolved">—</div>
+          <div class="welcome-stat-label">This Week</div>
+        </div>
+        <div class="welcome-stat">
+          <div class="welcome-stat-val" id="wStatStreak">—</div>
+          <div class="welcome-stat-label">Day Streak</div>
+        </div>
+        <div class="welcome-stat">
+          <div class="welcome-stat-val" id="wStatMastered">—</div>
+          <div class="welcome-stat-label">Tracks Mastered</div>
+        </div>
+      </div>
     </div>
 
     <!-- Start Training -->
@@ -1014,10 +1164,34 @@
             Starting...
           </div>
 
+          <!-- Section C: 3 mode cards -->
           <div class="plan-customize">
-            Or customize:
-            <button onclick="switchMode('bootcamp')">Bootcamp</button>
-            <button onclick="switchMode('mock')">Mock Exam</button>
+            Or choose a mode:
+            <div class="mode-cards-row" id="modeCardsRow">
+              <div class="mode-card active" id="modeCard-mixed" onclick="switchModeCard('mixed')">
+                <div class="mc-icon">🎲</div>
+                <div class="mc-name">Mixed Practice</div>
+                <div class="mc-desc">Balanced session across all skills. Best for steady progress.</div>
+              </div>
+              <div class="mode-card" id="modeCard-bootcamp" onclick="switchModeCard('bootcamp')">
+                <div class="mc-icon">🏋️</div>
+                <div class="mc-name">Bootcamp</div>
+                <div class="mc-desc">Guided foundations with full hints. Builds skills from your current tier up.</div>
+              </div>
+              <div class="mode-card" id="modeCard-challenge" onclick="switchModeCard('challenge')">
+                <div class="mc-icon">⚡</div>
+                <div class="mc-name">Challenge</div>
+                <div class="mc-desc">One tier harder, countdown timer, fewer hints. For when you're ready to push.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section D: Tier progression for selected track -->
+          <div id="tierLadderContainer" style="margin-top:20px;display:none">
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--gray-700);margin-bottom:10px;text-align:center">
+              Your Tier Progress — <span id="tierLadderTrackName">All Tracks</span>
+            </div>
+            <div class="tier-ladder" id="tierLadder"></div>
           </div>
         </div>
       </div>
@@ -1093,24 +1267,30 @@
 
     <!-- Skills -->
     <div class="section" id="section-skills">
-      <h2 style="font-family: var(--font-display); font-size: 36px; margin-bottom: 16px; text-align: center;">
-        7 Core Thinking Skills
+      <h2 style="font-family: var(--font-display); font-size: 36px; margin-bottom: 8px; text-align: center;">
+        Skill Tracks
       </h2>
-      <p style="text-align: center; font-size: 18px; color: var(--gray-700); max-width: 700px; margin: 0 auto 32px;">
-        Master these skills to excel in BdMO, Selection Rounds, and IMO competitions.
+      <p style="text-align: center; font-size: 16px; color: var(--gray-700); max-width: 680px; margin: 0 auto 32px; line-height: 1.6;">
+        Choose a track to drill. Each card shows your mastery level and the next recommended tier.
+        Click any card to start a focused session on that skill.
       </p>
 
-      <div style="background: white; border-radius: 16px; padding: 32px; max-width: 900px; margin: 0 auto 40px; border: 2px solid var(--gold-200);">
-        <h3 style="font-family: var(--font-display); font-size: 22px; margin-bottom: 16px; text-align: center;">
-          Understanding Problem Difficulty
-        </h3>
-        <p style="text-align: center; font-size: 14px; color: var(--gray-700); margin-bottom: 24px;">
-          Problems are rated by thinking depth, not number size. Hover over each tier to see examples for your level.
-        </p>
-        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;" id="difficultyBadges"></div>
-        <p style="text-align: center; font-size: 12px; color: var(--gray-700); margin-top: 20px; font-style: italic;">
-          💡 "Difficulty = depth of thinking, not size of numbers"
-        </p>
+      <!-- Skill Track Cards (Section B) -->
+      <div class="skill-tracks-grid" id="skillTracksGrid">
+        <div style="grid-column:1/-1;text-align:center;color:var(--gray-700);padding:40px 0;font-style:italic">Loading skill tracks…</div>
+      </div>
+
+      <!-- Tier ladder for selected track -->
+      <div id="skillSectionTierContainer" style="max-width:700px;margin:0 auto 32px;display:none;background:white;border:1.5px solid var(--gold-200);border-radius:16px;padding:20px 24px">
+        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--gray-700);margin-bottom:12px;text-align:center">
+          Tier Progression — <span id="skillSectionTrackName"></span>
+        </div>
+        <div class="tier-ladder" id="skillSectionTierLadder"></div>
+        <div style="margin-top:16px;text-align:center">
+          <button class="start-training-btn" style="font-size:14px;padding:12px 32px;" id="skillSectionStartBtn" onclick="startTrainingForSelectedSkill()">
+            START THIS TRACK
+          </button>
+        </div>
       </div>
     </div>
 
@@ -1402,7 +1582,8 @@
     let selectedChildName = null;
 
     let currentLevel = null;
-    let currentMode = "mixed"; // mixed | bootcamp | mock
+    let currentMode = "mixed"; // mixed | bootcamp | challenge | mock
+    let selectedSkill  = null; // set when user clicks a skill track card
 
     // Countdown state (old UX)
     let countdownInterval = null;
@@ -1911,18 +2092,284 @@
       armAutoStartCountdown();
     }
 
-    function switchSection(sectionName, onShowCallback) {
-      document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
-      document.querySelectorAll(".nav-tabs .nav-tab").forEach(t => t.classList.remove("active"));
-
-      const sec = document.getElementById(`section-${sectionName}`);
-      if (sec) sec.classList.add("active");
-
-      const btn = document.querySelector(`.nav-tabs .nav-tab[data-tab="${sectionName}"]`);
-      if (btn) btn.classList.add("active");
-
-      if (typeof onShowCallback === 'function') onShowCallback();
+    function switchMode(mode) {
+      currentMode = mode;
+      if (currentLevel) generateTodaysPlan(currentLevel);
     }
+
+    function switchModeCard(mode) {
+      currentMode = mode;
+      document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+      const card = document.getElementById(`modeCard-${mode}`);
+      if (card) card.classList.add('active');
+      if (currentLevel) generateTodaysPlan(currentLevel);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       STAGE 1: WELCOME HEADER — Section A
+       Loads from v_current_mastery + mastery_history
+       ═══════════════════════════════════════════════════════ */
+
+    const SKILL_META = {
+      constraints:          { icon: '🔒', label: 'Logic & Constraints' },
+      counting:             { icon: '🔢', label: 'Counting & Combinatorics' },
+      divisibility:         { icon: '➗', label: 'Divisibility & Number Theory' },
+      geometry_no_formulas: { icon: '📐', label: 'Geometry (No Formulas)' },
+      invariants:           { icon: '♻️', label: 'Invariants & Parity' },
+      mixed:                { icon: '🎯', label: 'Mixed Challenges' },
+      worst_case:           { icon: '🐢', label: 'Worst-Case & Pigeonhole' },
+    };
+
+    const TIER_ORDER = ['warmup','standard','challenge','contest','elite'];
+    const TIER_ICONS = { warmup:'🌱', standard:'📗', challenge:'🔥', contest:'🏆', elite:'⭐' };
+
+    async function loadWelcomeHeader(uid) {
+      if (!sb || !uid) return;
+      try {
+        // Mastery data for BdMO readiness
+        const { data: mastery } = await sb
+          .from('v_current_mastery')
+          .select('skill_track, mastery_probability')
+          .eq('user_id', uid);
+
+        const masteryMap = {};
+        (mastery || []).forEach(m => { masteryMap[m.skill_track] = m.mastery_probability; });
+        const avgMastery = mastery?.length
+          ? mastery.reduce((s, m) => s + (m.mastery_probability || 0), 0) / mastery.length
+          : 0;
+        const readinessPct = Math.round(avgMastery * 100);
+        const mastered = (mastery || []).filter(m => m.mastery_probability >= 0.8).length;
+
+        // Weekly problems solved
+        const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+        const { count: weekCount } = await sb
+          .from('mastery_history')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', uid)
+          .gte('created_at', weekAgo);
+
+        // Streak from mastery_history dates (simplified: count distinct days with activity)
+        const { data: recentDays } = await sb
+          .from('mastery_history')
+          .select('created_at')
+          .eq('user_id', uid)
+          .order('created_at', { ascending: false })
+          .limit(60);
+
+        let streak = 0;
+        if (recentDays?.length) {
+          const days = [...new Set(recentDays.map(r => r.created_at.slice(0,10)))].sort().reverse();
+          const today = new Date().toISOString().slice(0,10);
+          let expected = today;
+          for (const d of days) {
+            if (d === expected) { streak++; const dt = new Date(expected); dt.setDate(dt.getDate()-1); expected = dt.toISOString().slice(0,10); }
+            else if (d < expected) break;
+          }
+        }
+
+        // Render
+        const greeting = selectedChildName ? `Hi, ${selectedChildName}! 👋` : 'Welcome back! 👋';
+        const subtext = readinessPct >= 70 ? '🎉 Strong readiness — keep pushing!'
+                      : readinessPct >= 40 ? '📈 Good progress — consistency is key'
+                      : '🌱 Building your BdMO foundation';
+
+        document.getElementById('welcomeGreeting').textContent = greeting;
+        document.getElementById('welcomeSub').textContent = subtext;
+        document.getElementById('readinessFill').style.width = readinessPct + '%';
+        document.getElementById('readinessPct').textContent = readinessPct + '%';
+        document.getElementById('wStatSolved').textContent = weekCount ?? '0';
+        document.getElementById('wStatStreak').textContent = streak + (streak === 1 ? ' day' : ' days');
+        document.getElementById('wStatMastered').textContent = mastered + '/7';
+        document.getElementById('welcomeHeader').style.display = '';
+
+        return masteryMap;
+      } catch (e) {
+        console.warn('[Olympiad] Welcome header load error:', e);
+        return {};
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       STAGE 1: SKILL TRACK CARDS — Section B
+       ═══════════════════════════════════════════════════════ */
+
+    async function loadSkillTracksSection() {
+      const grid = document.getElementById('skillTracksGrid');
+      if (!grid || !sb) return;
+
+      try {
+        const uid = selectedChildId || user?.id;
+
+        // Mastery per track
+        const { data: mastery } = uid
+          ? await sb.from('v_current_mastery').select('skill_track, mastery_probability').eq('user_id', uid)
+          : { data: [] };
+        const masteryMap = {};
+        (mastery || []).forEach(m => { masteryMap[m.skill_track] = m.mastery_probability || 0; });
+
+        // Problem counts per track (published, active, olympiad)
+        const { data: trackCounts } = await sb
+          .from('problems')
+          .select('skill_track, difficulty_tier')
+          .eq('is_active', true)
+          .eq('publish_state', 'published')
+          .not('skill_track', 'is', null);
+
+        const countMap = {};
+        const tierMap  = {};
+        (trackCounts || []).forEach(p => {
+          countMap[p.skill_track] = (countMap[p.skill_track] || 0) + 1;
+          if (!tierMap[p.skill_track]) tierMap[p.skill_track] = new Set();
+          tierMap[p.skill_track].add(p.difficulty_tier);
+        });
+
+        // Solved per track (from mastery_history)
+        const solvedMap = {};
+        if (uid) {
+          const { data: solved } = await sb
+            .from('mastery_history')
+            .select('skill_track')
+            .eq('user_id', uid);
+          (solved || []).forEach(r => { if (r.skill_track) solvedMap[r.skill_track] = (solvedMap[r.skill_track] || 0) + 1; });
+        }
+
+        const tracks = Object.keys(SKILL_META);
+        grid.innerHTML = tracks.map(track => {
+          const meta      = SKILL_META[track];
+          const mastery_p = masteryMap[track] || 0;
+          const pct       = Math.round(mastery_p * 100);
+          const available = countMap[track] || 0;
+          const solved    = solvedMap[track] || 0;
+          const tiers     = tierMap[track] || new Set();
+          // Next recommended tier = first tier with available problems the student hasn't mastered
+          const nextTier  = TIER_ORDER.find(t => tiers.has(t)) || 'warmup';
+          const masteryLabel = mastery_p >= 0.8 ? 'Mastered' : mastery_p >= 0.5 ? 'Stable' : mastery_p >= 0.2 ? 'Practicing' : 'Not started';
+
+          return `<div class="skill-track-card" id="stc-${track}" onclick="selectSkillTrack('${track}')">
+            <div class="stc-header">
+              <div class="stc-icon">${meta.icon}</div>
+              <div>
+                <div class="stc-name">${meta.label}</div>
+                <div style="font-size:11px;color:var(--gray-700);margin-top:2px">${masteryLabel} · ${available} problems</div>
+              </div>
+            </div>
+            <div class="stc-mastery-row">
+              <div class="stc-mastery-bar"><div class="stc-mastery-fill" style="width:${pct}%"></div></div>
+              <div class="stc-mastery-pct">${pct}%</div>
+            </div>
+            <div class="stc-meta">
+              <span>📖 ${solved} solved</span>
+              <span>📚 ${available} available</span>
+              <span class="stc-next-tier">Next: ${nextTier}</span>
+            </div>
+            <button class="stc-start-btn" onclick="event.stopPropagation();launchSkillTrack('${track}','${nextTier}')">
+              Start → ${meta.label.split(' ')[0]}
+            </button>
+          </div>`;
+        }).join('');
+      } catch (e) {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--gray-700);padding:40px;font-style:italic">Could not load skill tracks. Try refreshing.</div>`;
+        console.warn('[Olympiad] Skill tracks load error:', e);
+      }
+    }
+
+    let selectedSkillTrackForLadder = null;
+
+    function selectSkillTrack(track) {
+      selectedSkill = track;
+      selectedSkillTrackForLadder = track;
+      document.querySelectorAll('.skill-track-card').forEach(c => c.classList.remove('selected'));
+      const card = document.getElementById(`stc-${track}`);
+      if (card) card.classList.add('selected');
+
+      // Show tier ladder for this track
+      const meta = SKILL_META[track] || {};
+      document.getElementById('skillSectionTrackName').textContent = meta.label || track;
+      document.getElementById('skillSectionTierContainer').style.display = '';
+      renderTierLadder('skillSectionTierLadder', track);
+    }
+
+    async function renderTierLadder(containerId, track) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      // Get solved tiers for this track from mastery_history
+      let masteredTiers = new Set();
+      let unlockedTiers = new Set(['warmup']); // warmup always unlocked
+      try {
+        if (sb && (selectedChildId || user?.id)) {
+          const uid = selectedChildId || user.id;
+          const { data: history } = await sb
+            .from('mastery_history')
+            .select('difficulty_tier, mastery_probability')
+            .eq('user_id', uid)
+            .eq('skill_track', track)
+            .order('created_at', { ascending: false });
+          // Mastered = mastery_probability >= 0.8; unlock next tier when current is mastered
+          const tierMastery = {};
+          (history || []).forEach(h => {
+            if (!tierMastery[h.difficulty_tier]) tierMastery[h.difficulty_tier] = h.mastery_probability;
+          });
+          TIER_ORDER.forEach((t, i) => {
+            if ((tierMastery[t] || 0) >= 0.8) {
+              masteredTiers.add(t);
+              if (i+1 < TIER_ORDER.length) unlockedTiers.add(TIER_ORDER[i+1]);
+            }
+            if (i === 0) unlockedTiers.add(t); // warmup always unlocked
+          });
+        }
+      } catch (e) { /* silent */ }
+
+      container.innerHTML = TIER_ORDER.map((tier, i) => {
+        const isMastered = masteredTiers.has(tier);
+        const isUnlocked = unlockedTiers.has(tier);
+        const state = isMastered ? 'mastered' : isUnlocked ? 'unlocked' : 'locked';
+        const connector = i < TIER_ORDER.length - 1
+          ? `<div class="tier-connector${isMastered ? ' done' : ''}"></div>`
+          : '';
+        return `<div class="tier-rung ${state}">
+          <div class="tier-rung-circle" title="${tier}" ${isUnlocked && !isMastered ? `onclick="launchSkillTrack('${track}','${tier}')"` : ''}>
+            ${isMastered ? '✓' : TIER_ICONS[tier] || tier[0].toUpperCase()}
+          </div>
+          <div class="tier-rung-label">${tier}</div>
+        </div>${connector}`;
+      }).join('');
+    }
+
+    function launchSkillTrack(track, tier) {
+      // Navigate immediately with skill + tier pre-set, then startTraining handles level/mode
+      selectedSkill = track;
+      if (!currentLevel) { showError('Please select your level first.'); switchSection('training'); return; }
+      if (!user) return redirectToLogin();
+      if (!selectedChildId) { openChildModal(); return; }
+      const params = new URLSearchParams({
+        track: APP_TRACK,
+        level: currentLevel,
+        mode:  currentMode,
+        skill: track,
+        tier:  tier,
+        child_id: selectedChildId,
+      });
+      sessionStorage.setItem('lp_olympiad_plan', JSON.stringify({
+        version: 'olympiad_plan_v1',
+        track: APP_TRACK,
+        level: currentLevel,
+        mode: currentMode,
+        skill: track,
+        tier,
+        child_id: selectedChildId,
+        user_id: user.id,
+      }));
+      window.location.href = `/learn.html?${params.toString()}`;
+    }
+
+    function startTrainingForSelectedSkill() {
+      if (!selectedSkillTrackForLadder) return;
+      launchSkillTrack(selectedSkillTrackForLadder, 'warmup');
+    }
+
+    // Wire skills section load on tab click
+    const _origSwitchSection = typeof switchSection === 'function' ? null : null;
 
     function selectLevel(level) {
       currentLevel = level;
@@ -1930,14 +2377,13 @@
       const sel = document.querySelector(`[data-level="${level}"]`);
       if (sel) sel.classList.add("selected");
       generateTodaysPlan(level);
+      // Show tier ladder in training section for current skill if selected
+      if (selectedSkill) {
+        document.getElementById('tierLadderContainer').style.display = '';
+        document.getElementById('tierLadderTrackName').textContent = SKILL_META[selectedSkill]?.label || selectedSkill;
+        renderTierLadder('tierLadder', selectedSkill);
+      }
     }
-
-    function switchMode(mode) {
-      currentMode = mode;
-      if (currentLevel) generateTodaysPlan(currentLevel);
-    }
-
-    // startTraining(manualClick=true/false, auto=false)
     // P1.6: Creates a real DB session row before redirecting so
     // the fingerprint trigger fires and session_id is consistent
     // across all attempt rows logged in the Olympiad learn engine.
@@ -1985,7 +2431,7 @@
         sessionStorage.setItem("lp_olympiad_plan", JSON.stringify(plan));
 
         // Redirect into Olympiad learn engine
-        // Pass session_id + level + mode as URL params for the learn page to consume
+        // Pass session_id + level + mode + skill as URL params
         const params = new URLSearchParams({
           track:      APP_TRACK,
           level:      currentLevel,
@@ -1993,6 +2439,8 @@
           session_id: sessionId,
           child_id:   selectedChildId,
         });
+        // Include skill track if one was selected from the Skill Tracks section
+        if (selectedSkill) params.set('skill', selectedSkill);
         window.location.href = `/learn.html?${params.toString()}`;
       } catch (e) {
         console.error("[Olympiad] startTraining failed:", e);
@@ -2168,12 +2616,29 @@ if (!hasAccess) {
         await ensureChildSelected();
         await renderOlympiadTutorHint();
 
+        // Load welcome header and skill tracks after child is selected
+        const uid = selectedChildId || user?.id;
+        loadWelcomeHeader(uid).catch(() => {});
+
         // If there is already a saved level, do nothing; user chooses.
         resetCountdownUI();
       } catch (e) {
         console.error(e);
         showError(String(e?.message || e));
       }
+    }
+
+    // Wire Skill Tracks tab load
+    const _baseSwitch = switchSection;
+    function switchSection(sectionName, onShowCallback) {
+      document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+      document.querySelectorAll(".nav-tabs .nav-tab").forEach(t => t.classList.remove("active"));
+      const sec = document.getElementById(`section-${sectionName}`);
+      if (sec) sec.classList.add("active");
+      const btn = document.querySelector(`.nav-tabs .nav-tab[data-tab="${sectionName}"]`);
+      if (btn) btn.classList.add("active");
+      if (typeof onShowCallback === 'function') onShowCallback();
+      if (sectionName === 'skills') loadSkillTracksSection().catch(() => {});
     }
 
     window.addEventListener("DOMContentLoaded", boot);

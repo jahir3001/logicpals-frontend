@@ -98,6 +98,10 @@
     }
     .geometry-container.show{display:block;}
     .geometry-container svg{display:block;width:100%;height:auto;}
+    /* Stage 2: Override geometry-renderer.js amber background in olympiad dark theme */
+    .olympiad-track #geometryContainer svg rect:first-child[fill="#FFFBEB"],
+    .olympiad-track .geometry-container svg rect[fill="#FFFBEB"] { fill: transparent !important; }
+    .olympiad-track .geometry-container { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); }
     /* fallback image / description inside renderer */
     .geometry-container img{max-width:100%;height:auto;display:block;}
 
@@ -654,6 +658,23 @@
   const TRACK=LP_getTrack();
   const LOGIN_URL='/login.html?next='+encodeURIComponent(location.pathname+location.search);
 
+  // ── Stage 2: Read olympiad plan from sessionStorage + URL mode ──────────────
+  // olympiad.html writes this before every redirect; learn.html consumes it here.
+  const _olympiadPlan = (() => {
+    try { return JSON.parse(sessionStorage.getItem('lp_olympiad_plan') || '{}'); }
+    catch { return {}; }
+  })();
+  const _urlP0 = new URLSearchParams(location.search);
+  // qMode: bootcamp | practice | challenge | mock | mixed (default = practice)
+  const qMode = _urlP0.get('mode') || _olympiadPlan.mode || 'practice';
+  // Non-repeating: track attempted problem IDs across this browser session
+  const _attemptedIds = new Set();
+  // Tier max durations (seconds) — used for countdown in challenge/mock mode
+  const TIER_DURATIONS = { warmup: 360, standard: 600, challenge: 900, contest: 1500, elite: 2400 };
+  // Recent performance tracker for adaptive tier selection
+  const _recentResults = []; // { correct: bool, tier: string }
+  // ───────────────────────────────────────────────────────────────────────────
+
   // ── Constants that were missing (caused ReferenceError in production) ──
   const DEBUG = false;          // set true locally to enable verbose attempt logging
   const HINTS_ENABLED = true;   // global hints toggle
@@ -854,6 +875,37 @@
     const isProof = TRACK === 'olympiad' && !!currentProblem.proof_required;
     setProofMode(isProof);
 
+    // ── Stage 2: Mode behaviors ──────────────────────────────────
+    if(TRACK === 'olympiad'){
+      // Bootcamp: always open hints panel (guiding mode)
+      if(qMode === 'bootcamp'){
+        dom.hintBtn?.classList.remove('exhausted');
+        // Show a gentle hint-available indicator
+        if(dom.hintBtn) dom.hintBtn.title = '💡 Hints available — this is bootcamp mode';
+      }
+      // Challenge: show score-cap warning early (before any hints used)
+      if(qMode === 'challenge'){
+        if(dom.olyHeaderStrip?.classList.contains('show')){
+          // Add a reduced-hints badge if not already there
+          if(!document.getElementById('olyChallengeBadge')){
+            const badge = document.createElement('span');
+            badge.id = 'olyChallengeBadge';
+            badge.className = 'oly-chip';
+            badge.style.cssText = 'background:rgba(239,68,68,.12);color:#f87171;border-color:rgba(239,68,68,.25)';
+            badge.textContent = '⚡ Challenge Mode';
+            dom.olyHeaderStrip.appendChild(badge);
+          }
+        }
+      }
+      // Update countdown timer for this specific problem's tier
+      if(timerMode === 'countdown'){
+        const tier = (currentProblem.difficulty_tier || 'standard').toLowerCase();
+        countdownMax = TIER_DURATIONS[tier] || 600;
+        dom.timerBadge.classList.remove('urgent');
+      }
+    }
+    // ── end mode behaviors ───────────────────────────────────────
+
     // A4: Update placeholder hint based on answer_format
     const fmt = currentProblem.answer_format || 'word';
     const placeholders = {
@@ -909,8 +961,22 @@
     else { timerMode='count_up'; }
 
     if(TRACK === 'olympiad'){
-      // Olympiad practice always shows timer
-      if(timerMode === 'hidden') timerMode = 'count_up';
+      // Olympiad timer is mode+tier-aware
+      if(qMode === 'challenge' || qMode === 'mock'){
+        // Challenge/Mock: countdown using tier max duration
+        timerMode = 'countdown';
+        const qTier = p.get('tier') || _olympiadPlan.tier || 'standard';
+        countdownMax = TIER_DURATIONS[qTier] || 600;
+        if(countdownMax > 0 && !p.get('timer')){
+          // Only set if not manually overridden
+        }
+      } else if(qMode === 'bootcamp'){
+        // Bootcamp: count_up, informational only
+        timerMode = 'count_up';
+      } else {
+        // Practice / mixed: count_up, visible
+        if(timerMode === 'hidden') timerMode = 'count_up';
+      }
     }
 
     if(timerMode === 'hidden'){
@@ -1044,16 +1110,6 @@
     if(!hints||!Array.isArray(hints)||!hints.length) hints=['Think carefully about the wording!','Read the problem one more time.','The answer might be simpler than you think.'];
     addMessage('hint','\uD83D\uDCA1 HINT: '+hints[Math.min(hintsUsed,hints.length-1)]);
     hintsUsed++;updateStats();saveState();
-
-if (window.LP_track) {
-  window.LP_track('hint_requested', {
-    page: 'learn',
-    track: TRACK,
-    hint_number: hintsUsed,
-    skill_track: currentProblem?.skill_track || null,
-    difficulty_tier: currentProblem?.difficulty_tier || currentProblem?.difficulty || null
-  });
-}
   }
   function showSubscriptionBanner(type,days){
     if(!dom.subscriptionBanner)return;
@@ -1177,26 +1233,58 @@ if (window.LP_track) {
     try{
       if(sb){
         const urlP  = new URLSearchParams(location.search);
-        const qLevel = urlP.get('level');
-        const qSkill = urlP.get('skill');
+        const qLevel = urlP.get('level') || _olympiadPlan.level;
+        const qSkill = urlP.get('skill') || _olympiadPlan.skill;
+
+        // ── Adaptive tier selection (Practice mode) ───────────────
+        // Vary difficulty based on recent performance (~50% success target).
+        // Challenge/mock/bootcamp use explicit tier; practice adapts.
+        let qTierForced = urlP.get('tier') || _olympiadPlan.tier || null;
+        if(TRACK === 'olympiad' && qMode === 'practice' && _recentResults.length >= 2 && !qTierForced){
+          const recentSlice = _recentResults.slice(-4);
+          const correct = recentSlice.filter(r => r.correct).length;
+          const ratio = correct / recentSlice.length;
+          const currentTierIdx = ['warmup','standard','challenge','contest','elite']
+            .indexOf(recentSlice[recentSlice.length-1]?.tier || 'standard');
+          if(ratio >= 0.75 && currentTierIdx < 4) qTierForced = ['warmup','standard','challenge','contest','elite'][currentTierIdx + 1];
+          else if(ratio <= 0.25 && currentTierIdx > 0) qTierForced = ['warmup','standard','challenge','contest','elite'][currentTierIdx - 1];
+        }
 
         let query = sb.from('problems').select('*').eq('is_active', true);
 
+        // Helper: exclude already-attempted IDs from this session
+        function applyNonRepeat(q){
+          if(_attemptedIds.size > 0 && _attemptedIds.size < 50){
+            // PostgREST supports .not('id','in',`(${[...ids].join(',')})`)
+            return q.not('id','in',`(${[..._attemptedIds].join(',')})`);
+          }
+          return q;
+        }
+
         if(TRACK === 'olympiad'){
           // Try 3 progressively broader queries so we always find something if it exists
-          // Query 1: exact level + skill
+          // Query 1: exact level + skill (+ optional tier)
           if(qLevel && qSkill){
-            const r = await sb.from('problems').select('*').eq('is_active',true).eq('publish_state','published').eq('olympiad_level',qLevel).eq('skill_track',qSkill);
+            let q = sb.from('problems').select('*').eq('is_active',true).eq('publish_state','published').eq('olympiad_level',qLevel).eq('skill_track',qSkill);
+            if(qTierForced) q = q.eq('difficulty_tier', qTierForced);
+            q = applyNonRepeat(q);
+            const r = await q;
             if(!r.error && r.data?.length > 0){ puzzle = r.data[Math.floor(Math.random()*r.data.length)]; }
           }
           // Query 2: level only (any skill)
           if(!puzzle && qLevel){
-            const r = await sb.from('problems').select('*').eq('is_active',true).eq('publish_state','published').eq('olympiad_level',qLevel);
+            let q = sb.from('problems').select('*').eq('is_active',true).eq('publish_state','published').eq('olympiad_level',qLevel);
+            if(qTierForced) q = q.eq('difficulty_tier', qTierForced);
+            q = applyNonRepeat(q);
+            const r = await q;
             if(!r.error && r.data?.length > 0){ puzzle = r.data[Math.floor(Math.random()*r.data.length)]; }
           }
           // Query 3: any olympiad problem (skill_track IS NOT NULL)
           if(!puzzle){
-            const r = await sb.from('problems').select('*').eq('is_active',true).eq('publish_state','published').not('skill_track','is',null);
+            let q = sb.from('problems').select('*').eq('is_active',true).eq('publish_state','published').not('skill_track','is',null);
+            if(qSkill) q = q.eq('skill_track', qSkill);
+            q = applyNonRepeat(q);
+            const r = await q;
             if(!r.error && r.data?.length > 0){ puzzle = r.data[Math.floor(Math.random()*r.data.length)]; }
           }
           // Query 4: track column = 'olympiad' (alternative schema)
@@ -1261,27 +1349,11 @@ if (window.LP_track) {
       return; // Don't start timer, don't save state
     }
     currentProblem=puzzle;
-startTime=Date.now();
-saveState();renderProblem();startTimer();
-
-if (window.LP_track) {
-  window.LP_track('lesson_view', {
-    page: 'learn',
-    track: TRACK,
-    skill_track: currentProblem?.skill_track || null,
-    difficulty_tier: currentProblem?.difficulty_tier || currentProblem?.difficulty || null,
-    problem_id: currentProblem?.id || null
-  });
-
-  window.LP_track('lesson_started', {
-    page: 'learn',
-    track: TRACK,
-    session_id: sessionId || null,
-    problem_number: problemCount
-  });
-}
-
-dom.textInput.focus();
+    // Stage 2: Track this problem as attempted immediately (non-repeating)
+    if(puzzle?.id && TRACK === 'olympiad') _attemptedIds.add(puzzle.id);
+    startTime=Date.now();
+    saveState();renderProblem();startTimer();
+    dom.textInput.focus();
   }
 
   // ═══ CORE: Send answer ═══
@@ -1298,14 +1370,6 @@ dom.textInput.focus();
     chatLog.push({role:'user',content:text});saveState();
 
     // GA4: problem_attempted
-     if (window.LP_track) {
-  window.LP_track('problem_submitted', {
-    page: 'learn',
-    track: TRACK,
-    skill_track: currentProblem?.skill_track || null,
-    difficulty_tier: currentProblem?.difficulty_tier || currentProblem?.difficulty || null
-  });
-}
     window.LP_track('problem_attempted',{
       track:TRACK,
       skill_track:currentProblem?.skill_track||null,
@@ -1538,6 +1602,15 @@ dom.textInput.focus();
     localStorage.removeItem('lp_state');
     sessionCorrect++;sessionTotal++;
     addMessage('ai','Correct! \uD83C\uDF89 Amazing job!');
+    try{confetti({particleCount:150,spread:70,origin:{y:0.6}});}catch(_){}
+
+    // ── Stage 2: Track for non-repeating + adaptive tier ─────
+    if(currentProblem?.id) _attemptedIds.add(currentProblem.id);
+    if(TRACK === 'olympiad' && currentProblem?.difficulty_tier){
+      _recentResults.push({ correct, tier: currentProblem.difficulty_tier });
+      if(_recentResults.length > 10) _recentResults.shift(); // keep last 10
+    }
+    // ─────────────────────────────────────────────────────────
     try{confetti({particleCount:150,spread:70,origin:{y:0.6}});}catch(_){}
 
     dom.finalTime.innerText=dom.timeDisplay.innerText;
@@ -2001,8 +2074,20 @@ dom.textInput.focus();
   async function initOlympiadMode(){
     if(TRACK !== 'olympiad') return;
     document.body.classList.add('olympiad-mode');
+    document.body.classList.add('olympiad-track'); // geometry SVG theme override
     document.querySelector('.logo').textContent = '🏆 LogicPals Olympiad';
     dom.olyHeaderStrip.classList.add('show');
+    // Show mode badge in header
+    if(qMode && qMode !== 'practice'){
+      const modeLabel = { bootcamp:'🏋️ Bootcamp', challenge:'⚡ Challenge', mock:'📝 Mock', mixed:'🎲 Mixed' }[qMode];
+      if(modeLabel && dom.olyHeaderStrip){
+        const badge = document.createElement('span');
+        badge.className = 'oly-chip';
+        badge.style.cssText = 'background:rgba(245,158,11,.1);color:var(--gold,#f59e0b);';
+        badge.textContent = modeLabel;
+        dom.olyHeaderStrip.appendChild(badge);
+      }
+    }
     await loadKaTeX();
   }
 
