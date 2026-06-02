@@ -96,7 +96,7 @@ function buildMetaPayload(req, body) {
       event_time: Math.floor(Date.now() / 1000),
       event_id: body.event_id || `lp_${Date.now()}`,
       action_source: "website",
-      event_source_url: req.headers.referer || body.event_source_url || "",
+      event_source_url: body.event_source_url || req.headers.referer || "",
       user_data: buildMetaUserData(req, body),
       custom_data: body.custom_data || {},
     },
@@ -124,12 +124,18 @@ module.exports = async (req, res) => {
       "Lead",
       "Login",
       "ViewContent",
+      "Contact",
     ]);
 
     const { event_name } = body;
     if (!allowedEvents.has(event_name)) {
-      return res.status(400).json({ ok: false, error: "unsupported_event" });
-    }
+  return res.status(400).json({
+    ok: false,
+    error: "unsupported_event",
+    received_event_name: event_name || null,
+    allowed_events: Array.from(allowedEvents),
+  });
+}
 
     const META_PIXEL_ID = process.env.META_PIXEL_ID;
     const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
