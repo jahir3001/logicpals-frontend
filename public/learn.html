@@ -1044,6 +1044,16 @@
     if(!hints||!Array.isArray(hints)||!hints.length) hints=['Think carefully about the wording!','Read the problem one more time.','The answer might be simpler than you think.'];
     addMessage('hint','\uD83D\uDCA1 HINT: '+hints[Math.min(hintsUsed,hints.length-1)]);
     hintsUsed++;updateStats();saveState();
+
+if (window.LP_track) {
+  window.LP_track('hint_requested', {
+    page: 'learn',
+    track: TRACK,
+    hint_number: hintsUsed,
+    skill_track: currentProblem?.skill_track || null,
+    difficulty_tier: currentProblem?.difficulty_tier || currentProblem?.difficulty || null
+  });
+}
   }
   function showSubscriptionBanner(type,days){
     if(!dom.subscriptionBanner)return;
@@ -1251,9 +1261,27 @@
       return; // Don't start timer, don't save state
     }
     currentProblem=puzzle;
-    startTime=Date.now();
-    saveState();renderProblem();startTimer();
-    dom.textInput.focus();
+startTime=Date.now();
+saveState();renderProblem();startTimer();
+
+if (window.LP_track) {
+  window.LP_track('lesson_view', {
+    page: 'learn',
+    track: TRACK,
+    skill_track: currentProblem?.skill_track || null,
+    difficulty_tier: currentProblem?.difficulty_tier || currentProblem?.difficulty || null,
+    problem_id: currentProblem?.id || null
+  });
+
+  window.LP_track('lesson_started', {
+    page: 'learn',
+    track: TRACK,
+    session_id: sessionId || null,
+    problem_number: problemCount
+  });
+}
+
+dom.textInput.focus();
   }
 
   // ═══ CORE: Send answer ═══
@@ -1270,6 +1298,14 @@
     chatLog.push({role:'user',content:text});saveState();
 
     // GA4: problem_attempted
+     if (window.LP_track) {
+  window.LP_track('problem_submitted', {
+    page: 'learn',
+    track: TRACK,
+    skill_track: currentProblem?.skill_track || null,
+    difficulty_tier: currentProblem?.difficulty_tier || currentProblem?.difficulty || null
+  });
+}
     window.LP_track('problem_attempted',{
       track:TRACK,
       skill_track:currentProblem?.skill_track||null,
