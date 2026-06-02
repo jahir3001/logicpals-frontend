@@ -4,19 +4,22 @@
 (function () {
   'use strict';
 
-  window.lpTrack = function (eventName, params = {}) {
-    try {
-      if (typeof window.LP_track === 'function') {
-        window.LP_track(eventName, params);
-      }
+  window.LP_track = function (eventName, params) {
+  try {
+    const payload = Object.assign({ event: eventName }, params || {});
 
-      if (typeof window.fbq === 'function') {
-        window.fbq('trackCustom', eventName, params || {});
-      }
+    // 1) GTM dataLayer event
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push(payload);
 
-      console.log('[LP Track]', eventName, params);
-    } catch (err) {
-      console.warn('[LP Track] failed:', eventName, err);
+    // 2) Direct GA4 event fallback
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', eventName, params || {});
     }
-  };
+
+    console.log('[LP Track]', eventName, params || {});
+  } catch (e) {
+    console.warn('[LP_track] failed:', eventName, e);
+  }
+};
 })();
