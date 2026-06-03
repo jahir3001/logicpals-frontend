@@ -998,6 +998,55 @@
       .lb-my-rank-banner { grid-template-columns: 1fr 1fr; }
     }
 
+    /* For Parents header button — always visible in header-actions */
+    .btn-for-parents {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, var(--gold-500), var(--gold-600));
+      color: white;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .2s;
+      box-shadow: 0 2px 8px rgba(245,158,11,.25);
+    }
+    .btn-for-parents:hover {
+      background: linear-gradient(135deg, var(--gold-600), var(--gold-700));
+      box-shadow: 0 4px 12px rgba(245,158,11,.35);
+      transform: translateY(-1px);
+    }
+    /* Active state when parent section is showing */
+    .btn-for-parents.active {
+      background: linear-gradient(135deg, var(--gold-700), var(--gold-800));
+      box-shadow: 0 2px 6px rgba(245,158,11,.3);
+    }
+    /* Nav scroll fade: hint more tabs exist */
+    .nav-tabs-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .nav-tabs-wrap::after {
+      content: '';
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: 28px;
+      background: linear-gradient(to right, transparent, rgba(255,255,255,.95));
+      pointer-events: none;
+      border-radius: 0 12px 12px 0;
+    }
+    .nav-tabs-wrap .nav-tabs {
+      flex-shrink: 1;
+      min-width: 0;
+    }
+
     /* ═══════════════════════════════════════════════════════
        PARENT TAB STYLES — light/gold theme, olympiad.html only
        ═══════════════════════════════════════════════════════ */
@@ -1162,6 +1211,7 @@
         <span class="logo-text">LogicPals Olympiad</span>
       </a>
 
+      <div class="nav-tabs-wrap">
       <div class="nav-tabs" aria-label="Olympiad navigation">
         <button class="nav-tab active" data-tab="training" onclick="switchSection('training')">Start Training</button>
         <button class="nav-tab" data-tab="skills" onclick="switchSection('skills')">Skill Tracks</button>
@@ -1169,10 +1219,13 @@
         <button class="nav-tab" data-tab="mocks" onclick="switchSection('mocks', loadMockSection)">Mock Olympiads</button>
         <button class="nav-tab" data-tab="progress" onclick="switchSection('progress', loadProgressSection)">Progress</button>
         <button class="nav-tab" data-tab="leaderboard" onclick="switchSection('leaderboard', loadLeaderboardSection)">Leaderboard</button>
-        <button class="nav-tab" data-tab="parent" onclick="switchSection('parent', loadParentSection)">👨‍👩‍👧 For Parents</button>
+      </div>
       </div>
 
       <div class="header-actions">
+        <button class="btn-for-parents" onclick="switchSection('parent', loadParentSection)" title="View your child's Olympiad progress">
+          👨‍👩‍👧 For Parents
+        </button>
         <a href="/dashboard.html" class="btn-dashboard" title="Go to Regular Practice">
           <span>📚</span><span> Regular Practice</span>
         </a>
@@ -2804,6 +2857,9 @@ if (!hasAccess) {
       if (sec) sec.classList.add("active");
       const btn = document.querySelector(`.nav-tabs .nav-tab[data-tab="${sectionName}"]`);
       if (btn) btn.classList.add("active");
+      // Sync the For Parents header button active state
+      const parentBtn = document.querySelector('.btn-for-parents');
+      if (parentBtn) parentBtn.classList.toggle('active', sectionName === 'parent');
       if (typeof onShowCallback === 'function') onShowCallback();
       if (sectionName === 'skills') loadSkillTracksSection().catch(() => {});
       if (sectionName === 'parent' && typeof loadParentSection === 'function') loadParentSection().catch(() => {});
