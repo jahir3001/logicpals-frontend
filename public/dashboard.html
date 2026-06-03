@@ -620,6 +620,53 @@ if (window.lpTrack) {
     renderInsights(attempts);
     renderLeaderboard(schoolPeers,childId,childData);
     setupChartTabs(attempts);
+
+    // ── Olympiad Bridge Card — Scholar/Champion only, zero new queries ──
+    // Uses existing `attempts` array filtered client-side (no extra DB call).
+    if (hasOlympiadAccess && attempts.length > 0) {
+      const olyAtts = attempts.filter(a => a.mode === 'olympiad');
+      if (olyAtts.length > 0) {
+        const olyTracks = new Set(
+          olyAtts.map(a => a.problems?.skill_track).filter(Boolean)
+        );
+        const olyProblems = new Set(
+          olyAtts.map(a => a.problem_id).filter(Boolean)
+        );
+        const olyHtml = `
+          <div class="section-gap">
+            <section class="card full-width"
+              style="border:1px solid rgba(254,202,87,.2);
+                     background:linear-gradient(135deg,
+                     rgba(254,202,87,.06),rgba(254,202,87,.02));">
+              <div style="display:flex;align-items:center;
+                          justify-content:space-between;
+                          flex-wrap:wrap;gap:12px;">
+                <div>
+                  <div class="section-title" style="margin-bottom:4px;">
+                    🏆 Olympiad Progress
+                  </div>
+                  <div style="font-size:13px;color:var(--muted);">
+                    ${childData?.name || 'Your child'} has completed
+                    ${olyProblems.size} Olympiad problem${olyProblems.size !== 1 ? 's' : ''}
+                    across ${olyTracks.size}
+                    skill track${olyTracks.size !== 1 ? 's' : ''}.
+                  </div>
+                </div>
+                <a href="/olympiad.html?tab=parent"
+                   style="padding:9px 18px;border-radius:10px;
+                          background:rgba(254,202,87,.12);
+                          color:var(--accent);font-weight:700;
+                          font-size:13px;text-decoration:none;
+                          border:1px solid rgba(254,202,87,.25);
+                          white-space:nowrap;">
+                  View Full Progress →
+                </a>
+              </div>
+            </section>
+          </div>`;
+        document.querySelector('.foot').insertAdjacentHTML('beforebegin', olyHtml);
+      }
+    }
     $('btnStart').addEventListener('click',()=>{
   if (window.LP_track) {
     window.LP_track('lesson_started', {

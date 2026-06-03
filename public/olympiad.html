@@ -997,6 +997,149 @@
       .progress-grid { grid-template-columns: 1fr; }
       .lb-my-rank-banner { grid-template-columns: 1fr 1fr; }
     }
+
+    /* ═══════════════════════════════════════════════════════
+       PARENT TAB STYLES — light/gold theme, olympiad.html only
+       ═══════════════════════════════════════════════════════ */
+    .parent-section-title {
+      font-family: var(--font-display);
+      font-size: 28px; font-weight: 700;
+      color: var(--gray-900); margin-bottom: 4px;
+    }
+    .parent-section-sub { font-size: 14px; color: var(--gray-700); margin-bottom: 32px; }
+    .prep-score-card {
+      background: linear-gradient(135deg, rgba(245,158,11,.08) 0%, rgba(251,191,36,.05) 100%);
+      border: 2px solid var(--gold-300); border-radius: 20px;
+      padding: 28px 32px; margin-bottom: 24px;
+      display: flex; align-items: center; gap: 32px; flex-wrap: wrap;
+    }
+    .prep-score-ring { flex-shrink: 0; width: 100px; height: 100px; position: relative; }
+    .prep-score-ring svg { width: 100%; height: 100%; }
+    .prep-score-val {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .prep-score-pct {
+      font-family: var(--font-display); font-size: 26px;
+      font-weight: 800; color: var(--gold-800); line-height: 1;
+    }
+    .prep-score-label { font-size: 10px; color: var(--gray-700); font-weight: 600; margin-top: 2px; }
+    .prep-score-details { flex: 1; min-width: 200px; }
+    .prep-score-title {
+      font-family: var(--font-display); font-size: 22px;
+      font-weight: 700; color: var(--gray-900); margin-bottom: 6px;
+    }
+    .prep-tier-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+    .prep-tier-badge.building   { background: var(--gold-100); color: var(--gold-800); }
+    .prep-tier-badge.developing { background: #D1FAE5; color: #065F46; }
+    .prep-tier-badge.strong     { background: #BBF7D0; color: #065F46; }
+    .prep-tier-badge.excellent  { background: var(--gold-200); color: var(--gold-900); }
+    .prep-score-sub  { font-size: 12px; color: var(--gray-700); line-height: 1.5; }
+    .prep-score-note { font-size: 11px; color: var(--gray-700); font-style: italic; margin-top: 4px; }
+    .pillar-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px; margin-bottom: 24px;
+    }
+    .pillar-card {
+      background: white; border: 1px solid var(--gray-200);
+      border-radius: 14px; padding: 18px 16px;
+      position: relative; overflow: hidden;
+    }
+    .pillar-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 3px; background: var(--gold-400); border-radius: 14px 14px 0 0;
+    }
+    .pillar-card.pillar-mastery::before { background: #10B981; }
+    .pillar-card.pillar-growth::before  { background: #3B82F6; }
+    .pillar-card.pillar-consist::before { background: var(--gold-500); }
+    .pillar-card.pillar-arena::before   { background: #8B5CF6; }
+    .pillar-card.pillar-locked { background: var(--gray-50); border-style: dashed; }
+    .pillar-icon { font-size: 22px; margin-bottom: 6px; }
+    .pillar-label {
+      font-size: 11px; font-weight: 700; color: var(--gray-700);
+      text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px;
+    }
+    .pillar-value { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--gray-900); margin-bottom: 2px; }
+    .pillar-sub  { font-size: 11px; color: var(--gray-700); line-height: 1.4; }
+    .pillar-trend { font-size: 12px; font-weight: 700; margin-top: 6px; }
+    .pillar-trend.up   { color: #059669; }
+    .pillar-trend.flat { color: var(--gray-700); }
+    .track-bars-card {
+      background: white; border: 1px solid var(--gray-200);
+      border-radius: 16px; padding: 24px; margin-bottom: 24px;
+    }
+    .track-bars-title {
+      font-family: var(--font-display); font-size: 18px;
+      font-weight: 700; color: var(--gray-900); margin-bottom: 16px;
+    }
+    .track-bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .track-bar-name { width: 160px; flex-shrink: 0; font-size: 13px; font-weight: 600; color: var(--gray-800); }
+    .track-bar-wrap { flex: 1; height: 10px; background: var(--gray-100); border-radius: 10px; overflow: hidden; }
+    .track-bar-fill { height: 100%; border-radius: 10px; transition: width .6s ease; }
+    .track-bar-fill.mastered   { background: #10B981; }
+    .track-bar-fill.practicing { background: var(--gold-500); }
+    .track-bar-fill.introduced { background: var(--gray-300); }
+    .track-bar-fill.locked     { background: var(--gray-200); }
+    .track-bar-state { width: 80px; flex-shrink: 0; font-size: 11px; font-weight: 700; text-align: right; }
+    .track-bar-state.mastered   { color: #059669; }
+    .track-bar-state.practicing { color: var(--gold-700); }
+    .track-bar-state.introduced { color: var(--gray-700); }
+    .track-bar-state.locked     { color: var(--gray-400); }
+    .sessions-card {
+      background: white; border: 1px solid var(--gray-200);
+      border-radius: 16px; padding: 24px; margin-bottom: 24px;
+    }
+    .session-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid var(--gray-100);
+    }
+    .session-row:last-child { border-bottom: none; }
+    .session-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .session-dot.solved   { background: #10B981; }
+    .session-dot.unsolved { background: var(--gray-300); }
+    .session-info { flex: 1; min-width: 0; }
+    .session-track { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+    .session-meta  { font-size: 11px; color: var(--gray-700); }
+    .session-date  { font-size: 11px; color: var(--gray-700); flex-shrink: 0; }
+    .tips-card {
+      background: var(--gold-50); border: 1px solid var(--gold-200);
+      border-radius: 16px; padding: 24px; margin-bottom: 24px;
+    }
+    .tips-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--gold-900); margin-bottom: 12px; }
+    .tip-row { display: flex; gap: 10px; margin-bottom: 10px; font-size: 13px; color: var(--gray-800); line-height: 1.5; }
+    .tip-row:last-child { margin-bottom: 0; }
+    .tip-num {
+      flex-shrink: 0; width: 20px; height: 20px;
+      background: var(--gold-400); color: white; border-radius: 50%;
+      font-size: 11px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; margin-top: 1px;
+    }
+    .parent-cta-row {
+      display: flex; gap: 12px; flex-wrap: wrap;
+      justify-content: center; padding: 8px 0 24px;
+    }
+    .parent-cta-primary {
+      display: inline-block; background: var(--gold-500); color: white;
+      font-weight: 700; font-size: 14px; padding: 12px 28px;
+      border-radius: 12px; text-decoration: none; border: none; cursor: pointer;
+    }
+    .parent-cta-primary:hover { background: var(--gold-600); }
+    .parent-cta-secondary {
+      display: inline-block; background: white; color: var(--gold-700);
+      font-weight: 700; font-size: 14px; padding: 12px 24px;
+      border-radius: 12px; text-decoration: none;
+      border: 2px solid var(--gold-300); cursor: pointer;
+    }
+    .parent-cta-secondary:hover { background: var(--gold-50); }
+    @media (max-width: 600px) {
+      .pillar-grid { grid-template-columns: 1fr 1fr; }
+      .prep-score-card { flex-direction: column; text-align: center; }
+      .track-bar-name { width: 110px; font-size: 11px; }
+      .track-bar-state { width: 60px; font-size: 10px; }
+    }
+
   </style>
   <script src="/assets/js/lp-tracking.js"></script>
 </head>
@@ -1026,6 +1169,7 @@
         <button class="nav-tab" data-tab="mocks" onclick="switchSection('mocks', loadMockSection)">Mock Olympiads</button>
         <button class="nav-tab" data-tab="progress" onclick="switchSection('progress', loadProgressSection)">Progress</button>
         <button class="nav-tab" data-tab="leaderboard" onclick="switchSection('leaderboard', loadLeaderboardSection)">Leaderboard</button>
+        <button class="nav-tab" data-tab="parent" onclick="switchSection('parent', loadParentSection)">👨‍👩‍👧 For Parents</button>
       </div>
 
       <div class="header-actions">
@@ -1508,6 +1652,17 @@
       <div id="leaderboard-growth" class="leaderboard-section" style="display:none;">
         <h3 style="text-align:center;margin-bottom:24px;">Growth Leaderboard (Last 30 Days)</h3>
         <p style="text-align:center;color:var(--gray-700);">Who improved the most recently? New students welcomed!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FOR PARENTS TAB — full Olympiad progress analytics
+       ═══════════════════════════════════════════════════════ -->
+  <div class="section" id="section-parent">
+    <div id="parentSectionInner" style="max-width:900px;margin:0 auto;">
+      <div style="text-align:center;padding:60px 20px;color:var(--gray-700);">
+        Loading your progress report…
       </div>
     </div>
   </div>
@@ -2619,6 +2774,19 @@ if (!hasAccess) {
         const uid = selectedChildId || user?.id;
         loadWelcomeHeader(uid).catch(() => {});
 
+        // Stage 1.3: URL deep-link — /olympiad.html?tab=parent auto-opens tab
+        const _tabParam = new URLSearchParams(location.search).get('tab');
+        if (_tabParam && document.getElementById('section-' + _tabParam)) {
+          const _tabCbs = {
+            parent:      loadParentSection,
+            progress:    loadProgressSection,
+            arena:       loadArenaSection,
+            mocks:       loadMockSection,
+            leaderboard: loadLeaderboardSection,
+          };
+          switchSection(_tabParam, _tabCbs[_tabParam]);
+        }
+
         // If there is already a saved level, do nothing; user chooses.
         resetCountdownUI();
       } catch (e) {
@@ -2638,9 +2806,497 @@ if (!hasAccess) {
       if (btn) btn.classList.add("active");
       if (typeof onShowCallback === 'function') onShowCallback();
       if (sectionName === 'skills') loadSkillTracksSection().catch(() => {});
+      if (sectionName === 'parent' && typeof loadParentSection === 'function') loadParentSection().catch(() => {});
     }
 
     window.addEventListener("DOMContentLoaded", boot);
+
+    /* ═══════════════════════════════════════════════════════════
+       FOR PARENTS TAB — STAGE 2+3
+       Data: fetchParentOlyAttempts (attempts table, mode=olympiad)
+             fetchParentSkillMap    (get_student_skill_map RPC)
+             fetchParentArena       (get_arena_rating RPC)
+       All helpers have internal try/catch → safe default on failure.
+       Stage 0 verification: Check A (attempts RLS), Check B (skill_map)
+       must pass before data populates. Section degrades gracefully.
+       ═══════════════════════════════════════════════════════════ */
+
+    // ── Track display config (jargon-free parent labels) ─────────
+    const OLY_TRACKS = {
+      constraints:          { label: 'Logic & Constraints',      icon: '🔗' },
+      counting:             { label: 'Counting & Combinatorics', icon: '🔢' },
+      divisibility:         { label: 'Divisibility & Numbers',   icon: '➗' },
+      geometry_no_formulas: { label: 'Geometry (No Formulas)',   icon: '📐' },
+      invariants:           { label: 'Invariants & Parity',      icon: '⚖️' },
+      mixed:                { label: 'Mixed Challenges',         icon: '🎯' },
+      worst_case:           { label: 'Worst-Case & Pigeonhole',  icon: '🕊️' },
+    };
+    const TIER_ORDER_PARENT = { warmup: 1, standard: 2, challenge: 3, contest: 4, elite: 5 };
+
+    // ── Fetch helper: Olympiad attempts ─────────────────────────
+    async function fetchParentOlyAttempts() {
+      try {
+        const { data, error } = await sb
+          .from('attempts')
+          .select('id, mode, created_at, solved_correctly,' +
+                  'hints_used, time_spent_seconds, problem_id,' +
+                  'problems(skill_track, difficulty_tier)')
+          .eq('child_id', selectedChildId)
+          .eq('mode', 'olympiad')
+          .order('created_at', { ascending: false })
+          .limit(200);
+        if (error) {
+          console.warn('[ParentTab] attempts error:', error.code, error.message);
+          // FAIL A2: if 42703 (column not found), try join-based filter
+          if (error.code === '42703') {
+            const r2 = await sb
+              .from('attempts')
+              .select('id, created_at, solved_correctly,' +
+                      'hints_used, time_spent_seconds, problem_id,' +
+                      'problems!inner(skill_track, difficulty_tier)')
+              .eq('child_id', selectedChildId)
+              .not('problems.skill_track', 'is', null)
+              .order('created_at', { ascending: false })
+              .limit(200);
+            if (!r2.error) return r2.data ?? [];
+          }
+          return [];
+        }
+        return data ?? [];
+      } catch (e) {
+        console.warn('[ParentTab] fetchParentOlyAttempts threw:', e?.message);
+        return [];
+      }
+    }
+
+    // ── Fetch helper: skill map via confirmed-working RPC ────────
+    async function fetchParentSkillMap() {
+      try {
+        const { data, error } = await sb
+          .rpc('get_student_skill_map', { p_user_id: selectedChildId });
+        if (error) {
+          console.warn('[ParentTab] skill_map error:', error.message);
+          // FAIL B: fallback to mastery_history if RPC unavailable
+          const fb = await sb
+            .from('mastery_history')
+            .select('skill_key, mastery_level, mastery_state, created_at')
+            .eq('child_id', selectedChildId)
+            .order('created_at', { ascending: false });
+          if (!fb.error) {
+            // De-duplicate: keep latest state per skill_key
+            const seen = new Map();
+            (fb.data || []).forEach(r => {
+              if (!seen.has(r.skill_key)) seen.set(r.skill_key, r);
+            });
+            return [...seen.values()];
+          }
+          return [];
+        }
+        return data ?? [];
+      } catch (e) {
+        console.warn('[ParentTab] fetchParentSkillMap threw:', e?.message);
+        return [];
+      }
+    }
+
+    // ── Fetch helper: arena rating via confirmed-working RPC ─────
+    async function fetchParentArena() {
+      try {
+        const { data, error } = await sb
+          .rpc('get_arena_rating', { p_user_id: selectedChildId, p_track: 'olympiad' });
+        if (error) {
+          console.warn('[ParentTab] arena_rating error:', error.message);
+          return null;
+        }
+        return data ?? null;
+      } catch (e) {
+        console.warn('[ParentTab] fetchParentArena threw:', e?.message);
+        return null;
+      }
+    }
+
+    // ── Main section loader ──────────────────────────────────────
+    let parentSectionLoaded = false;
+
+    async function loadParentSection() {
+      if (parentSectionLoaded || !sb || !user || !selectedChildId) return;
+      parentSectionLoaded = true;
+
+      const inner = document.getElementById('parentSectionInner');
+      if (!inner) return;
+      inner.innerHTML = `
+        <div style="text-align:center;padding:48px 20px;
+                    color:var(--gray-700);font-size:14px;">
+          ⏳ Loading ${selectedChildName || 'your child'}'s progress…
+        </div>`;
+
+      const [attResult, skillResult, arenaResult] = await Promise.allSettled([
+        fetchParentOlyAttempts(),
+        fetchParentSkillMap(),
+        fetchParentArena(),
+      ]);
+
+      const att      = attResult.status   === 'fulfilled' ? attResult.value   : [];
+      const skillMap = skillResult.status === 'fulfilled' ? skillResult.value : [];
+      const arena    = arenaResult.status === 'fulfilled' ? arenaResult.value : null;
+
+      renderParentSection(inner, att, skillMap, arena);
+
+      // GA4 — Stage 4
+      if (window.LP_track) {
+        window.LP_track('olympiad_parent_tab_viewed', {
+          has_attempts:  att.length > 0,
+          has_skill_map: skillMap.length > 0,
+          has_arena:     !!arena,
+          attempt_count: att.length,
+        });
+      }
+    }
+
+    // ── Stage 3: renderParentSection ─────────────────────────────
+    function renderParentSection(container, att, skillMap, arena) {
+      const childName = selectedChildName || 'your child';
+
+      // ── THIN DATA: < 2 Olympiad attempts ──────────────────────
+      if (!att || att.length < 2) {
+        container.innerHTML = `
+          <div class="parent-section-title">
+            👨‍👩‍👧 ${childName}'s Olympiad Progress
+          </div>
+          <div style="text-align:center;padding:40px 20px;
+                      background:white;border-radius:20px;
+                      border:1px solid var(--gold-200);">
+            <div style="font-size:48px;margin-bottom:16px;">🚀</div>
+            <div style="font-family:var(--font-display);font-size:22px;
+                        font-weight:700;color:var(--gray-900);
+                        margin-bottom:12px;">
+              ${childName} is just getting started!
+            </div>
+            <div style="font-size:14px;color:var(--gray-700);
+                        line-height:1.6;max-width:480px;margin:0 auto 24px;">
+              Complete a few Olympiad sessions to unlock a full
+              personalised progress report here. Every session
+              counts — great things are ahead! 🌟
+            </div>
+            <button class="parent-cta-primary"
+              onclick="switchSection('training')">
+              Start Training Now →
+            </button>
+          </div>`;
+        return;
+      }
+
+      // ── PILLAR 1: Mastery Depth ────────────────────────────────
+      let masteryScore = null, masteryMeta = '';
+      let masteredCount = 0, practicingCount = 0, totalTracks = 0;
+      if (skillMap.length > 0) {
+        totalTracks    = skillMap.length;
+        masteredCount  = skillMap.filter(s => s.mastery_state === 'MASTERED').length;
+        practicingCount = skillMap.filter(s =>
+          s.mastery_state === 'PRACTICING' || s.mastery_state === 'INTRODUCED').length;
+        const activeCount = masteredCount + practicingCount;
+        masteryScore = Math.round(
+          (masteredCount * 100 + practicingCount * 50) / (totalTracks * 100) * 100
+        );
+        masteryScore = Math.max(masteryScore, activeCount > 0 ? 20 : 0);
+        masteryMeta  = `${masteredCount} solid · ${practicingCount} learning`
+                     + ` · ${totalTracks - masteredCount - practicingCount} not yet started`;
+      }
+
+      // ── PILLAR 2: Skill Growth (Amendment 2 applied) ──────────
+      // Wellbeing guardrail: 'reinforcing' replaces 'down'.
+      // Deepening earlier levels is pedagogically positive — never penalised.
+      let growthScore = null, growthTrend = 'flat', growthMeta = '';
+      const sortedAtt = [...att].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      if (sortedAtt.length >= 4) {
+        const half = Math.floor(sortedAtt.length / 2);
+        const tierVal = a => TIER_ORDER_PARENT[a.problems?.difficulty_tier] || 1;
+        const earlyAvg = sortedAtt.slice(0, half).reduce((s, a) => s + tierVal(a), 0) / half;
+        const lateAvg  = sortedAtt.slice(half).reduce((s, a) => s + tierVal(a), 0) / (sortedAtt.length - half);
+        const delta = lateAvg - earlyAvg;
+        // Amendment 2: three states — 'up', 'flat', 'reinforcing' (never 'down')
+        growthTrend = delta > 0.3 ? 'up' : delta < -0.3 ? 'reinforcing' : 'flat';
+        // Amendment 2 scores: rising=75, reinforcing=62 (positive signal), steady=55
+        growthScore = growthTrend === 'up'          ? 75
+                    : growthTrend === 'reinforcing' ? 62
+                    : 55;
+        growthMeta  = growthTrend === 'up'
+          ? 'Tackling harder problems over time'
+          : growthTrend === 'reinforcing'
+          ? 'Reinforcing fundamentals — building a solid base'
+          : 'Steady, consistent practice level';
+      } else if (sortedAtt.length >= 2) {
+        growthScore = 55;
+        growthMeta  = 'Keep practicing to track difficulty progress';
+      }
+
+      // ── PILLAR 3: Practice Consistency ────────────────────────
+      let consistScore = null, consistMeta = '';
+      if (att.length >= 2) {
+        const now = new Date();
+        const activeDays = new Set(
+          att.filter(a => (now - new Date(a.created_at)) / 86400000 <= 14)
+             .map(a => a.created_at.slice(0, 10))
+        ).size;
+        consistScore = Math.max(Math.round(activeDays / 14 * 100), att.length > 0 ? 20 : 0);
+        consistMeta  = `Practiced ${activeDays} of the last 14 days`;
+      }
+
+      // ── PILLAR 4: Competition Rating ───────────────────────────
+      // Guardrail: hidden (null) when 0 matches. Elo never shown as number.
+      let arenaScore = null, arenaMeta = '', arenaVal = '';
+      const totalMatches = arena ? ((arena.wins || 0) + (arena.losses || 0)) : 0;
+      if (arena && totalMatches > 0) {
+        const elo = arena.elo_rating || 1200;
+        arenaScore = Math.min(100, Math.max(0, Math.round((elo - 1000) / 800 * 100)));
+        arenaVal   = elo >= 1600 ? 'Expert' : elo >= 1400 ? 'Advanced'
+                   : elo >= 1200 ? 'Developing' : 'Building';
+        arenaMeta  = `${arena.wins || 0} wins · ${arena.losses || 0} losses`
+                   + (arena.win_streak > 1 ? ` · ${arena.win_streak} win streak 🔥` : '');
+      }
+
+      // ── COMPOSITE SCORE ────────────────────────────────────────
+      const pillars = [
+        { score: masteryScore, weight: 0.40 },
+        { score: growthScore,  weight: 0.30 },
+        { score: consistScore, weight: 0.20 },
+        { score: arenaScore,   weight: 0.10 },
+      ].filter(p => p.score !== null);
+
+      let compositeScore = null;
+      if (pillars.length >= 2) {
+        const totalWeight = pillars.reduce((s, p) => s + p.weight, 0);
+        const rawScore    = pillars.reduce((s, p) => s + (p.score * p.weight / totalWeight), 0);
+        compositeScore    = Math.max(35, Math.round(rawScore / 5) * 5); // floor 35, round to nearest 5
+      }
+
+      const tierLabel = !compositeScore ? null
+        : compositeScore >= 80 ? 'Excellent Shape 🏅'
+        : compositeScore >= 65 ? 'Strong Progress 🌳'
+        : compositeScore >= 50 ? 'Developing Well 🌿'
+        : 'Building Foundations 🌱';
+      const tierClass = !compositeScore ? ''
+        : compositeScore >= 80 ? 'excellent'
+        : compositeScore >= 65 ? 'strong'
+        : compositeScore >= 50 ? 'developing'
+        : 'building';
+
+      // ── COACHING TIPS — rules-based, contextual ───────────────
+      const tips = [];
+      const weakTracks = skillMap
+        .filter(s => s.mastery_state === 'INTRODUCED' || s.mastery_state === null)
+        .map(s => OLY_TRACKS[s.skill_key]?.label || s.skill_key);
+      const strongTracks = skillMap
+        .filter(s => s.mastery_state === 'MASTERED' || s.mastery_state === 'PRACTICING')
+        .map(s => OLY_TRACKS[s.skill_key]?.label || s.skill_key);
+
+      if (strongTracks.length > 0)
+        tips.push(`${childName}'s strongest area is <strong>${strongTracks[0]}</strong> — encourage them to keep that momentum going.`);
+      if (weakTracks.length > 0)
+        tips.push(`<strong>${weakTracks[0]}</strong> hasn't been explored yet — starting here would broaden their range for BdMO Regional rounds.`);
+      if (consistScore !== null && consistScore < 50)
+        tips.push(`Short daily sessions (even 10 minutes) build stronger long-term performance than occasional long ones. Encourage ${childName} to practice a little each day.`);
+      else if (consistScore !== null && consistScore >= 70)
+        tips.push(`${childName}'s consistency is excellent — that regularity is one of the biggest predictors of Olympiad success. Keep it up!`);
+      if (arenaScore === null)
+        tips.push(`Trying the Arena (even Practice Mode against a ghost opponent) helps ${childName} build competition confidence without any pressure.`);
+
+      // ── RECENT SESSIONS ────────────────────────────────────────
+      const recentSessions = sortedAtt.slice(-6).reverse();
+
+      // ── HELPER FUNCTIONS ───────────────────────────────────────
+      const fmtDate = d => {
+        const diff = Math.floor((new Date() - new Date(d)) / 86400000);
+        return diff === 0 ? 'Today' : diff === 1 ? 'Yesterday' : `${diff} days ago`;
+      };
+      const trackLabel = k => OLY_TRACKS[k]?.label || (k || 'Olympiad').replace(/_/g, ' ');
+
+      // ── SVG ring for composite score ───────────────────────────
+      const ringPct = compositeScore || 0;
+      const r = 38, cx2 = 50, cy2 = 50;
+      const circ = 2 * Math.PI * r;
+      const dash = (ringPct / 100) * circ;
+      const ringColor = ringPct >= 80 ? '#F59E0B' : ringPct >= 65 ? '#10B981' : ringPct >= 50 ? '#3B82F6' : '#9CA3AF';
+
+      // ── BUILD HTML ─────────────────────────────────────────────
+      container.innerHTML = `
+        <div class="parent-section-title">
+          👨‍👩‍👧 ${childName}'s Olympiad Progress
+        </div>
+        <div class="parent-section-sub">
+          Updated just now · ${att.length} Olympiad session${att.length !== 1 ? 's' : ''} completed
+        </div>
+
+        ${compositeScore ? `
+        <div class="prep-score-card">
+          <div class="prep-score-ring">
+            <svg viewBox="0 0 100 100">
+              <circle cx="${cx2}" cy="${cy2}" r="${r}"
+                fill="none" stroke="var(--gray-100)" stroke-width="8"/>
+              <circle cx="${cx2}" cy="${cy2}" r="${r}"
+                fill="none" stroke="${ringColor}" stroke-width="8"
+                stroke-linecap="round"
+                stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}"
+                transform="rotate(-90 ${cx2} ${cy2})"/>
+            </svg>
+            <div class="prep-score-val">
+              <span class="prep-score-pct">${compositeScore}%</span>
+              <span class="prep-score-label">Prep</span>
+            </div>
+          </div>
+          <div class="prep-score-details">
+            <div class="prep-score-title">Regional Prep Progress</div>
+            <div class="prep-tier-badge ${tierClass}">${tierLabel}</div>
+            <div class="prep-score-sub">
+              Based on ${att.length} session${att.length !== 1 ? 's' : ''} across
+              ${new Set(att.map(a => a.problems?.skill_track).filter(Boolean)).size}
+              skill track${new Set(att.map(a => a.problems?.skill_track).filter(Boolean)).size !== 1 ? 's' : ''}
+            </div>
+            <div class="prep-score-note">
+              This reflects preparation activity, not a predicted exam result.
+            </div>
+          </div>
+        </div>` : ''}
+
+        <div class="pillar-grid">
+          ${masteryScore !== null ? `
+          <div class="pillar-card pillar-mastery">
+            <div class="pillar-icon">📚</div>
+            <div class="pillar-label">Mastery Depth</div>
+            <div class="pillar-value">${masteredCount}/${totalTracks}</div>
+            <div class="pillar-sub">tracks with solid grounding</div>
+            <div class="pillar-trend flat">${masteryMeta}</div>
+          </div>` : ''}
+
+          ${growthScore !== null ? `
+          <div class="pillar-card pillar-growth">
+            <div class="pillar-icon">📈</div>
+            <div class="pillar-label">Skill Growth</div>
+            <div class="pillar-value">
+              ${growthTrend === 'up'          ? 'Rising ↑'
+              : growthTrend === 'reinforcing' ? 'Solid Base 💪'
+              : 'Steady →'}
+            </div>
+            <div class="pillar-sub">problem difficulty trend</div>
+            <div class="pillar-trend ${growthTrend === 'up' ? 'up' : 'flat'}">${growthMeta}</div>
+          </div>` : ''}
+
+          ${consistScore !== null ? `
+          <div class="pillar-card pillar-consist">
+            <div class="pillar-icon">🗓️</div>
+            <div class="pillar-label">Practice Consistency</div>
+            <div class="pillar-value">${consistScore}%</div>
+            <div class="pillar-sub">of last 14 days active</div>
+            <div class="pillar-trend flat">${consistMeta}</div>
+          </div>` : ''}
+
+          ${arenaScore !== null ? `
+          <div class="pillar-card pillar-arena">
+            <div class="pillar-icon">⚔️</div>
+            <div class="pillar-label">Competition Rating</div>
+            <div class="pillar-value">${arenaVal}</div>
+            <div class="pillar-sub">arena competition level</div>
+            <div class="pillar-trend flat">${arenaMeta}</div>
+          </div>` : `
+          <div class="pillar-card pillar-locked">
+            <div class="pillar-icon">⚔️</div>
+            <div class="pillar-label">Competition Rating</div>
+            <div class="pillar-value" style="font-size:14px;color:var(--gray-500);">Not yet started</div>
+            <div class="pillar-sub">Enter an Arena match to unlock your competition rating</div>
+            <a href="/olympiad.html" style="font-size:12px;color:var(--gold-700);font-weight:700;
+               text-decoration:none;display:inline-block;margin-top:6px;">Try Arena Practice →</a>
+          </div>`}
+        </div>
+
+        ${skillMap.length > 0 ? `
+        <div class="track-bars-card">
+          <div class="track-bars-title">🧠 Skills Progress</div>
+          ${skillMap.map(s => {
+            const stateRaw   = (s.mastery_state || 'locked').toLowerCase();
+            const stateClass = stateRaw === 'mastered'   ? 'mastered'
+                             : stateRaw === 'practicing' ? 'practicing'
+                             : stateRaw === 'introduced' ? 'introduced'
+                             : 'locked';
+            // Jargon-free display names — never show raw enum to parents
+            const stateLabel = stateRaw === 'mastered'   ? 'Solid'
+                             : stateRaw === 'practicing' ? 'Learning'
+                             : stateRaw === 'introduced' ? 'Just Started'
+                             : 'Not yet started';
+            const pct = stateRaw === 'mastered'   ? 100
+                      : stateRaw === 'practicing' ? Math.max(35, Math.round((s.mastery_level || 0.3) * 100))
+                      : stateRaw === 'introduced' ? 15 : 5;
+            const track = OLY_TRACKS[s.skill_key] || { label: s.skill_key.replace(/_/g, ' '), icon: '📌' };
+            return `
+              <div class="track-bar-row">
+                <div class="track-bar-name">${track.icon} ${track.label}</div>
+                <div class="track-bar-wrap">
+                  <div class="track-bar-fill ${stateClass}" style="width:${pct}%"></div>
+                </div>
+                <div class="track-bar-state ${stateClass}">${stateLabel}</div>
+              </div>`;
+          }).join('')}
+        </div>` : ''}
+
+        ${recentSessions.length > 0 ? `
+        <div class="sessions-card">
+          <div class="track-bars-title">📅 Recent Sessions</div>
+          ${recentSessions.map(a => {
+            const solved  = a.solved_correctly;
+            const track   = trackLabel(a.problems?.skill_track);
+            const tier    = a.problems?.difficulty_tier || '';
+            const hints   = a.hints_used || 0;
+            const secs    = a.time_spent_seconds || 0;
+            const timeStr = secs >= 60 ? `${Math.floor(secs/60)}m ${secs%60}s` : secs > 0 ? `${secs}s` : '';
+            return `
+              <div class="session-row">
+                <div class="session-dot ${solved ? 'solved' : 'unsolved'}"></div>
+                <div class="session-info">
+                  <div class="session-track">${track}</div>
+                  <div class="session-meta">
+                    ${solved ? '✅ Solved' : '🔄 Practiced'}
+                    ${tier ? ' · ' + tier.charAt(0).toUpperCase() + tier.slice(1) : ''}
+                    ${timeStr ? ' · ' + timeStr : ''}
+                    ${hints > 0 ? ' · ' + hints + ' hint' + (hints > 1 ? 's' : '') : ''}
+                  </div>
+                </div>
+                <div class="session-date">${fmtDate(a.created_at)}</div>
+              </div>`;
+          }).join('')}
+        </div>` : ''}
+
+        ${tips.length > 0 ? `
+        <div class="tips-card">
+          <div class="tips-title">💡 Tips for You as a Parent</div>
+          ${tips.slice(0, 3).map((tip, i) => `
+            <div class="tip-row">
+              <div class="tip-num">${i + 1}</div>
+              <div>${tip}</div>
+            </div>`).join('')}
+        </div>` : ''}
+
+        <div class="parent-cta-row">
+          <button class="parent-cta-primary" onclick="switchSection('training')">
+            Start Today's Session →
+          </button>
+          <button class="parent-cta-secondary"
+            onclick="switchSection('progress', loadProgressSection)">
+            View Full Skill Graph
+          </button>
+        </div>
+      `;
+
+      // Stage 4: GA4 event with composite score
+      if (window.LP_track) {
+        window.LP_track('olympiad_parent_score_rendered', {
+          composite_score:   compositeScore,
+          tier_label:        tierClass,
+          mastery_score:     masteryScore,
+          growth_score:      growthScore,
+          consistency_score: consistScore,
+          arena_score:       arenaScore,
+        });
+      }
+    }
 
     /* ═══════════════════════════════════════════════════════════
        P5 ARENA SECTION
