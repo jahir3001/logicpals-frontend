@@ -89,16 +89,6 @@
       box-shadow: 0 4px 20px rgba(245, 158, 11, 0.1);
     }
 
-    .header-content {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 0 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: nowrap;
-    }
 
     .logo {
       display: flex;
@@ -179,53 +169,157 @@
     }
 
     @media (max-width: 768px) {
-      .header-content { padding: 0 12px; gap: 8px; }
       .header-user-email { display: none; }
-      .btn-dashboard span:last-child { display: none; }
-      .logo-text { font-size: 18px; }
+      .logo-text { font-size: 16px; }
+    }
+
+    /* ══════════════════════════════════════════════════════
+       HEADER — two-row responsive layout
+       Row 1: brand + utilities  |  Row 2: navigation tabs
+       All tabs visible on every device, no overflow clipping
+       ══════════════════════════════════════════════════════ */
+    .header {
+      background: rgba(255,255,255,.97);
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid var(--gold-300);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 4px 20px rgba(245,158,11,.1);
+    }
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 10px 24px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* Row 1 */
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 10px;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .header-user-email {
+      font-size: 12px;
+      color: var(--gray-700);
+      font-weight: 600;
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* For Parents — gold button in header-top */
+    .btn-for-parents {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: linear-gradient(135deg, var(--gold-500), var(--gold-600));
+      color: white;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 7px 14px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .18s;
+      box-shadow: 0 2px 8px rgba(245,158,11,.28);
+    }
+    .btn-for-parents:hover { filter: brightness(1.06); box-shadow: 0 4px 14px rgba(245,158,11,.38); }
+    .btn-for-parents.active {
+      background: linear-gradient(135deg, var(--gold-700), var(--gold-800));
+      box-shadow: inset 0 2px 4px rgba(0,0,0,.15);
+    }
+    /* Hide label on very small screens, show emoji only */
+    .btn-for-parents .fp-label { transition: none; }
+    @media (max-width: 480px) { .btn-for-parents .fp-label { display: none; } }
+
+    /* Row 2 — nav tabs strip */
+    .header-nav {
+      border-top: 1px solid var(--gold-100);
+      padding: 6px 0 0;
     }
 
     /* Navigation */
     .nav-tabs {
       display: flex;
-      gap: 4px;
-      background: white;
-      padding: 6px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      flex-wrap: nowrap;
+      gap: 3px;
+      background: rgba(245,158,11,.06);
+      padding: 5px 6px;
+      border-radius: 12px 12px 0 0;
       overflow-x: auto;
       scrollbar-width: none;
-      flex-shrink: 1;
-      min-width: 0;
+      -ms-overflow-style: none;
     }
     .nav-tabs::-webkit-scrollbar { display: none; }
-
     .nav-tab {
+      flex: 1;
+      min-width: max-content;
       padding: 8px 14px;
       border: none;
+      border-radius: 8px;
       background: transparent;
       color: var(--gray-700);
-      font-weight: 600;
-      font-size: 13px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.3s ease;
       font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .18s;
       white-space: nowrap;
-      flex-shrink: 0;
+      text-align: center;
     }
-
-    .nav-tab:hover {
-      background: var(--gold-50);
-      color: var(--gold-700);
-    }
-
+    .nav-tab:hover { background: rgba(245,158,11,.12); color: var(--gray-900); }
     .nav-tab.active {
-      background: linear-gradient(135deg, var(--gold-500), var(--gold-600));
+      background: var(--gold-500);
       color: white;
-      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+      box-shadow: 0 2px 8px rgba(245,158,11,.35);
+      font-weight: 700;
     }
+
+    /* ── Responsive breakpoints ────────────────────────── */
+    /* Large desktop: tabs spread comfortably */
+    @media (min-width: 1200px) {
+      .nav-tab { font-size: 14px; padding: 9px 18px; }
+    }
+    /* Laptop: standard size */
+    @media (max-width: 1199px) and (min-width: 900px) {
+      .nav-tab { font-size: 13px; padding: 8px 12px; }
+    }
+    /* Tablet: hide user email, keep everything else */
+    @media (max-width: 899px) {
+      .header-user-email { display: none; }
+      .nav-tab { font-size: 12px; padding: 7px 10px; }
+      .header-inner { padding: 8px 16px 0; }
+    }
+    /* Mobile: compact logo + actions, tabs scroll */
+    @media (max-width: 600px) {
+      .header-inner { padding: 8px 12px 0; }
+      .header-top { padding-bottom: 8px; }
+      .logo-text { font-size: 15px; }
+      .logo-icon img { width: 26px !important; height: 26px !important; }
+      .nav-tab { font-size: 11.5px; padding: 7px 9px; flex: 0 0 auto; }
+      .btn-for-parents { padding: 7px 10px; font-size: 12px; }
+      /* "Regular Practice" text hidden on mobile — show only icon */
+      .btn-dashboard span:last-child { display: none; }
+    }
+    @media (max-width: 380px) {
+      .nav-tab { font-size: 11px; padding: 6px 8px; }
+      .header-inner { padding: 7px 10px 0; }
+    }
+
 
     /* Container */
     .container {
@@ -569,9 +663,6 @@
     .btn-secondary { background: var(--gray-100); color: var(--gray-900); }
     .btn:hover { filter: brightness(0.98); }
 
-    @media (max-width: 1024px) {
-      .header-content { flex-direction: column; align-items: stretch; }
-    }
     @media (max-width: 768px) {
       .level-cards { grid-template-columns: 1fr; }
       .tooltip { width: 280px; }
@@ -998,55 +1089,6 @@
       .lb-my-rank-banner { grid-template-columns: 1fr 1fr; }
     }
 
-    /* For Parents header button — always visible in header-actions */
-    .btn-for-parents {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: linear-gradient(135deg, var(--gold-500), var(--gold-600));
-      color: white;
-      font-family: var(--font-body);
-      font-size: 13px;
-      font-weight: 700;
-      padding: 8px 14px;
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all .2s;
-      box-shadow: 0 2px 8px rgba(245,158,11,.25);
-    }
-    .btn-for-parents:hover {
-      background: linear-gradient(135deg, var(--gold-600), var(--gold-700));
-      box-shadow: 0 4px 12px rgba(245,158,11,.35);
-      transform: translateY(-1px);
-    }
-    /* Active state when parent section is showing */
-    .btn-for-parents.active {
-      background: linear-gradient(135deg, var(--gold-700), var(--gold-800));
-      box-shadow: 0 2px 6px rgba(245,158,11,.3);
-    }
-    /* Nav scroll fade: hint more tabs exist */
-    .nav-tabs-wrap {
-      position: relative;
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-    }
-    .nav-tabs-wrap::after {
-      content: '';
-      position: absolute;
-      right: 0; top: 0; bottom: 0;
-      width: 28px;
-      background: linear-gradient(to right, transparent, rgba(255,255,255,.95));
-      pointer-events: none;
-      border-radius: 0 12px 12px 0;
-    }
-    .nav-tabs-wrap .nav-tabs {
-      flex-shrink: 1;
-      min-width: 0;
-    }
-
     /* ═══════════════════════════════════════════════════════
        PARENT TAB STYLES — light/gold theme, olympiad.html only
        ═══════════════════════════════════════════════════════ */
@@ -1205,35 +1247,41 @@
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
   <div class="header">
-    <div class="header-content">
-      <a href="/dashboard.html" class="logo">
-        <span class="logo-icon"><img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MDAgNDEwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPiA8Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjIwMCIgZmlsbD0iIzEzMjI0MCIvPiA8cmVjdCB4PSIxMDgiIHk9IjEyMCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjEwMCIgcng9IjQiIGZpbGw9IiMyRThCQzAiLz4gPHJlY3QgeD0iMTA4IiB5PSIxOTgiIHdpZHRoPSI2MiIgaGVpZ2h0PSIyMiIgcng9IjQiIGZpbGw9IiMyRThCQzAiLz4gPHJlY3QgeD0iMjE0IiB5PSIxMjAiIHdpZHRoPSIyMiIgaGVpZ2h0PSIxMDAiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjIxNCIgeT0iMTIwIiB3aWR0aD0iNjIiIGhlaWdodD0iMjIiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjI1NCIgeT0iMTIwIiB3aWR0aD0iMjIiIGhlaWdodD0iNTgiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjIxNCIgeT0iMTU2IiB3aWR0aD0iNjIiIGhlaWdodD0iMjIiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDwvc3ZnPg==" alt="LogicPals" style="width:32px;height:32px;border-radius:8px;display:block;" /></span>
-        <span class="logo-text">LogicPals Olympiad</span>
-      </a>
+    <div class="header-inner">
 
-      <div class="nav-tabs-wrap">
-      <div class="nav-tabs" aria-label="Olympiad navigation">
-        <button class="nav-tab active" data-tab="training" onclick="switchSection('training')">Start Training</button>
-        <button class="nav-tab" data-tab="skills" onclick="switchSection('skills')">Skill Tracks</button>
-        <button class="nav-tab" data-tab="arena" onclick="switchSection('arena', loadArenaSection)">⚔️ Arena</button>
-        <button class="nav-tab" data-tab="mocks" onclick="switchSection('mocks', loadMockSection)">Mock Olympiads</button>
-        <button class="nav-tab" data-tab="progress" onclick="switchSection('progress', loadProgressSection)">Progress</button>
-        <button class="nav-tab" data-tab="leaderboard" onclick="switchSection('leaderboard', loadLeaderboardSection)">Leaderboard</button>
-      </div>
-      </div>
-
-      <div class="header-actions">
-        <button class="btn-for-parents" onclick="switchSection('parent', loadParentSection)" title="View your child's Olympiad progress">
-          👨‍👩‍👧 For Parents
-        </button>
-        <a href="/dashboard.html" class="btn-dashboard" title="Go to Regular Practice">
-          <span>📚</span><span> Regular Practice</span>
+      <!-- Row 1: Brand + utility actions -->
+      <div class="header-top">
+        <a href="/dashboard.html" class="logo">
+          <span class="logo-icon"><img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MDAgNDEwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPiA8Y2lyY2xlIGN4PSIyMDAiIGN5PSIyMDAiIHI9IjIwMCIgZmlsbD0iIzEzMjI0MCIvPiA8cmVjdCB4PSIxMDgiIHk9IjEyMCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjEwMCIgcng9IjQiIGZpbGw9IiMyRThCQzAiLz4gPHJlY3QgeD0iMTA4IiB5PSIxOTgiIHdpZHRoPSI2MiIgaGVpZ2h0PSIyMiIgcng9IjQiIGZpbGw9IiMyRThCQzAiLz4gPHJlY3QgeD0iMjE0IiB5PSIxMjAiIHdpZHRoPSIyMiIgaGVpZ2h0PSIxMDAiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjIxNCIgeT0iMTIwIiB3aWR0aD0iNjIiIGhlaWdodD0iMjIiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjI1NCIgeT0iMTIwIiB3aWR0aD0iMjIiIGhlaWdodD0iNTgiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDxyZWN0IHg9IjIxNCIgeT0iMTU2IiB3aWR0aD0iNjIiIGhlaWdodD0iMjIiIHJ4PSI0IiBmaWxsPSIjMEVBNUEwIi8+IDwvc3ZnPg==" alt="LogicPals" style="width:32px;height:32px;border-radius:8px;display:block;" /></span>
+          <span class="logo-text">LogicPals Olympiad</span>
         </a>
-        <span class="header-user-email" id="headerUserEmail"></span>
-        <button class="btn-signout" id="btnSignOut" onclick="handleSignOut()" title="Sign out">
-          Sign out
-        </button>
+
+        <div class="header-actions">
+          <button class="btn-for-parents" onclick="switchSection('parent', loadParentSection)" title="View your child's Olympiad progress">
+            👨‍👩‍👧 <span class="fp-label">For Parents</span>
+          </button>
+          <a href="/dashboard.html" class="btn-dashboard" title="Go to Regular Practice">
+            <span>📚</span><span> Regular Practice</span>
+          </a>
+          <span class="header-user-email" id="headerUserEmail"></span>
+          <button class="btn-signout" id="btnSignOut" onclick="handleSignOut()" title="Sign out">
+            Sign out
+          </button>
+        </div>
       </div>
+
+      <!-- Row 2: Navigation tabs — full width, all visible -->
+      <div class="header-nav">
+        <div class="nav-tabs" aria-label="Olympiad navigation">
+          <button class="nav-tab active" data-tab="training" onclick="switchSection('training')">Start Training</button>
+          <button class="nav-tab" data-tab="skills" onclick="switchSection('skills')">Skill Tracks</button>
+          <button class="nav-tab" data-tab="arena" onclick="switchSection('arena', loadArenaSection)">⚔️ Arena</button>
+          <button class="nav-tab" data-tab="mocks" onclick="switchSection('mocks', loadMockSection)">Mock Olympiads</button>
+          <button class="nav-tab" data-tab="progress" onclick="switchSection('progress', loadProgressSection)">Progress</button>
+          <button class="nav-tab" data-tab="leaderboard" onclick="switchSection('leaderboard', loadLeaderboardSection)">Leaderboard</button>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -2857,9 +2905,6 @@ if (!hasAccess) {
       if (sec) sec.classList.add("active");
       const btn = document.querySelector(`.nav-tabs .nav-tab[data-tab="${sectionName}"]`);
       if (btn) btn.classList.add("active");
-      // Sync the For Parents header button active state
-      const parentBtn = document.querySelector('.btn-for-parents');
-      if (parentBtn) parentBtn.classList.toggle('active', sectionName === 'parent');
       if (typeof onShowCallback === 'function') onShowCallback();
       if (sectionName === 'skills') loadSkillTracksSection().catch(() => {});
       if (sectionName === 'parent' && typeof loadParentSection === 'function') loadParentSection().catch(() => {});
