@@ -13,6 +13,9 @@
   <link rel="stylesheet" href="/assets/css/admin.css" />
   <script src="/assets/js/env-loader.js"></script>
   <script src="/assets/js/admin-auth.js"></script>
+  <!-- Quill rich text editor -->
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
   <!-- TELEMETRY BUILD v2 -->
 
   <style>
@@ -1108,6 +1111,475 @@
       .lp-content-drawer { width: 100%; }
     }
 
+
+  /* ═══════════════════════════════════════════════════════
+     STAGE 1 — World-class Workspace Split Layout
+  ═══════════════════════════════════════════════════════ */
+
+  @media (min-width: 900px) {
+    .lp-system-card {
+      display: flex !important;
+      flex-direction: row;
+      align-items: stretch;
+      min-height: calc(100vh - 220px);
+    }
+    .lp-system-card > .lp-tabs { display: none !important; }
+  }
+  @media (max-width: 899px) {
+    .lp-ws-nav { display: none !important; }
+  }
+
+  .lp-ws-nav {
+    width: 210px; flex-shrink: 0;
+    border-right: 1px solid var(--lp-border);
+    background: var(--lp-surface);
+    display: flex; flex-direction: column;
+    padding: 12px 0 16px; gap: 2px;
+    position: sticky; top: 0;
+    max-height: calc(100vh - 220px);
+    overflow-y: auto; scrollbar-width: none;
+  }
+  .lp-ws-nav::-webkit-scrollbar { display: none; }
+
+  .lp-ws-nav-section {
+    padding: 10px 14px 4px;
+    font-size: 9.5px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: .1em;
+    color: var(--lp-subtle);
+  }
+
+  .lp-ws-nav-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 14px 9px 16px;
+    margin: 0 8px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    color: var(--lp-text-2);
+    background: none; border: none; cursor: pointer;
+    text-align: left; width: calc(100% - 16px);
+    transition: background var(--lp-t-fast), color var(--lp-t-fast);
+    position: relative;
+  }
+  .lp-ws-nav-item:hover { background: var(--lp-surface-2); color: var(--lp-text); }
+  .lp-ws-nav-item.active {
+    background: rgba(79,70,229,.12); color: var(--lp-indigo); font-weight: 700;
+  }
+  .lp-ws-nav-item.active::before {
+    content: ''; position: absolute; left: -8px; top: 50%;
+    transform: translateY(-50%);
+    width: 3px; height: 18px;
+    background: var(--lp-indigo); border-radius: 0 3px 3px 0;
+  }
+  .lp-ws-nav-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: .7; }
+  .lp-ws-nav-item.active .lp-ws-nav-icon { opacity: 1; }
+
+  .lp-ws-nav-badge {
+    margin-left: auto; font-size: 10px; font-weight: 700;
+    padding: 1px 6px; border-radius: 999px;
+    background: var(--lp-surface-2); color: var(--lp-muted);
+    border: 1px solid var(--lp-border);
+  }
+  .lp-ws-nav-badge.amber {
+    background: var(--lp-warning-bg); color: var(--lp-warning-text);
+    border-color: var(--lp-warning-border);
+  }
+  .lp-ws-nav-badge.indigo {
+    background: rgba(79,70,229,.1); color: var(--lp-indigo);
+    border-color: rgba(79,70,229,.22);
+  }
+  .lp-ws-nav-badge.green {
+    background: rgba(34,197,94,.1); color: #16a34a;
+    border-color: rgba(34,197,94,.2);
+  }
+
+  .lp-ws-nav-spacer { flex: 1; }
+  .lp-ws-nav-footer {
+    padding: 10px 14px 0;
+    border-top: 1px solid var(--lp-border);
+    font-size: 10.5px; color: var(--lp-subtle);
+    line-height: 1.6; margin-top: 8px;
+  }
+
+  .lp-ws-content { flex: 1; min-width: 0; overflow: hidden; }
+  .lp-ws-content .lp-panel { padding: 22px; }
+
+  /* ═══════════════════════════════════════════════════════
+     STAGE 2 — Command Palette
+  ═══════════════════════════════════════════════════════ */
+
+  .lp-cmd-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(10,12,20,.6);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    z-index: 900;
+  }
+  .lp-cmd-backdrop.open { display: block; }
+
+  .lp-cmd-palette {
+    display: none; position: fixed;
+    top: 16%; left: 50%; transform: translateX(-50%);
+    width: 580px; max-width: 94vw;
+    background: var(--lp-card);
+    border: 1px solid var(--lp-border-2);
+    border-radius: var(--lp-r-xl);
+    box-shadow: var(--lp-shadow-xl), 0 0 0 1px rgba(79,70,229,.14);
+    z-index: 901; overflow: hidden;
+    animation: lp-cmd-in .16s cubic-bezier(.16,1,.3,1) both;
+  }
+  @keyframes lp-cmd-in {
+    from { opacity:0; transform:translateX(-50%) translateY(-12px) scale(.96); }
+    to   { opacity:1; transform:translateX(-50%) translateY(0) scale(1); }
+  }
+  .lp-cmd-palette.open { display: block; }
+
+  .lp-cmd-search-wrap {
+    display: flex; align-items: center; gap: 10px;
+    padding: 15px 16px;
+    border-bottom: 1px solid var(--lp-border);
+  }
+  .lp-cmd-search-icon { width: 18px; height: 18px; color: var(--lp-muted); flex-shrink: 0; }
+  .lp-cmd-input {
+    flex: 1; background: none; border: none; outline: none;
+    font-size: 15px; color: var(--lp-text); font-family: inherit;
+  }
+  .lp-cmd-input::placeholder { color: var(--lp-muted); }
+  .lp-cmd-kbd {
+    font-size: 11px; color: var(--lp-muted);
+    background: var(--lp-surface-2);
+    border: 1px solid var(--lp-border); border-radius: 5px;
+    padding: 2px 7px; font-family: var(--lp-font-mono); flex-shrink: 0;
+  }
+
+  .lp-cmd-results { max-height: 380px; overflow-y: auto; padding: 6px; }
+  .lp-cmd-results:empty::after {
+    content: 'No results'; display: block;
+    padding: 16px; text-align: center;
+    font-size: 13px; color: var(--lp-muted);
+  }
+  .lp-cmd-group-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--lp-subtle);
+    padding: 8px 10px 4px;
+  }
+  .lp-cmd-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 8px;
+    font-size: 13.5px; color: var(--lp-text);
+    cursor: pointer; transition: background var(--lp-t-fast);
+  }
+  .lp-cmd-item:hover, .lp-cmd-item.focused {
+    background: rgba(79,70,229,.09); color: var(--lp-indigo);
+  }
+  .lp-cmd-item-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--lp-surface-2);
+    border: 1px solid var(--lp-border);
+    display: grid; place-items: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .lp-cmd-item-label { flex: 1; font-weight: 600; }
+  .lp-cmd-item-hint { font-size: 11.5px; color: var(--lp-muted); }
+  .lp-cmd-footer {
+    padding: 8px 14px; border-top: 1px solid var(--lp-border);
+    background: var(--lp-surface);
+    display: flex; gap: 16px;
+    font-size: 11px; color: var(--lp-subtle);
+  }
+  .lp-cmd-footer kbd {
+    background: var(--lp-surface-2); border: 1px solid var(--lp-border);
+    border-radius: 4px; padding: 1px 5px;
+    font-size: 10.5px; font-family: var(--lp-font-mono); margin-right: 3px;
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     STAGE 3 — CMS Panel
+  ═══════════════════════════════════════════════════════ */
+
+  .lp-cms-subnav {
+    display: flex; gap: 2px; padding: 0 20px;
+    border-bottom: 1px solid var(--lp-border);
+    background: var(--lp-surface); flex-shrink: 0;
+  }
+  .lp-cms-subtab {
+    padding: 12px 14px 11px;
+    font-size: 12.5px; font-weight: 600;
+    color: var(--lp-muted);
+    border: none; background: none; cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color var(--lp-t-fast), border-color var(--lp-t-fast);
+    margin-bottom: -1px; white-space: nowrap;
+  }
+  .lp-cms-subtab:hover { color: var(--lp-text-2); }
+  .lp-cms-subtab.active { color: var(--lp-indigo); border-bottom-color: var(--lp-indigo); }
+
+  .lp-cms-subpanel { display: none; padding: 22px; }
+  .lp-cms-subpanel.active { display: block; }
+
+  /* Blog post table */
+  .lp-blog-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .lp-blog-table th {
+    padding: 10px 14px; text-align: left;
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--lp-subtle);
+    border-bottom: 1px solid var(--lp-border);
+    white-space: nowrap;
+  }
+  .lp-blog-table td {
+    padding: 12px 14px; border-bottom: 1px solid var(--lp-border);
+    vertical-align: middle;
+  }
+  .lp-blog-table tr:hover td { background: var(--lp-surface); cursor: pointer; }
+  .lp-blog-table tr:last-child td { border-bottom: none; }
+
+  .lp-blog-status {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 999px;
+    font-size: 10.5px; font-weight: 700; white-space: nowrap;
+  }
+  .lp-blog-status.published { background: rgba(34,197,94,.1); color: #16a34a; border: 1px solid rgba(34,197,94,.2); }
+  .lp-blog-status.draft     { background: var(--lp-surface-2); color: var(--lp-muted); border: 1px solid var(--lp-border); }
+  .lp-blog-status.archived  { background: rgba(239,68,68,.08); color: #dc2626; border: 1px solid rgba(239,68,68,.15); }
+
+  .lp-blog-cat {
+    display: inline-block; padding: 2px 8px; border-radius: 5px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .lp-blog-cat.olympiad       { background: rgba(245,158,11,.1); color: #d97706; }
+  .lp-blog-cat.general        { background: rgba(99,102,241,.08); color: var(--lp-indigo); }
+  .lp-blog-cat.learning-tips  { background: rgba(20,184,166,.1); color: #0d9488; }
+  .lp-blog-cat.success-stories{ background: rgba(168,85,247,.1); color: #9333ea; }
+  .lp-blog-cat.bdmo-guide     { background: rgba(59,130,246,.1); color: #3b82f6; }
+  .lp-blog-cat.news           { background: rgba(239,68,68,.08); color: #dc2626; }
+
+  /* ═══════════════════════════════════════════════════════
+     STAGE 4 — Full-page Blog Editor Overlay
+  ═══════════════════════════════════════════════════════ */
+
+  .lp-blog-editor-overlay {
+    display: none; position: fixed; inset: 0;
+    background: var(--lp-card); z-index: 800;
+    flex-direction: column;
+  }
+  .lp-blog-editor-overlay.open { display: flex; }
+
+  .lp-ble-header {
+    height: 56px; border-bottom: 1px solid var(--lp-border);
+    background: var(--lp-surface);
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 20px; flex-shrink: 0;
+  }
+  .lp-ble-back {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 600; color: var(--lp-muted);
+    background: none; border: none; cursor: pointer;
+    padding: 0 10px 0 0; border-right: 1px solid var(--lp-border);
+    transition: color var(--lp-t-fast); white-space: nowrap;
+  }
+  .lp-ble-back:hover { color: var(--lp-text); }
+  .lp-ble-title-wrap { flex: 1; min-width: 0; }
+  .lp-ble-doc-title {
+    font-size: 14px; font-weight: 800; color: var(--lp-text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .lp-ble-doc-slug {
+    font-size: 11px; color: var(--lp-muted);
+    font-family: var(--lp-font-mono);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .lp-ble-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+  .lp-ble-autosave { font-size: 11.5px; color: var(--lp-muted); white-space: nowrap; }
+
+  .lp-ble-status-pill {
+    font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+  }
+  .lp-ble-status-pill.published { background: rgba(34,197,94,.12); color: #16a34a; }
+  .lp-ble-status-pill.draft     { background: var(--lp-surface-2); color: var(--lp-muted); border: 1px solid var(--lp-border); }
+  .lp-ble-status-pill.archived  { background: rgba(239,68,68,.1); color: #dc2626; }
+
+  .lp-ble-body {
+    flex: 1; overflow: hidden;
+    display: grid; grid-template-columns: 46% 54%;
+  }
+  .lp-ble-form {
+    overflow-y: auto; padding: 24px;
+    border-right: 1px solid var(--lp-border);
+    display: grid; gap: 16px; align-content: start;
+  }
+  .lp-ble-preview { overflow-y: auto; background: var(--lp-surface); display: flex; flex-direction: column; }
+
+  .lp-ble-preview-tabs {
+    display: flex; border-bottom: 1px solid var(--lp-border);
+    background: var(--lp-surface); padding: 0 16px; flex-shrink: 0;
+  }
+  .lp-ble-preview-tab {
+    padding: 12px 14px 11px; font-size: 12px; font-weight: 600;
+    color: var(--lp-muted); border: none; background: none; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: color var(--lp-t-fast), border-color var(--lp-t-fast);
+  }
+  .lp-ble-preview-tab:hover { color: var(--lp-text-2); }
+  .lp-ble-preview-tab.active { color: var(--lp-indigo); border-bottom-color: var(--lp-indigo); }
+
+  .lp-ble-preview-panel { display: none; padding: 20px; flex: 1; }
+  .lp-ble-preview-panel.active { display: block; }
+
+  /* Quill toolbar override for dark theme */
+  .lp-ble-form .ql-toolbar {
+    background: var(--lp-surface); border-color: var(--lp-border) !important;
+    border-radius: 8px 8px 0 0; padding: 8px 10px;
+  }
+  .lp-ble-form .ql-container {
+    border-color: var(--lp-border) !important;
+    border-radius: 0 0 8px 8px;
+    background: var(--lp-card); min-height: 260px;
+  }
+  .lp-ble-form .ql-editor { color: var(--lp-text); min-height: 240px; font-size: 14px; }
+  .lp-ble-form .ql-toolbar .ql-stroke { stroke: var(--lp-text-2); }
+  .lp-ble-form .ql-toolbar .ql-fill { fill: var(--lp-text-2); }
+  .lp-ble-form .ql-toolbar button:hover .ql-stroke { stroke: var(--lp-indigo); }
+  .lp-ble-form .ql-toolbar button:hover .ql-fill { fill: var(--lp-indigo); }
+
+  /* Form components */
+  .lp-char-count { font-size: 11px; color: var(--lp-muted); margin-top: 4px; }
+  .lp-char-count.warn { color: var(--lp-warning-text); }
+  .lp-char-count.over { color: var(--lp-danger-text); }
+
+  .lp-cover-preview {
+    width: 100%; max-height: 160px; object-fit: cover;
+    border-radius: 8px; border: 1px solid var(--lp-border);
+    display: none; margin-bottom: 6px;
+  }
+  .lp-cover-preview.visible { display: block; }
+
+  .lp-tag-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .lp-tag-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px 3px 10px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 600;
+    background: rgba(79,70,229,.1); color: var(--lp-indigo);
+    border: 1px solid rgba(79,70,229,.18);
+  }
+  .lp-tag-chip-remove {
+    cursor: pointer; opacity: .6; font-size: 13px;
+    line-height: 1; transition: opacity var(--lp-t-fast);
+    background: none; border: none; color: inherit; padding: 0;
+  }
+  .lp-tag-chip-remove:hover { opacity: 1; }
+
+  .lp-form-divider { border: none; border-top: 1px solid var(--lp-border); margin: 4px 0; }
+  .lp-form-section-label {
+    font-size: 10.5px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--lp-muted); margin-bottom: 2px;
+  }
+
+  /* SERP Preview */
+  .lp-serp-preview {
+    background: #fff; border-radius: 12px;
+    padding: 18px 20px; border: 1px solid #dfe1e5;
+  }
+  .lp-serp-url { font-size: 12px; color: #202124; display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+  .lp-serp-url-site { font-size: 14px; font-weight: 500; color: #202124; }
+  .lp-serp-url-path { font-size: 12px; color: #4d5156; }
+  .lp-serp-title { font-size: 20px; color: #1a0dab; font-weight: 400; line-height: 1.3; margin-bottom: 4px; word-break: break-word; }
+  .lp-serp-title.over { color: #d93025; }
+  .lp-serp-desc { font-size: 13.5px; color: #4d5156; line-height: 1.58; word-break: break-word; }
+  .lp-serp-warn {
+    font-size: 11px; margin-top: 6px; padding: 4px 10px;
+    border-radius: 6px; font-weight: 600;
+  }
+  .lp-serp-warn.ok   { background: rgba(34,197,94,.08); color: #166534; }
+  .lp-serp-warn.warn { background: var(--lp-warning-bg); color: var(--lp-warning-text); }
+  .lp-serp-warn.over { background: var(--lp-danger-bg); color: var(--lp-danger-text); }
+
+  /* Brand logo editor */
+  .lp-brand-logo-preview {
+    width: 80px; height: 80px; border-radius: 12px;
+    border: 1px solid var(--lp-border); background: var(--lp-surface-2);
+    object-fit: contain; display: none; padding: 6px;
+  }
+  .lp-brand-logo-preview.visible { display: block; }
+  .lp-brand-logo-placeholder {
+    width: 80px; height: 80px; border-radius: 12px;
+    border: 2px dashed var(--lp-border); background: var(--lp-surface);
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 4px; font-size: 20px;
+    color: var(--lp-muted); cursor: pointer;
+    transition: border-color var(--lp-t-fast);
+  }
+  .lp-brand-logo-placeholder:hover { border-color: var(--lp-indigo); }
+
+  /* Media library */
+  .lp-media-dropzone {
+    border: 2px dashed var(--lp-border); border-radius: 12px;
+    padding: 32px; text-align: center;
+    transition: all var(--lp-t-fast); cursor: pointer;
+    background: var(--lp-surface);
+  }
+  .lp-media-dropzone.drag-over {
+    border-color: var(--lp-indigo);
+    background: rgba(79,70,229,.05);
+  }
+  .lp-media-dropzone:hover { border-color: var(--lp-indigo); }
+
+  .lp-media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px; margin-top: 16px;
+  }
+  .lp-media-item {
+    position: relative; border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--lp-border); background: var(--lp-surface);
+    cursor: pointer; transition: all var(--lp-t-fast);
+    aspect-ratio: 1;
+  }
+  .lp-media-item:hover { border-color: var(--lp-indigo); transform: scale(1.02); }
+  .lp-media-item:hover .lp-media-item-overlay { opacity: 1; }
+  .lp-media-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .lp-media-item-overlay {
+    position: absolute; inset: 0; background: rgba(10,12,20,.65);
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; opacity: 0; transition: opacity var(--lp-t-fast);
+  }
+  .lp-media-item-name {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,.7));
+    padding: 16px 8px 6px; font-size: 10px; color: rgba(255,255,255,.8);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* Media picker modal */
+  .lp-media-picker-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(10,12,20,.65); z-index: 950;
+  }
+  .lp-media-picker-backdrop.open { display: block; }
+  .lp-media-picker-modal {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 740px; max-width: 96vw; max-height: 86vh;
+    background: var(--lp-card); border-radius: var(--lp-r-xl);
+    border: 1px solid var(--lp-border-2);
+    box-shadow: var(--lp-shadow-xl); z-index: 951;
+    display: none; flex-direction: column; overflow: hidden;
+  }
+  .lp-media-picker-modal.open { display: flex; }
+
+  /* Hero editor */
+  .lp-hero-preview-box {
+    background: linear-gradient(135deg, rgba(30,24,60,.8), rgba(10,20,40,.9));
+    border-radius: 14px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,.08);
+    padding: 28px 30px; position: relative;
+  }
+
+  /* Publish badge (reuse in editor header) */
+  .lp-publish-badge {
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+  }
+  .lp-publish-badge.published { background: rgba(34,197,94,.12); color: #16a34a; }
+  .lp-publish-badge.draft     { background: var(--lp-surface-2); color: var(--lp-muted); border: 1px solid var(--lp-border); }
+  .lp-publish-badge.archived  { background: rgba(239,68,68,.08); color: #dc2626; }
+
   </style>
 </head>
 
@@ -1154,6 +1626,10 @@
             <span class="admin-dot" id="dot"></span>
             <span id="statusTxt">Loading…</span>
           </span>
+          <button class="admin-btn admin-btn-ghost admin-btn-sm" onclick="openCommandPalette()" title="Command palette (⌘K)" type="button" style="display:flex;align-items:center;gap:5px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <span style="font-family:var(--lp-font-mono);font-size:11px">⌘K</span>
+          </button>
           <a class="admin-btn admin-btn-secondary admin-btn-sm" href="/">Visit Site</a>
           <a class="admin-btn admin-btn-secondary admin-btn-sm" href="/dashboard.html">Dashboard</a>
         </div>
@@ -1208,7 +1684,64 @@
         <!-- ── Workspace card ── -->
         <div class="lp-system-card" id="workspaceCard" style="position:relative">
 
-          <!-- Tab bar -->
+          <!-- ── Vertical workspace nav (desktop only) ── -->
+          <nav class="lp-ws-nav" id="workspaceNav" aria-label="Workspace navigation">
+
+            <div class="lp-ws-nav-section">Main</div>
+
+            <button class="lp-ws-nav-item active" data-tab="overview" type="button">
+              <svg class="lp-ws-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+              Overview
+            </button>
+
+            <button class="lp-ws-nav-item" data-tab="content" type="button">
+              <svg class="lp-ws-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Content
+              <span class="lp-ws-nav-badge amber" id="navReviewBadge" style="display:none">0</span>
+            </button>
+
+            <button class="lp-ws-nav-item" data-tab="cms" type="button">
+              <svg class="lp-ws-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              CMS
+              <span class="lp-ws-nav-badge indigo" id="navBlogBadge" style="display:none">0</span>
+            </button>
+
+            <div class="lp-ws-nav-section" style="margin-top:8px">System</div>
+
+            <button class="lp-ws-nav-item" data-tab="monetization" type="button">
+              <svg class="lp-ws-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
+              Monetization
+            </button>
+
+            <button class="lp-ws-nav-item" data-tab="access" type="button">
+              <svg class="lp-ws-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              Access
+            </button>
+
+            <button class="lp-ws-nav-item" data-tab="flags" type="button">
+              <svg class="lp-ws-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5v14"/><path d="M5 5h8l1.5 3L21 8v8h-8l-1.5-3H5"/></svg>
+              Flags
+            </button>
+
+            <button class="lp-ws-nav-item" data-tab="telemetry" type="button">
+              <svg class="lp-ws-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l3-3 3 2 4-6"/></svg>
+              Telemetry
+            </button>
+
+            <div class="lp-ws-nav-spacer"></div>
+
+            <div class="lp-ws-nav-footer">
+              <div id="navSchemaVersion">Schema —</div>
+              <div style="margin-top:2px">QC 131 · P0–P6 Complete</div>
+            </div>
+
+          </nav>
+          <!-- /workspace nav -->
+
+          <!-- Content wrapper -->
+          <div class="lp-ws-content" id="wsContent">
+
+          <!-- Tab bar (mobile fallback) -->
           <div class="lp-tabs" role="tablist" aria-label="Admin workspace">
             <button class="lp-tab active" data-tab="overview" role="tab" aria-selected="true" type="button">
               <svg class="lp-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
@@ -1217,6 +1750,10 @@
             <button class="lp-tab" data-tab="content" role="tab" aria-selected="false" type="button">
               <svg class="lp-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               Content
+            </button>
+            <button class="lp-tab" data-tab="cms" role="tab" aria-selected="false" type="button">
+              <svg class="lp-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              CMS
             </button>
             <button class="lp-tab" data-tab="monetization" role="tab" aria-selected="false" type="button">
               <svg class="lp-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
@@ -1687,6 +2224,263 @@
             </div>
           </div>
           <!-- /tab-content -->
+
+
+          <!-- ── Panel: CMS ── -->
+          <div class="lp-panel" id="tab-cms" role="tabpanel">
+
+            <!-- CMS Sub-navigation -->
+            <div class="lp-cms-subnav">
+              <button class="lp-cms-subtab active" data-cms-tab="posts" type="button">📝 Blog Posts</button>
+              <button class="lp-cms-subtab" data-cms-tab="hero" type="button">🏠 Hero Editor</button>
+              <button class="lp-cms-subtab" data-cms-tab="brand" type="button">🎨 Brand &amp; Logo</button>
+              <button class="lp-cms-subtab" data-cms-tab="media" type="button">🖼️ Media Library</button>
+            </div>
+
+            <!-- ── Sub-panel: Blog Posts ── -->
+            <div class="lp-cms-subpanel active" id="cms-panel-posts">
+              <div class="lp-telemetry-table-card">
+                <div class="lp-telemetry-card-head">
+                  <div>
+                    <div class="lp-telemetry-card-title">Blog Posts</div>
+                    <div class="lp-cell-subtle" style="margin-top:3px">Manage posts · Published posts appear on the homepage</div>
+                  </div>
+                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                    <input class="admin-input admin-input-sm" id="blogSearch" type="text" placeholder="Search posts…" style="width:180px">
+                    <select class="admin-select admin-select-sm" id="blogStatusFilter">
+                      <option value="">All statuses</option>
+                      <option value="published">Published</option>
+                      <option value="draft">Draft</option>
+                      <option value="archived">Archived</option>
+                    </select>
+                    <select class="admin-select admin-select-sm" id="blogCatFilter">
+                      <option value="">All categories</option>
+                      <option value="general">General</option>
+                      <option value="olympiad">Olympiad</option>
+                      <option value="learning-tips">Learning Tips</option>
+                      <option value="success-stories">Success Stories</option>
+                      <option value="bdmo-guide">BdMO Guide</option>
+                      <option value="news">News</option>
+                    </select>
+                    <button class="admin-btn admin-btn-primary admin-btn-sm" id="btnNewPost" type="button">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M12 5v14M5 12h14"/></svg>
+                      New Post
+                    </button>
+                  </div>
+                </div>
+                <div id="blogPostsLoading" style="padding:28px;text-align:center;color:var(--lp-muted);font-size:13px">Loading posts…</div>
+                <div style="overflow-x:auto;display:none" id="blogTableWrap">
+                  <table class="lp-blog-table">
+                    <thead>
+                      <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Published</th>
+                        <th style="text-align:right">Views</th>
+                        <th style="text-align:right">Read</th>
+                      </tr>
+                    </thead>
+                    <tbody id="blogTableBody"></tbody>
+                  </table>
+                  <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--lp-border)">
+                    <div style="font-size:12px;color:var(--lp-muted)" id="blogTableMeta">—</div>
+                    <div style="display:flex;gap:6px">
+                      <button class="admin-btn admin-btn-ghost admin-btn-sm" id="blogPrevPage" type="button" disabled>← Prev</button>
+                      <button class="admin-btn admin-btn-ghost admin-btn-sm" id="blogNextPage" type="button" disabled>Next →</button>
+                    </div>
+                  </div>
+                </div>
+                <div id="blogEmptyState" style="display:none;padding:40px;text-align:center">
+                  <div style="font-size:32px;margin-bottom:10px">📝</div>
+                  <div style="font-size:15px;font-weight:700;color:var(--lp-text);margin-bottom:6px">No posts yet</div>
+                  <div style="font-size:13px;color:var(--lp-muted);margin-bottom:16px">Create your first blog post to get started</div>
+                  <button class="admin-btn admin-btn-primary admin-btn-sm" onclick="openBlogEditor(null)" type="button">Create First Post</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Sub-panel: Hero Editor ── -->
+            <div class="lp-cms-subpanel" id="cms-panel-hero">
+              <div class="lp-telemetry-table-card">
+                <div class="lp-telemetry-card-head">
+                  <div>
+                    <div class="lp-telemetry-card-title">Hero Editor</div>
+                    <div class="lp-cell-subtle" style="margin-top:3px">Manage homepage hero section copy and trust items</div>
+                  </div>
+                  <div style="display:flex;gap:8px;align-items:center">
+                    <span id="heroSaveStatus" style="font-size:11.5px;color:var(--lp-muted)">—</span>
+                    <button class="admin-btn admin-btn-primary admin-btn-sm" id="btnHeroSave" type="button">Save Changes</button>
+                  </div>
+                </div>
+                <div style="padding:22px;display:grid;grid-template-columns:1fr 1fr;gap:24px">
+                  <!-- Left: form -->
+                  <div style="display:grid;gap:14px;align-content:start">
+                    <div class="admin-field">
+                      <label class="admin-label" for="heroHeadline">Headline</label>
+                      <textarea class="admin-input" id="heroHeadline" rows="2" maxlength="120" placeholder="Your bold headline…" style="resize:vertical"></textarea>
+                    </div>
+                    <div class="admin-field">
+                      <label class="admin-label" for="heroSubline">Subline</label>
+                      <textarea class="admin-input" id="heroSubline" rows="2" maxlength="200" placeholder="Supporting text…" style="resize:vertical"></textarea>
+                    </div>
+                    <div class="admin-field">
+                      <label class="admin-label" for="heroCtaPrimary">Primary CTA Label</label>
+                      <input class="admin-input" id="heroCtaPrimary" type="text" maxlength="60" placeholder="Start Free Trial">
+                    </div>
+                    <div class="admin-field">
+                      <label class="admin-label" for="heroCtaSecondary">Secondary CTA Label</label>
+                      <input class="admin-input" id="heroCtaSecondary" type="text" maxlength="60" placeholder="See How It Works">
+                    </div>
+                    <hr class="lp-form-divider">
+                    <div class="lp-form-section-label">Trust Items (up to 3)</div>
+                    <div id="heroTrustItems" style="display:grid;gap:10px"></div>
+                    <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnAddTrustItem" type="button" style="width:fit-content">+ Add Trust Item</button>
+                  </div>
+                  <!-- Right: preview -->
+                  <div>
+                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--lp-muted);margin-bottom:10px">Live Preview</div>
+                    <div class="lp-hero-preview-box">
+                      <div style="font-size:20px;font-weight:800;color:#F0F4FF;line-height:1.25;margin-bottom:10px" id="heroPreviewHeadline">Your headline appears here</div>
+                      <div style="font-size:13px;color:#A8B4CC;line-height:1.6;margin-bottom:16px" id="heroPreviewSubline">Subline text appears here</div>
+                      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+                        <div style="background:linear-gradient(135deg,#4F46E5,#0EA5E9);padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;color:white" id="heroPreviewCtaP">Start Free Trial</div>
+                        <div style="border:1px solid rgba(255,255,255,.2);padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;color:rgba(255,255,255,.7)" id="heroPreviewCtaS">See How It Works</div>
+                      </div>
+                      <div style="display:flex;gap:14px;flex-wrap:wrap" id="heroPreviewTrust"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Sub-panel: Brand & Logo ── -->
+            <div class="lp-cms-subpanel" id="cms-panel-brand">
+              <div class="lp-telemetry-table-card">
+                <div class="lp-telemetry-card-head">
+                  <div>
+                    <div class="lp-telemetry-card-title">Brand &amp; Logo</div>
+                    <div class="lp-cell-subtle" style="margin-top:3px">Update site logo, favicon, and brand identity. Changes apply on next page load.</div>
+                  </div>
+                  <div style="display:flex;gap:8px;align-items:center">
+                    <span id="brandSaveStatus" style="font-size:11.5px;color:var(--lp-muted)">—</span>
+                    <button class="admin-btn admin-btn-primary admin-btn-sm" id="btnBrandSave" type="button">Save Changes</button>
+                  </div>
+                </div>
+                <div style="padding:22px;display:grid;gap:24px">
+                  <!-- Logo + Favicon row -->
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+                    <!-- Logo -->
+                    <div>
+                      <div class="lp-form-section-label" style="margin-bottom:10px">Site Logo</div>
+                      <div style="display:flex;gap:12px;align-items:flex-start">
+                        <div>
+                          <img class="lp-brand-logo-preview" id="brandLogoPreview" alt="Logo preview">
+                          <div class="lp-brand-logo-placeholder" id="brandLogoPlaceholder" onclick="document.getElementById('brandLogoFile').click()" title="Click to upload">
+                            🖼️
+                            <span style="font-size:9px;text-align:center;margin-top:2px">Upload</span>
+                          </div>
+                        </div>
+                        <div style="display:grid;gap:8px;flex:1">
+                          <label class="admin-btn admin-btn-secondary admin-btn-sm" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">
+                            ↑ Upload Logo
+                            <input type="file" id="brandLogoFile" accept="image/png,image/svg+xml,image/jpeg,image/webp" style="display:none">
+                          </label>
+                          <input class="admin-input" id="brandLogoUrl" type="url" placeholder="Or paste logo URL…" style="font-size:12px">
+                          <div style="font-size:11px;color:var(--lp-muted)">SVG or PNG, transparent bg, min 200×200px</div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Favicon -->
+                    <div>
+                      <div class="lp-form-section-label" style="margin-bottom:10px">Favicon</div>
+                      <div style="display:flex;gap:12px;align-items:flex-start">
+                        <div style="width:48px;height:48px;border-radius:10px;border:1px solid var(--lp-border);background:var(--lp-surface-2);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex-shrink:0" id="brandFaviconPreviewWrap">🌐</div>
+                        <div style="display:grid;gap:8px;flex:1">
+                          <label class="admin-btn admin-btn-secondary admin-btn-sm" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">
+                            ↑ Upload Favicon
+                            <input type="file" id="brandFaviconFile" accept="image/x-icon,image/png,image/webp" style="display:none">
+                          </label>
+                          <input class="admin-input" id="brandFaviconUrl" type="url" placeholder="Or paste favicon URL…" style="font-size:12px">
+                          <div style="font-size:11px;color:var(--lp-muted)">ICO or PNG, 32×32px</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <hr class="lp-form-divider">
+
+                  <!-- Site name + tagline -->
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                    <div class="admin-field">
+                      <label class="admin-label" for="brandSiteName">Site Name</label>
+                      <input class="admin-input" id="brandSiteName" type="text" placeholder="LogicPals">
+                      <div style="font-size:11px;color:var(--lp-muted);margin-top:3px">Used in browser tab titles and email footers</div>
+                    </div>
+                    <div class="admin-field">
+                      <label class="admin-label" for="brandTagline">Tagline</label>
+                      <input class="admin-input" id="brandTagline" type="text" placeholder="THINK. DON'T MEMORIZE.">
+                      <div style="font-size:11px;color:var(--lp-muted);margin-top:3px">Shown in footer and social share previews</div>
+                    </div>
+                  </div>
+
+                  <!-- Live nav preview -->
+                  <div style="background:var(--lp-surface);border:1px solid var(--lp-border);border-radius:var(--lp-r-lg);padding:16px 18px">
+                    <div class="lp-form-section-label" style="margin-bottom:12px">Live Preview — Nav Logo</div>
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div style="width:34px;height:34px;border-radius:8px;background:var(--lp-surface-2);border:1px solid var(--lp-border);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0" id="brandNavLogoPreview">L</div>
+                      <div>
+                        <div style="font-size:14px;font-weight:700;color:var(--lp-text)" id="brandNavName">LogicPals</div>
+                        <div style="font-size:10px;color:var(--lp-muted)" id="brandNavTagline">THINK. DON'T MEMORIZE.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Sub-panel: Media Library ── -->
+            <div class="lp-cms-subpanel" id="cms-panel-media">
+              <div class="lp-telemetry-table-card">
+                <div class="lp-telemetry-card-head">
+                  <div>
+                    <div class="lp-telemetry-card-title">Media Library</div>
+                    <div class="lp-cell-subtle" style="margin-top:3px">All images in the blog-media bucket · Max 5MB per file</div>
+                  </div>
+                  <div style="display:flex;gap:8px;align-items:center">
+                    <span id="mediaCount" style="font-size:12px;color:var(--lp-muted)">—</span>
+                    <label class="admin-btn admin-btn-primary admin-btn-sm" style="cursor:pointer;margin:0">
+                      ↑ Upload Images
+                      <input type="file" id="mediaUploadInput" accept="image/*" multiple style="display:none">
+                    </label>
+                  </div>
+                </div>
+                <div style="padding:20px">
+                  <div class="lp-media-dropzone" id="mediaDropzone">
+                    <div style="font-size:28px;margin-bottom:8px">🖼️</div>
+                    <div style="font-size:14px;font-weight:700;color:var(--lp-text);margin-bottom:4px">Drop images here to upload</div>
+                    <div style="font-size:12px;color:var(--lp-muted)">or click to browse · PNG, JPG, WebP, GIF · Max 5MB each</div>
+                  </div>
+                  <div id="mediaUploadProgress" style="display:none;margin-top:14px">
+                    <div class="admin-banner admin-banner-info" style="margin:0">
+                      <svg class="admin-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                      <span id="mediaUploadMsg">Uploading…</span>
+                    </div>
+                  </div>
+                  <div id="mediaLoadingState" style="padding:24px;text-align:center;color:var(--lp-muted);font-size:13px">Loading media…</div>
+                  <div class="lp-media-grid" id="mediaGrid" style="display:none"></div>
+                  <div id="mediaEmptyState" style="display:none;padding:24px;text-align:center">
+                    <div style="font-size:28px;margin-bottom:8px">📭</div>
+                    <div style="font-size:14px;font-weight:600;color:var(--lp-text-2)">No images yet</div>
+                    <div style="font-size:12px;color:var(--lp-muted);margin-top:4px">Upload your first image using the button above</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <!-- /tab-cms -->
+
 
           <!-- ── Panel: Monetization ── -->
           <div class="lp-panel" id="tab-monetization" role="tabpanel">
@@ -2321,6 +3115,7 @@
           </div>
           <!-- /tab-telemetry -->
 
+          </div><!-- /lp-ws-content -->
 
           <!-- ── Gate overlay (locked when signed out) ── -->
           <div class="lp-gate" id="gateOverlay" aria-live="polite" aria-label="Workspace locked">
@@ -2364,36 +3159,60 @@
   (function () {
     'use strict';
 
-    /* ── Tab switcher ─────────────────────────────────────────── */
-    function wireTabs() {
-      const tabs   = Array.from(document.querySelectorAll('.lp-tab'));
-      const panels = {
-        overview:     document.getElementById('tab-overview'),
-        content:      document.getElementById('tab-content'),
-        monetization: document.getElementById('tab-monetization'),
-        access:       document.getElementById('tab-access'),
-        flags:        document.getElementById('tab-flags'),
-        telemetry:    document.getElementById('tab-telemetry'),
+    /* ── Unified workspace panel switcher ───────────────────── */
+    const panels = {
+      overview:     document.getElementById('tab-overview'),
+      content:      document.getElementById('tab-content'),
+      cms:          document.getElementById('tab-cms'),
+      monetization: document.getElementById('tab-monetization'),
+      access:       document.getElementById('tab-access'),
+      flags:        document.getElementById('tab-flags'),
+      telemetry:    document.getElementById('tab-telemetry'),
+    };
+
+    function switchPanel(key) {
+      // Deactivate all horizontal tabs
+      document.querySelectorAll('.lp-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      // Deactivate all vertical nav items
+      document.querySelectorAll('.lp-ws-nav-item').forEach(n => n.classList.remove('active'));
+
+      // Activate matching tab + nav item
+      const tab = document.querySelector(`.lp-tab[data-tab="${key}"]`);
+      const nav = document.querySelector(`.lp-ws-nav-item[data-tab="${key}"]`);
+      if (tab) { tab.classList.add('active'); tab.setAttribute('aria-selected', 'true'); }
+      if (nav) nav.classList.add('active');
+
+      // Deactivate all panels, activate target
+      Object.values(panels).forEach(p => p?.classList.remove('active'));
+      panels[key]?.classList.add('active');
+
+      // Load callbacks
+      if (key === 'telemetry')    loadMonitoringDashboard().catch(() => {});
+      if (key === 'overview')     loadOverviewIncidentSnapshot().catch(() => {});
+      if (key === 'flags')        loadFeatureFlags().catch(() => {});
+      if (key === 'content')      loadContentTab().catch(() => {});
+      if (key === 'cms')          loadCmsTab().catch(() => {});
+
+      // Update breadcrumb
+      const labels = {
+        overview:'Overview', content:'Content', cms:'CMS',
+        monetization:'Monetization', access:'Access',
+        flags:'Flags', telemetry:'Telemetry'
       };
+      const bc = document.querySelector('.admin-breadcrumb-current');
+      if (bc) bc.textContent = labels[key] || key;
+    }
 
-      tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-          tabs.forEach(t => {
-            t.classList.remove('active');
-            t.setAttribute('aria-selected', 'false');
-          });
-          tab.classList.add('active');
-          tab.setAttribute('aria-selected', 'true');
-
-          Object.values(panels).forEach(p => p?.classList.remove('active'));
-          const key = tab.getAttribute('data-tab');
-          panels[key]?.classList.add('active');
-          if (key === 'telemetry') loadMonitoringDashboard().catch(() => {});
-          if (key === 'overview') loadOverviewIncidentSnapshot().catch(() => {});
-          if (key === 'flags') loadFeatureFlags().catch(() => {});
-          if (key === 'content') loadContentTab().catch(() => {});
-
-        });
+    // Backward-compat: wireTabs wires both .lp-tab and .lp-ws-nav-item
+    function wireTabs() {
+      document.querySelectorAll('.lp-tab').forEach(tab => {
+        tab.addEventListener('click', () => switchPanel(tab.getAttribute('data-tab')));
+      });
+      document.querySelectorAll('.lp-ws-nav-item').forEach(nav => {
+        nav.addEventListener('click', () => switchPanel(nav.getAttribute('data-tab')));
       });
     }
 
@@ -2428,6 +3247,9 @@
           if (dt) dt.textContent = data.applied_at
             ? new Date(data.applied_at).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })
             : '—';
+          // Update workspace nav footer
+          const navVer = document.getElementById('navSchemaVersion');
+          if (navVer) navVer.textContent = 'Schema ' + (data.version || '—');
         }
       } catch (_) {
         const el = document.getElementById('statSchema');
@@ -2994,7 +3816,7 @@
           const row = openRows.find(r => String(r.id || '') === String(incidentId || ''));
           if (!row) return;
           setSelectedIncident(row);
-          document.querySelector('.lp-tab[data-tab="telemetry"]')?.click();
+          switchPanel('telemetry');
         });
       });
     }
@@ -3024,7 +3846,7 @@
       if (!row?.id) return;
       setSelectedIncident(row);
       if (options.activateMonitoring) {
-        document.querySelector('.lp-tab[data-tab="telemetry"]')?.click();
+        switchPanel('telemetry');
         return;
       }
       try {
@@ -4013,7 +4835,7 @@
       });
 
       overviewOpenMonitoringBtn?.addEventListener('click', () => {
-        document.querySelector('.lp-tab[data-tab="telemetry"]')?.click();
+        switchPanel('telemetry');
       });
 
       incidentStatusEl?.addEventListener('change', () => {
@@ -5666,6 +6488,7 @@
 
         // Store sb for content tab queries
         contentSb = sb;
+        window._lpSb = sb; // expose for CMS functions
 
         // Preload feature flags for admin control plane
         loadFeatureFlags().catch(() => {});
@@ -5685,6 +6508,845 @@
     });
 
   })();
+
+
+    /* ════════════════════════════════════════════════════════
+       COMMAND PALETTE
+    ════════════════════════════════════════════════════════ */
+    const CMD_ITEMS = [
+      { group:'Navigate', icon:'🏠', label:'Overview',         hint:'Dashboard stats',      action:()=>switchPanel('overview') },
+      { group:'Navigate', icon:'📄', label:'Content Manager',  hint:'Problems library',     action:()=>switchPanel('content') },
+      { group:'Navigate', icon:'✏️',  label:'CMS',              hint:'Blog, hero, media',    action:()=>switchPanel('cms') },
+      { group:'Navigate', icon:'💳', label:'Monetization',     hint:'Payments & subs',      action:()=>switchPanel('monetization') },
+      { group:'Navigate', icon:'🔐', label:'Access Control',   hint:'Roles & permissions',  action:()=>switchPanel('access') },
+      { group:'Navigate', icon:'🚩', label:'Feature Flags',    hint:'Toggle features',      action:()=>switchPanel('flags') },
+      { group:'Navigate', icon:'📊', label:'Telemetry',        hint:'Monitoring & ops',     action:()=>switchPanel('telemetry') },
+      { group:'CMS',      icon:'📝', label:'New Blog Post',    hint:'Open editor',          action:()=>{ switchPanel('cms'); setTimeout(()=>openBlogEditor(null),200); } },
+      { group:'CMS',      icon:'🏠', label:'Edit Hero',        hint:'Homepage hero copy',   action:()=>{ switchPanel('cms'); setTimeout(()=>document.querySelector('[data-cms-tab="hero"]')?.click(),200); } },
+      { group:'CMS',      icon:'🖼️', label:'Media Library',    hint:'Upload & manage',      action:()=>{ switchPanel('cms'); setTimeout(()=>document.querySelector('[data-cms-tab="media"]')?.click(),200); } },
+      { group:'CMS',      icon:'🎨', label:'Brand & Logo',     hint:'Update site logo',     action:()=>{ switchPanel('cms'); setTimeout(()=>document.querySelector('[data-cms-tab="brand"]')?.click(),200); } },
+      { group:'Content',  icon:'🔍', label:'Problem Browser',  hint:'Search problems',      action:()=>{ switchPanel('content'); setTimeout(()=>document.getElementById('filterSearch')?.focus(),300); } },
+      { group:'Content',  icon:'🚀', label:'Bulk Publish Gate',hint:'Run gate check',       action:()=>{ switchPanel('content'); document.getElementById('btnRunGateCheck')?.click(); } },
+      { group:'Content',  icon:'📋', label:'Review Queue',     hint:'Problems with blockers',action:()=>{ switchPanel('content'); document.getElementById('reviewQueueBody')?.scrollIntoView({behavior:'smooth'}); } },
+      { group:'System',   icon:'🔄', label:'Refresh Telemetry',hint:'Reload monitoring',    action:()=>loadMonitoringDashboard().catch(()=>{}) },
+      { group:'System',   icon:'🌐', label:'Visit Live Site',  hint:'Open logicpals.com',   action:()=>window.open('/','_blank') },
+    ];
+
+    let cmdOpen = false, cmdFocused = 0, cmdFiltered = [];
+
+    function openCommandPalette() {
+      document.getElementById('cmdBackdrop').classList.add('open');
+      document.getElementById('cmdPalette').classList.add('open');
+      document.getElementById('cmdInput').value = '';
+      cmdOpen = true; cmdFocused = 0;
+      filterCmdItems('');
+      setTimeout(() => document.getElementById('cmdInput').focus(), 50);
+    }
+
+    function closeCommandPalette() {
+      document.getElementById('cmdBackdrop').classList.remove('open');
+      document.getElementById('cmdPalette').classList.remove('open');
+      cmdOpen = false;
+    }
+
+    function filterCmdItems(query) {
+      const q = query.toLowerCase().trim();
+      cmdFiltered = q
+        ? CMD_ITEMS.filter(i => i.label.toLowerCase().includes(q) || i.hint.toLowerCase().includes(q) || i.group.toLowerCase().includes(q))
+        : CMD_ITEMS;
+
+      const groups = {};
+      cmdFiltered.forEach(item => {
+        if (!groups[item.group]) groups[item.group] = [];
+        groups[item.group].push(item);
+      });
+
+      const res = document.getElementById('cmdResults');
+      if (!cmdFiltered.length) { res.innerHTML = ''; return; }
+
+      let html = '', idx = 0;
+      Object.entries(groups).forEach(([group, items]) => {
+        html += `<div class="lp-cmd-group-label">${group}</div>`;
+        items.forEach(item => {
+          html += `<div class="lp-cmd-item" data-idx="${idx}">
+            <div class="lp-cmd-item-icon">${item.icon}</div>
+            <span class="lp-cmd-item-label">${item.label}</span>
+            <span class="lp-cmd-item-hint">${item.hint}</span>
+          </div>`;
+          idx++;
+        });
+      });
+      res.innerHTML = html;
+      cmdFocused = 0;
+      updateCmdFocus();
+
+      res.querySelectorAll('.lp-cmd-item').forEach((el, i) => {
+        el.addEventListener('click', () => { cmdFiltered[i].action(); closeCommandPalette(); });
+        el.addEventListener('mouseenter', () => { cmdFocused = i; updateCmdFocus(); });
+      });
+    }
+
+    function updateCmdFocus() {
+      const items = document.querySelectorAll('#cmdResults .lp-cmd-item');
+      items.forEach((el, i) => el.classList.toggle('focused', i === cmdFocused));
+      items[cmdFocused]?.scrollIntoView({ block:'nearest' });
+    }
+
+    document.getElementById('cmdInput')?.addEventListener('input', e => filterCmdItems(e.target.value));
+    document.getElementById('cmdBackdrop')?.addEventListener('click', closeCommandPalette);
+
+    document.addEventListener('keydown', e => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        cmdOpen ? closeCommandPalette() : openCommandPalette();
+        return;
+      }
+      if (!cmdOpen) return;
+      if (e.key === 'Escape') { closeCommandPalette(); return; }
+      if (e.key === 'ArrowDown') { e.preventDefault(); cmdFocused = Math.min(cmdFocused+1, cmdFiltered.length-1); updateCmdFocus(); }
+      if (e.key === 'ArrowUp')   { e.preventDefault(); cmdFocused = Math.max(cmdFocused-1, 0); updateCmdFocus(); }
+      if (e.key === 'Enter')     { e.preventDefault(); cmdFiltered[cmdFocused]?.action(); closeCommandPalette(); }
+    });
+
+    /* ════════════════════════════════════════════════════════
+       CMS TAB CONTROLLER
+    ════════════════════════════════════════════════════════ */
+    async function loadCmsTab() {
+      // Wire CMS sub-tab clicks (idempotent)
+      if (!document.getElementById('tab-cms')._cmsWired) {
+        document.querySelectorAll('.lp-cms-subtab').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.lp-cms-subtab').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.lp-cms-subpanel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            const key = btn.getAttribute('data-cms-tab');
+            document.getElementById('cms-panel-' + key)?.classList.add('active');
+            if (key === 'posts')  loadBlogPosts();
+            if (key === 'hero')   loadHeroEditor();
+            if (key === 'brand')  loadBrandEditor();
+            if (key === 'media')  loadMediaLibrary();
+          });
+        });
+        document.getElementById('btnNewPost')?.addEventListener('click', () => openBlogEditor(null));
+        document.getElementById('tab-cms')._cmsWired = true;
+      }
+      loadBlogPosts();
+    }
+
+    /* ════════════════════════════════════════════════════════
+       BLOG POSTS LIST
+    ════════════════════════════════════════════════════════ */
+    let blogCurrentPage = 0, blogPageSize = 15, blogAllPosts = [], blogFilteredPosts = [];
+
+    async function loadBlogPosts() {
+      const sb = window._lpSb; if (!sb) return;
+      document.getElementById('blogPostsLoading').style.display = '';
+      document.getElementById('blogTableWrap').style.display = 'none';
+      document.getElementById('blogEmptyState').style.display = 'none';
+      try {
+        const { data, error } = await sb.from('blog_posts')
+          .select('id,title,slug,category,status,published_at,read_time_minutes,view_count,author,excerpt')
+          .order('updated_at', { ascending: false });
+        if (error) throw error;
+        blogAllPosts = data || [];
+        blogCurrentPage = 0;
+        filterAndRenderBlogPosts();
+        // Update nav badge
+        const pub = blogAllPosts.filter(p => p.status === 'published').length;
+        const badge = document.getElementById('navBlogBadge');
+        if (badge) { badge.textContent = pub; badge.style.display = pub > 0 ? '' : 'none'; }
+      } catch(err) {
+        document.getElementById('blogPostsLoading').textContent = 'Failed to load posts: ' + err.message;
+      }
+    }
+
+    function filterAndRenderBlogPosts() {
+      const q      = (document.getElementById('blogSearch')?.value || '').toLowerCase();
+      const status = document.getElementById('blogStatusFilter')?.value || '';
+      const cat    = document.getElementById('blogCatFilter')?.value || '';
+      blogFilteredPosts = blogAllPosts.filter(p => {
+        if (status && p.status !== status) return false;
+        if (cat && p.category !== cat) return false;
+        if (q && !p.title.toLowerCase().includes(q) && !(p.excerpt||'').toLowerCase().includes(q)) return false;
+        return true;
+      });
+      renderBlogTable();
+    }
+
+    function renderBlogTable() {
+      const loading = document.getElementById('blogPostsLoading');
+      const wrap    = document.getElementById('blogTableWrap');
+      const empty   = document.getElementById('blogEmptyState');
+      const tbody   = document.getElementById('blogTableBody');
+      const meta    = document.getElementById('blogTableMeta');
+      loading.style.display = 'none';
+
+      if (!blogFilteredPosts.length) {
+        wrap.style.display = 'none';
+        empty.style.display = '';
+        return;
+      }
+      wrap.style.display = '';
+      empty.style.display = 'none';
+
+      const start = blogCurrentPage * blogPageSize;
+      const page  = blogFilteredPosts.slice(start, start + blogPageSize);
+      const catLabels = { general:'General', olympiad:'Olympiad', 'learning-tips':'Learning Tips', 'success-stories':'Success Stories', 'bdmo-guide':'BdMO Guide', news:'News' };
+
+      tbody.innerHTML = page.map(p => {
+        const pubDate = p.published_at ? new Date(p.published_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—';
+        return `<tr onclick="openBlogEditor('${p.id}')">
+          <td>
+            <div style="font-size:13px;font-weight:600;color:var(--lp-text);line-height:1.3;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.title || '—'}</div>
+            <div style="font-size:11px;color:var(--lp-muted);font-family:var(--lp-font-mono);margin-top:2px">${p.slug || '—'}</div>
+          </td>
+          <td><span class="lp-blog-cat ${p.category||'general'}">${catLabels[p.category]||p.category||'—'}</span></td>
+          <td><span class="lp-blog-status ${p.status||'draft'}">${p.status||'draft'}</span></td>
+          <td style="font-size:12px;color:var(--lp-text-2);white-space:nowrap">${pubDate}</td>
+          <td style="text-align:right;font-size:12px;color:var(--lp-text-2)">${(p.view_count||0).toLocaleString()}</td>
+          <td style="text-align:right;font-size:12px;color:var(--lp-muted)">${p.read_time_minutes||3} min</td>
+        </tr>`;
+      }).join('');
+
+      const total = blogFilteredPosts.length;
+      const totalPages = Math.ceil(total / blogPageSize);
+      meta.textContent = `${start+1}–${Math.min(start+blogPageSize,total)} of ${total} post${total===1?'':'s'}`;
+      document.getElementById('blogPrevPage').disabled = blogCurrentPage === 0;
+      document.getElementById('blogNextPage').disabled = blogCurrentPage >= totalPages - 1;
+    }
+
+    document.getElementById('blogSearch')?.addEventListener('input', () => { blogCurrentPage=0; filterAndRenderBlogPosts(); });
+    document.getElementById('blogStatusFilter')?.addEventListener('change', () => { blogCurrentPage=0; filterAndRenderBlogPosts(); });
+    document.getElementById('blogCatFilter')?.addEventListener('change',   () => { blogCurrentPage=0; filterAndRenderBlogPosts(); });
+    document.getElementById('blogPrevPage')?.addEventListener('click', () => { blogCurrentPage--; renderBlogTable(); });
+    document.getElementById('blogNextPage')?.addEventListener('click', () => { blogCurrentPage++; renderBlogTable(); });
+
+    /* ════════════════════════════════════════════════════════
+       BLOG EDITOR — Open / Close / Save
+    ════════════════════════════════════════════════════════ */
+    let bleCurrentId = null, bleTags = [], bleQuill = null, bleAutoSaveTimer = null;
+
+    function openBlogEditor(id) {
+      bleCurrentId = id;
+      bleTags = [];
+      document.getElementById('blogEditorOverlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+      resetBleForm();
+
+      if (!bleQuill) {
+        bleQuill = new Quill('#bleContentEditor', {
+          theme: 'snow',
+          modules: { toolbar: [
+            [{ header:[1,2,3,false] }],
+            ['bold','italic','underline','strike'],
+            [{ list:'ordered'},{ list:'bullet'}],
+            ['blockquote','code-block'],
+            ['link','image'],
+            ['clean']
+          ]}
+        });
+        bleQuill.on('text-change', () => {
+          const words = bleQuill.getText().trim().split(/\s+/).filter(w=>w.length>0);
+          document.getElementById('bleWordCount').textContent = words.length;
+          scheduleAutoSave();
+          updateBlePreview();
+        });
+        // Custom image handler — open media picker
+        bleQuill.getModule('toolbar').addHandler('image', () => openMediaPicker('quill'));
+      }
+
+      if (id) {
+        loadBlogPost(id);
+        document.getElementById('bleDangerZone').style.display = '';
+      } else {
+        document.getElementById('bleDocTitle').textContent = 'New Post';
+        document.getElementById('bleDocSlug').textContent = '/blog-post.html?slug=—';
+        document.getElementById('bleDangerZone').style.display = 'none';
+        updateBlePreview();
+      }
+    }
+
+    function closeBlogEditor() {
+      if (bleAutoSaveTimer) clearTimeout(bleAutoSaveTimer);
+      document.getElementById('blogEditorOverlay').classList.remove('open');
+      document.body.style.overflow = '';
+      loadBlogPosts();
+    }
+
+    function resetBleForm() {
+      ['bleTitle','bleSlug','bleAuthor','bleCoverUrl','bleExcerpt','bleTagInput','bleSeoTitle','bleSeoDesc']
+        .forEach(id => { const el=document.getElementById(id); if(el) el.value = id==='bleAuthor'?'LogicPals Team':''; });
+      document.getElementById('bleCategory').value = 'general';
+      document.getElementById('bleStatus').value = 'draft';
+      document.getElementById('bleReadTime').value = '3';
+      document.getElementById('blePublishedAt').value = '';
+      document.getElementById('blePublishedAtRow').style.display = 'none';
+      document.getElementById('bleTagChips').innerHTML = '';
+      document.getElementById('bleTitleCount').textContent = '0';
+      document.getElementById('bleExcerptCount').textContent = '0';
+      document.getElementById('bleSeoTitleCount').textContent = '0';
+      document.getElementById('bleSeoDescCount').textContent = '0';
+      document.getElementById('bleWordCount').textContent = '0';
+      document.getElementById('bleAutoSave').textContent = '—';
+      document.getElementById('bleCoverPreview').classList.remove('visible');
+      if (bleQuill) bleQuill.setText('');
+      bleTags = [];
+      document.getElementById('btnBlePublish').textContent = 'Publish';
+    }
+
+    async function loadBlogPost(id) {
+      const sb = window._lpSb; if (!sb) return;
+      try {
+        const { data, error } = await sb.from('blog_posts').select('*').eq('id', id).single();
+        if (error || !data) throw error || new Error('Not found');
+        document.getElementById('bleTitle').value = data.title || '';
+        document.getElementById('bleSlug').value  = data.slug || '';
+        document.getElementById('bleCategory').value = data.category || 'general';
+        document.getElementById('bleStatus').value   = data.status || 'draft';
+        document.getElementById('bleAuthor').value   = data.author || 'LogicPals Team';
+        document.getElementById('bleReadTime').value = data.read_time_minutes || 3;
+        document.getElementById('bleExcerpt').value  = data.excerpt || '';
+        document.getElementById('bleSeoTitle').value = data.seo_title || '';
+        document.getElementById('bleSeoDesc').value  = data.seo_description || '';
+        document.getElementById('bleCoverUrl').value = data.cover_url || '';
+        if (data.cover_url) {
+          const prev = document.getElementById('bleCoverPreview');
+          prev.src = data.cover_url; prev.classList.add('visible');
+        }
+        if (data.published_at) {
+          const local = new Date(new Date(data.published_at) - new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);
+          document.getElementById('blePublishedAt').value = local;
+          document.getElementById('blePublishedAtRow').style.display = '';
+        }
+        if (Array.isArray(data.tags)) { bleTags = data.tags; renderBleTags(); }
+        if (bleQuill && data.content_html) bleQuill.root.innerHTML = data.content_html;
+        updateCharCounts();
+        updateBlePreview();
+        updateBlePublishBtn();
+      } catch(err) {
+        if (window.LPAdmin) LPAdmin.toast('Failed to load post: ' + err.message, 'error');
+      }
+    }
+
+    async function saveBlogPost(overrideStatus) {
+      const sb = window._lpSb; if (!sb) return;
+      const status = overrideStatus || document.getElementById('bleStatus').value;
+      const title  = document.getElementById('bleTitle').value.trim();
+      if (!title) { if (window.LPAdmin) LPAdmin.toast('Title is required', 'error'); return; }
+
+      const payload = {
+        title,
+        slug:            document.getElementById('bleSlug').value.trim() || slugify(title),
+        category:        document.getElementById('bleCategory').value,
+        status,
+        author:          document.getElementById('bleAuthor').value || 'LogicPals Team',
+        read_time_minutes: parseInt(document.getElementById('bleReadTime').value) || 3,
+        excerpt:         document.getElementById('bleExcerpt').value,
+        seo_title:       document.getElementById('bleSeoTitle').value,
+        seo_description: document.getElementById('bleSeoDesc').value,
+        cover_url:       document.getElementById('bleCoverUrl').value || null,
+        tags:            bleTags,
+        content_html:    bleQuill ? bleQuill.root.innerHTML : '',
+      };
+      if (status === 'published') {
+        const pa = document.getElementById('blePublishedAt').value;
+        payload.published_at = pa ? new Date(pa).toISOString() : new Date().toISOString();
+      }
+
+      try {
+        let result;
+        if (bleCurrentId) {
+          result = await sb.from('blog_posts').update(payload).eq('id', bleCurrentId);
+        } else {
+          result = await sb.from('blog_posts').insert(payload).select().single();
+          if (result.data?.id) bleCurrentId = result.data.id;
+        }
+        if (result.error) throw result.error;
+        document.getElementById('bleAutoSave').textContent = 'Saved ✓ ' + new Date().toLocaleTimeString();
+        if (window.LPAdmin) LPAdmin.toast('Post saved', 'success', 2000);
+        document.getElementById('bleDocTitle').textContent = title;
+        document.getElementById('bleDocSlug').textContent = '/blog-post.html?slug=' + payload.slug;
+        document.getElementById('bleDangerZone').style.display = '';
+      } catch(err) {
+        if (window.LPAdmin) LPAdmin.toast('Save failed: ' + err.message, 'error');
+      }
+    }
+
+    function scheduleAutoSave() {
+      if (bleAutoSaveTimer) clearTimeout(bleAutoSaveTimer);
+      document.getElementById('bleAutoSave').textContent = 'Auto-saving…';
+      bleAutoSaveTimer = setTimeout(() => saveBlogPost(null), 3000);
+    }
+
+    function slugify(str) {
+      return str.toLowerCase().trim()
+        .replace(/[^\w\s-]/g,'').replace(/[\s_]+/g,'-').replace(/^-+|-+$/g,'')
+        .slice(0,80);
+    }
+
+    function updateCharCounts() {
+      const pairs = [
+        ['bleTitle','bleTitleCount',60], ['bleExcerpt','bleExcerptCount',160],
+        ['bleSeoTitle','bleSeoTitleCount',60], ['bleSeoDesc','bleSeoDescCount',160],
+      ];
+      pairs.forEach(([inputId, countId, limit]) => {
+        const el = document.getElementById(inputId); if (!el) return;
+        const len = el.value.length;
+        const countEl = document.getElementById(countId); if (!countEl) return;
+        countEl.textContent = len;
+        countEl.parentElement.className = 'lp-char-count' + (len > limit ? ' over' : len > limit*0.9 ? ' warn' : '');
+      });
+    }
+
+    function updateBlePublishBtn() {
+      const s = document.getElementById('bleStatus').value;
+      document.getElementById('btnBlePublish').textContent = s==='published'?'Update': s==='archived'?'Archive':'Publish';
+      document.getElementById('blePublishedAtRow').style.display = s==='published' ? '' : 'none';
+      if (s==='published' && !document.getElementById('blePublishedAt').value) {
+        document.getElementById('blePublishedAt').value = new Date(Date.now() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,16);
+      }
+    }
+
+    /* Blog tags */
+    function renderBleTags() {
+      const chips = document.getElementById('bleTagChips');
+      chips.innerHTML = bleTags.map((t,i) =>
+        `<span class="lp-tag-chip">${t}<button class="lp-tag-chip-remove" data-i="${i}" type="button">✕</button></span>`
+      ).join('');
+      chips.querySelectorAll('.lp-tag-chip-remove').forEach(btn => {
+        btn.addEventListener('click', () => { bleTags.splice(parseInt(btn.dataset.i),1); renderBleTags(); });
+      });
+    }
+    document.getElementById('bleTagInput')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        const val = e.target.value.trim().replace(/,/g,'');
+        if (val && !bleTags.includes(val) && bleTags.length < 10) { bleTags.push(val); renderBleTags(); }
+        e.target.value = '';
+      }
+    });
+
+    /* Slug regeneration */
+    document.getElementById('bleTitle')?.addEventListener('input', e => {
+      if (!bleCurrentId || !document.getElementById('bleSlug').value) {
+        document.getElementById('bleSlug').value = slugify(e.target.value);
+      }
+      updateCharCounts(); updateBlePreview(); updateSerpPreview(); scheduleAutoSave();
+    });
+    document.getElementById('btnBleRegenerateSlug')?.addEventListener('click', () => {
+      document.getElementById('bleSlug').value = slugify(document.getElementById('bleTitle').value);
+      updateBlePreview(); updateSerpPreview();
+    });
+
+    ['bleExcerpt','bleSeoTitle','bleSeoDesc','bleSlug','bleAuthor','bleReadTime','bleCoverUrl'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', () => {
+        updateCharCounts(); updateBlePreview(); updateSerpPreview(); scheduleAutoSave();
+      });
+    });
+    document.getElementById('bleCategory')?.addEventListener('change', () => { updateBlePreview(); updateSerpPreview(); });
+    document.getElementById('bleStatus')?.addEventListener('change', () => { updateBlePublishBtn(); updateBlePreview(); });
+
+    document.getElementById('bleCoverUrl')?.addEventListener('input', e => {
+      const prev = document.getElementById('bleCoverPreview');
+      if (e.target.value) { prev.src = e.target.value; prev.classList.add('visible'); }
+      else prev.classList.remove('visible');
+      updateBlePreview();
+    });
+
+    /* Preview tabs */
+    document.querySelectorAll('.lp-ble-preview-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.lp-ble-preview-tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.lp-ble-preview-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('ble-preview-' + btn.dataset.preview)?.classList.add('active');
+        if (btn.dataset.preview === 'serp') updateSerpPreview();
+      });
+    });
+
+    function updateBlePreview() {
+      const title    = document.getElementById('bleTitle')?.value || '';
+      const excerpt  = document.getElementById('bleExcerpt')?.value || '';
+      const category = document.getElementById('bleCategory')?.value || 'general';
+      const author   = document.getElementById('bleAuthor')?.value || 'LogicPals Team';
+      const readTime = document.getElementById('bleReadTime')?.value || '3';
+      const coverUrl = document.getElementById('bleCoverUrl')?.value || '';
+      const status   = document.getElementById('bleStatus')?.value || 'draft';
+      const pubAt    = document.getElementById('blePublishedAt')?.value || '';
+      const catLabels = {general:'General',olympiad:'Olympiad','learning-tips':'Learning Tips','success-stories':'Success Stories','bdmo-guide':'BdMO Guide',news:'News'};
+      const dateStr  = status==='published'&&pubAt ? new Date(pubAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : 'Draft';
+
+      // Card preview
+      document.getElementById('bleCardTitle').textContent   = title || 'Post title here…';
+      document.getElementById('bleCardExcerpt').textContent = excerpt || 'Excerpt appears here…';
+      document.getElementById('bleCardCat').textContent     = catLabels[category]||'General';
+      document.getElementById('bleCardDate').textContent    = dateStr;
+      document.getElementById('bleCardReadTime').textContent= readTime + ' min read';
+      const cardCover = document.getElementById('bleCardCover');
+      cardCover.innerHTML = coverUrl ? `<img src="${coverUrl}" style="width:100%;height:100%;object-fit:cover" alt="">` : '📷';
+
+      // Header preview
+      document.getElementById('bleHeaderTitle').textContent  = title || 'Post title here…';
+      document.getElementById('bleHeaderCat').textContent    = catLabels[category]||'General';
+      document.getElementById('bleHeaderAuthor').textContent = author;
+      document.getElementById('bleHeaderDate').textContent   = dateStr;
+      document.getElementById('bleHeaderReadTime').textContent= readTime + ' min read';
+      const hCover = document.getElementById('bleHeaderCoverWrap');
+      hCover.innerHTML = coverUrl ? `<img src="${coverUrl}" style="width:100%;height:100%;object-fit:cover" alt="">` : '📷';
+
+      // Status pill + header doc title
+      const pill = document.getElementById('bleStatusPill');
+      pill.className = 'lp-ble-status-pill ' + (status||'draft');
+      pill.textContent = (status||'draft').charAt(0).toUpperCase()+(status||'draft').slice(1);
+      document.getElementById('bleDocTitle').textContent = title || 'New Post';
+      document.getElementById('bleDocSlug').textContent  = '/blog-post.html?slug='+(document.getElementById('bleSlug')?.value||'—');
+    }
+
+    function updateSerpPreview() {
+      const rawTitle = document.getElementById('bleSeoTitle')?.value || document.getElementById('bleTitle')?.value || '';
+      const rawDesc  = document.getElementById('bleSeoDesc')?.value  || document.getElementById('bleExcerpt')?.value || '';
+      const rawSlug  = document.getElementById('bleSlug')?.value || '';
+      const TITLE_LIMIT=60, DESC_LIMIT=160;
+
+      const serpTitleFull = rawTitle + (rawTitle ? ' — LogicPals' : '');
+      document.getElementById('serpTitle').textContent = serpTitleFull.slice(0, TITLE_LIMIT+13+(rawTitle?' — LogicPals'.length:0)) || 'Post Title — LogicPals';
+      document.getElementById('serpTitle').classList.toggle('over', rawTitle.length > TITLE_LIMIT);
+      document.getElementById('serpDesc').textContent  = rawDesc.slice(0, DESC_LIMIT) + (rawDesc.length>DESC_LIMIT?'…':'') || 'Your excerpt or SEO description will appear here…';
+      document.getElementById('serpUrlPath').textContent = rawSlug ? `blog-post.html?slug=${rawSlug}` : 'blog-post.html';
+
+      const tw=document.getElementById('serpTitleWarn'), tLen=rawTitle.length;
+      tw.textContent = `Title: ${tLen} characters${tLen<50?' — aim for 50–60':tLen>60?' — too long, will be truncated':' ✓ ideal'}`;
+      tw.className='lp-serp-warn '+(tLen===0?'ok':tLen>60?'over':tLen>=50?'ok':'warn');
+
+      const dw=document.getElementById('serpDescWarn'), dLen=rawDesc.length;
+      dw.textContent = `Description: ${dLen} characters${dLen<120?' — aim for 120–160':dLen>160?' — too long, will be truncated':' ✓ ideal'}`;
+      dw.className='lp-serp-warn '+(dLen===0?'ok':dLen>160?'over':dLen>=120?'ok':'warn');
+    }
+
+    /* Editor save/close buttons */
+    document.getElementById('btnBlogEditorClose')?.addEventListener('click', closeBlogEditor);
+    document.getElementById('btnBleSaveDraft')?.addEventListener('click',   () => saveBlogPost('draft'));
+    document.getElementById('btnBlePublish')?.addEventListener('click',     () => saveBlogPost(null));
+    document.getElementById('btnBleDelete')?.addEventListener('click', async () => {
+      if (!bleCurrentId) return;
+      if (!confirm('Permanently delete this post? This cannot be undone.')) return;
+      const sb=window._lpSb; if(!sb) return;
+      await sb.from('blog_posts').delete().eq('id', bleCurrentId);
+      if (window.LPAdmin) LPAdmin.toast('Post deleted', 'info');
+      closeBlogEditor();
+    });
+    document.getElementById('btnBlePickCover')?.addEventListener('click', () => openMediaPicker('cover'));
+
+    /* Ctrl+S / Cmd+S in editor */
+    document.addEventListener('keydown', e => {
+      const overlayOpen = document.getElementById('blogEditorOverlay')?.classList.contains('open');
+      if (overlayOpen && (e.metaKey||e.ctrlKey) && e.key==='s') { e.preventDefault(); saveBlogPost(null); }
+      if (overlayOpen && e.key==='Escape' && !cmdOpen) closeBlogEditor();
+    });
+
+    /* ════════════════════════════════════════════════════════
+       HERO EDITOR
+    ════════════════════════════════════════════════════════ */
+    async function loadHeroEditor() {
+      const sb=window._lpSb; if(!sb) return;
+      try {
+        const { data } = await sb.from('site_settings').select('value').eq('key','hero').single();
+        if (!data) return;
+        const h = data.value;
+        document.getElementById('heroHeadline').value    = h.headline || '';
+        document.getElementById('heroSubline').value     = h.subline || '';
+        document.getElementById('heroCtaPrimary').value  = h.cta_primary || '';
+        document.getElementById('heroCtaSecondary').value= h.cta_secondary || '';
+        if (Array.isArray(h.trust_items)) renderHeroTrustItems(h.trust_items);
+        document.getElementById('heroSaveStatus').textContent = 'Loaded';
+        updateHeroPreview();
+      } catch(_) {}
+    }
+
+    function renderHeroTrustItems(items) {
+      const container = document.getElementById('heroTrustItems');
+      container.innerHTML = items.map((item, i) =>
+        `<div style="display:flex;gap:8px;align-items:center">
+          <input class="admin-input" type="text" value="${item.icon||''}" placeholder="🏆" style="width:48px;text-align:center" data-trust-icon="${i}">
+          <input class="admin-input" type="text" value="${item.text||''}" placeholder="Trust statement…" style="flex:1" data-trust-text="${i}">
+          <button class="admin-btn admin-btn-ghost admin-btn-sm" onclick="removeHeroTrustItem(${i})" type="button">✕</button>
+        </div>`
+      ).join('');
+      container.querySelectorAll('input').forEach(inp => inp.addEventListener('input', updateHeroPreview));
+    }
+
+    function removeHeroTrustItem(i) {
+      const items = getHeroTrustItems();
+      items.splice(i,1);
+      renderHeroTrustItems(items);
+      updateHeroPreview();
+    }
+
+    function getHeroTrustItems() {
+      const container=document.getElementById('heroTrustItems');
+      const count = container.querySelectorAll('[data-trust-icon]').length;
+      const items = [];
+      for(let i=0;i<count;i++) {
+        const icon = container.querySelector(`[data-trust-icon="${i}"]`)?.value||'';
+        const text = container.querySelector(`[data-trust-text="${i}"]`)?.value||'';
+        if(icon||text) items.push({icon,text});
+      }
+      return items;
+    }
+
+    document.getElementById('btnAddTrustItem')?.addEventListener('click', () => {
+      const items = getHeroTrustItems();
+      if (items.length >= 3) { if(window.LPAdmin) LPAdmin.toast('Max 3 trust items','info'); return; }
+      items.push({icon:'✨',text:''});
+      renderHeroTrustItems(items);
+    });
+
+    ['heroHeadline','heroSubline','heroCtaPrimary','heroCtaSecondary'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', updateHeroPreview);
+    });
+
+    function updateHeroPreview() {
+      const h = document.getElementById('heroHeadline')?.value || '';
+      const s = document.getElementById('heroSubline')?.value || '';
+      const cp = document.getElementById('heroCtaPrimary')?.value || 'Start Free Trial';
+      const cs = document.getElementById('heroCtaSecondary')?.value || 'See How It Works';
+      document.getElementById('heroPreviewHeadline').textContent = h || 'Your headline appears here';
+      document.getElementById('heroPreviewSubline').textContent  = s || 'Subline text appears here';
+      document.getElementById('heroPreviewCtaP').textContent     = cp;
+      document.getElementById('heroPreviewCtaS').textContent     = cs;
+      const items = getHeroTrustItems();
+      document.getElementById('heroPreviewTrust').innerHTML = items.map(it =>
+        `<span style="font-size:11.5px;color:rgba(255,255,255,.65)">${it.icon} ${it.text}</span>`
+      ).join('');
+    }
+
+    document.getElementById('btnHeroSave')?.addEventListener('click', async () => {
+      const sb=window._lpSb; if(!sb) return;
+      const payload = {
+        headline:      document.getElementById('heroHeadline').value,
+        subline:       document.getElementById('heroSubline').value,
+        cta_primary:   document.getElementById('heroCtaPrimary').value,
+        cta_secondary: document.getElementById('heroCtaSecondary').value,
+        trust_items:   getHeroTrustItems(),
+      };
+      const { error } = await sb.from('site_settings').upsert({ key:'hero', value:payload });
+      if (error) { if(window.LPAdmin) LPAdmin.toast('Save failed: '+error.message,'error'); return; }
+      document.getElementById('heroSaveStatus').textContent = 'Saved ✓ ' + new Date().toLocaleTimeString();
+      if (window.LPAdmin) LPAdmin.toast('Hero settings saved','success',2200);
+    });
+
+    /* ════════════════════════════════════════════════════════
+       BRAND & LOGO EDITOR
+    ════════════════════════════════════════════════════════ */
+    async function loadBrandEditor() {
+      const sb=window._lpSb; if(!sb) return;
+      try {
+        const { data } = await sb.from('site_settings').select('value').eq('key','brand').single();
+        if (!data) return;
+        const b = data.value;
+        document.getElementById('brandLogoUrl').value    = b.logo_url    || '';
+        document.getElementById('brandFaviconUrl').value = b.favicon_url || '';
+        document.getElementById('brandSiteName').value   = b.site_name   || 'LogicPals';
+        document.getElementById('brandTagline').value    = b.tagline     || "THINK. DON'T MEMORIZE.";
+        if (b.logo_url) {
+          document.getElementById('brandLogoPreview').src = b.logo_url;
+          document.getElementById('brandLogoPreview').classList.add('visible');
+          document.getElementById('brandLogoPlaceholder').style.display = 'none';
+        }
+        if (b.favicon_url) {
+          document.getElementById('brandFaviconPreviewWrap').innerHTML =
+            `<img src="${b.favicon_url}" style="width:100%;height:100%;object-fit:contain;border-radius:6px">`;
+        }
+        document.getElementById('brandSaveStatus').textContent = 'Loaded';
+        updateBrandPreview();
+      } catch(_) {}
+    }
+
+    function updateBrandPreview() {
+      const name    = document.getElementById('brandSiteName')?.value || 'LogicPals';
+      const tagline = document.getElementById('brandTagline')?.value || "THINK. DON'T MEMORIZE.";
+      const logoUrl = document.getElementById('brandLogoUrl')?.value || '';
+      document.getElementById('brandNavName').textContent    = name;
+      document.getElementById('brandNavTagline').textContent = tagline;
+      if (logoUrl) {
+        document.getElementById('brandNavLogoPreview').innerHTML =
+          `<img src="${logoUrl}" style="width:100%;height:100%;object-fit:contain;border-radius:6px">`;
+      } else {
+        document.getElementById('brandNavLogoPreview').innerHTML = name.charAt(0).toUpperCase();
+      }
+    }
+
+    ['brandSiteName','brandTagline','brandLogoUrl','brandFaviconUrl'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', updateBrandPreview);
+    });
+    document.getElementById('brandLogoUrl')?.addEventListener('input', e => {
+      const prev = document.getElementById('brandLogoPreview');
+      if (e.target.value) { prev.src = e.target.value; prev.classList.add('visible'); document.getElementById('brandLogoPlaceholder').style.display='none'; }
+      else { prev.classList.remove('visible'); document.getElementById('brandLogoPlaceholder').style.display=''; }
+    });
+    document.getElementById('brandFaviconUrl')?.addEventListener('input', e => {
+      document.getElementById('brandFaviconPreviewWrap').innerHTML = e.target.value
+        ? `<img src="${e.target.value}" style="width:100%;height:100%;object-fit:contain;border-radius:6px">`
+        : '🌐';
+    });
+
+    async function handleBrandFileUpload(file, type) {
+      const sb=window._lpSb; if(!sb||!file) return;
+      const ext = file.name.split('.').pop();
+      const path = `brand/${type}-${Date.now()}.${ext}`;
+      const { error } = await sb.storage.from('blog-media').upload(path, file, { upsert: true });
+      if (error) { if(window.LPAdmin) LPAdmin.toast('Upload failed: '+error.message,'error'); return; }
+      const { data: urlData } = sb.storage.from('blog-media').getPublicUrl(path);
+      const url = urlData?.publicUrl;
+      if (type === 'logo') {
+        document.getElementById('brandLogoUrl').value = url;
+        document.getElementById('brandLogoPreview').src = url;
+        document.getElementById('brandLogoPreview').classList.add('visible');
+        document.getElementById('brandLogoPlaceholder').style.display = 'none';
+      } else {
+        document.getElementById('brandFaviconUrl').value = url;
+        document.getElementById('brandFaviconPreviewWrap').innerHTML =
+          `<img src="${url}" style="width:100%;height:100%;object-fit:contain;border-radius:6px">`;
+      }
+      updateBrandPreview();
+      if(window.LPAdmin) LPAdmin.toast('Uploaded ✓','success',2000);
+    }
+
+    document.getElementById('brandLogoFile')?.addEventListener('change', e => handleBrandFileUpload(e.target.files[0],'logo'));
+    document.getElementById('brandFaviconFile')?.addEventListener('change', e => handleBrandFileUpload(e.target.files[0],'favicon'));
+
+    document.getElementById('btnBrandSave')?.addEventListener('click', async () => {
+      const sb=window._lpSb; if(!sb) return;
+      const payload = {
+        logo_url:    document.getElementById('brandLogoUrl').value || null,
+        favicon_url: document.getElementById('brandFaviconUrl').value || null,
+        site_name:   document.getElementById('brandSiteName').value || 'LogicPals',
+        tagline:     document.getElementById('brandTagline').value || "THINK. DON'T MEMORIZE.",
+      };
+      const { error } = await sb.from('site_settings').upsert({ key:'brand', value:payload });
+      if (error) { if(window.LPAdmin) LPAdmin.toast('Save failed: '+error.message,'error'); return; }
+      document.getElementById('brandSaveStatus').textContent = 'Saved ✓ ' + new Date().toLocaleTimeString();
+      if(window.LPAdmin) LPAdmin.toast('Brand settings saved','success',2200);
+    });
+
+    /* ════════════════════════════════════════════════════════
+       MEDIA LIBRARY
+    ════════════════════════════════════════════════════════ */
+    let mediaPickerCallback = null;
+
+    async function loadMediaLibrary() {
+      const sb=window._lpSb; if(!sb) return;
+      const loading = document.getElementById('mediaLoadingState');
+      const grid    = document.getElementById('mediaGrid');
+      const empty   = document.getElementById('mediaEmptyState');
+      loading.style.display=''; grid.style.display='none'; empty.style.display='none';
+      try {
+        const { data, error } = await sb.storage.from('blog-media').list('', { limit:200, sortBy:{column:'created_at',order:'desc'} });
+        if (error) throw error;
+        const images = (data||[]).filter(f => f.name && /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(f.name));
+        loading.style.display = 'none';
+        document.getElementById('mediaCount').textContent = images.length + ' image' + (images.length===1?'':'s');
+        if (!images.length) { empty.style.display=''; return; }
+        grid.style.display='';
+        grid.innerHTML = images.map(f => {
+          const { data: urlData } = sb.storage.from('blog-media').getPublicUrl(f.name);
+          const url = urlData?.publicUrl || '';
+          return `<div class="lp-media-item" data-url="${url}" data-name="${f.name}" title="${f.name}">
+            <img src="${url}" alt="${f.name}" loading="lazy">
+            <div class="lp-media-item-name">${f.name.split('/').pop()}</div>
+            <div class="lp-media-item-overlay">
+              <button class="admin-btn admin-btn-ghost admin-btn-sm" onclick="navigator.clipboard.writeText('${url}');if(window.LPAdmin)LPAdmin.toast('URL copied','success',1600)" type="button" title="Copy URL">📋</button>
+              <button class="admin-btn admin-btn-ghost admin-btn-sm" onclick="deleteMediaFile('${f.name}')" type="button" title="Delete" style="color:var(--lp-danger-text)">🗑️</button>
+            </div>
+          </div>`;
+        }).join('');
+      } catch(err) {
+        loading.textContent = 'Load failed: ' + err.message;
+      }
+    }
+
+    async function deleteMediaFile(name) {
+      if (!confirm('Delete ' + name + '? This cannot be undone.')) return;
+      const sb=window._lpSb; if(!sb) return;
+      await sb.storage.from('blog-media').remove([name]);
+      if(window.LPAdmin) LPAdmin.toast('Deleted','info',1600);
+      loadMediaLibrary();
+    }
+
+    async function uploadMediaFiles(files) {
+      const sb=window._lpSb; if(!sb||!files.length) return;
+      const progress = document.getElementById('mediaUploadProgress');
+      const msg      = document.getElementById('mediaUploadMsg');
+      progress.style.display='';
+      for (let i=0; i<files.length; i++) {
+        const file = files[i];
+        msg.textContent = `Uploading ${i+1}/${files.length}: ${file.name}`;
+        const path = `uploads/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'-')}`;
+        const { error } = await sb.storage.from('blog-media').upload(path, file, { upsert: true });
+        if (error && window.LPAdmin) LPAdmin.toast('Upload failed: '+error.message,'error');
+      }
+      progress.style.display='none';
+      if(window.LPAdmin) LPAdmin.toast(`${files.length} file${files.length===1?'':'s'} uploaded`,'success',2200);
+      loadMediaLibrary();
+    }
+
+    // Drop zone + file input
+    const mediaDropzone = document.getElementById('mediaDropzone');
+    mediaDropzone?.addEventListener('click', () => document.getElementById('mediaUploadInput').click());
+    mediaDropzone?.addEventListener('dragover', e => { e.preventDefault(); mediaDropzone.classList.add('drag-over'); });
+    mediaDropzone?.addEventListener('dragleave', () => mediaDropzone.classList.remove('drag-over'));
+    mediaDropzone?.addEventListener('drop', e => { e.preventDefault(); mediaDropzone.classList.remove('drag-over'); uploadMediaFiles(Array.from(e.dataTransfer.files)); });
+    document.getElementById('mediaUploadInput')?.addEventListener('change', e => { if(e.target.files.length) uploadMediaFiles(Array.from(e.target.files)); });
+
+    // Media picker modal (used from blog editor cover + Quill image)
+    function openMediaPicker(target) {
+      mediaPickerCallback = target;
+      const sb=window._lpSb; if(!sb) return;
+      const pickerBackdrop = document.getElementById('mediaPickerBackdrop');
+      const pickerModal    = document.getElementById('mediaPickerModal');
+      const pickerGrid     = document.getElementById('mediaPickerGrid');
+      const pickerEmpty    = document.getElementById('mediaPickerEmpty');
+      pickerBackdrop.classList.add('open'); pickerModal.classList.add('open');
+      pickerGrid.innerHTML = '<div style="padding:20px;text-align:center;color:var(--lp-muted);font-size:13px">Loading…</div>';
+      sb.storage.from('blog-media').list('',{limit:200,sortBy:{column:'created_at',order:'desc'}}).then(({data,error}) => {
+        if (error || !data) { pickerGrid.innerHTML=''; pickerEmpty.style.display=''; return; }
+        const images = data.filter(f => /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(f.name));
+        if (!images.length) { pickerGrid.innerHTML=''; pickerEmpty.style.display=''; return; }
+        pickerEmpty.style.display='none';
+        pickerGrid.innerHTML = images.map(f => {
+          const { data: urlData } = sb.storage.from('blog-media').getPublicUrl(f.name);
+          const url = urlData?.publicUrl || '';
+          return `<div class="lp-media-item" onclick="selectMediaImage('${url}')" title="${f.name}">
+            <img src="${url}" alt="" loading="lazy">
+            <div class="lp-media-item-name">${f.name.split('/').pop()}</div>
+          </div>`;
+        }).join('');
+      });
+    }
+
+    function selectMediaImage(url) {
+      if (mediaPickerCallback === 'cover') {
+        document.getElementById('bleCoverUrl').value = url;
+        document.getElementById('bleCoverPreview').src = url;
+        document.getElementById('bleCoverPreview').classList.add('visible');
+        updateBlePreview();
+      } else if (mediaPickerCallback === 'quill' && bleQuill) {
+        const range = bleQuill.getSelection(true);
+        bleQuill.insertEmbed(range.index, 'image', url);
+      }
+      document.getElementById('mediaPickerBackdrop').classList.remove('open');
+      document.getElementById('mediaPickerModal').classList.remove('open');
+    }
+
+    document.getElementById('btnCloseMediaPicker')?.addEventListener('click', () => {
+      document.getElementById('mediaPickerBackdrop').classList.remove('open');
+      document.getElementById('mediaPickerModal').classList.remove('open');
+    });
+    document.getElementById('mediaPickerBackdrop')?.addEventListener('click', () => {
+      document.getElementById('mediaPickerBackdrop').classList.remove('open');
+      document.getElementById('mediaPickerModal').classList.remove('open');
+    });
+
   </script>
   <!-- ── Problem Detail Drawer ── -->
   <div class="lp-content-drawer-backdrop" id="contentDrawerBackdrop"></div>
@@ -5700,6 +7362,245 @@
     </div>
     <div class="lp-content-drawer-body" id="drawerBody">
       <div class="lp-telemetry-empty">Select a problem from the browser to view details.</div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════
+       COMMAND PALETTE (⌘K)
+  ══════════════════════════════════════════════ -->
+  <div class="lp-cmd-backdrop" id="cmdBackdrop"></div>
+  <div class="lp-cmd-palette" id="cmdPalette" role="dialog" aria-label="Command palette" aria-modal="true">
+    <div class="lp-cmd-search-wrap">
+      <svg class="lp-cmd-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="lp-cmd-input" id="cmdInput" type="text" placeholder="Type a command or search…" autocomplete="off" spellcheck="false">
+      <span class="lp-cmd-kbd">Esc</span>
+    </div>
+    <div class="lp-cmd-results" id="cmdResults"></div>
+    <div class="lp-cmd-footer">
+      <span><kbd>↑↓</kbd> navigate</span>
+      <span><kbd>↵</kbd> select</span>
+      <span><kbd>Esc</kbd> close</span>
+      <span><kbd>⌘K</kbd> open</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       FULL-PAGE BLOG EDITOR OVERLAY
+  ══════════════════════════════════════════════ -->
+  <div class="lp-blog-editor-overlay" id="blogEditorOverlay" role="dialog" aria-modal="true" aria-label="Blog post editor">
+
+    <!-- Header -->
+    <div class="lp-ble-header">
+      <button class="lp-ble-back" id="btnBlogEditorClose" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Back to CMS
+      </button>
+      <div class="lp-ble-title-wrap">
+        <div class="lp-ble-doc-title" id="bleDocTitle">New Post</div>
+        <div class="lp-ble-doc-slug" id="bleDocSlug">/blog-post.html?slug=—</div>
+      </div>
+      <div class="lp-ble-actions">
+        <span class="lp-ble-autosave" id="bleAutoSave">—</span>
+        <span class="lp-ble-status-pill draft" id="bleStatusPill">Draft</span>
+        <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnBleSaveDraft" type="button">Save Draft</button>
+        <button class="admin-btn admin-btn-primary admin-btn-sm" id="btnBlePublish" type="button">Publish</button>
+      </div>
+    </div>
+
+    <!-- Two-column body -->
+    <div class="lp-ble-body">
+
+      <!-- LEFT: Form -->
+      <div class="lp-ble-form" id="bleForm">
+
+        <div class="admin-field">
+          <label class="admin-label" for="bleTitle">Title <span style="color:var(--lp-danger)">*</span></label>
+          <input class="admin-input" id="bleTitle" type="text" placeholder="Your post title…" maxlength="120" style="font-size:17px;font-weight:700;height:52px">
+          <div class="lp-char-count"><span id="bleTitleCount">0</span>/60 recommended for SEO</div>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="bleSlug">URL Slug</label>
+          <div style="display:flex;gap:6px">
+            <input class="admin-input" id="bleSlug" type="text" placeholder="auto-generated" style="flex:1;font-family:var(--lp-font-mono);font-size:12px">
+            <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnBleRegenerateSlug" type="button" title="Regenerate from title">↺ Regenerate</button>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div class="admin-field">
+            <label class="admin-label" for="bleCategory">Category</label>
+            <select class="admin-select" id="bleCategory">
+              <option value="general">General</option>
+              <option value="olympiad">Olympiad</option>
+              <option value="learning-tips">Learning Tips</option>
+              <option value="success-stories">Success Stories</option>
+              <option value="bdmo-guide">BdMO Guide</option>
+              <option value="news">News</option>
+            </select>
+          </div>
+          <div class="admin-field">
+            <label class="admin-label" for="bleStatus">Status</label>
+            <select class="admin-select" id="bleStatus">
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+              <option value="archived">Archived</option>
+            </select>
+          </div>
+          <div class="admin-field">
+            <label class="admin-label" for="bleAuthor">Author</label>
+            <input class="admin-input" id="bleAuthor" type="text" value="LogicPals Team">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 130px;gap:10px">
+          <div class="admin-field" id="blePublishedAtRow" style="display:none">
+            <label class="admin-label" for="blePublishedAt">Publish Date &amp; Time</label>
+            <input class="admin-input" id="blePublishedAt" type="datetime-local">
+          </div>
+          <div class="admin-field">
+            <label class="admin-label" for="bleReadTime">Read Time (min)</label>
+            <input class="admin-input" id="bleReadTime" type="number" min="1" max="60" value="3">
+            <div class="lp-char-count"><span id="bleWordCount">0</span> words</div>
+          </div>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label">Cover Image</label>
+          <img class="lp-cover-preview" id="bleCoverPreview" alt="Cover preview">
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button class="admin-btn admin-btn-secondary admin-btn-sm" id="btnBlePickCover" type="button">📁 From Media Library</button>
+            <input class="admin-input" id="bleCoverUrl" type="url" placeholder="Or paste image URL" style="flex:1;font-size:12px">
+          </div>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="bleExcerpt">Excerpt <span style="font-weight:400;color:var(--lp-muted)">— shown on cards &amp; SEO</span></label>
+          <textarea class="admin-input" id="bleExcerpt" rows="3" maxlength="300" placeholder="One sentence that makes someone click…" style="resize:vertical"></textarea>
+          <div class="lp-char-count"><span id="bleExcerptCount">0</span>/160 recommended</div>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="bleTagInput">Tags</label>
+          <input class="admin-input" id="bleTagInput" type="text" placeholder="Type and press Enter or comma…">
+          <div class="lp-tag-chips" id="bleTagChips"></div>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label">Content</label>
+          <div id="bleContentEditor" style="min-height:280px"></div>
+        </div>
+
+        <hr class="lp-form-divider">
+        <div class="lp-form-section-label">SEO</div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="bleSeoTitle">SEO Title</label>
+          <input class="admin-input" id="bleSeoTitle" type="text" maxlength="80" placeholder="Defaults to title if empty">
+          <div class="lp-char-count"><span id="bleSeoTitleCount">0</span>/60 recommended</div>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="bleSeoDesc">SEO Description</label>
+          <textarea class="admin-input" id="bleSeoDesc" rows="2" maxlength="200" placeholder="Defaults to excerpt if empty" style="resize:vertical"></textarea>
+          <div class="lp-char-count"><span id="bleSeoDescCount">0</span>/160 recommended</div>
+        </div>
+
+        <div id="bleDangerZone" style="display:none">
+          <hr class="lp-form-divider">
+          <div class="lp-form-section-label" style="color:var(--lp-danger-text)">Danger Zone</div>
+          <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnBleDelete" type="button" style="color:var(--lp-danger-text);border-color:var(--lp-danger-border)">Delete this post permanently</button>
+        </div>
+
+      </div><!-- /form -->
+
+      <!-- RIGHT: Live preview -->
+      <div class="lp-ble-preview">
+        <div class="lp-ble-preview-tabs">
+          <button class="lp-ble-preview-tab active" data-preview="card" type="button">Blog Card</button>
+          <button class="lp-ble-preview-tab" data-preview="serp" type="button">Google Preview</button>
+          <button class="lp-ble-preview-tab" data-preview="header" type="button">Post Header</button>
+        </div>
+
+        <!-- Preview: Blog Card -->
+        <div class="lp-ble-preview-panel active" id="ble-preview-card">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--lp-muted);margin-bottom:14px">How it looks on the homepage</div>
+          <div id="bleCardPreview" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;max-width:360px">
+            <div id="bleCardCover" style="width:100%;aspect-ratio:16/9;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:28px;color:rgba(255,255,255,.18)">📷</div>
+            <div style="padding:16px 18px 18px">
+              <div id="bleCardCat" style="display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;background:rgba(99,102,241,.1);color:#818CF8;border:1px solid rgba(99,102,241,.15);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">General</div>
+              <div id="bleCardTitle" style="font-size:16px;font-weight:700;color:#F0F4FF;line-height:1.3;margin-bottom:8px">Post title here…</div>
+              <div id="bleCardExcerpt" style="font-size:12.5px;color:#A8B4CC;line-height:1.55;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Excerpt appears here…</div>
+              <div style="font-size:11px;color:#6B7A96;display:flex;gap:14px">
+                <span id="bleCardDate">Draft</span>
+                <span id="bleCardReadTime">3 min read</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview: Google SERP -->
+        <div class="lp-ble-preview-panel" id="ble-preview-serp">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--lp-muted);margin-bottom:14px">How it looks in Google search results</div>
+          <div class="lp-serp-preview">
+            <div class="lp-serp-url">
+              <div style="width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#3B82F6,#0EA5A0);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:white;flex-shrink:0">L</div>
+              <div>
+                <span class="lp-serp-url-site">logicpals.com</span>
+                <span style="color:#4d5156;margin:0 3px">›</span>
+                <span class="lp-serp-url-path" id="serpUrlPath">blog-post.html</span>
+              </div>
+            </div>
+            <div class="lp-serp-title" id="serpTitle">Post Title — LogicPals</div>
+            <div class="lp-serp-desc" id="serpDesc">Your excerpt or SEO description will appear here. Keep it between 120–160 characters for best results.</div>
+          </div>
+          <div style="margin-top:12px;display:grid;gap:6px">
+            <div class="lp-serp-warn ok" id="serpTitleWarn">Title: — characters</div>
+            <div class="lp-serp-warn ok" id="serpDescWarn">Description: — characters</div>
+          </div>
+          <div style="margin-top:14px;font-size:11.5px;color:var(--lp-muted);line-height:1.7;background:var(--lp-surface);border-radius:8px;padding:12px 14px">
+            <strong style="color:var(--lp-text-2)">SERP best practices:</strong><br>
+            Title: 50–60 characters ideal<br>
+            Description: 120–160 characters ideal<br>
+            Include your main keyword near the start.
+          </div>
+        </div>
+
+        <!-- Preview: Post Header -->
+        <div class="lp-ble-preview-panel" id="ble-preview-header">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--lp-muted);margin-bottom:14px">How the article page header looks</div>
+          <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden">
+            <div id="bleHeaderCoverWrap" style="width:100%;aspect-ratio:16/5;background:linear-gradient(135deg,rgba(79,70,229,.2),rgba(14,165,160,.12));display:flex;align-items:center;justify-content:center;font-size:32px">📷</div>
+            <div style="padding:20px 22px">
+              <div id="bleHeaderCat" style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;background:rgba(99,102,241,.1);color:#818CF8;margin-bottom:12px;text-transform:uppercase">General</div>
+              <div id="bleHeaderTitle" style="font-size:22px;font-weight:700;color:#F0F4FF;line-height:1.25;margin-bottom:10px">Post title here…</div>
+              <div style="display:flex;gap:16px;font-size:12px;color:#6B7A96;flex-wrap:wrap">
+                <span id="bleHeaderAuthor">LogicPals Team</span>
+                <span id="bleHeaderDate">Draft</span>
+                <span id="bleHeaderReadTime">3 min read</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /preview -->
+    </div><!-- /body -->
+  </div>
+  <!-- /blog editor overlay -->
+
+  <!-- ══════════════════════════════════════════════
+       MEDIA PICKER MODAL
+  ══════════════════════════════════════════════ -->
+  <div class="lp-media-picker-backdrop" id="mediaPickerBackdrop"></div>
+  <div class="lp-media-picker-modal" id="mediaPickerModal">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--lp-border)">
+      <div style="font-size:15px;font-weight:700;color:var(--lp-text)">Select Image</div>
+      <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnCloseMediaPicker" type="button">✕ Close</button>
+    </div>
+    <div style="padding:16px;overflow-y:auto;flex:1">
+      <div class="lp-media-grid" id="mediaPickerGrid"></div>
+      <div id="mediaPickerEmpty" style="display:none;padding:24px;text-align:center;color:var(--lp-muted);font-size:13px">No images in library. Upload some first.</div>
     </div>
   </div>
 

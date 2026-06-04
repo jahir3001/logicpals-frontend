@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-PSTQB75G');</script>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title id="pageTitle">Loading… — LogicPals</title>
+  <meta name="description" id="pageMetaDesc" content="">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" id="pageCanonical" href="https://logicpals.com/blog-post.html">
+
+  <!-- OG / Twitter -->
+  <meta property="og:type"  content="article">
+  <meta property="og:site_name" content="LogicPals">
+  <meta property="og:title" id="ogTitle" content="LogicPals Blog">
+  <meta property="og:description" id="ogDesc" content="">
+  <meta property="og:image" id="ogImage" content="https://logicpals.com/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#080C14">
+  <script src="/assets/js/pixel.js" defer></script>
+  <script src="/assets/js/tracking.js" defer></script>
+  <script src="/assets/js/env-loader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* ── Base reset ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'Fira Code', 'Cascadia Code', monospace;
+      --bg:        #080C14;
+      --bg2:       #0D1220;
+      --surface:   #111827;
+      --border:    rgba(255,255,255,.08);
+      --text:      #F0F4FF;
+      --text2:     #C8D0E0;
+      --muted:     #6B7A96;
+      --subtle:    #4B5563;
+      --indigo:    #818CF8;
+      --indigo2:   #4F46E5;
+      --teal:      #0EA5E9;
+      --max-w:     720px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body  { background: var(--bg); color: var(--text); font-family: var(--font-body); line-height: 1.6; }
+    a     { color: var(--indigo); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    img   { max-width: 100%; }
+
+    /* ── Reading progress bar ─────────────────────────────────── */
+    #readingProgress {
+      position: fixed; top: 0; left: 0; z-index: 999;
+      height: 3px; width: 0%;
+      background: linear-gradient(90deg, var(--indigo2), var(--teal));
+      transition: width .1s linear;
+    }
+
+    /* ── Navigation ───────────────────────────────────────────── */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8,12,20,.92);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      height: 56px; display: flex; align-items: center;
+    }
+    .nav-inner {
+      max-width: 1160px; margin: 0 auto; padding: 0 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 9px; color: var(--text); font-weight: 800; font-size: 15px; }
+    .nav-logo-icon {
+      width: 30px; height: 30px; border-radius: 7px;
+      background: linear-gradient(135deg, var(--indigo2), var(--teal));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 900; color: white; flex-shrink: 0;
+    }
+    .nav-actions { display: flex; gap: 10px; align-items: center; }
+    .nav-btn {
+      padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: none; transition: all .18s ease; text-decoration: none;
+    }
+    .nav-btn-ghost { background: rgba(255,255,255,.06); color: var(--text2); border: 1px solid var(--border); }
+    .nav-btn-ghost:hover { background: rgba(255,255,255,.1); color: var(--text); text-decoration: none; }
+    .nav-btn-primary { background: linear-gradient(135deg, var(--indigo2), var(--teal)); color: white; }
+    .nav-btn-primary:hover { opacity: .9; text-decoration: none; }
+
+    /* ── Main layout ──────────────────────────────────────────── */
+    .post-wrap  { max-width: var(--max-w); margin: 0 auto; padding: 0 20px 80px; }
+    .post-full  { max-width: 860px; }  /* for cover image */
+
+    /* ── Cover image ──────────────────────────────────────────── */
+    .post-cover-wrap {
+      max-width: 860px; margin: 0 auto; padding: 0 20px;
+    }
+    .post-cover {
+      width: 100%; aspect-ratio: 16/6; object-fit: cover;
+      border-radius: 16px; margin-top: 32px;
+      display: block;
+    }
+    .post-cover-placeholder {
+      width: 100%; aspect-ratio: 16/5;
+      background: linear-gradient(135deg, rgba(79,70,229,.15), rgba(14,165,160,.08));
+      border-radius: 16px; margin-top: 32px;
+    }
+
+    /* ── Post header ──────────────────────────────────────────── */
+    .post-header { padding: 32px 0 24px; }
+    .post-cat {
+      display: inline-block; padding: 4px 12px; border-radius: 999px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+      margin-bottom: 16px;
+    }
+    .post-cat.olympiad       { background: rgba(245,158,11,.1); color: #D97706; }
+    .post-cat.general        { background: rgba(99,102,241,.1); color: #818CF8; }
+    .post-cat.learning-tips  { background: rgba(20,184,166,.1); color: #0D9488; }
+    .post-cat.success-stories{ background: rgba(168,85,247,.1); color: #9333EA; }
+    .post-cat.bdmo-guide     { background: rgba(59,130,246,.1); color: #3B82F6; }
+    .post-cat.news           { background: rgba(239,68,68,.08); color: #DC2626; }
+
+    .post-title {
+      font-size: clamp(26px, 5vw, 38px); font-weight: 800;
+      color: var(--text); line-height: 1.2; margin-bottom: 18px;
+    }
+    .post-meta {
+      display: flex; gap: 20px; flex-wrap: wrap;
+      font-size: 13px; color: var(--muted);
+      align-items: center; padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .post-meta-author { font-weight: 600; color: var(--text2); }
+    .post-meta-dot { color: var(--subtle); }
+    .post-meta-share {
+      margin-left: auto; display: flex; gap: 8px;
+    }
+    .share-btn {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: rgba(255,255,255,.05); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--muted); font-size: 15px;
+      transition: all .18s ease; text-decoration: none;
+    }
+    .share-btn:hover { background: rgba(255,255,255,.1); color: var(--text); text-decoration: none; }
+
+    /* ── Article body typography ──────────────────────────────── */
+    .post-body { font-size: 17px; line-height: 1.75; color: var(--text2); padding-top: 28px; }
+    .post-body h1,.post-body h2,.post-body h3,.post-body h4 { color: var(--text); line-height: 1.25; margin: 1.8em 0 .6em; font-weight: 700; }
+    .post-body h2 { font-size: 1.5em; }
+    .post-body h3 { font-size: 1.25em; }
+    .post-body h4 { font-size: 1.1em; }
+    .post-body p  { margin-bottom: 1.2em; }
+    .post-body ul,.post-body ol { padding-left: 1.5em; margin-bottom: 1.2em; }
+    .post-body li { margin-bottom: .4em; }
+    .post-body blockquote {
+      border-left: 3px solid var(--indigo); padding: .8em 1.2em;
+      margin: 1.6em 0; background: rgba(79,70,229,.06); border-radius: 0 8px 8px 0;
+      font-style: italic; color: var(--text2);
+    }
+    .post-body code {
+      font-family: var(--font-mono); font-size: .88em;
+      background: rgba(255,255,255,.08); padding: 2px 6px;
+      border-radius: 4px; color: #93C5FD;
+    }
+    .post-body pre {
+      background: #0D1220; border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px 20px; overflow-x: auto;
+      margin: 1.4em 0;
+    }
+    .post-body pre code { background: none; padding: 0; font-size: .9em; color: #E2E8F0; }
+    .post-body img { border-radius: 10px; margin: 1.2em 0; }
+    .post-body a { color: var(--indigo); }
+    .post-body a:hover { color: #A5B4FC; }
+    .post-body table { width: 100%; border-collapse: collapse; margin: 1.4em 0; font-size: 15px; }
+    .post-body th,.post-body td { padding: 10px 14px; border: 1px solid var(--border); text-align: left; }
+    .post-body th { background: var(--surface); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+    .post-body hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
+
+    /* ── Post footer / tags ───────────────────────────────────── */
+    .post-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .post-tag {
+      display: inline-block; padding: 4px 12px; border-radius: 999px;
+      font-size: 12px; font-weight: 600;
+      background: rgba(99,102,241,.08); color: var(--indigo);
+      border: 1px solid rgba(99,102,241,.18);
+    }
+
+    /* ── Related posts ────────────────────────────────────────── */
+    .related-section { margin-top: 52px; padding-top: 32px; border-top: 1px solid var(--border); }
+    .related-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 20px; }
+    .related-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+    @media (max-width:700px) { .related-grid { grid-template-columns: 1fr; } }
+
+    .related-card {
+      background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit;
+      transition: border-color .18s ease, transform .18s ease;
+    }
+    .related-card:hover { border-color: rgba(99,102,241,.3); transform: translateY(-2px); text-decoration: none; }
+    .related-card-cover {
+      aspect-ratio: 16/7; background: linear-gradient(135deg, rgba(79,70,229,.15), rgba(14,165,160,.08));
+      display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--subtle);
+    }
+    .related-card-cover img { width:100%; height:100%; object-fit:cover; display:block; }
+    .related-card-body { padding: 12px 14px 14px; }
+    .related-card-title { font-size: 13.5px; font-weight: 600; color: var(--text); line-height: 1.35; display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+    .related-card-meta  { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+    /* ── CTA banner ───────────────────────────────────────────── */
+    .post-cta {
+      margin-top: 48px; padding: 32px 36px; border-radius: 16px;
+      background: linear-gradient(135deg, rgba(79,70,229,.18), rgba(14,165,160,.12));
+      border: 1px solid rgba(79,70,229,.25);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 20px; flex-wrap: wrap;
+    }
+    .post-cta-copy { flex: 1; min-width: 200px; }
+    .post-cta-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .post-cta-sub   { font-size: 13.5px; color: var(--text2); }
+    .post-cta-btn {
+      padding: 11px 24px; border-radius: 10px; font-size: 14px; font-weight: 700;
+      background: linear-gradient(135deg, var(--indigo2), var(--teal));
+      color: white; white-space: nowrap; text-decoration: none;
+      transition: opacity .18s ease;
+    }
+    .post-cta-btn:hover { opacity: .88; text-decoration: none; }
+
+    /* ── 404 / loading states ─────────────────────────────────── */
+    .post-loading, .post-404 { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .post-loading-spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--indigo); border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .post-404-emoji { font-size: 48px; margin-bottom: 16px; }
+    .post-404-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .post-404-sub   { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+
+    /* ── Footer ───────────────────────────────────────────────── */
+    .site-footer {
+      border-top: 1px solid var(--border); padding: 28px 20px;
+      text-align: center; font-size: 12.5px; color: var(--muted);
+    }
+    .site-footer a { color: var(--muted); }
+    .site-footer a:hover { color: var(--text2); }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .post-wrap  { padding: 0 16px 60px; }
+      .post-cover-wrap { padding: 0 16px; }
+      .post-cta   { padding: 22px 20px; }
+      .post-meta-share { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSTQB75G" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- Reading progress bar -->
+<div id="readingProgress"></div>
+
+<!-- Navigation -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <div class="nav-logo-icon">LP</div>
+      <span>LogicPals</span>
+    </a>
+    <div class="nav-actions">
+      <a class="nav-btn nav-btn-ghost" href="/">← Home</a>
+      <a class="nav-btn nav-btn-primary" href="/pricing.html">Start Free Trial</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Main content (dynamic) -->
+<main id="postMain">
+
+  <!-- LOADING STATE -->
+  <div class="post-loading" id="postLoading">
+    <div class="post-loading-spinner"></div>
+    <div style="font-size:14px;color:var(--muted)">Loading post…</div>
+  </div>
+
+  <!-- 404 STATE -->
+  <div class="post-wrap post-404" id="post404" style="display:none">
+    <div class="post-404-emoji">📭</div>
+    <div class="post-404-title">Post not found</div>
+    <div class="post-404-sub">This post may have been moved or deleted.</div>
+    <a class="nav-btn nav-btn-primary" href="/">Back to Home</a>
+  </div>
+
+  <!-- POST CONTENT (revealed after load) -->
+  <div id="postContent" style="display:none">
+
+    <!-- Cover image -->
+    <div class="post-cover-wrap">
+      <img class="post-cover" id="postCoverImg" alt="" style="display:none" loading="eager">
+      <div class="post-cover-placeholder" id="postCoverPlaceholder" style="display:none"></div>
+    </div>
+
+    <!-- Article -->
+    <div class="post-wrap">
+      <div class="post-header">
+        <span class="post-cat general" id="postCat">General</span>
+        <h1 class="post-title" id="postTitle"></h1>
+        <div class="post-meta">
+          <span class="post-meta-author" id="postAuthor">LogicPals Team</span>
+          <span class="post-meta-dot">·</span>
+          <span id="postDate">—</span>
+          <span class="post-meta-dot">·</span>
+          <span id="postReadTime">3 min read</span>
+          <span class="post-meta-dot">·</span>
+          <span id="postViews" style="color:var(--subtle)">— views</span>
+          <div class="post-meta-share">
+            <a class="share-btn" id="shareTwitter" href="#" target="_blank" rel="noopener" title="Share on X/Twitter">𝕏</a>
+            <a class="share-btn" id="shareFacebook" href="#" target="_blank" rel="noopener" title="Share on Facebook">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+            </a>
+            <button class="share-btn" id="shareCopy" title="Copy link" onclick="copyPostLink()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Article body -->
+      <div class="post-body" id="postBody">
+        <!-- content_html rendered here by JS -->
+      </div>
+
+      <!-- Tags -->
+      <div class="post-tags" id="postTags" style="display:none"></div>
+
+      <!-- CTA -->
+      <div class="post-cta">
+        <div class="post-cta-copy">
+          <div class="post-cta-title">Ready to think like an Olympiad champion?</div>
+          <div class="post-cta-sub">Start your free 7-day trial. No credit card needed. Ages 8–16.</div>
+        </div>
+        <a class="post-cta-btn" href="/pricing.html">Start Free Trial →</a>
+      </div>
+
+      <!-- Related posts -->
+      <div class="related-section" id="relatedSection" style="display:none">
+        <div class="related-title">More from LogicPals</div>
+        <div class="related-grid" id="relatedGrid"></div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <p>© 2025 LogicPals. All rights reserved.
+    <a href="/privacy.html" style="margin-left:16px">Privacy</a>
+    <a href="/terms.html"   style="margin-left:12px">Terms</a>
+    <a href="/"             style="margin-left:12px">Home</a>
+  </p>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  /* ── Reading progress bar ──────────────────────────────── */
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight) * 100;
+    document.getElementById('readingProgress').style.width = Math.min(scrolled,100) + '%';
+  }, { passive: true });
+
+  /* ── Boot: load post from ?slug= ──────────────────────── */
+  const params = new URLSearchParams(location.search);
+  const slug   = params.get('slug') || '';
+
+  if (!slug) {
+    show404(); return;
+  }
+
+  window.addEventListener('load', async function() {
+    if (!window.supabase || !window._env) { show404(); return; }
+    const sb = supabase.createClient(window._env.SUPABASE_URL, window._env.SUPABASE_ANON_KEY, { auth: { storageKey: 'logicpals.auth' } });
+
+    try {
+      const { data, error } = await sb
+        .from('blog_posts')
+        .select('*')
+        .eq('slug', slug)
+        .eq('status', 'published')
+        .single();
+
+      if (error || !data) { show404(); return; }
+
+      renderPost(data, sb);
+
+      // Increment view count (fire-and-forget)
+      sb.from('blog_posts').update({ view_count: (data.view_count||0)+1 }).eq('id', data.id).then(() => {});
+
+      // Load related posts
+      loadRelated(data, sb);
+
+    } catch(e) { show404(); }
+  });
+
+  /* ── Render the post ──────────────────────────────────── */
+  function renderPost(post, sb) {
+    document.getElementById('postLoading').style.display = 'none';
+    document.getElementById('postContent').style.display = '';
+
+    // Cover image
+    if (post.cover_url) {
+      const img = document.getElementById('postCoverImg');
+      img.src = post.cover_url;
+      img.alt = post.title || '';
+      img.style.display = 'block';
+    } else {
+      document.getElementById('postCoverPlaceholder').style.display = '';
+    }
+
+    // Category
+    const catEl = document.getElementById('postCat');
+    const catLabels = { general:'General', olympiad:'Olympiad', 'learning-tips':'Learning Tips', 'success-stories':'Success Stories', 'bdmo-guide':'BdMO Guide', news:'News' };
+    catEl.textContent = catLabels[post.category] || 'General';
+    catEl.className = 'post-cat ' + (post.category || 'general');
+
+    // Title + meta
+    document.getElementById('postTitle').textContent = post.title || '';
+    document.getElementById('postAuthor').textContent = post.author || 'LogicPals Team';
+    document.getElementById('postDate').textContent = post.published_at
+      ? new Date(post.published_at).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' })
+      : '—';
+    document.getElementById('postReadTime').textContent = (post.read_time_minutes||3) + ' min read';
+    document.getElementById('postViews').textContent = ((post.view_count||0)+1).toLocaleString() + ' views';
+
+    // Content — DOMParser sanitize then inject
+    const bodyEl = document.getElementById('postBody');
+    if (post.content_html) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(post.content_html, 'text/html');
+      // Remove dangerous elements
+      doc.querySelectorAll('script, iframe, object, embed, form, input, button').forEach(el => el.remove());
+      bodyEl.innerHTML = doc.body.innerHTML;
+    } else {
+      bodyEl.innerHTML = '<p style="color:var(--muted);font-style:italic">This post has no content yet.</p>';
+    }
+
+    // Tags
+    if (Array.isArray(post.tags) && post.tags.length) {
+      const tagsEl = document.getElementById('postTags');
+      tagsEl.style.display = '';
+      tagsEl.innerHTML = post.tags.map(t => `<span class="post-tag">${t}</span>`).join('');
+    }
+
+    // Share links
+    const pageUrl = encodeURIComponent(location.href);
+    const pageTitle = encodeURIComponent(post.title || 'LogicPals Blog');
+    document.getElementById('shareTwitter').href  = `https://twitter.com/intent/tweet?text=${pageTitle}&url=${pageUrl}`;
+    document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${pageUrl}`;
+
+    // SEO <meta> tags
+    const seoTitle = post.seo_title || post.title || 'LogicPals Blog';
+    const seoDesc  = post.seo_description || post.excerpt || '';
+    document.getElementById('pageTitle').textContent = seoTitle + ' — LogicPals';
+    document.getElementById('pageMetaDesc').setAttribute('content', seoDesc);
+    document.getElementById('ogTitle').setAttribute('content', seoTitle);
+    document.getElementById('ogDesc').setAttribute('content', seoDesc);
+    if (post.cover_url) document.getElementById('ogImage').setAttribute('content', post.cover_url);
+    document.getElementById('pageCanonical').setAttribute('href', 'https://logicpals.com/blog-post.html?slug=' + slug);
+
+    // Schema.org Article JSON-LD
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: post.title,
+      description: post.excerpt || '',
+      author: { '@type':'Person', name: post.author || 'LogicPals Team' },
+      publisher: { '@type':'Organization', name:'LogicPals', url:'https://logicpals.com' },
+      datePublished: post.published_at,
+      dateModified: post.updated_at || post.published_at,
+      image: post.cover_url || 'https://logicpals.com/og-image.png',
+      url: 'https://logicpals.com/blog-post.html?slug=' + slug,
+    };
+    const schemaEl = document.createElement('script');
+    schemaEl.type = 'application/ld+json';
+    schemaEl.textContent = JSON.stringify(schema);
+    document.head.appendChild(schemaEl);
+
+    // GA4 event
+    if (window.dataLayer) {
+      window.dataLayer.push({ event:'blog_post_viewed', post_title: post.title, post_slug: slug, post_category: post.category });
+    }
+  }
+
+  /* ── Load related posts ─────────────────────────────── */
+  async function loadRelated(currentPost, sb) {
+    try {
+      const { data } = await sb
+        .from('blog_posts')
+        .select('id,title,slug,cover_url,category,published_at,read_time_minutes')
+        .eq('status','published')
+        .eq('category', currentPost.category)
+        .neq('id', currentPost.id)
+        .limit(3);
+      if (!data || !data.length) return;
+
+      const catLabels = { general:'General', olympiad:'Olympiad', 'learning-tips':'Learning Tips', 'success-stories':'Success Stories', 'bdmo-guide':'BdMO Guide', news:'News' };
+      document.getElementById('relatedSection').style.display = '';
+      document.getElementById('relatedGrid').innerHTML = data.map(p => {
+        const coverHtml = p.cover_url
+          ? `<div class="related-card-cover"><img src="${p.cover_url}" alt="" loading="lazy"></div>`
+          : `<div class="related-card-cover">📚</div>`;
+        return `<a class="related-card" href="/blog-post.html?slug=${encodeURIComponent(p.slug||'')}">
+          ${coverHtml}
+          <div class="related-card-body">
+            <div class="related-card-title">${p.title||''}</div>
+            <div class="related-card-meta">${catLabels[p.category]||'General'} · ${p.read_time_minutes||3} min read</div>
+          </div>
+        </a>`;
+      }).join('');
+    } catch(_) {}
+  }
+
+  /* ── Helpers ────────────────────────────────────────── */
+  function show404() {
+    document.getElementById('postLoading').style.display = 'none';
+    document.getElementById('post404').style.display = '';
+  }
+
+  function copyPostLink() {
+    navigator.clipboard.writeText(location.href).then(() => {
+      const btn = document.getElementById('shareCopy');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '✓';
+      setTimeout(() => btn.innerHTML = orig, 1600);
+    });
+  }
+  window.copyPostLink = copyPostLink;
+
+})();
+</script>
+
+</body>
+</html>
