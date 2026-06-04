@@ -1782,44 +1782,37 @@
   .lp-blog-editor-overlay pre {
     font-family: 'Fira Code', 'Cascadia Code', 'Courier New', monospace !important;
   }
-
-  /* ═══════════════════════════════════════════════════════
-     ENTERPRISE HOTFIX — Admin typography + DOM stability
-     Purpose: prevent admin.css or injected guard styles from leaking an icon font
-     into the whole admin workspace. Keep SVG/Quill safe.
-  ═══════════════════════════════════════════════════════ */
-  :root {
-    --lp-safe-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-    --lp-safe-mono: 'Fira Code', 'Cascadia Code', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
-  }
-
-  html, body, .admin-app, .admin-main, .admin-topbar, .admin-content,
-  #lpSidebar, #lpSidebar *,
-  .lp-system-card, .lp-system-card *,
-  .lp-panel, .lp-panel *,
-  .lp-cmd-palette, .lp-cmd-palette *,
-  .lp-blog-editor-overlay, .lp-blog-editor-overlay *,
-  button, input, select, textarea, label, table, th, td {
-    font-family: var(--lp-safe-font) !important;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
-  .lp-mono, .admin-font-mono, code, pre, kbd,
-  [style*='var(--lp-font-mono)'] {
-    font-family: var(--lp-safe-mono) !important;
-  }
-
-  svg, svg *, .ql-toolbar, .ql-toolbar *, .ql-container, .ql-container *, .ql-editor, .ql-editor * {
-    font-family: initial !important;
-  }
-
-  .ql-editor, .ql-editor * {
-    font-family: var(--lp-safe-font) !important;
-  }
-
   </style>
+
+
+  <!-- ENTERPRISE FONT RESCUE v2: prevents icon-font inheritance from admin.css/admin-auth.js -->
+  <style id="lp-font-rescue-v2">
+    :root {
+      --lp-font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
+      --lp-font-display: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
+      --lp-font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
+      --lp-font-mono: "Fira Code", "Cascadia Code", "Courier New", monospace !important;
+    }
+
+    html, body, .admin-app, .admin-main, .admin-topbar, .admin-content,
+    #lpSidebar, #lpSidebar *, .lp-system-card, .lp-system-card *,
+    .lp-blog-editor-overlay, .lp-blog-editor-overlay *,
+    input, textarea, select, button, label, table, th, td, p, span, div,
+    h1, h2, h3, h4, h5, h6, a {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
+      font-variant-ligatures: none !important;
+      text-rendering: optimizeLegibility !important;
+    }
+
+    code, pre, kbd, samp, .lp-mono, .admin-font-mono {
+      font-family: "Fira Code", "Cascadia Code", "Courier New", monospace !important;
+    }
+
+    svg, svg *, .material-icons, .fa, .fas, .far, .fab, [class*="icon"]:not(.lp-sb-icon):not(.lp-tab-icon) {
+      font-family: initial !important;
+    }
+  </style>
+
 </head>
 
 <body>
@@ -6835,29 +6828,22 @@
       });
     }
 
-    // Enterprise typography hardening — multiple passes catch late admin-auth/admin-guard CSS injections.
-    function fixAdminTypography() {
-      forceFont(document.getElementById('adminApp'), true);
+    // ENTERPRISE FONT RESCUE v2 — fix the entire admin surface, not only the sidebar.
+    // The screenshot symptom means a stylesheet/script is making normal text inherit an icon font.
+    // We force safe fonts after initial load, after auth bootstrap, and after dynamic DOM updates.
+    function fixAdminFont() {
+      forceFont(document.body, true);
       forceFont(document.getElementById('lpSidebar'), false);
+      forceFont(document.getElementById('adminApp'), true);
     }
-    setTimeout(fixAdminTypography, 50);
-    setTimeout(fixAdminTypography, 250);
-    setTimeout(fixAdminTypography, 900);
-    setTimeout(fixAdminTypography, 1800);
-
-    // Keep future dynamic CMS/ops rows readable without touching Quill internals.
+    setTimeout(fixAdminFont, 50);
+    setTimeout(fixAdminFont, 250);
+    setTimeout(fixAdminFont, 1000);
+    setTimeout(fixAdminFont, 2500);
+    window.addEventListener('load', fixAdminFont);
     try {
-      const fontObserverTarget = document.getElementById('adminApp');
-      if (fontObserverTarget) {
-        const fontObserver = new MutationObserver(function(mutations) {
-          for (const m of mutations) {
-            m.addedNodes && m.addedNodes.forEach(function(node) {
-              if (node.nodeType === 1) forceFont(node, true);
-            });
-          }
-        });
-        fontObserver.observe(fontObserverTarget, { childList: true, subtree: true });
-      }
+      new MutationObserver(function(){ fixAdminFont(); })
+        .observe(document.body, { childList: true, subtree: true });
     } catch (_) {}
 
     // Wire sidebar link buttons (converted from <a> to <button data-href>)
