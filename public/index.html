@@ -1362,6 +1362,97 @@
       .container { padding: 0 20px; }
     }
   </style>
+
+  <style>
+    /* ── Blog teaser section ──────────────────────────────────── */
+    .blog-section {
+      padding: 80px 0;
+      background: #080C14;
+    }
+    .blog-section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 36px; flex-wrap: wrap; gap: 14px;
+    }
+    .blog-section-title { font-size: 26px; font-weight: 800; color: #F0F4FF; }
+    .blog-section-subtitle { font-size: 14px; color: #A8B4CC; margin-top: 4px; }
+    .blog-section-viewall {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600;
+      color: #818CF8; text-decoration: none;
+      border: 1px solid rgba(99,102,241,.25);
+      padding: 8px 16px; border-radius: 8px;
+      transition: all .2s ease;
+    }
+    .blog-section-viewall:hover { background: rgba(99,102,241,.08); color: #A5B4FC; }
+
+    .blog-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    @media (max-width: 900px) { .blog-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .blog-grid { grid-template-columns: 1fr; } }
+
+    .blog-card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px; overflow: hidden;
+      text-decoration: none; color: inherit;
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+      display: block;
+    }
+    .blog-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(99,102,241,.3);
+      box-shadow: 0 12px 36px rgba(0,0,0,.3);
+    }
+    .blog-card-cover {
+      width: 100%; aspect-ratio: 16/9; object-fit: cover;
+      background: linear-gradient(135deg, rgba(79,70,229,.15), rgba(14,165,160,.1));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; color: rgba(255,255,255,.15);
+    }
+    .blog-card-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .blog-card-body { padding: 16px 18px 20px; }
+    .blog-card-cat {
+      display: inline-block; padding: 2px 8px; border-radius: 5px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+      margin-bottom: 9px;
+    }
+    .blog-card-cat.olympiad       { background: rgba(245,158,11,.1); color: #D97706; }
+    .blog-card-cat.general        { background: rgba(99,102,241,.1); color: #818CF8; }
+    .blog-card-cat.learning-tips  { background: rgba(20,184,166,.1); color: #0D9488; }
+    .blog-card-cat.success-stories{ background: rgba(168,85,247,.1); color: #9333EA; }
+    .blog-card-cat.bdmo-guide     { background: rgba(59,130,246,.1); color: #3B82F6; }
+    .blog-card-cat.news           { background: rgba(239,68,68,.08); color: #DC2626; }
+
+    .blog-card-title {
+      font-size: 16px; font-weight: 700; color: #F0F4FF; line-height: 1.3;
+      margin-bottom: 8px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .blog-card-excerpt {
+      font-size: 12.5px; color: #A8B4CC; line-height: 1.55; margin-bottom: 13px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .blog-card-meta { font-size: 11px; color: #6B7A96; display: flex; gap: 14px; }
+
+    /* Loading skeleton */
+    .blog-skeleton {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px; overflow: hidden;
+    }
+    .blog-skeleton-cover { aspect-ratio: 16/9; background: rgba(255,255,255,.06); }
+    .blog-skeleton-body  { padding: 16px 18px 20px; display: grid; gap: 10px; }
+    .blog-skeleton-line  {
+      height: 10px; border-radius: 5px;
+      background: linear-gradient(90deg, rgba(255,255,255,.06) 25%, rgba(255,255,255,.1) 50%, rgba(255,255,255,.06) 75%);
+      background-size: 200% 100%;
+      animation: skeleton-shimmer 1.6s infinite;
+    }
+    @keyframes skeleton-shimmer { to { background-position: -200% 0; } }
+  </style>
 </head>
 <body>
   <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1961788037810759&ev=PageView&noscript=1"/></noscript>
@@ -1378,6 +1469,7 @@
         <a href="#how-it-works">How It Works</a>
         <a href="#pricing">Pricing</a>
         <a href="#faq">FAQ</a>
+        <a href="/blog.html">Blog</a>
       </nav>
       <div class="nav-right">
         <a id="lp-admin-nav-link" href="/admin.html">⚙ Admin</a>
@@ -1706,6 +1798,54 @@
     </div>
   </section>
 
+
+  <!-- ── BLOG TEASER ── -->
+  <section class="blog-section" id="blogSection">
+    <div class="container">
+      <div class="blog-section-header">
+        <div>
+          <div class="blog-section-title">From the LogicPals Blog</div>
+          <div class="blog-section-subtitle">Tips, guides, and success stories for Olympiad-ready students</div>
+        </div>
+        <a class="blog-section-viewall" href="/blog.html">
+          View All Posts
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="blog-grid" id="blogGrid">
+        <!-- Skeleton loaders shown while fetching -->
+        <div class="blog-skeleton" id="blogSkel1">
+          <div class="blog-skeleton-cover"></div>
+          <div class="blog-skeleton-body">
+            <div class="blog-skeleton-line" style="width:30%;height:8px"></div>
+            <div class="blog-skeleton-line" style="width:90%"></div>
+            <div class="blog-skeleton-line" style="width:75%"></div>
+            <div class="blog-skeleton-line" style="width:60%;height:8px;margin-top:4px"></div>
+          </div>
+        </div>
+        <div class="blog-skeleton" id="blogSkel2">
+          <div class="blog-skeleton-cover"></div>
+          <div class="blog-skeleton-body">
+            <div class="blog-skeleton-line" style="width:40%;height:8px"></div>
+            <div class="blog-skeleton-line" style="width:85%"></div>
+            <div class="blog-skeleton-line" style="width:70%"></div>
+            <div class="blog-skeleton-line" style="width:55%;height:8px;margin-top:4px"></div>
+          </div>
+        </div>
+        <div class="blog-skeleton" id="blogSkel3">
+          <div class="blog-skeleton-cover"></div>
+          <div class="blog-skeleton-body">
+            <div class="blog-skeleton-line" style="width:35%;height:8px"></div>
+            <div class="blog-skeleton-line" style="width:88%"></div>
+            <div class="blog-skeleton-line" style="width:65%"></div>
+            <div class="blog-skeleton-line" style="width:50%;height:8px;margin-top:4px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- /BLOG TEASER -->
+
   <!-- FOUNDER -->
   <section class="section founder-section">
     <div class="container">
@@ -1831,7 +1971,7 @@
       });
       if (!env) { board.innerHTML = `<span class="lb-pill">Rankings update daily</span>`; return; }
       try {
-        const sb = supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+        const sb = supabase.createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { storageKey: 'logicpals.auth' } });
         const { data } = await sb.from('public_school_leaderboard').select('school_name,olympiad_wins,total_pts').limit(3);
         if (!data?.length) { board.innerHTML = `<span class="lb-pill">Be the first school!</span>`; return; }
         board.innerHTML = ['🥇','🥈','🥉'].slice(0, data.length).map((m, i) =>
@@ -1897,5 +2037,111 @@
   });
 })();
 </script>
+
+<script>
+(function() {
+  'use strict';
+
+  // Wait for env-loader + supabase
+  window.addEventListener('load', async function() {
+    if (!window.supabase || !window._env) return;
+    const sb = supabase.createClient(window._env.SUPABASE_URL, window._env.SUPABASE_ANON_KEY, { auth: { storageKey: 'logicpals.auth' } });
+
+    loadDynamicBlog(sb);
+    loadDynamicHero(sb);
+    loadDynamicBrand(sb);
+  });
+
+  /* ── Blog teaser ────────────────────────────────────────── */
+  async function loadDynamicBlog(sb) {
+    try {
+      const { data, error } = await sb
+        .from('blog_posts')
+        .select('id,title,slug,excerpt,cover_url,category,published_at,read_time_minutes')
+        .eq('status','published')
+        .order('published_at', { ascending: false })
+        .limit(3);
+      if (error || !data || !data.length) {
+        // Show a coming-soon state in the grid
+        document.getElementById('blogGrid').innerHTML = `
+          <div style="grid-column:1/-1;text-align:center;padding:32px 0;color:#6B7A96">
+            <div style="font-size:28px;margin-bottom:10px">✏️</div>
+            <div style="font-size:14px;font-weight:600;color:#C8D0E0">Posts coming soon</div>
+            <div style="font-size:12.5px;margin-top:6px">Great content is on the way. Check back soon!</div>
+          </div>`;
+        return;
+      }
+
+      const catLabels = { general:'General', olympiad:'Olympiad', 'learning-tips':'Learning Tips', 'success-stories':'Success Stories', 'bdmo-guide':'BdMO Guide', news:'News' };
+      const grid = document.getElementById('blogGrid');
+      grid.innerHTML = data.map(post => {
+        const pubDate = post.published_at
+          ? new Date(post.published_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})
+          : '';
+        const coverHtml = post.cover_url
+          ? `<div class="blog-card-cover"><img src="${post.cover_url}" alt="${post.title||''}" loading="lazy"></div>`
+          : `<div class="blog-card-cover">📚</div>`;
+        return `<a class="blog-card" href="/blog-post.html?slug=${encodeURIComponent(post.slug||'')}">
+          ${coverHtml}
+          <div class="blog-card-body">
+            <span class="blog-card-cat ${post.category||'general'}">${catLabels[post.category]||'General'}</span>
+            <div class="blog-card-title">${post.title||''}</div>
+            <div class="blog-card-excerpt">${post.excerpt||''}</div>
+            <div class="blog-card-meta">
+              <span>${pubDate}</span>
+              <span>${post.read_time_minutes||3} min read</span>
+            </div>
+          </div>
+        </a>`;
+      }).join('');
+      document.getElementById('blogSection').style.display = '';
+    } catch(_) {}
+  }
+
+  /* ── Dynamic hero ──────────────────────────────────────── */
+  async function loadDynamicHero(sb) {
+    try {
+      const { data } = await sb.from('site_settings').select('value').eq('key','hero').single();
+      if (!data?.value) return;
+      const h = data.value;
+      const heroHeadline = document.querySelector('.hero-headline, [data-hero="headline"], h1');
+      const heroSubline  = document.querySelector('.hero-subline, [data-hero="subline"]');
+      const heroCta1     = document.querySelector('[data-hero="cta-primary"]');
+      const heroCta2     = document.querySelector('[data-hero="cta-secondary"]');
+      if (h.headline && heroHeadline) heroHeadline.innerHTML = h.headline;
+      if (h.subline  && heroSubline)  heroSubline.textContent = h.subline;
+      if (h.cta_primary   && heroCta1) heroCta1.textContent = h.cta_primary;
+      if (h.cta_secondary && heroCta2) heroCta2.textContent = h.cta_secondary;
+    } catch(_) {}
+  }
+
+  /* ── Dynamic brand ─────────────────────────────────────── */
+  async function loadDynamicBrand(sb) {
+    try {
+      const { data } = await sb.from('site_settings').select('value').eq('key','brand').single();
+      if (!data?.value) return;
+      const b = data.value;
+
+      // Logo
+      if (b.logo_url) {
+        document.querySelectorAll('.logo img, .nav-logo img, [data-brand="logo"]').forEach(img => img.src = b.logo_url);
+      }
+      // Site name
+      if (b.site_name) {
+        document.querySelectorAll('.logo-name, [data-brand="name"]').forEach(el => el.textContent = b.site_name);
+        document.title = document.title.replace(/^LogicPals/, b.site_name);
+      }
+      // Favicon
+      if (b.favicon_url) {
+        let link = document.querySelector("link[rel='icon']");
+        if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+        link.href = b.favicon_url;
+      }
+    } catch(_) {}
+  }
+
+})();
+</script>
+
 </body>
 </html>
