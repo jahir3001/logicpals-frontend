@@ -1782,6 +1782,43 @@
   .lp-blog-editor-overlay pre {
     font-family: 'Fira Code', 'Cascadia Code', 'Courier New', monospace !important;
   }
+
+  /* ═══════════════════════════════════════════════════════
+     ENTERPRISE HOTFIX — Admin typography + DOM stability
+     Purpose: prevent admin.css or injected guard styles from leaking an icon font
+     into the whole admin workspace. Keep SVG/Quill safe.
+  ═══════════════════════════════════════════════════════ */
+  :root {
+    --lp-safe-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    --lp-safe-mono: 'Fira Code', 'Cascadia Code', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  }
+
+  html, body, .admin-app, .admin-main, .admin-topbar, .admin-content,
+  #lpSidebar, #lpSidebar *,
+  .lp-system-card, .lp-system-card *,
+  .lp-panel, .lp-panel *,
+  .lp-cmd-palette, .lp-cmd-palette *,
+  .lp-blog-editor-overlay, .lp-blog-editor-overlay *,
+  button, input, select, textarea, label, table, th, td {
+    font-family: var(--lp-safe-font) !important;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .lp-mono, .admin-font-mono, code, pre, kbd,
+  [style*='var(--lp-font-mono)'] {
+    font-family: var(--lp-safe-mono) !important;
+  }
+
+  svg, svg *, .ql-toolbar, .ql-toolbar *, .ql-container, .ql-container *, .ql-editor, .ql-editor * {
+    font-family: initial !important;
+  }
+
+  .ql-editor, .ql-editor * {
+    font-family: var(--lp-safe-font) !important;
+  }
+
   </style>
 </head>
 
@@ -1800,14 +1837,14 @@
         <div class="lp-sb-logo-icon">LP</div>
         <div>
           <span class="lp-sb-logo-name" style="display:block">LogicPals</span>
-          <span class="lp-sb-logo-sub" style="display:block">Admin Console</div>
+          <span class="lp-sb-logo-sub" style="display:block">Admin Console</span>
         </div>
       </div>
 
       <!-- Nav -->
       <nav class="lp-sb-nav">
 
-        <p class="lp-sb-section">Workspace</div>
+        <p class="lp-sb-section">Workspace</p>
 
         <button class="lp-sb-item active" data-panel="overview" type="button">
           <svg class="lp-sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
@@ -6798,12 +6835,30 @@
       });
     }
 
-    // Fix sidebar — two passes (150ms + 700ms) to catch late CSS injections
-    function fixSidebarFont() {
+    // Enterprise typography hardening — multiple passes catch late admin-auth/admin-guard CSS injections.
+    function fixAdminTypography() {
+      forceFont(document.getElementById('adminApp'), true);
       forceFont(document.getElementById('lpSidebar'), false);
     }
-    setTimeout(fixSidebarFont, 150);
-    setTimeout(fixSidebarFont, 700);
+    setTimeout(fixAdminTypography, 50);
+    setTimeout(fixAdminTypography, 250);
+    setTimeout(fixAdminTypography, 900);
+    setTimeout(fixAdminTypography, 1800);
+
+    // Keep future dynamic CMS/ops rows readable without touching Quill internals.
+    try {
+      const fontObserverTarget = document.getElementById('adminApp');
+      if (fontObserverTarget) {
+        const fontObserver = new MutationObserver(function(mutations) {
+          for (const m of mutations) {
+            m.addedNodes && m.addedNodes.forEach(function(node) {
+              if (node.nodeType === 1) forceFont(node, true);
+            });
+          }
+        });
+        fontObserver.observe(fontObserverTarget, { childList: true, subtree: true });
+      }
+    } catch (_) {}
 
     // Wire sidebar link buttons (converted from <a> to <button data-href>)
     document.querySelectorAll('#lpSidebar .lp-sb-link[data-href]').forEach(function(btn) {
