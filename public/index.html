@@ -1469,6 +1469,7 @@
         <a href="#how-it-works">How It Works</a>
         <a href="#pricing">Pricing</a>
         <a href="#faq">FAQ</a>
+        <a href="/blog.html">Blog</a>
       </nav>
       <div class="nav-right">
         <a id="lp-admin-nav-link" href="/admin.html">⚙ Admin</a>
@@ -1799,7 +1800,7 @@
 
 
   <!-- ── BLOG TEASER ── -->
-  <section class="blog-section" id="blogSection" style="display:none">
+  <section class="blog-section" id="blogSection">
     <div class="container">
       <div class="blog-section-header">
         <div>
@@ -2060,7 +2061,16 @@
         .eq('status','published')
         .order('published_at', { ascending: false })
         .limit(3);
-      if (error || !data || !data.length) return;
+      if (error || !data || !data.length) {
+        // Show a coming-soon state in the grid
+        document.getElementById('blogGrid').innerHTML = `
+          <div style="grid-column:1/-1;text-align:center;padding:32px 0;color:#6B7A96">
+            <div style="font-size:28px;margin-bottom:10px">✏️</div>
+            <div style="font-size:14px;font-weight:600;color:#C8D0E0">Posts coming soon</div>
+            <div style="font-size:12.5px;margin-top:6px">Great content is on the way. Check back soon!</div>
+          </div>`;
+        return;
+      }
 
       const catLabels = { general:'General', olympiad:'Olympiad', 'learning-tips':'Learning Tips', 'success-stories':'Success Stories', 'bdmo-guide':'BdMO Guide', news:'News' };
       const grid = document.getElementById('blogGrid');
