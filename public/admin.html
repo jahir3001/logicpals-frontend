@@ -11,6 +11,58 @@
   <meta http-equiv="Expires"       content="0" />
 
   <link rel="stylesheet" href="/assets/css/admin.css" />
+  <!-- ENTERPRISE FONT RESCUE — layout-safe.
+       Keep this small: no margin, position, transform, height, width, grid, or flex overrides. -->
+  <style id="lp-font-rescue-layout-safe">
+    :root {
+      --lp-safe-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "Noto Sans", sans-serif;
+      --lp-safe-font-mono: "Cascadia Code", "Courier New", monospace;
+    }
+
+    html,
+    body,
+    .admin-app,
+    .admin-main,
+    .admin-content,
+    .admin-topbar,
+    .admin-sidebar,
+    #sidebar,
+    #lpSidebar,
+    button,
+    input,
+    select,
+    textarea,
+    table,
+    th,
+    td,
+    p,
+    span,
+    div,
+    a,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    label {
+      font-family: var(--lp-safe-font-sans) !important;
+      font-variant-ligatures: none !important;
+      text-rendering: optimizeLegibility !important;
+    }
+
+    code,
+    pre,
+    kbd,
+    samp,
+    .lp-mono {
+      font-family: var(--lp-safe-font-mono) !important;
+    }
+  </style>
+  <script>
+    document.documentElement.setAttribute("data-font-rescue", "layout-safe-from-prebroken-admin");
+    console.info("[Admin Font Rescue] layout-safe patch active");
+  </script>
   <script src="/assets/js/env-loader.js"></script>
   <script src="/assets/js/admin-auth.js"></script>
   <script src="/assets/js/admin-guard.js"></script>
@@ -1783,86 +1835,6 @@
     font-family: 'Fira Code', 'Cascadia Code', 'Courier New', monospace !important;
   }
   </style>
-
-<!-- ENTERPRISE FONT STACK HARDENING v4: remove local Inter dependency causing glyph corruption -->
-<style id="lp-font-stack-hardening-v4">
-  :root {
-    --lp-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "Noto Sans", sans-serif !important;
-    --lp-font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "Noto Sans", sans-serif !important;
-    --lp-font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "Noto Sans", sans-serif !important;
-    --lp-font-mono: "Cascadia Code", "Fira Code", "Courier New", monospace !important;
-  }
-
-  html,
-  body,
-  .admin-app,
-  .admin-main,
-  .admin-sidebar,
-  .admin-content,
-  .admin-topbar,
-  #lpSidebar,
-  #lpSidebar *,
-  .lp-system-card,
-  .lp-system-card *,
-  .lp-blog-editor-overlay,
-  .lp-blog-editor-overlay *,
-  button,
-  input,
-  textarea,
-  select,
-  option,
-  label,
-  table,
-  th,
-  td,
-  p,
-  span,
-  div,
-  a,
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "Noto Sans", sans-serif !important;
-    font-variant-ligatures: none !important;
-    text-rendering: geometricPrecision !important;
-  }
-
-  code,
-  pre,
-  kbd,
-  samp,
-  .lp-mono,
-  .admin-font-mono {
-    font-family: "Cascadia Code", "Fira Code", "Courier New", monospace !important;
-  }
-
-  svg,
-  svg *,
-  path {
-    font-family: initial !important;
-  }
-
-  .material-icons,
-  .material-icons-outlined,
-  .material-symbols-outlined,
-  .material-symbols-rounded,
-  .fa,
-  .fas,
-  .far,
-  .fab,
-  [class^="fa-"],
-  [class*=" fa-"] {
-    font-family: "Material Symbols Outlined", "Font Awesome 6 Free", "Font Awesome 5 Free", sans-serif !important;
-  }
-</style>
-<script id="lp-font-stack-hardening-v4-check">
-  document.documentElement.setAttribute("data-font-rescue", "v4-system-stack-active");
-  console.info("[Admin Font Rescue] v4 system stack active — local Inter dependency removed");
-</script>
-
 </head>
 
 <body>
