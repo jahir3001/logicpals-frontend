@@ -1785,38 +1785,81 @@
   </style>
 
 
-  <!-- ENTERPRISE FONT RESCUE v2: prevents icon-font inheritance from admin.css/admin-auth.js -->
-  <style id="lp-font-rescue-v2">
+  <!-- ENTERPRISE FONT RESCUE v3: hard isolates readable UI text from icon-font inheritance -->
+  <style id="lp-font-rescue-v3">
     :root {
-      --lp-font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
-      --lp-font-display: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
-      --lp-font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
+      --lp-font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif !important;
+      --lp-font-display: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif !important;
+      --lp-font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif !important;
       --lp-font-mono: "Fira Code", "Cascadia Code", "Courier New", monospace !important;
     }
 
-    html, body, .admin-app, .admin-main, .admin-topbar, .admin-content,
-    #lpSidebar, #lpSidebar *, .lp-system-card, .lp-system-card *,
-    .lp-blog-editor-overlay, .lp-blog-editor-overlay *,
-    input, textarea, select, button, label, table, th, td, p, span, div,
-    h1, h2, h3, h4, h5, h6, a {
-      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
+    html, body, body *, .admin-app, .admin-main, .admin-topbar, .admin-content,
+    #lpSidebar, #lpSidebar *, input, textarea, select, button, label, table, th, td,
+    p, span, div, h1, h2, h3, h4, h5, h6, a, small, strong, em, li {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif !important;
       font-variant-ligatures: none !important;
       text-rendering: optimizeLegibility !important;
     }
 
-    code, pre, kbd, samp, .lp-mono, .admin-font-mono {
+    code, pre, kbd, samp, .lp-mono, .admin-font-mono, [data-mono="true"] {
       font-family: "Fira Code", "Cascadia Code", "Courier New", monospace !important;
     }
 
-    svg, svg *, .material-icons, .fa, .fas, .far, .fab, [class*="icon"]:not(.lp-sb-icon):not(.lp-tab-icon) {
-      font-family: initial !important;
+    /* Only real icon-font libraries keep icon fonts. Do NOT use [class*=icon]; it catches normal UI wrappers. */
+    .material-icons, .material-icons-outlined, .material-icons-round,
+    .material-symbols-outlined, .material-symbols-rounded,
+    .fa, .fas, .far, .fal, .fab, .fa-solid, .fa-regular, .fa-brands {
+      font-family: "Material Symbols Outlined", "Material Icons", "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
     }
   </style>
 
+  <script id="admin-font-rescue-marker-v3">
+    (function(){
+      var SAFE_FONT = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+      var MONO_FONT = '"Fira Code", "Cascadia Code", "Courier New", monospace';
+      var ICON_CLASSES = /^(material-icons|material-icons-outlined|material-icons-round|material-symbols-outlined|material-symbols-rounded|fa|fas|far|fal|fab|fa-solid|fa-regular|fa-brands)$/;
 
-  <script id="admin-font-rescue-marker-v2">
-    document.documentElement.setAttribute("data-font-rescue", "v2-active");
-    console.info("[Admin Font Rescue] v2 active");
+      function isRealIconFontElement(el){
+        if (!el || !el.classList) return false;
+        for (var i=0; i<el.classList.length; i++) {
+          if (ICON_CLASSES.test(el.classList[i])) return true;
+        }
+        return false;
+      }
+
+      function hasHumanText(el){
+        if (!el || !el.childNodes) return false;
+        for (var i=0; i<el.childNodes.length; i++) {
+          var n = el.childNodes[i];
+          if (n.nodeType === 3 && n.nodeValue && n.nodeValue.trim().length > 0) return true;
+        }
+        return false;
+      }
+
+      function repairFonts(){
+        var all = document.querySelectorAll('body, body *');
+        all.forEach(function(el){
+          if (!el || el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || el.tagName === 'PATH') return;
+          if (isRealIconFontElement(el)) return;
+          if (el.matches && el.matches('code, pre, kbd, samp, .lp-mono, .admin-font-mono, [data-mono="true"]')) {
+            el.style.setProperty('font-family', MONO_FONT, 'important');
+            return;
+          }
+          if (hasHumanText(el) || el.closest('#lpSidebar') || el.closest('.admin-app')) {
+            el.style.setProperty('font-family', SAFE_FONT, 'important');
+            el.style.setProperty('font-variant-ligatures', 'none', 'important');
+          }
+        });
+      }
+
+      document.documentElement.setAttribute('data-font-rescue', 'v3-active');
+      console.info('[Admin Font Rescue] v3 active');
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', repairFonts);
+      else repairFonts();
+      window.addEventListener('load', function(){ repairFonts(); setTimeout(repairFonts, 250); setTimeout(repairFonts, 1000); });
+      window.LPAdminRepairFonts = repairFonts;
+    })();
   </script>
 
 </head>
