@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-PSTQB75G');</script>
+
+  <meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blog — LogicPals | Math Olympiad Tips & Learning Strategies</title>
+  <meta name="description" content="Tips, guides, and success stories to help Bangladeshi students master Math Olympiad and critical thinking.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://logicpals.com/blog.html">
+  <meta property="og:title" content="LogicPals Blog">
+  <meta property="og:description" content="Math Olympiad tips, BdMO strategies, and student success stories.">
+  <meta property="og:image" content="https://logicpals.com/og-image.png">
+  <meta property="og:url" content="https://logicpals.com/blog.html">
+  <meta property="og:type" content="website">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#080C14">
+  <script src="/assets/js/pixel.js" defer></script>
+  <script src="/assets/js/tracking.js" defer></script>
+  <script src="/assets/js/env-loader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* ── Font hard reset ──────────────────────────────────── */
+    html, body, button, input, select, textarea {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif !important;
+    }
+    * { font-family: inherit; box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Design tokens ────────────────────────────────────── */
+    :root {
+      --bg:      #080C14;
+      --bg2:     #0D1220;
+      --surface: #111827;
+      --border:  rgba(255,255,255,.08);
+      --border2: rgba(255,255,255,.12);
+      --text:    #F0F4FF;
+      --text2:   #C8D0E0;
+      --muted:   #6B7A96;
+      --subtle:  #4B5563;
+      --indigo:  #818CF8;
+      --indigo2: #4F46E5;
+      --teal:    #0EA5E9;
+    }
+
+    body { background: var(--bg); color: var(--text); line-height: 1.6; }
+    a    { color: var(--indigo); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    img  { max-width: 100%; }
+
+    /* ── Navigation ───────────────────────────────────────── */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(8,12,20,.92);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      height: 56px; display: flex; align-items: center;
+    }
+    .nav-inner {
+      max-width: 1160px; margin: 0 auto; padding: 0 20px;
+      display: flex; align-items: center; justify-content: space-between; width: 100%;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 9px; color: var(--text); font-weight: 800; font-size: 15px; }
+    .nav-logo-icon {
+      width: 30px; height: 30px; border-radius: 7px;
+      background: linear-gradient(135deg, var(--indigo2), var(--teal));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 900; color: white; flex-shrink: 0;
+    }
+    .nav-actions { display: flex; gap: 10px; align-items: center; }
+    .nav-btn {
+      padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: none; transition: all .18s; text-decoration: none; display: inline-block;
+    }
+    .nav-btn-ghost { background: rgba(255,255,255,.06); color: var(--text2); border: 1px solid var(--border2); }
+    .nav-btn-ghost:hover { background: rgba(255,255,255,.1); color: var(--text); text-decoration: none; }
+    .nav-btn-primary { background: linear-gradient(135deg, var(--indigo2), var(--teal)); color: white; }
+    .nav-btn-primary:hover { opacity: .9; text-decoration: none; }
+
+    /* ── Container ─────────────────────────────────────────── */
+    .container { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
+
+    /* ── Hero ─────────────────────────────────────────────── */
+    .blog-hero {
+      padding: 64px 0 48px;
+      background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(79,70,229,.18) 0%, transparent 70%);
+      text-align: center; border-bottom: 1px solid var(--border);
+    }
+    .blog-hero-eyebrow {
+      display: inline-block; padding: 4px 14px; border-radius: 999px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+      background: rgba(79,70,229,.12); color: var(--indigo);
+      border: 1px solid rgba(79,70,229,.2); margin-bottom: 18px;
+    }
+    .blog-hero-title {
+      font-size: clamp(32px, 5vw, 52px); font-weight: 900; line-height: 1.15;
+      margin-bottom: 14px; color: var(--text);
+    }
+    .blog-hero-subtitle {
+      font-size: 16px; color: var(--muted); max-width: 520px;
+      margin: 0 auto 32px;
+    }
+
+    /* ── Category filter pills ─────────────────────────────── */
+    .filter-bar {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      justify-content: center; padding: 28px 0 0;
+    }
+    .filter-pill {
+      padding: 7px 18px; border-radius: 999px; font-size: 13px; font-weight: 600;
+      border: 1px solid var(--border2); background: rgba(255,255,255,.04);
+      color: var(--muted); cursor: pointer; transition: all .18s;
+    }
+    .filter-pill:hover { background: rgba(255,255,255,.08); color: var(--text2); }
+    .filter-pill.active {
+      background: rgba(79,70,229,.14); color: var(--indigo);
+      border-color: rgba(79,70,229,.3);
+    }
+
+    /* ── Listing body ──────────────────────────────────────── */
+    .blog-listing { padding: 52px 0 80px; }
+
+    /* ── Post grid ─────────────────────────────────────────── */
+    .posts-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+    @media (max-width: 960px)  { .posts-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px)  { .posts-grid { grid-template-columns: 1fr; gap: 16px; } }
+
+    /* Post card */
+    .post-card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+      text-decoration: none; color: inherit; display: block;
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .post-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(79,70,229,.3);
+      box-shadow: 0 16px 40px rgba(0,0,0,.35);
+      text-decoration: none;
+    }
+    .post-card-cover {
+      width: 100%; aspect-ratio: 16/9; overflow: hidden;
+      background: linear-gradient(135deg, rgba(79,70,229,.15), rgba(14,165,160,.1));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; color: rgba(255,255,255,.12);
+    }
+    .post-card-cover img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s ease; }
+    .post-card:hover .post-card-cover img { transform: scale(1.04); }
+
+    .post-card-body { padding: 18px 20px 20px; }
+
+    .post-card-cat {
+      display: inline-block; padding: 3px 10px; border-radius: 5px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+      margin-bottom: 10px;
+    }
+    .post-card-cat.olympiad       { background: rgba(245,158,11,.1); color: #D97706; }
+    .post-card-cat.general        { background: rgba(99,102,241,.1); color: #818CF8; }
+    .post-card-cat.learning-tips  { background: rgba(20,184,166,.1); color: #0D9488; }
+    .post-card-cat.success-stories{ background: rgba(168,85,247,.1); color: #9333EA; }
+    .post-card-cat.bdmo-guide     { background: rgba(59,130,246,.1); color: #3B82F6; }
+    .post-card-cat.news           { background: rgba(239,68,68,.08); color: #DC2626; }
+
+    .post-card-title {
+      font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.3;
+      margin-bottom: 8px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .post-card-excerpt {
+      font-size: 13px; color: var(--muted); line-height: 1.55; margin-bottom: 14px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .post-card-meta { font-size: 11.5px; color: var(--subtle); display: flex; gap: 12px; }
+    .post-card-meta-dot { color: var(--subtle); }
+
+    /* ── Featured post (first post, full-width) ───────────── */
+    .post-card-featured {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 280px;
+    }
+    .post-card-featured .post-card-cover {
+      aspect-ratio: unset; height: 100%; min-height: 220px; border-radius: 0;
+    }
+    .post-card-featured .post-card-body {
+      padding: 32px 36px; display: flex; flex-direction: column; justify-content: center;
+    }
+    .post-card-featured .post-card-title { font-size: 22px; -webkit-line-clamp: 3; }
+    .post-card-featured .post-card-excerpt { -webkit-line-clamp: 3; }
+    @media (max-width: 700px) {
+      .post-card-featured { grid-template-columns: 1fr; }
+      .post-card-featured .post-card-cover { min-height: 200px; border-radius: 16px 16px 0 0; }
+    }
+
+    /* ── Skeleton loaders ──────────────────────────────────── */
+    .posts-skeleton { display: grid; grid-template-columns: repeat(3,1fr); gap: 22px; }
+    @media (max-width: 960px) { .posts-skeleton { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 600px) { .posts-skeleton { grid-template-columns: 1fr; } }
+    .skeleton-card { border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+    .skel { background: linear-gradient(90deg, rgba(255,255,255,.05) 25%, rgba(255,255,255,.09) 50%, rgba(255,255,255,.05) 75%); background-size: 200% 100%; animation: shimmer 1.6s infinite; }
+    .skel-cover { aspect-ratio: 16/9; }
+    .skel-body   { padding: 18px 20px; display: grid; gap: 10px; }
+    .skel-line   { height: 10px; border-radius: 5px; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    /* ── Empty / error states ──────────────────────────────── */
+    .posts-empty {
+      grid-column: 1/-1; text-align: center; padding: 64px 20px;
+    }
+    .posts-empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .posts-empty-title { font-size: 20px; font-weight: 700; color: var(--text2); margin-bottom: 8px; }
+    .posts-empty-sub   { font-size: 14px; color: var(--muted); }
+
+    /* ── Pagination ─────────────────────────────────────────── */
+    .pagination {
+      display: flex; gap: 8px; justify-content: center; align-items: center;
+      margin-top: 48px; flex-wrap: wrap;
+    }
+    .page-btn {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: rgba(255,255,255,.05); border: 1px solid var(--border2);
+      color: var(--text2); font-size: 13px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all .18s;
+    }
+    .page-btn:hover   { background: rgba(255,255,255,.09); color: var(--text); }
+    .page-btn.active  { background: rgba(79,70,229,.15); color: var(--indigo); border-color: rgba(79,70,229,.3); }
+    .page-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .page-btn-wide { width: auto; padding: 0 16px; }
+
+    /* ── CTA banner ─────────────────────────────────────────── */
+    .blog-cta {
+      background: linear-gradient(135deg, rgba(79,70,229,.12), rgba(14,165,160,.08));
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      padding: 56px 0; text-align: center;
+    }
+    .blog-cta-title { font-size: 26px; font-weight: 800; margin-bottom: 10px; }
+    .blog-cta-sub { font-size: 15px; color: var(--muted); margin-bottom: 28px; }
+    .cta-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .cta-btn-primary {
+      padding: 13px 28px; border-radius: 10px; font-size: 14px; font-weight: 700;
+      background: linear-gradient(135deg, var(--indigo2), var(--teal));
+      color: white; text-decoration: none; transition: opacity .18s;
+    }
+    .cta-btn-primary:hover { opacity: .88; text-decoration: none; }
+    .cta-btn-ghost {
+      padding: 13px 28px; border-radius: 10px; font-size: 14px; font-weight: 600;
+      background: rgba(255,255,255,.06); color: var(--text2);
+      border: 1px solid var(--border2); text-decoration: none; transition: all .18s;
+    }
+    .cta-btn-ghost:hover { background: rgba(255,255,255,.1); color: var(--text); text-decoration: none; }
+
+    /* ── Footer ─────────────────────────────────────────────── */
+    .site-footer {
+      border-top: 1px solid var(--border); padding: 28px 20px;
+      text-align: center; font-size: 12.5px; color: var(--muted);
+    }
+    .site-footer a { color: var(--muted); }
+    .site-footer a:hover { color: var(--text2); }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .blog-hero { padding: 44px 0 32px; }
+      .blog-listing { padding: 36px 0 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- GTM noscript -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSTQB75G" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- Navigation -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <div class="nav-logo-icon">LP</div>
+      <span>LogicPals</span>
+    </a>
+    <div class="nav-actions">
+      <a class="nav-btn nav-btn-ghost" href="/">← Home</a>
+      <a class="nav-btn nav-btn-primary" href="/pricing.html">Start Free Trial</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="blog-hero">
+  <div class="container">
+    <div class="blog-hero-eyebrow">LogicPals Blog</div>
+    <h1 class="blog-hero-title">Think Deeper.<br>Solve Anything.</h1>
+    <p class="blog-hero-subtitle">Math Olympiad strategies, BdMO preparation guides, and success stories from Bangladeshi students.</p>
+
+    <!-- Category filter pills -->
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-pill active" data-cat="" type="button">All Posts</button>
+      <button class="filter-pill" data-cat="olympiad" type="button">Olympiad</button>
+      <button class="filter-pill" data-cat="bdmo-guide" type="button">BdMO Guide</button>
+      <button class="filter-pill" data-cat="learning-tips" type="button">Learning Tips</button>
+      <button class="filter-pill" data-cat="success-stories" type="button">Success Stories</button>
+      <button class="filter-pill" data-cat="news" type="button">News</button>
+      <button class="filter-pill" data-cat="general" type="button">General</button>
+    </div>
+  </div>
+</section>
+
+<!-- Blog listing -->
+<section class="blog-listing">
+  <div class="container">
+
+    <!-- Loading skeletons (shown while fetching) -->
+    <div id="postsLoading">
+      <div class="posts-skeleton">
+        <div class="skeleton-card">
+          <div class="skel skel-cover"></div>
+          <div class="skel-body">
+            <div class="skel skel-line" style="width:35%;height:8px"></div>
+            <div class="skel skel-line" style="width:90%"></div>
+            <div class="skel skel-line" style="width:70%"></div>
+            <div class="skel skel-line" style="width:50%;height:8px;margin-top:4px"></div>
+          </div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skel skel-cover"></div>
+          <div class="skel-body">
+            <div class="skel skel-line" style="width:40%;height:8px"></div>
+            <div class="skel skel-line" style="width:85%"></div>
+            <div class="skel skel-line" style="width:65%"></div>
+            <div class="skel skel-line" style="width:45%;height:8px;margin-top:4px"></div>
+          </div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skel skel-cover"></div>
+          <div class="skel-body">
+            <div class="skel skel-line" style="width:30%;height:8px"></div>
+            <div class="skel skel-line" style="width:88%"></div>
+            <div class="skel skel-line" style="width:72%"></div>
+            <div class="skel skel-line" style="width:55%;height:8px;margin-top:4px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Post grid -->
+    <div class="posts-grid" id="postsGrid" style="display:none"></div>
+
+    <!-- Pagination -->
+    <div class="pagination" id="postsPagination" style="display:none"></div>
+
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="blog-cta">
+  <div class="container">
+    <div class="blog-cta-title">Ready to start your Olympiad journey?</div>
+    <div class="blog-cta-sub">Join 500+ Bangladeshi families. 7-day free trial. Ages 8–16. No credit card needed.</div>
+    <div class="cta-buttons">
+      <a class="cta-btn-primary" href="/pricing.html">Start Free Trial →</a>
+      <a class="cta-btn-ghost"   href="/">See How It Works</a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <p>© 2025 LogicPals. All rights reserved.
+    <a href="/privacy.html" style="margin-left:14px">Privacy</a>
+    <a href="/terms.html"   style="margin-left:10px">Terms</a>
+    <a href="/"             style="margin-left:10px">Home</a>
+    <a href="/blog.html"    style="margin-left:10px">Blog</a>
+  </p>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  const PAGE_SIZE = 9;
+  let allPosts    = [];
+  let filtered    = [];
+  let currentPage = 0;
+  let currentCat  = '';
+
+  /* ── Boot ──────────────────────────────────────────────── */
+  window.addEventListener('load', async function() {
+    if (!window.supabase || !window._env) {
+      showError('Could not initialise. Please refresh.');
+      return;
+    }
+    const sb = supabase.createClient(
+      window._env.SUPABASE_URL,
+      window._env.SUPABASE_ANON_KEY,
+      { auth: { storageKey: 'logicpals.auth' } }
+    );
+
+    try {
+      const { data, error } = await sb
+        .from('blog_posts')
+        .select('id,title,slug,excerpt,cover_url,category,published_at,read_time_minutes,view_count')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false });
+
+      if (error) throw error;
+      allPosts = data || [];
+      applyFilter('');
+    } catch(err) {
+      showError('Failed to load posts: ' + err.message);
+    }
+  });
+
+  /* ── Category filter ───────────────────────────────────── */
+  document.getElementById('filterBar').addEventListener('click', function(e) {
+    const btn = e.target.closest('.filter-pill');
+    if (!btn) return;
+    document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentCat = btn.dataset.cat || '';
+    currentPage = 0;
+    applyFilter(currentCat);
+  });
+
+  function applyFilter(cat) {
+    filtered = cat ? allPosts.filter(p => p.category === cat) : allPosts;
+    currentPage = 0;
+    renderPage();
+  }
+
+  /* ── Render a page of posts ────────────────────────────── */
+  function renderPage() {
+    const grid  = document.getElementById('postsGrid');
+    const pag   = document.getElementById('postsPagination');
+    document.getElementById('postsLoading').style.display = 'none';
+    grid.style.display = '';
+
+    if (!filtered.length) {
+      grid.innerHTML = `
+        <div class="posts-empty">
+          <div class="posts-empty-icon">✏️</div>
+          <div class="posts-empty-title">No posts yet in this category</div>
+          <div class="posts-empty-sub">Great content is on the way. Check back soon!</div>
+        </div>`;
+      pag.style.display = 'none';
+      return;
+    }
+
+    const start = currentPage * PAGE_SIZE;
+    const page  = filtered.slice(start, start + PAGE_SIZE);
+    const catLabels = {
+      general:'General', olympiad:'Olympiad', 'learning-tips':'Learning Tips',
+      'success-stories':'Success Stories', 'bdmo-guide':'BdMO Guide', news:'News'
+    };
+
+    grid.innerHTML = page.map(function(post, idx) {
+      const isFeatured = (currentPage === 0 && idx === 0 && filtered.length > 1);
+      const pubDate = post.published_at
+        ? new Date(post.published_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})
+        : '';
+      const coverHtml = post.cover_url
+        ? '<img src="' + post.cover_url + '" alt="' + (post.title||'') + '" loading="lazy">'
+        : '📚';
+      const catClass = post.category || 'general';
+      const catLabel = catLabels[catClass] || 'General';
+
+      return '<a class="post-card' + (isFeatured ? ' post-card-featured' : '') + '" href="/blog-post.html?slug=' + encodeURIComponent(post.slug||'') + '">'
+        + '<div class="post-card-cover">' + coverHtml + '</div>'
+        + '<div class="post-card-body">'
+        + '<span class="post-card-cat ' + catClass + '">' + catLabel + '</span>'
+        + '<div class="post-card-title">' + (post.title||'') + '</div>'
+        + '<div class="post-card-excerpt">' + (post.excerpt||'') + '</div>'
+        + '<div class="post-card-meta">'
+        + '<span>' + pubDate + '</span>'
+        + (pubDate ? '<span class="post-card-meta-dot">·</span>' : '')
+        + '<span>' + (post.read_time_minutes||3) + ' min read</span>'
+        + ((post.view_count||0) > 0 ? '<span class="post-card-meta-dot">·</span><span>' + (post.view_count||0).toLocaleString() + ' views</span>' : '')
+        + '</div>'
+        + '</div></a>';
+    }).join('');
+
+    // Pagination
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    if (totalPages <= 1) { pag.style.display = 'none'; return; }
+    pag.style.display = '';
+    pag.innerHTML = buildPagination(totalPages);
+    pag.querySelectorAll('.page-btn[data-page]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        currentPage = parseInt(btn.dataset.page);
+        renderPage();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+  }
+
+  function buildPagination(total) {
+    var html = '<button class="page-btn page-btn-wide" data-page="' + (currentPage-1) + '" ' + (currentPage===0?'disabled':'') + '>← Prev</button>';
+    for (var i = 0; i < total; i++) {
+      html += '<button class="page-btn' + (i===currentPage?' active':'') + '" data-page="' + i + '">' + (i+1) + '</button>';
+    }
+    html += '<button class="page-btn page-btn-wide" data-page="' + (currentPage+1) + '" ' + (currentPage>=total-1?'disabled':'') + '>Next →</button>';
+    return html;
+  }
+
+  function showError(msg) {
+    document.getElementById('postsLoading').style.display = 'none';
+    document.getElementById('postsGrid').style.display = '';
+    document.getElementById('postsGrid').innerHTML =
+      '<div class="posts-empty"><div class="posts-empty-icon">⚠️</div>'
+      + '<div class="posts-empty-title">Something went wrong</div>'
+      + '<div class="posts-empty-sub">' + msg + '</div></div>';
+  }
+
+  // GA4 event
+  if (window.dataLayer) {
+    window.dataLayer.push({ event: 'blog_listing_viewed' });
+  }
+
+})();
+</script>
+
+</body>
+</html>
