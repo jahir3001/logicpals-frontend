@@ -1800,14 +1800,14 @@
         <div class="lp-sb-logo-icon">LP</div>
         <div>
           <span class="lp-sb-logo-name" style="display:block">LogicPals</span>
-          <span class="lp-sb-logo-sub" style="display:block">Admin Console</div>
+          <span class="lp-sb-logo-sub" style="display:block">Admin Console</span>
         </div>
       </div>
 
       <!-- Nav -->
       <nav class="lp-sb-nav">
 
-        <p class="lp-sb-section">Workspace</div>
+        <p class="lp-sb-section">Workspace</p>
 
         <button class="lp-sb-item active" data-panel="overview" type="button">
           <svg class="lp-sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
@@ -3423,6 +3423,262 @@
 
   </div>
   <!-- /admin-app -->
+
+  <!-- ── Problem Detail Drawer ── -->
+  <div class="lp-content-drawer-backdrop" id="contentDrawerBackdrop"></div>
+  <div class="lp-content-drawer" id="contentDrawer" role="dialog" aria-modal="true" aria-label="Problem details">
+    <div class="lp-content-drawer-header">
+      <div style="min-width:0;flex:1">
+        <div class="lp-content-drawer-title" id="drawerTitle">Problem</div>
+        <div class="lp-content-drawer-meta" id="drawerMeta">—</div>
+      </div>
+      <button class="lp-content-drawer-close" id="btnCloseDrawer" type="button" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="lp-content-drawer-body" id="drawerBody">
+      <div class="lp-telemetry-empty">Select a problem from the browser to view details.</div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════
+       COMMAND PALETTE (⌘K)
+  ══════════════════════════════════════════════ -->
+  <div class="lp-cmd-backdrop" id="cmdBackdrop"></div>
+  <div class="lp-cmd-palette" id="cmdPalette" role="dialog" aria-label="Command palette" aria-modal="true">
+    <div class="lp-cmd-search-wrap">
+      <svg class="lp-cmd-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="lp-cmd-input" id="cmdInput" type="text" placeholder="Type a command or search…" autocomplete="off" spellcheck="false">
+      <span class="lp-cmd-kbd">Esc</span>
+    </div>
+    <div class="lp-cmd-results" id="cmdResults"></div>
+    <div class="lp-cmd-footer">
+      <span><kbd>↑↓</kbd> navigate</span>
+      <span><kbd>↵</kbd> select</span>
+      <span><kbd>Esc</kbd> close</span>
+      <span><kbd>⌘K</kbd> open</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       FULL-PAGE BLOG EDITOR OVERLAY
+  ══════════════════════════════════════════════ -->
+  <div class="lp-blog-editor-overlay" id="blogEditorOverlay" role="dialog" aria-modal="true" aria-label="Blog post editor">
+
+    <!-- Header -->
+    <div class="lp-ble-header">
+      <button class="lp-ble-back" id="btnBlogEditorClose" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Back to CMS
+      </button>
+      <div class="lp-ble-title-wrap">
+        <div class="lp-ble-doc-title" id="bleDocTitle">New Post</div>
+        <div class="lp-ble-doc-slug" id="bleDocSlug">/blog-post.html?slug=—</div>
+      </div>
+      <div class="lp-ble-actions">
+        <span class="lp-ble-autosave" id="bleAutoSave">—</span>
+        <span class="lp-ble-status-pill draft" id="bleStatusPill">Draft</span>
+        <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnBleSaveDraft" type="button">Save Draft</button>
+        <button class="admin-btn admin-btn-primary admin-btn-sm" id="btnBlePublish" type="button">Publish</button>
+      </div>
+    </div>
+
+    <!-- Two-column body -->
+    <div class="lp-ble-body">
+
+      <!-- LEFT: Form -->
+      <div class="lp-ble-form" id="bleForm">
+
+        <div class="admin-field">
+          <label class="admin-label" for="bleTitle">Title <span style="color:var(--lp-danger)">*</span></label>
+          <input class="admin-input" id="bleTitle" type="text" placeholder="Your post title…" maxlength="120" style="font-size:17px;font-weight:700;height:52px">
+          <div class="lp-char-count"><span id="bleTitleCount">0</span>/60 recommended for SEO</div>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="bleSlug">URL Slug</label>
+          <div style="display:flex;gap:6px">
+            <input class="admin-input" id="bleSlug" type="text" placeholder="auto-generated" style="flex:1;font-family:var(--lp-font-mono);font-size:12px">
+            <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnBleRegenerateSlug" type="button" title="Regenerate from title">↺ Regenerate</button>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div class="admin-field">
+            <label class="admin-label" for="bleCategory">Category</label>
+            <select class="admin-select" id="bleCategory">
+              <option value="general">General</option>
+              <option value="olympiad">Olympiad</option>
+              <option value="learning-tips">Learning Tips</option>
+              <option value="success-stories">Success Stories</option>
+              <option value="bdmo-guide">BdMO Guide</option>
+              <option value="news">News</option>
+            </select>
+          </div>
+          <div class="admin-field">
+            <label class="admin-label" for="bleStatus">Status</label>
+            <select class="admin-select" id="bleStatus">
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+              <option value="archived">Archived</option>
+            </select>
+          </div>
+          <div class="admin-field">
+            <label class="admin-label" for="bleAuthor">Author</label>
+            <input class="admin-input" id="bleAuthor" type="text" value="LogicPals Team">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 130px;gap:10px">
+          <div class="admin-field" id="blePublishedAtRow" style="display:none">
+            <label class="admin-label" for="blePublishedAt">Publish Date &amp; Time</label>
+            <input class="admin-input" id="blePublishedAt" type="datetime-local">
+          </div>
+          <div class="admin-field">
+            <label class="admin-label" for="bleReadTime">Read Time (min)</label>
+            <input class="admin-input" id="bleReadTime" type="number" min="1" max="60" value="3">
+            <div class="lp-char-count"><span id="bleWordCount">0</span> words</div>
+          </div>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label">Cover Image</label>
+          <img class="lp-cover-preview" id="bleCoverPreview" alt="Cover preview">
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button class="admin-btn admin-btn-secondary admin-btn-sm" id="btnBlePickCover" type="button">📁 From Media Library</button>
+            <input class="admin-input" id="bleCoverUrl" type="url" placeholder="Or paste image URL" style="flex:1;font-size:12px">
+          </div>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="bleExcerpt">Excerpt <span style="font-weight:400;color:var(--lp-muted)">— shown on cards &amp; SEO</span></label>
+          <textarea class="admin-input" id="bleExcerpt" rows="3" maxlength="300" placeholder="One sentence that makes someone click…" style="resize:vertical"></textarea>
+          <div class="lp-char-count"><span id="bleExcerptCount">0</span>/160 recommended</div>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="bleTagInput">Tags</label>
+          <input class="admin-input" id="bleTagInput" type="text" placeholder="Type and press Enter or comma…">
+          <div class="lp-tag-chips" id="bleTagChips"></div>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label">Content</label>
+          <div id="bleContentEditor" style="min-height:280px"></div>
+        </div>
+
+        <hr class="lp-form-divider">
+        <div class="lp-form-section-label">SEO</div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="bleSeoTitle">SEO Title</label>
+          <input class="admin-input" id="bleSeoTitle" type="text" maxlength="80" placeholder="Defaults to title if empty">
+          <div class="lp-char-count"><span id="bleSeoTitleCount">0</span>/60 recommended</div>
+        </div>
+
+        <div class="admin-field">
+          <label class="admin-label" for="bleSeoDesc">SEO Description</label>
+          <textarea class="admin-input" id="bleSeoDesc" rows="2" maxlength="200" placeholder="Defaults to excerpt if empty" style="resize:vertical"></textarea>
+          <div class="lp-char-count"><span id="bleSeoDescCount">0</span>/160 recommended</div>
+        </div>
+
+        <div id="bleDangerZone" style="display:none">
+          <hr class="lp-form-divider">
+          <div class="lp-form-section-label" style="color:var(--lp-danger-text)">Danger Zone</div>
+          <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnBleDelete" type="button" style="color:var(--lp-danger-text);border-color:var(--lp-danger-border)">Delete this post permanently</button>
+        </div>
+
+      </div><!-- /form -->
+
+      <!-- RIGHT: Live preview -->
+      <div class="lp-ble-preview">
+        <div class="lp-ble-preview-tabs">
+          <button class="lp-ble-preview-tab active" data-preview="card" type="button">Blog Card</button>
+          <button class="lp-ble-preview-tab" data-preview="serp" type="button">Google Preview</button>
+          <button class="lp-ble-preview-tab" data-preview="header" type="button">Post Header</button>
+        </div>
+
+        <!-- Preview: Blog Card -->
+        <div class="lp-ble-preview-panel active" id="ble-preview-card">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--lp-muted);margin-bottom:14px">How it looks on the homepage</div>
+          <div id="bleCardPreview" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;max-width:360px">
+            <div id="bleCardCover" style="width:100%;aspect-ratio:16/9;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:28px;color:rgba(255,255,255,.18)">📷</div>
+            <div style="padding:16px 18px 18px">
+              <div id="bleCardCat" style="display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;background:rgba(99,102,241,.1);color:#818CF8;border:1px solid rgba(99,102,241,.15);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">General</div>
+              <div id="bleCardTitle" style="font-size:16px;font-weight:700;color:#F0F4FF;line-height:1.3;margin-bottom:8px">Post title here…</div>
+              <div id="bleCardExcerpt" style="font-size:12.5px;color:#A8B4CC;line-height:1.55;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Excerpt appears here…</div>
+              <div style="font-size:11px;color:#6B7A96;display:flex;gap:14px">
+                <span id="bleCardDate">Draft</span>
+                <span id="bleCardReadTime">3 min read</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview: Google SERP -->
+        <div class="lp-ble-preview-panel" id="ble-preview-serp">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--lp-muted);margin-bottom:14px">How it looks in Google search results</div>
+          <div class="lp-serp-preview">
+            <div class="lp-serp-url">
+              <div style="width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#3B82F6,#0EA5A0);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:white;flex-shrink:0">L</div>
+              <div>
+                <span class="lp-serp-url-site">logicpals.com</span>
+                <span style="color:#4d5156;margin:0 3px">›</span>
+                <span class="lp-serp-url-path" id="serpUrlPath">blog-post.html</span>
+              </div>
+            </div>
+            <div class="lp-serp-title" id="serpTitle">Post Title — LogicPals</div>
+            <div class="lp-serp-desc" id="serpDesc">Your excerpt or SEO description will appear here. Keep it between 120–160 characters for best results.</div>
+          </div>
+          <div style="margin-top:12px;display:grid;gap:6px">
+            <div class="lp-serp-warn ok" id="serpTitleWarn">Title: — characters</div>
+            <div class="lp-serp-warn ok" id="serpDescWarn">Description: — characters</div>
+          </div>
+          <div style="margin-top:14px;font-size:11.5px;color:var(--lp-muted);line-height:1.7;background:var(--lp-surface);border-radius:8px;padding:12px 14px">
+            <strong style="color:var(--lp-text-2)">SERP best practices:</strong><br>
+            Title: 50–60 characters ideal<br>
+            Description: 120–160 characters ideal<br>
+            Include your main keyword near the start.
+          </div>
+        </div>
+
+        <!-- Preview: Post Header -->
+        <div class="lp-ble-preview-panel" id="ble-preview-header">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--lp-muted);margin-bottom:14px">How the article page header looks</div>
+          <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden">
+            <div id="bleHeaderCoverWrap" style="width:100%;aspect-ratio:16/5;background:linear-gradient(135deg,rgba(79,70,229,.2),rgba(14,165,160,.12));display:flex;align-items:center;justify-content:center;font-size:32px">📷</div>
+            <div style="padding:20px 22px">
+              <div id="bleHeaderCat" style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;background:rgba(99,102,241,.1);color:#818CF8;margin-bottom:12px;text-transform:uppercase">General</div>
+              <div id="bleHeaderTitle" style="font-size:22px;font-weight:700;color:#F0F4FF;line-height:1.25;margin-bottom:10px">Post title here…</div>
+              <div style="display:flex;gap:16px;font-size:12px;color:#6B7A96;flex-wrap:wrap">
+                <span id="bleHeaderAuthor">LogicPals Team</span>
+                <span id="bleHeaderDate">Draft</span>
+                <span id="bleHeaderReadTime">3 min read</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /preview -->
+    </div><!-- /body -->
+  </div>
+  <!-- /blog editor overlay -->
+
+  <!-- ══════════════════════════════════════════════
+       MEDIA PICKER MODAL
+  ══════════════════════════════════════════════ -->
+  <div class="lp-media-picker-backdrop" id="mediaPickerBackdrop"></div>
+  <div class="lp-media-picker-modal" id="mediaPickerModal">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--lp-border)">
+      <div style="font-size:15px;font-weight:700;color:var(--lp-text)">Select Image</div>
+      <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnCloseMediaPicker" type="button">✕ Close</button>
+    </div>
+    <div style="padding:16px;overflow-y:auto;flex:1">
+      <div class="lp-media-grid" id="mediaPickerGrid"></div>
+      <div id="mediaPickerEmpty" style="display:none;padding:24px;text-align:center;color:var(--lp-muted);font-size:13px">No images in library. Upload some first.</div>
+    </div>
+  </div>
 
   <script>
   /* ── Admin Console bootstrap ──────────────────────────────────────
@@ -7731,261 +7987,5 @@
     });
 
   </script>
-  <!-- ── Problem Detail Drawer ── -->
-  <div class="lp-content-drawer-backdrop" id="contentDrawerBackdrop"></div>
-  <div class="lp-content-drawer" id="contentDrawer" role="dialog" aria-modal="true" aria-label="Problem details">
-    <div class="lp-content-drawer-header">
-      <div style="min-width:0;flex:1">
-        <div class="lp-content-drawer-title" id="drawerTitle">Problem</div>
-        <div class="lp-content-drawer-meta" id="drawerMeta">—</div>
-      </div>
-      <button class="lp-content-drawer-close" id="btnCloseDrawer" type="button" aria-label="Close">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
-    </div>
-    <div class="lp-content-drawer-body" id="drawerBody">
-      <div class="lp-telemetry-empty">Select a problem from the browser to view details.</div>
-    </div>
-  </div>
-
-
-  <!-- ══════════════════════════════════════════════
-       COMMAND PALETTE (⌘K)
-  ══════════════════════════════════════════════ -->
-  <div class="lp-cmd-backdrop" id="cmdBackdrop"></div>
-  <div class="lp-cmd-palette" id="cmdPalette" role="dialog" aria-label="Command palette" aria-modal="true">
-    <div class="lp-cmd-search-wrap">
-      <svg class="lp-cmd-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      <input class="lp-cmd-input" id="cmdInput" type="text" placeholder="Type a command or search…" autocomplete="off" spellcheck="false">
-      <span class="lp-cmd-kbd">Esc</span>
-    </div>
-    <div class="lp-cmd-results" id="cmdResults"></div>
-    <div class="lp-cmd-footer">
-      <span><kbd>↑↓</kbd> navigate</span>
-      <span><kbd>↵</kbd> select</span>
-      <span><kbd>Esc</kbd> close</span>
-      <span><kbd>⌘K</kbd> open</span>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════════
-       FULL-PAGE BLOG EDITOR OVERLAY
-  ══════════════════════════════════════════════ -->
-  <div class="lp-blog-editor-overlay" id="blogEditorOverlay" role="dialog" aria-modal="true" aria-label="Blog post editor">
-
-    <!-- Header -->
-    <div class="lp-ble-header">
-      <button class="lp-ble-back" id="btnBlogEditorClose" type="button">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-        Back to CMS
-      </button>
-      <div class="lp-ble-title-wrap">
-        <div class="lp-ble-doc-title" id="bleDocTitle">New Post</div>
-        <div class="lp-ble-doc-slug" id="bleDocSlug">/blog-post.html?slug=—</div>
-      </div>
-      <div class="lp-ble-actions">
-        <span class="lp-ble-autosave" id="bleAutoSave">—</span>
-        <span class="lp-ble-status-pill draft" id="bleStatusPill">Draft</span>
-        <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnBleSaveDraft" type="button">Save Draft</button>
-        <button class="admin-btn admin-btn-primary admin-btn-sm" id="btnBlePublish" type="button">Publish</button>
-      </div>
-    </div>
-
-    <!-- Two-column body -->
-    <div class="lp-ble-body">
-
-      <!-- LEFT: Form -->
-      <div class="lp-ble-form" id="bleForm">
-
-        <div class="admin-field">
-          <label class="admin-label" for="bleTitle">Title <span style="color:var(--lp-danger)">*</span></label>
-          <input class="admin-input" id="bleTitle" type="text" placeholder="Your post title…" maxlength="120" style="font-size:17px;font-weight:700;height:52px">
-          <div class="lp-char-count"><span id="bleTitleCount">0</span>/60 recommended for SEO</div>
-        </div>
-
-        <div class="admin-field">
-          <label class="admin-label" for="bleSlug">URL Slug</label>
-          <div style="display:flex;gap:6px">
-            <input class="admin-input" id="bleSlug" type="text" placeholder="auto-generated" style="flex:1;font-family:var(--lp-font-mono);font-size:12px">
-            <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnBleRegenerateSlug" type="button" title="Regenerate from title">↺ Regenerate</button>
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-          <div class="admin-field">
-            <label class="admin-label" for="bleCategory">Category</label>
-            <select class="admin-select" id="bleCategory">
-              <option value="general">General</option>
-              <option value="olympiad">Olympiad</option>
-              <option value="learning-tips">Learning Tips</option>
-              <option value="success-stories">Success Stories</option>
-              <option value="bdmo-guide">BdMO Guide</option>
-              <option value="news">News</option>
-            </select>
-          </div>
-          <div class="admin-field">
-            <label class="admin-label" for="bleStatus">Status</label>
-            <select class="admin-select" id="bleStatus">
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="archived">Archived</option>
-            </select>
-          </div>
-          <div class="admin-field">
-            <label class="admin-label" for="bleAuthor">Author</label>
-            <input class="admin-input" id="bleAuthor" type="text" value="LogicPals Team">
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 130px;gap:10px">
-          <div class="admin-field" id="blePublishedAtRow" style="display:none">
-            <label class="admin-label" for="blePublishedAt">Publish Date &amp; Time</label>
-            <input class="admin-input" id="blePublishedAt" type="datetime-local">
-          </div>
-          <div class="admin-field">
-            <label class="admin-label" for="bleReadTime">Read Time (min)</label>
-            <input class="admin-input" id="bleReadTime" type="number" min="1" max="60" value="3">
-            <div class="lp-char-count"><span id="bleWordCount">0</span> words</div>
-          </div>
-        </div>
-
-        <div class="admin-field">
-          <label class="admin-label">Cover Image</label>
-          <img class="lp-cover-preview" id="bleCoverPreview" alt="Cover preview">
-          <div style="display:flex;gap:8px;margin-top:6px">
-            <button class="admin-btn admin-btn-secondary admin-btn-sm" id="btnBlePickCover" type="button">📁 From Media Library</button>
-            <input class="admin-input" id="bleCoverUrl" type="url" placeholder="Or paste image URL" style="flex:1;font-size:12px">
-          </div>
-        </div>
-
-        <div class="admin-field">
-          <label class="admin-label" for="bleExcerpt">Excerpt <span style="font-weight:400;color:var(--lp-muted)">— shown on cards &amp; SEO</span></label>
-          <textarea class="admin-input" id="bleExcerpt" rows="3" maxlength="300" placeholder="One sentence that makes someone click…" style="resize:vertical"></textarea>
-          <div class="lp-char-count"><span id="bleExcerptCount">0</span>/160 recommended</div>
-        </div>
-
-        <div class="admin-field">
-          <label class="admin-label" for="bleTagInput">Tags</label>
-          <input class="admin-input" id="bleTagInput" type="text" placeholder="Type and press Enter or comma…">
-          <div class="lp-tag-chips" id="bleTagChips"></div>
-        </div>
-
-        <div class="admin-field">
-          <label class="admin-label">Content</label>
-          <div id="bleContentEditor" style="min-height:280px"></div>
-        </div>
-
-        <hr class="lp-form-divider">
-        <div class="lp-form-section-label">SEO</div>
-
-        <div class="admin-field">
-          <label class="admin-label" for="bleSeoTitle">SEO Title</label>
-          <input class="admin-input" id="bleSeoTitle" type="text" maxlength="80" placeholder="Defaults to title if empty">
-          <div class="lp-char-count"><span id="bleSeoTitleCount">0</span>/60 recommended</div>
-        </div>
-
-        <div class="admin-field">
-          <label class="admin-label" for="bleSeoDesc">SEO Description</label>
-          <textarea class="admin-input" id="bleSeoDesc" rows="2" maxlength="200" placeholder="Defaults to excerpt if empty" style="resize:vertical"></textarea>
-          <div class="lp-char-count"><span id="bleSeoDescCount">0</span>/160 recommended</div>
-        </div>
-
-        <div id="bleDangerZone" style="display:none">
-          <hr class="lp-form-divider">
-          <div class="lp-form-section-label" style="color:var(--lp-danger-text)">Danger Zone</div>
-          <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnBleDelete" type="button" style="color:var(--lp-danger-text);border-color:var(--lp-danger-border)">Delete this post permanently</button>
-        </div>
-
-      </div><!-- /form -->
-
-      <!-- RIGHT: Live preview -->
-      <div class="lp-ble-preview">
-        <div class="lp-ble-preview-tabs">
-          <button class="lp-ble-preview-tab active" data-preview="card" type="button">Blog Card</button>
-          <button class="lp-ble-preview-tab" data-preview="serp" type="button">Google Preview</button>
-          <button class="lp-ble-preview-tab" data-preview="header" type="button">Post Header</button>
-        </div>
-
-        <!-- Preview: Blog Card -->
-        <div class="lp-ble-preview-panel active" id="ble-preview-card">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--lp-muted);margin-bottom:14px">How it looks on the homepage</div>
-          <div id="bleCardPreview" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;max-width:360px">
-            <div id="bleCardCover" style="width:100%;aspect-ratio:16/9;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:28px;color:rgba(255,255,255,.18)">📷</div>
-            <div style="padding:16px 18px 18px">
-              <div id="bleCardCat" style="display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;background:rgba(99,102,241,.1);color:#818CF8;border:1px solid rgba(99,102,241,.15);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">General</div>
-              <div id="bleCardTitle" style="font-size:16px;font-weight:700;color:#F0F4FF;line-height:1.3;margin-bottom:8px">Post title here…</div>
-              <div id="bleCardExcerpt" style="font-size:12.5px;color:#A8B4CC;line-height:1.55;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Excerpt appears here…</div>
-              <div style="font-size:11px;color:#6B7A96;display:flex;gap:14px">
-                <span id="bleCardDate">Draft</span>
-                <span id="bleCardReadTime">3 min read</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Preview: Google SERP -->
-        <div class="lp-ble-preview-panel" id="ble-preview-serp">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--lp-muted);margin-bottom:14px">How it looks in Google search results</div>
-          <div class="lp-serp-preview">
-            <div class="lp-serp-url">
-              <div style="width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#3B82F6,#0EA5A0);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:white;flex-shrink:0">L</div>
-              <div>
-                <span class="lp-serp-url-site">logicpals.com</span>
-                <span style="color:#4d5156;margin:0 3px">›</span>
-                <span class="lp-serp-url-path" id="serpUrlPath">blog-post.html</span>
-              </div>
-            </div>
-            <div class="lp-serp-title" id="serpTitle">Post Title — LogicPals</div>
-            <div class="lp-serp-desc" id="serpDesc">Your excerpt or SEO description will appear here. Keep it between 120–160 characters for best results.</div>
-          </div>
-          <div style="margin-top:12px;display:grid;gap:6px">
-            <div class="lp-serp-warn ok" id="serpTitleWarn">Title: — characters</div>
-            <div class="lp-serp-warn ok" id="serpDescWarn">Description: — characters</div>
-          </div>
-          <div style="margin-top:14px;font-size:11.5px;color:var(--lp-muted);line-height:1.7;background:var(--lp-surface);border-radius:8px;padding:12px 14px">
-            <strong style="color:var(--lp-text-2)">SERP best practices:</strong><br>
-            Title: 50–60 characters ideal<br>
-            Description: 120–160 characters ideal<br>
-            Include your main keyword near the start.
-          </div>
-        </div>
-
-        <!-- Preview: Post Header -->
-        <div class="lp-ble-preview-panel" id="ble-preview-header">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--lp-muted);margin-bottom:14px">How the article page header looks</div>
-          <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden">
-            <div id="bleHeaderCoverWrap" style="width:100%;aspect-ratio:16/5;background:linear-gradient(135deg,rgba(79,70,229,.2),rgba(14,165,160,.12));display:flex;align-items:center;justify-content:center;font-size:32px">📷</div>
-            <div style="padding:20px 22px">
-              <div id="bleHeaderCat" style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;background:rgba(99,102,241,.1);color:#818CF8;margin-bottom:12px;text-transform:uppercase">General</div>
-              <div id="bleHeaderTitle" style="font-size:22px;font-weight:700;color:#F0F4FF;line-height:1.25;margin-bottom:10px">Post title here…</div>
-              <div style="display:flex;gap:16px;font-size:12px;color:#6B7A96;flex-wrap:wrap">
-                <span id="bleHeaderAuthor">LogicPals Team</span>
-                <span id="bleHeaderDate">Draft</span>
-                <span id="bleHeaderReadTime">3 min read</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- /preview -->
-    </div><!-- /body -->
-  </div>
-  <!-- /blog editor overlay -->
-
-  <!-- ══════════════════════════════════════════════
-       MEDIA PICKER MODAL
-  ══════════════════════════════════════════════ -->
-  <div class="lp-media-picker-backdrop" id="mediaPickerBackdrop"></div>
-  <div class="lp-media-picker-modal" id="mediaPickerModal">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--lp-border)">
-      <div style="font-size:15px;font-weight:700;color:var(--lp-text)">Select Image</div>
-      <button class="admin-btn admin-btn-ghost admin-btn-sm" id="btnCloseMediaPicker" type="button">✕ Close</button>
-    </div>
-    <div style="padding:16px;overflow-y:auto;flex:1">
-      <div class="lp-media-grid" id="mediaPickerGrid"></div>
-      <div id="mediaPickerEmpty" style="display:none;padding:24px;text-align:center;color:var(--lp-muted);font-size:13px">No images in library. Upload some first.</div>
-    </div>
-  </div>
-
 </body>
 </html>
