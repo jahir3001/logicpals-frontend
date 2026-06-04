@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="/assets/css/admin.css" />
   <script src="/assets/js/env-loader.js"></script>
   <script src="/assets/js/admin-auth.js"></script>
+  <script src="/assets/js/admin-guard.js"></script>
   <!-- Quill rich text editor -->
   <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
   <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
@@ -1608,6 +1609,179 @@
   .lp-publish-badge.draft     { background: var(--lp-surface-2); color: var(--lp-muted); border: 1px solid var(--lp-border); }
   .lp-publish-badge.archived  { background: rgba(239,68,68,.08); color: #dc2626; }
 
+
+  /* ═══════════════════════════════════════════════════════
+     CUSTOM UNIFIED SIDEBAR
+  ═══════════════════════════════════════════════════════ */
+
+  /* Hide the admin-auth.js sidebar (we replace it) */
+  #sidebar { display: none !important; }
+  .admin-sidebar-backdrop { display: none !important; }
+
+  /* Shift main content to make room for our sidebar */
+  @media (min-width: 769px) {
+    .admin-main { margin-left: 240px !important; }
+  }
+
+  /* ── Sidebar container ── */
+  #lpSidebar {
+    position: fixed; top: 0; left: 0;
+    width: 240px; height: 100vh;
+    background: #0D1220;
+    border-right: 1px solid rgba(255,255,255,.07);
+    display: flex; flex-direction: column;
+    z-index: 300; overflow: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    transition: transform .25s cubic-bezier(.4,0,.2,1);
+  }
+  #lpSidebar.sb-collapsed { transform: translateX(-100%); }
+  @media (max-width: 768px) {
+    #lpSidebar { transform: translateX(-100%); }
+    #lpSidebar.sb-open { transform: translateX(0); }
+    .admin-main { margin-left: 0 !important; }
+  }
+
+  /* ── Logo ── */
+  .lp-sb-logo {
+    height: 58px; flex-shrink: 0;
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 16px;
+    background: linear-gradient(135deg, rgba(79,70,229,.15) 0%, rgba(14,165,160,.08) 100%);
+    border-bottom: 1px solid rgba(255,255,255,.07);
+  }
+  .lp-sb-logo-icon {
+    width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+    background: linear-gradient(135deg, #4F46E5, #0EA5E9);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 900; color: white;
+    box-shadow: 0 2px 8px rgba(79,70,229,.35);
+  }
+  .lp-sb-logo-name { font-size: 14px; font-weight: 800; color: #F0F4FF; line-height: 1.2; }
+  .lp-sb-logo-sub  { font-size: 9.5px; font-weight: 600; color: rgba(255,255,255,.3); text-transform: uppercase; letter-spacing: .08em; }
+
+  /* ── Nav area ── */
+  .lp-sb-nav {
+    flex: 1; overflow-y: auto; padding: 8px 8px 12px;
+    scrollbar-width: none;
+  }
+  .lp-sb-nav::-webkit-scrollbar { display: none; }
+
+  /* ── Section labels ── */
+  .lp-sb-section {
+    font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em;
+    color: rgba(255,255,255,.25); padding: 14px 10px 4px;
+    user-select: none;
+  }
+  .lp-sb-section:first-child { padding-top: 8px; }
+
+  /* ── Nav items ── */
+  .lp-sb-item {
+    display: flex; align-items: center; gap: 9px;
+    width: 100%; padding: 9px 10px 9px 12px;
+    border-radius: 8px; margin-bottom: 1px;
+    font-size: 13px; font-weight: 600; color: rgba(255,255,255,.55);
+    background: none; border: none; cursor: pointer;
+    text-align: left; text-decoration: none;
+    transition: all .14s ease;
+    position: relative;
+  }
+  .lp-sb-item:hover {
+    background: rgba(255,255,255,.05);
+    color: rgba(255,255,255,.85);
+    text-decoration: none;
+  }
+  .lp-sb-item.active {
+    background: rgba(79,70,229,.14);
+    color: #A5B4FC;
+    font-weight: 700;
+  }
+  .lp-sb-item.active::before {
+    content: '';
+    position: absolute; left: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 3px; height: 18px;
+    background: linear-gradient(to bottom, #6366F1, #818CF8);
+    border-radius: 0 3px 3px 0;
+  }
+  .lp-sb-icon {
+    width: 15px; height: 15px; flex-shrink: 0; opacity: .75;
+  }
+  .lp-sb-item:hover .lp-sb-icon,
+  .lp-sb-item.active .lp-sb-icon { opacity: 1; }
+
+  /* Badge in sidebar */
+  .lp-sb-badge {
+    margin-left: auto; font-size: 9.5px; font-weight: 800;
+    padding: 1px 6px; border-radius: 999px; line-height: 16px;
+    background: rgba(245,158,11,.15); color: #F59E0B;
+    border: 1px solid rgba(245,158,11,.2);
+  }
+  .lp-sb-badge.indigo {
+    background: rgba(99,102,241,.15); color: #818CF8;
+    border-color: rgba(99,102,241,.2);
+  }
+
+  /* Divider */
+  .lp-sb-divider {
+    height: 1px; background: rgba(255,255,255,.07);
+    margin: 8px 10px;
+  }
+
+  /* ── User footer ── */
+  .lp-sb-footer {
+    flex-shrink: 0; padding: 10px 12px;
+    border-top: 1px solid rgba(255,255,255,.07);
+    background: rgba(0,0,0,.2);
+  }
+  .lp-sb-user {
+    display: flex; align-items: center; gap: 9px;
+    padding: 6px 0 8px; min-width: 0;
+  }
+  .lp-sb-avatar {
+    width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+    background: linear-gradient(135deg, #4F46E5, #7C3AED);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800; color: white;
+  }
+  .lp-sb-email {
+    font-size: 11.5px; font-weight: 600; color: rgba(255,255,255,.7);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .lp-sb-role  {
+    font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .07em; color: #818CF8;
+  }
+  .lp-sb-actions { display: flex; gap: 6px; margin-top: 4px; }
+  .lp-sb-action-btn {
+    flex: 1; padding: 7px 10px; border-radius: 7px;
+    font-size: 11.5px; font-weight: 600;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+    color: rgba(255,255,255,.5); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    transition: all .14s; text-decoration: none;
+  }
+  .lp-sb-action-btn:hover {
+    background: rgba(255,255,255,.1); color: rgba(255,255,255,.8);
+    text-decoration: none;
+  }
+  .lp-sb-action-btn.danger:hover {
+    background: rgba(239,68,68,.15); color: #FCA5A5;
+    border-color: rgba(239,68,68,.25);
+  }
+
+  /* ── Blog editor font hard-reset (beats admin.css icon-font) ── */
+  .lp-blog-editor-overlay,
+  .lp-blog-editor-overlay * {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif !important;
+  }
+  .lp-blog-editor-overlay .ql-editor,
+  .lp-blog-editor-overlay .ql-editor * {
+    font-family: 'Inter', Georgia, serif !important;
+  }
+  .lp-blog-editor-overlay code,
+  .lp-blog-editor-overlay pre {
+    font-family: 'Fira Code', 'Cascadia Code', 'Courier New', monospace !important;
+  }
   </style>
 </head>
 
@@ -1615,9 +1789,137 @@
 
   <div class="admin-app" id="adminApp">
 
-    <!-- ── Sidebar (rendered by LPAdmin.init) ── -->
-    <aside class="admin-sidebar" id="sidebar"></aside>
-    <div class="admin-sidebar-backdrop" id="lp-sb-backdrop"></div>
+    <!-- ── Sidebar (rendered by LPAdmin.init — kept for auth) ── -->
+    <aside class="admin-sidebar" id="sidebar" style="display:none"></aside>
+
+    <!-- ── Custom unified sidebar ── -->
+    <div id="lpSidebar" role="navigation" aria-label="Admin navigation">
+
+      <!-- Logo -->
+      <div class="lp-sb-logo">
+        <div class="lp-sb-logo-icon">LP</div>
+        <div>
+          <div class="lp-sb-logo-name">LogicPals</div>
+          <div class="lp-sb-logo-sub">Admin Console</div>
+        </div>
+      </div>
+
+      <!-- Nav -->
+      <nav class="lp-sb-nav">
+
+        <div class="lp-sb-section">Workspace</div>
+
+        <button class="lp-sb-item active" data-panel="overview" type="button">
+          <svg class="lp-sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          Overview
+        </button>
+
+        <button class="lp-sb-item" data-panel="content" type="button">
+          <svg class="lp-sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Content Library
+          <span class="lp-sb-badge" id="sbReviewBadge" style="display:none">0</span>
+        </button>
+
+        <button class="lp-sb-item" data-panel="cms" type="button">
+          <svg class="lp-sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          CMS
+          <span class="lp-sb-badge indigo" id="sbBlogBadge" style="display:none">0</span>
+        </button>
+
+        <button class="lp-sb-item" data-panel="telemetry" type="button">
+          <svg class="lp-sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l3-3 3 2 4-6"/></svg>
+          Monitoring
+        </button>
+
+        <div class="lp-sb-divider"></div>
+        <div class="lp-sb-section">Operations</div>
+
+        <button class="lp-sb-item" data-panel="monetization" type="button">
+          <svg class="lp-sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
+          Monetization
+        </button>
+
+        <button class="lp-sb-item" data-panel="access" type="button">
+          <svg class="lp-sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          Access Control
+        </button>
+
+        <button class="lp-sb-item" data-panel="flags" type="button">
+          <svg class="lp-sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5v14"/><path d="M5 5h8l1.5 3L21 8v8h-8l-1.5-3H5"/></svg>
+          Feature Flags
+        </button>
+
+        <a class="lp-sb-item" href="/admin/admin-incidents.html">
+          <svg class="lp-sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Incidents
+        </a>
+
+        <div class="lp-sb-divider"></div>
+        <div class="lp-sb-section">Admin Tools</div>
+
+        <a class="lp-sb-item" href="/admin/admin-payments.html">
+          <svg class="lp-sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+          Payments
+        </a>
+
+        <a class="lp-sb-item" href="/admin/admin-subscriptions.html">
+          <svg class="lp-sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+          Subscriptions
+        </a>
+
+        <a class="lp-sb-item" href="/admin/admin-roles.html">
+          <svg class="lp-sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          Role Manager
+        </a>
+
+        <a class="lp-sb-item" href="/admin/admin-governance.html">
+          <svg class="lp-sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Governance
+        </a>
+
+        <a class="lp-sb-item" href="/admin/admin-postmortems.html">
+          <svg class="lp-sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Postmortems
+        </a>
+
+        <a class="lp-sb-item" href="/admin/admin-circuit-breakers.html">
+          <svg class="lp-sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Circuit Breakers
+        </a>
+
+        <div class="lp-sb-divider"></div>
+        <div class="lp-sb-section">Analytics</div>
+
+        <a class="lp-sb-item" href="/admin/ab-dashboard.html">
+          <svg class="lp-sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          A/B Dashboard
+        </a>
+
+      </nav>
+
+      <!-- User footer -->
+      <div class="lp-sb-footer">
+        <div class="lp-sb-user">
+          <div class="lp-sb-avatar" id="sbAvatar">—</div>
+          <div style="min-width:0;flex:1">
+            <div class="lp-sb-email" id="sbEmail">Loading…</div>
+            <div class="lp-sb-role" id="sbRole">—</div>
+          </div>
+        </div>
+        <div class="lp-sb-actions">
+          <a class="lp-sb-action-btn" href="/" title="Visit live site">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+            Live Site
+          </a>
+          <button class="lp-sb-action-btn danger" id="sbLogout" type="button" title="Sign out">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sign Out
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <!-- /custom sidebar -->
 
     <div class="admin-main">
 
@@ -3157,6 +3459,11 @@
       // Activate matching tab
       const tab = document.querySelector(`.lp-tab[data-tab="${key}"]`);
       if (tab) { tab.classList.add('active'); tab.setAttribute('aria-selected', 'true'); }
+
+      // Sync sidebar active state
+      document.querySelectorAll('#lpSidebar .lp-sb-item[data-panel]').forEach(item => {
+        item.classList.toggle('active', item.dataset.panel === key);
+      });
 
       // Deactivate all panels, activate target
       Object.values(panels).forEach(p => p?.classList.remove('active'));
@@ -6424,6 +6731,56 @@
     }
 
     /* ── Main bootstrap ───────────────────────────────────────── */
+
+    /* ════════════════════════════════════════════════════════
+       SIDEBAR — wire nav, logout, mobile toggle
+    ════════════════════════════════════════════════════════ */
+
+    // Wire sidebar panel buttons
+    document.querySelectorAll('#lpSidebar .lp-sb-item[data-panel]').forEach(btn => {
+      btn.addEventListener('click', () => switchPanel(btn.dataset.panel));
+    });
+
+    // Sync tab badge counts to sidebar badges
+    const _syncSbBadge = (tabId, sbId) => {
+      const tabBadge = document.getElementById(tabId);
+      const sbBadge  = document.getElementById(sbId);
+      if (!tabBadge || !sbBadge) return;
+      const obs = new MutationObserver(() => {
+        sbBadge.textContent = tabBadge.textContent;
+        sbBadge.style.display = tabBadge.style.display;
+      });
+      obs.observe(tabBadge, { childList: true, attributes: true, attributeFilter: ['style'] });
+    };
+    _syncSbBadge('navReviewBadge', 'sbReviewBadge');
+    _syncSbBadge('navBlogBadge',   'sbBlogBadge');
+
+    // Logout
+    document.getElementById('sbLogout')?.addEventListener('click', async () => {
+      try {
+        if (window._lpSb) await window._lpSb.auth.signOut();
+        else if (window.AdminGuard) { const sb = await AdminGuard.isAdmin(); }
+      } catch(e) {}
+      window.location.href = '/admin-login.html';
+    });
+
+    // Mobile hamburger toggle
+    document.getElementById('lp-menu-toggle')?.addEventListener('click', () => {
+      const sb = document.getElementById('lpSidebar');
+      sb?.classList.toggle('sb-open');
+    });
+
+    // Mark current page link as active in sidebar
+    (function markCurrentPage() {
+      const path = window.location.pathname;
+      document.querySelectorAll('#lpSidebar a.lp-sb-item').forEach(a => {
+        if (a.getAttribute('href') && path.endsWith(a.getAttribute('href').replace(/^\//, ''))) {
+          a.classList.add('active');
+        }
+      });
+    })();
+
+
     wireTabs();
     wireNav();
     wireTelemetry();
@@ -6458,6 +6815,16 @@
         // Store sb for content tab queries
         contentSb = sb;
         window._lpSb = sb; // expose for CMS functions
+
+        // Populate sidebar user info
+        const _email = session.user.email || '—';
+        const _role  = role || 'admin';
+        const sbEl   = document.getElementById('sbEmail');
+        const sbRoleEl = document.getElementById('sbRole');
+        const sbAvatarEl = document.getElementById('sbAvatar');
+        if (sbEl)     sbEl.textContent = _email;
+        if (sbRoleEl) sbRoleEl.textContent = _role;
+        if (sbAvatarEl) sbAvatarEl.textContent = _email.slice(0,2).toUpperCase();
 
         // Preload feature flags for admin control plane
         loadFeatureFlags().catch(() => {});
@@ -6739,6 +7106,7 @@
       if (bleAutoSaveTimer) clearTimeout(bleAutoSaveTimer);
       document.getElementById('blogEditorOverlay').classList.remove('open');
       document.body.style.overflow = '';
+      switchPanel('cms');   // Return to CMS panel
       loadBlogPosts();
     }
 

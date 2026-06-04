@@ -394,14 +394,28 @@
   let currentCat  = '';
 
   /* ── Boot ──────────────────────────────────────────────── */
+  /* Resilient env loader — tries window._env first, then /api/env */
+  async function getEnv() {
+    if (window._env?.SUPABASE_URL) return window._env;
+    if (window.__lp_env?.SUPABASE_URL) return window.__lp_env;
+    const r = await fetch('/api/env');
+    if (!r.ok) throw new Error('env_fetch_failed');
+    const j = await r.json();
+    return {
+      SUPABASE_URL:     j.supabaseUrl  || j.SUPABASE_URL,
+      SUPABASE_ANON_KEY: j.supabaseAnonKey || j.SUPABASE_ANON_KEY
+    };
+  }
+
   window.addEventListener('load', async function() {
-    if (!window.supabase || !window._env) {
-      showError('Could not initialise. Please refresh.');
-      return;
-    }
+    if (!window.supabase) { showError('Supabase library not loaded. Please refresh.'); return; }
+    let env;
+    try { env = await getEnv(); } catch(e) { showError('Could not load config. Please refresh.'); return; }
+    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) { showError('Missing environment config.'); return; }
+
     const sb = supabase.createClient(
-      window._env.SUPABASE_URL,
-      window._env.SUPABASE_ANON_KEY,
+      env.SUPABASE_URL,
+      env.SUPABASE_ANON_KEY,
       { auth: { storageKey: 'logicpals.auth' } }
     );
 
