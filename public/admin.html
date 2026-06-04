@@ -7405,9 +7405,14 @@
       if (!bleCurrentId) return;
       if (!confirm('Permanently delete this post? This cannot be undone.')) return;
       const sb=window._lpSb; if(!sb) return;
-      await sb.from('blog_posts').delete().eq('id', bleCurrentId);
-      if (window.LPAdmin) LPAdmin.toast('Post deleted', 'info');
-      closeBlogEditor();
+      try {
+        const { error } = await sb.from('blog_posts').delete().eq('id', bleCurrentId);
+        if (error) throw error;
+        if (window.LPAdmin) LPAdmin.toast('Post deleted', 'info');
+        closeBlogEditor();
+      } catch(err) {
+        if (window.LPAdmin) LPAdmin.toast('Delete failed: ' + err.message, 'error');
+      }
     });
     document.getElementById('btnBlePickCover')?.addEventListener('click', () => openMediaPicker('cover'));
 
@@ -7615,7 +7620,7 @@
       const empty   = document.getElementById('mediaEmptyState');
       loading.style.display=''; grid.style.display='none'; empty.style.display='none';
       try {
-        const { data, error } = await sb.storage.from('blog-media').list('', { limit:200, sortBy:{column:'created_at',order:'desc'} });
+        const { data, error } = await sb.storage.from('blog-media').list('uploads', { limit:200, sortBy:{column:'created_at',order:'desc'} });
         if (error) throw error;
         const images = (data||[]).filter(f => f.name && /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(f.name));
         loading.style.display = 'none';
@@ -7623,7 +7628,7 @@
         if (!images.length) { empty.style.display=''; return; }
         grid.style.display='';
         grid.innerHTML = images.map(f => {
-          const { data: urlData } = sb.storage.from('blog-media').getPublicUrl(f.name);
+          const { data: urlData } = sb.storage.from('blog-media').getPublicUrl('uploads/' + f.name);
           const url = urlData?.publicUrl || '';
           return `<div class="lp-media-item" data-url="${url}" data-name="${f.name}" title="${f.name}">
             <img src="${url}" alt="${f.name}" loading="lazy">
@@ -7642,7 +7647,7 @@
     async function deleteMediaFile(name) {
       if (!confirm('Delete ' + name + '? This cannot be undone.')) return;
       const sb=window._lpSb; if(!sb) return;
-      await sb.storage.from('blog-media').remove([name]);
+      await sb.storage.from('blog-media').remove(['uploads/' + name]);
       if(window.LPAdmin) LPAdmin.toast('Deleted','info',1600);
       loadMediaLibrary();
     }
@@ -7654,6 +7659,10 @@
       progress.style.display='';
       for (let i=0; i<files.length; i++) {
         const file = files[i];
+        if (file.size > 5 * 1024 * 1024) {
+          if (window.LPAdmin) LPAdmin.toast(`${file.name} exceeds 5 MB — skipped`, 'error', 3000);
+          continue;
+        }
         msg.textContent = `Uploading ${i+1}/${files.length}: ${file.name}`;
         const path = `uploads/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'-')}`;
         const { error } = await sb.storage.from('blog-media').upload(path, file, { upsert: true });
@@ -7682,13 +7691,13 @@
       const pickerEmpty    = document.getElementById('mediaPickerEmpty');
       pickerBackdrop.classList.add('open'); pickerModal.classList.add('open');
       pickerGrid.innerHTML = '<div style="padding:20px;text-align:center;color:var(--lp-muted);font-size:13px">Loading…</div>';
-      sb.storage.from('blog-media').list('',{limit:200,sortBy:{column:'created_at',order:'desc'}}).then(({data,error}) => {
+      sb.storage.from('blog-media').list('uploads',{limit:200,sortBy:{column:'created_at',order:'desc'}}).then(({data,error}) => {
         if (error || !data) { pickerGrid.innerHTML=''; pickerEmpty.style.display=''; return; }
         const images = data.filter(f => /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(f.name));
         if (!images.length) { pickerGrid.innerHTML=''; pickerEmpty.style.display=''; return; }
         pickerEmpty.style.display='none';
         pickerGrid.innerHTML = images.map(f => {
-          const { data: urlData } = sb.storage.from('blog-media').getPublicUrl(f.name);
+          const { data: urlData } = sb.storage.from('blog-media').getPublicUrl('uploads/' + f.name);
           const url = urlData?.publicUrl || '';
           return `<div class="lp-media-item" onclick="selectMediaImage('${url}')" title="${f.name}">
             <img src="${url}" alt="" loading="lazy">
