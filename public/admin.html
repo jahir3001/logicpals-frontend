@@ -1658,6 +1658,17 @@
     font-size: 12px; font-weight: 900; color: white;
     box-shadow: 0 2px 8px rgba(79,70,229,.35);
   }
+  .lp-sb-logo-icon img[data-brand-logo] {
+    width: 100%; height: 100%; object-fit: contain; display: none;
+  }
+  .lp-sb-logo-icon.has-brand-logo {
+    background: rgba(255,255,255,.08);
+    padding: 2px;
+  }
+  .lp-sb-logo-icon.has-brand-logo img[data-brand-logo] { display: block; }
+  .lp-sb-logo-icon.has-brand-logo [data-brand-initials] { display: none; }
+  .lp-sb-logo-icon [data-brand-initials] { display: inline-flex; align-items: center; justify-content: center; }
+
   .lp-sb-logo-name { font-size: 14px; font-weight: 800; color: #F0F4FF; line-height: 1.2; }
   .lp-sb-logo-sub  { font-size: 9.5px; font-weight: 600; color: rgba(255,255,255,.3); text-transform: uppercase; letter-spacing: .08em; }
 
@@ -2086,11 +2097,22 @@
     <div id="lpSidebar" role="navigation" aria-label="Admin navigation">
 
       <!-- Logo -->
-      <div class="lp-sb-logo">
-        <div class="lp-sb-logo-icon">LP</div>
+      <div class="lp-sb-logo" data-brand-root>
+        <div class="lp-sb-logo-icon" data-brand-logo-wrap aria-hidden="true">
+          <img
+            data-brand-logo
+            id="adminSidebarBrandLogo"
+            src=""
+            alt="LogicPals"
+            loading="eager"
+            decoding="async"
+            style="display:none;width:100%;height:100%;object-fit:contain;border-radius:9px"
+          />
+          <span data-brand-initials>LP</span>
+        </div>
         <div>
-          <span class="lp-sb-logo-name" style="display:block">LogicPals</span>
-          <span class="lp-sb-logo-sub" style="display:block">Admin Console</span>
+          <span class="lp-sb-logo-name" data-brand-name style="display:block">LogicPals</span>
+          <span class="lp-sb-logo-sub" data-brand-tagline style="display:block">Admin Console</span>
         </div>
       </div>
 
@@ -2928,7 +2950,7 @@
                 <div class="lp-telemetry-card-head">
                   <div>
                     <div class="lp-telemetry-card-title">Brand &amp; Logo</div>
-                    <div class="lp-cell-subtle" style="margin-top:3px">Update site logo, favicon, and brand identity. Changes apply on next page load.</div>
+                    <div class="lp-cell-subtle" style="margin-top:3px">Update site logo, favicon, and brand identity. Saves to Supabase, applies immediately in this console, and is reusable by every page that loads brand-loader.js.</div>
                   </div>
                   <div style="display:flex;gap:8px;align-items:center">
                     <span id="brandSaveStatus" style="font-size:11.5px;color:var(--lp-muted)">—</span>
@@ -7421,6 +7443,10 @@
         contentSb = sb;
         window._lpSb = sb; // expose for CMS functions
 
+        // Brand settings are global product metadata. Load once after auth so the
+        // admin sidebar/header reflects the Supabase source of truth on every device.
+        window.LPBrand?.refreshFromSupabase?.(sb).catch(() => {});
+
         // Populate sidebar user info
         const _email = session.user.email || '—';
         const _role  = role || 'admin';
@@ -8093,27 +8119,56 @@
        BRAND & LOGO EDITOR
     ════════════════════════════════════════════════════════ */
     async function loadBrandEditor() {
-      const sb=window._lpSb; if(!sb) return;
+      const sb = window._lpSb;
+      if (!sb) return;
+
       try {
-        const { data } = await sb.from('site_settings').select('value').eq('key','brand').single();
-        if (!data) return;
-        const b = data.value;
-        document.getElementById('brandLogoUrl').value    = b.logo_url    || '';
-        document.getElementById('brandFaviconUrl').value = b.favicon_url || '';
-        document.getElementById('brandSiteName').value   = b.site_name   || 'LogicPals';
-        document.getElementById('brandTagline').value    = b.tagline     || "THINK. DON'T MEMORIZE.";
-        if (b.logo_url) {
-          document.getElementById('brandLogoPreview').src = b.logo_url;
+        const { data, error } = await sb
+          .from('site_settings')
+          .select('value')
+          .eq('key', 'brand')
+          .maybeSingle();
+
+        if (error) throw error;
+
+        const b = data?.value || {};
+        const normalizedBrand = {
+          logo_url:    b.logo_url    || b.logoUrl    || '',
+          favicon_url: b.favicon_url || b.faviconUrl || '',
+          site_name:   b.site_name   || b.siteName   || 'LogicPals',
+          tagline:     b.tagline     || "THINK. DON'T MEMORIZE.",
+        };
+
+        document.getElementById('brandLogoUrl').value    = normalizedBrand.logo_url;
+        document.getElementById('brandFaviconUrl').value = normalizedBrand.favicon_url;
+        document.getElementById('brandSiteName').value   = normalizedBrand.site_name;
+        document.getElementById('brandTagline').value    = normalizedBrand.tagline;
+
+        if (normalizedBrand.logo_url) {
+          document.getElementById('brandLogoPreview').src = normalizedBrand.logo_url;
           document.getElementById('brandLogoPreview').classList.add('visible');
           document.getElementById('brandLogoPlaceholder').style.display = 'none';
+        } else {
+          document.getElementById('brandLogoPreview').classList.remove('visible');
+          document.getElementById('brandLogoPlaceholder').style.display = '';
         }
-        if (b.favicon_url) {
+
+        if (normalizedBrand.favicon_url) {
           document.getElementById('brandFaviconPreviewWrap').innerHTML =
-            `<img src="${b.favicon_url}" style="width:100%;height:100%;object-fit:contain;border-radius:6px">`;
+            `<img src="${normalizedBrand.favicon_url}" alt="Favicon preview" style="width:100%;height:100%;object-fit:contain;border-radius:6px">`;
+        } else {
+          document.getElementById('brandFaviconPreviewWrap').textContent = '🌐';
         }
-        document.getElementById('brandSaveStatus').textContent = 'Loaded';
+
+        // Enterprise note: keep a local runtime cache for immediate cross-tab/page UX.
+        // Supabase remains the source of truth; localStorage is only a fast fallback.
+        window.LPBrand?.applyBrandSettings?.(normalizedBrand, { persist: true });
+        document.getElementById('brandSaveStatus').textContent = data ? 'Loaded' : 'Default loaded';
         updateBrandPreview();
-      } catch(_) {}
+      } catch (err) {
+        console.warn('[Brand] Load failed', err);
+        document.getElementById('brandSaveStatus').textContent = 'Load failed';
+      }
     }
 
     function updateBrandPreview() {
@@ -8170,17 +8225,40 @@
     document.getElementById('brandFaviconFile')?.addEventListener('change', e => handleBrandFileUpload(e.target.files[0],'favicon'));
 
     document.getElementById('btnBrandSave')?.addEventListener('click', async () => {
-      const sb=window._lpSb; if(!sb) return;
+      const sb = window._lpSb;
+      if (!sb) return;
+
       const payload = {
-        logo_url:    document.getElementById('brandLogoUrl').value || null,
-        favicon_url: document.getElementById('brandFaviconUrl').value || null,
-        site_name:   document.getElementById('brandSiteName').value || 'LogicPals',
-        tagline:     document.getElementById('brandTagline').value || "THINK. DON'T MEMORIZE.",
+        logo_url:    document.getElementById('brandLogoUrl').value.trim() || null,
+        favicon_url: document.getElementById('brandFaviconUrl').value.trim() || null,
+        site_name:   document.getElementById('brandSiteName').value.trim() || 'LogicPals',
+        tagline:     document.getElementById('brandTagline').value.trim() || "THINK. DON'T MEMORIZE.",
+        updated_at:  new Date().toISOString(),
       };
-      const { error } = await sb.from('site_settings').upsert({ key:'brand', value:payload });
-      if (error) { if(window.LPAdmin) LPAdmin.toast('Save failed: '+error.message,'error'); return; }
-      document.getElementById('brandSaveStatus').textContent = 'Saved ✓ ' + new Date().toLocaleTimeString();
-      if(window.LPAdmin) LPAdmin.toast('Brand settings saved','success',2200);
+
+      const saveBtn = document.getElementById('btnBrandSave');
+      if (saveBtn) saveBtn.disabled = true;
+      document.getElementById('brandSaveStatus').textContent = 'Saving…';
+
+      try {
+        const { error } = await sb
+          .from('site_settings')
+          .upsert({ key: 'brand', value: payload });
+
+        if (error) throw error;
+
+        // Apply immediately to this admin console and persist a safe browser fallback.
+        window.LPBrand?.applyBrandSettings?.(payload, { persist: true });
+        window.dispatchEvent(new CustomEvent('logicpals:brand-updated', { detail: payload }));
+
+        document.getElementById('brandSaveStatus').textContent = 'Saved ✓ ' + new Date().toLocaleTimeString();
+        if (window.LPAdmin) LPAdmin.toast('Brand settings saved and applied', 'success', 2200);
+      } catch (err) {
+        document.getElementById('brandSaveStatus').textContent = 'Save failed';
+        if (window.LPAdmin) LPAdmin.toast('Save failed: ' + err.message, 'error');
+      } finally {
+        if (saveBtn) saveBtn.disabled = false;
+      }
     });
 
     /* ════════════════════════════════════════════════════════
