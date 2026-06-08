@@ -8386,5 +8386,321 @@
     })();
   </script>
 
+
+
+  <!-- =========================================================
+       LOGICPALS ADMIN DEVICE RESPONSIVE STABILIZER v6
+       Purpose:
+       1) fixes mobile sidebar not opening by replacing old toggle listeners
+       2) prevents desktop/mobile horizontal overflow
+       3) keeps font-safe rendering without breaking SVG/Quill icons
+       ========================================================= -->
+  <style id="lp-device-responsive-v6">
+    :root {
+      --lp-font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', Arial, sans-serif;
+      --lp-font-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', Arial, sans-serif;
+      --lp-font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', Arial, sans-serif;
+    }
+
+    html, body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden !important;
+      font-family: var(--lp-font-sans) !important;
+    }
+
+    .admin-app,
+    .admin-main,
+    .admin-content,
+    .admin-topbar,
+    .lp-system-card,
+    .lp-panel {
+      min-width: 0 !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+
+    body.lp-sidebar-is-open {
+      overflow: hidden !important;
+      touch-action: none;
+    }
+
+    .lp-sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.56);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      z-index: 998;
+    }
+
+    .lp-sidebar-backdrop.open { display: block !important; }
+
+    #lpSidebar {
+      will-change: transform;
+      font-family: var(--lp-font-sans) !important;
+    }
+
+    @media (min-width: 981px) {
+      #lpSidebar { transform: translateX(0) !important; }
+      .admin-main { margin-left: 240px !important; width: calc(100% - 240px) !important; }
+      .admin-menu-toggle { display: none !important; }
+    }
+
+    @media (max-width: 980px) {
+      #lpSidebar {
+        width: min(86vw, 340px) !important;
+        max-width: 340px !important;
+        height: 100dvh !important;
+        transform: translateX(-105%) !important;
+        z-index: 999 !important;
+        box-shadow: 18px 0 55px rgba(15,23,42,.42) !important;
+      }
+
+      #lpSidebar.sb-open { transform: translateX(0) !important; }
+
+      .admin-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+
+      .admin-topbar {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 260 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
+        padding: 10px 12px !important;
+        min-height: auto !important;
+        overflow: visible !important;
+      }
+
+      .admin-topbar-left,
+      .admin-topbar-right {
+        min-width: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+      }
+
+      .admin-topbar-right {
+        justify-content: flex-end !important;
+        flex-wrap: wrap !important;
+      }
+
+      .admin-menu-toggle {
+        display: inline-flex !important;
+        flex: 0 0 auto !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 10px !important;
+      }
+
+      .admin-breadcrumb {
+        max-width: 42vw !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+      }
+
+      .lp-global-ops-badge {
+        gap: 6px !important;
+        margin-right: 0 !important;
+      }
+
+      .lp-global-ops-pill {
+        padding: 7px 9px !important;
+        font-size: 11px !important;
+      }
+
+      .lp-global-ops-pill span:last-child {
+        display: none !important;
+      }
+
+      .admin-content {
+        padding: 20px 18px 30px !important;
+        width: 100% !important;
+      }
+
+      .admin-page-header {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+        align-items: start !important;
+      }
+
+      .admin-page-title {
+        font-size: clamp(26px, 7vw, 36px) !important;
+        line-height: 1.08 !important;
+      }
+
+      .admin-page-desc {
+        font-size: 15px !important;
+        line-height: 1.5 !important;
+      }
+
+      .admin-page-actions {
+        justify-content: flex-start !important;
+      }
+
+      .admin-grid,
+      .admin-grid-2,
+      .admin-grid-3,
+      .admin-grid-4,
+      .lp-workspace-grid,
+      .lp-flag-grid,
+      .lp-monitoring-health-grid,
+      .lp-escalation-grid,
+      .lp-escalation-automation-grid,
+      .lp-escalation-latest-grid,
+      .lp-content-counts-grid,
+      .lp-telemetry-grid {
+        grid-template-columns: 1fr !important;
+        width: 100% !important;
+      }
+
+      .admin-stat-card,
+      .lp-system-card,
+      .lp-action-card,
+      .lp-telemetry-card,
+      .lp-monitoring-health-card,
+      .lp-flag-card,
+      .lp-telemetry-table-card {
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+
+      .lp-system-card .lp-tabs,
+      .lp-cms-subnav,
+      .lp-tabs {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+      }
+
+      .lp-system-card .lp-tabs::-webkit-scrollbar,
+      .lp-cms-subnav::-webkit-scrollbar,
+      .lp-tabs::-webkit-scrollbar { display: none !important; }
+
+      .lp-telemetry-table-wrap,
+      .lp-table-wrap,
+      .lp-content-drawer-body {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+
+      .admin-btn,
+      .admin-btn-sm {
+        min-height: 36px !important;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .admin-content { padding: 18px 14px 28px !important; }
+      .admin-topbar { align-items: flex-start !important; }
+      .admin-topbar-right { max-width: calc(100vw - 58px) !important; }
+      .admin-breadcrumb { max-width: 32vw !important; }
+      .admin-page-title { font-size: 30px !important; }
+      .admin-stat-card { padding: 22px 24px !important; }
+      .admin-stat-value { font-size: 38px !important; }
+      .lp-global-ops-pill { padding: 7px 8px !important; }
+      .lp-global-ops-pill svg { width: 13px !important; height: 13px !important; }
+      .lp-ble-body { grid-template-columns: 1fr !important; overflow-y: auto !important; }
+      .lp-ble-preview { min-height: 420px !important; }
+      .lp-ble-header { height: auto !important; min-height: 56px !important; flex-wrap: wrap !important; padding: 10px 14px !important; }
+      .lp-ble-actions { flex-wrap: wrap !important; }
+    }
+  </style>
+
+  <script id="lp-device-responsive-v6-script">
+    (function () {
+      'use strict';
+      var root = document.documentElement;
+      root.setAttribute('data-admin-responsive', 'v6-device-responsive');
+
+      function ready(fn) {
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn, { once: true });
+        else fn();
+      }
+
+      ready(function () {
+        var sidebar = document.getElementById('lpSidebar');
+        var backdrop = document.getElementById('lpSidebarBackdrop');
+        var oldToggle = document.getElementById('lp-menu-toggle');
+
+        if (!sidebar || !oldToggle) return;
+
+        /* Critical fix: replace the hamburger node to remove earlier duplicate listeners.
+           Previous file had two click handlers on the same button, so mobile open could
+           immediately toggle closed again. */
+        var toggle = oldToggle.cloneNode(true);
+        oldToggle.parentNode.replaceChild(toggle, oldToggle);
+
+        if (!backdrop) {
+          backdrop = document.createElement('div');
+          backdrop.id = 'lpSidebarBackdrop';
+          backdrop.className = 'lp-sidebar-backdrop';
+          backdrop.setAttribute('aria-hidden', 'true');
+          sidebar.insertAdjacentElement('afterend', backdrop);
+        }
+
+        function isMobile() {
+          return window.matchMedia('(max-width: 980px)').matches;
+        }
+
+        function openSidebar() {
+          sidebar.classList.add('sb-open');
+          backdrop.classList.add('open');
+          document.body.classList.add('lp-sidebar-is-open');
+          toggle.setAttribute('aria-expanded', 'true');
+          toggle.setAttribute('aria-label', 'Close menu');
+        }
+
+        function closeSidebar() {
+          sidebar.classList.remove('sb-open');
+          backdrop.classList.remove('open');
+          document.body.classList.remove('lp-sidebar-is-open');
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.setAttribute('aria-label', 'Open menu');
+        }
+
+        toggle.setAttribute('aria-controls', 'lpSidebar');
+        toggle.setAttribute('aria-expanded', 'false');
+
+        toggle.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!isMobile()) return;
+          if (sidebar.classList.contains('sb-open')) closeSidebar();
+          else openSidebar();
+        }, { passive: false });
+
+        backdrop.addEventListener('click', closeSidebar);
+
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') closeSidebar();
+        });
+
+        sidebar.querySelectorAll('.lp-sb-item, .lp-sb-link, a, button').forEach(function (item) {
+          item.addEventListener('click', function () {
+            if (isMobile()) setTimeout(closeSidebar, 120);
+          });
+        });
+
+        window.addEventListener('resize', function () {
+          if (!isMobile()) closeSidebar();
+        });
+      });
+    })();
+  </script>
+
 </body>
 </html>
