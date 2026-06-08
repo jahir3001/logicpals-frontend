@@ -1328,7 +1328,7 @@
     display: none; position: fixed; inset: 0;
     background: #F1F5F9; z-index: 800;
     flex-direction: column;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   }
   .lp-blog-editor-overlay.open { display: flex; }
 
@@ -1410,7 +1410,7 @@
     border: 1.5px solid #CBD5E1 !important;
     color: #0F172A !important;
     border-radius: 8px !important;
-    font-family: 'Inter', -apple-system, sans-serif !important;
+    font-family: -apple-system, sans-serif !important;
     font-size: 13.5px !important;
     transition: border-color .15s, box-shadow .15s !important;
   }
@@ -1479,7 +1479,7 @@
     border: 1.5px solid #CBD5E1 !important;
     border-top: none !important;
     border-radius: 0 0 10px 10px !important; min-height: 260px;
-    font-family: 'Inter', -apple-system, sans-serif !important;
+    font-family: -apple-system, sans-serif !important;
   }
   .lp-ble-form .ql-editor {
     color: #1E293B !important; min-height: 240px !important;
@@ -1631,7 +1631,7 @@
     border-right: 1px solid rgba(255,255,255,.07);
     display: flex; flex-direction: column;
     z-index: 300; overflow: hidden;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     transition: transform .25s cubic-bezier(.4,0,.2,1);
   }
   #lpSidebar.sb-collapsed { transform: translateX(-100%); }
@@ -1772,16 +1772,304 @@
   /* ── Blog editor font hard-reset (beats admin.css icon-font) ── */
   .lp-blog-editor-overlay,
   .lp-blog-editor-overlay * {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif !important;
   }
   .lp-blog-editor-overlay .ql-editor,
   .lp-blog-editor-overlay .ql-editor * {
-    font-family: 'Inter', Georgia, serif !important;
+    font-family: Georgia, serif !important;
   }
   .lp-blog-editor-overlay code,
   .lp-blog-editor-overlay pre {
     font-family: 'Fira Code', 'Cascadia Code', 'Courier New', monospace !important;
   }
+  
+  /* ═══════════════════════════════════════════════════════
+     ENTERPRISE DESKTOP FONT STABILIZER
+     Fixes desktop-only corruption caused by a bad local Inter/icon-font mapping.
+     It deliberately removes local Inter from the runtime stack.
+  ═══════════════════════════════════════════════════════ */
+  :root {
+    --lp-font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', Arial, sans-serif;
+    --lp-font-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', Arial, sans-serif;
+    --lp-font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', Arial, sans-serif;
+    --lp-font-mono: 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
+  }
+
+  html,
+  body,
+  .admin-app,
+  .admin-main,
+  .admin-topbar,
+  .admin-content,
+  .lp-system-card,
+  .lp-panel,
+  #lpSidebar,
+  #lpSidebar button,
+  #lpSidebar a,
+  #lpSidebar span,
+  #lpSidebar p,
+  input,
+  select,
+  textarea,
+  button,
+  table,
+  th,
+  td {
+    font-family: var(--lp-font-sans) !important;
+    font-variant-ligatures: normal !important;
+    text-rendering: optimizeLegibility !important;
+  }
+
+  code,
+  pre,
+  kbd,
+  samp,
+  .lp-mono {
+    font-family: var(--lp-font-mono) !important;
+  }
+
+  svg,
+  svg *,
+  .lp-sb-icon,
+  .lp-tab-icon,
+  .ql-toolbar svg,
+  .ql-toolbar svg * {
+    font-family: initial !important;
+  }
+
+  .lp-sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.46);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 299;
+  }
+
+  .lp-sidebar-backdrop.open {
+    display: block;
+  }
+
+  @media (max-width: 768px) {
+    .lp-sidebar-backdrop {
+      z-index: 998;
+    }
+
+    #lpSidebar {
+      z-index: 999;
+    }
+
+    .admin-main {
+      margin-left: 0 !important;
+      width: 100% !important;
+      min-width: 0 !important;
+    }
+  }
+
+  
+  /* ═══════════════════════════════════════════════════════
+     RESPONSIVE ADMIN OPERATIONS CONSOLE LAYER
+     Desktop remains desktop-first; mobile becomes drawer-first.
+  ═══════════════════════════════════════════════════════ */
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .admin-app,
+  .admin-main,
+  .admin-content {
+    min-width: 0 !important;
+  }
+
+  .admin-main {
+    transition: margin-left .25s ease, width .25s ease;
+  }
+
+  @media (max-width: 1280px) {
+    .lp-flag-grid,
+    .lp-escalation-automation-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  @media (max-width: 980px) {
+    .admin-main {
+      margin-left: 0 !important;
+      width: 100% !important;
+    }
+
+    #lpSidebar {
+      width: min(84vw, 320px) !important;
+      transform: translateX(-105%);
+      box-shadow: 18px 0 50px rgba(15,23,42,.35);
+    }
+
+    #lpSidebar.sb-open {
+      transform: translateX(0) !important;
+    }
+
+    .admin-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 260;
+      min-width: 0 !important;
+      padding-left: 12px !important;
+      padding-right: 12px !important;
+      gap: 8px !important;
+    }
+
+    .admin-topbar-left,
+    .admin-topbar-right {
+      min-width: 0 !important;
+    }
+
+    .admin-breadcrumb {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 42vw;
+    }
+
+    .lp-global-ops-badge {
+      max-width: 100%;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      scrollbar-width: none;
+    }
+
+    .lp-global-ops-badge::-webkit-scrollbar {
+      display: none;
+    }
+
+    .admin-content,
+    .admin-page,
+    .admin-section,
+    .lp-panel {
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      overflow-x: hidden !important;
+    }
+
+    .lp-workspace-grid,
+    .lp-monitoring-health-grid,
+    .lp-escalation-grid,
+    .lp-escalation-form-grid,
+    .lp-escalation-manual-fields,
+    .lp-flag-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .lp-telemetry-grid,
+    .lp-content-counts-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .lp-system-card {
+      max-width: 100% !important;
+      overflow: hidden !important;
+    }
+
+    .lp-system-card .lp-tabs,
+    .lp-cms-subnav {
+      overflow-x: auto !important;
+      white-space: nowrap;
+      padding-left: 12px !important;
+      padding-right: 12px !important;
+    }
+
+    .lp-table-wrap,
+    .lp-telemetry-table-wrap {
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .lp-telemetry-table,
+    .lp-blog-table {
+      min-width: 760px;
+    }
+
+    .lp-ble-body {
+      grid-template-columns: 1fr !important;
+      overflow-y: auto !important;
+    }
+
+    .lp-ble-form,
+    .lp-ble-preview {
+      overflow: visible !important;
+    }
+
+    .lp-ble-header {
+      height: auto !important;
+      min-height: 56px;
+      flex-wrap: wrap;
+      padding: 10px 12px !important;
+    }
+
+    .lp-ble-actions {
+      width: 100%;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .lp-content-drawer {
+      width: 100vw !important;
+      max-width: 100vw !important;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .admin-topbar {
+      align-items: flex-start !important;
+    }
+
+    .admin-topbar-right {
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .admin-breadcrumb {
+      max-width: 58vw;
+    }
+
+    .lp-global-ops-pill span:last-child {
+      display: none;
+    }
+
+    .lp-telemetry-grid,
+    .lp-content-counts-grid,
+    .lp-monitoring-health-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .lp-card,
+    .lp-action-card,
+    .lp-system-card,
+    .lp-telemetry-card,
+    .lp-monitoring-health-card {
+      border-radius: 14px !important;
+    }
+
+    .lp-tab,
+    .lp-system-card .lp-tab,
+    .lp-cms-subtab {
+      padding-left: 10px !important;
+      padding-right: 10px !important;
+      font-size: 12px !important;
+    }
+
+    .lp-sb-logo {
+      height: 64px;
+    }
+
+    #lpSidebar {
+      width: min(88vw, 330px) !important;
+    }
+  }
+
   </style>
 </head>
 
@@ -1919,6 +2207,8 @@
       </div>
 
     </div>
+    <div id="lpSidebarBackdrop" class="lp-sidebar-backdrop" aria-hidden="true"></div>
+
     <!-- /custom sidebar -->
 
     <div class="admin-main">
@@ -7041,16 +7331,43 @@
        Inline !important is the apex of the CSS cascade.
        Beats any dynamically-injected admin-auth.js stylesheet.
     ════════════════════════════════════════════════════════ */
-    var SAFE_FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif";
+    var SAFE_FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', Arial, sans-serif";
 
     function forceFont(rootEl, excludeQuill) {
       if (!rootEl) return;
       var all = [rootEl].concat(Array.from(rootEl.querySelectorAll('*')));
       all.forEach(function(el) {
+        if (!el || !el.style) return;
+
         if (excludeQuill && el.closest) {
           if (el.closest('.ql-toolbar') || el.closest('.ql-editor') || el.closest('.ql-container')) return;
         }
+
+        var tag = (el.tagName || '').toLowerCase();
+        var cls = String(el.className || '');
+        if (
+          tag === 'svg' ||
+          tag === 'path' ||
+          tag === 'line' ||
+          tag === 'rect' ||
+          tag === 'circle' ||
+          tag === 'polyline' ||
+          tag === 'polygon' ||
+          cls.indexOf('material-icons') !== -1 ||
+          cls.indexOf('material-symbol') !== -1 ||
+          cls.indexOf('fa ') !== -1 ||
+          cls.indexOf('fas') !== -1 ||
+          cls.indexOf('far') !== -1 ||
+          cls.indexOf('fab') !== -1 ||
+          cls.indexOf('lucide') !== -1 ||
+          cls.indexOf('ql-') !== -1
+        ) {
+          return;
+        }
+
         el.style.setProperty('font-family', SAFE_FONT, 'important');
+        el.style.setProperty('font-variant-ligatures', 'normal', 'important');
+        el.style.setProperty('text-rendering', 'optimizeLegibility', 'important');
       });
     }
 
@@ -7987,5 +8304,87 @@
     });
 
   </script>
+
+  <script>
+    /* LogicPals Admin Stabilizer v5: desktop font + safe sidebar runtime */
+    (function () {
+      const root = document.documentElement;
+      root.setAttribute('data-admin-stabilizer', 'v5-responsive-font-safe');
+
+      const SYSTEM_FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', Arial, sans-serif";
+
+      function applySafeFont(rootEl) {
+        if (!rootEl) return;
+        const nodes = [rootEl].concat(Array.from(rootEl.querySelectorAll('*')));
+        nodes.forEach(function (el) {
+          if (!el || !el.style) return;
+          const tag = (el.tagName || '').toLowerCase();
+          const cls = String(el.className || '');
+          if (
+            ['svg','path','line','rect','circle','polyline','polygon'].includes(tag) ||
+            cls.includes('material-icons') ||
+            cls.includes('material-symbol') ||
+            cls.includes('fa ') ||
+            cls.includes('fas') ||
+            cls.includes('far') ||
+            cls.includes('fab') ||
+            cls.includes('lucide') ||
+            cls.includes('ql-')
+          ) return;
+
+          el.style.setProperty('font-family', SYSTEM_FONT, 'important');
+          el.style.setProperty('font-variant-ligatures', 'normal', 'important');
+        });
+      }
+
+      function stabilize() {
+        applySafeFont(document.getElementById('lpSidebar'));
+        applySafeFont(document.querySelector('.admin-topbar'));
+        applySafeFont(document.querySelector('.admin-main'));
+      }
+
+      setTimeout(stabilize, 50);
+      setTimeout(stabilize, 300);
+      setTimeout(stabilize, 1000);
+
+      const sidebar = document.getElementById('lpSidebar');
+      const backdrop = document.getElementById('lpSidebarBackdrop');
+      const toggle = document.getElementById('lp-menu-toggle');
+
+      function openSidebar() {
+        sidebar?.classList.add('sb-open');
+        backdrop?.classList.add('open');
+        document.body.classList.add('lp-sidebar-is-open');
+      }
+
+      function closeSidebar() {
+        sidebar?.classList.remove('sb-open');
+        backdrop?.classList.remove('open');
+        document.body.classList.remove('lp-sidebar-is-open');
+      }
+
+      toggle?.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (sidebar?.classList.contains('sb-open')) closeSidebar();
+        else openSidebar();
+      });
+
+      backdrop?.addEventListener('click', closeSidebar);
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeSidebar();
+      });
+
+      document.querySelectorAll('#lpSidebar .lp-sb-item, #lpSidebar .lp-sb-link').forEach(function (item) {
+        item.addEventListener('click', function () {
+          if (window.matchMedia('(max-width: 768px)').matches) {
+            setTimeout(closeSidebar, 120);
+          }
+        });
+      });
+    })();
+  </script>
+
 </body>
 </html>
